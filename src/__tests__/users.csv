@@ -1,0 +1,11 @@
+user,password,email,expected
+valid_user,123456,test1@gmail.com,success
+valid_user,wrongpass,test1@gmail.com,fail
+invalid_user,123456,test1@gmail.com,fail
+valid_user,,test1@gmail.com,fail
+valid_user,123456,,fail
+,,test1@gmail.com,fail
+valid_user,123456,wrongemail,fail
+admin,admin123,admin@gmail.com,success
+user01,123456,user01@gmail.com,success
+user01,123,user01@gmail.com,fail
