@@ -1,0 +1,17 @@
+[
+    {
+        "desc": "Empty string",
+        "value": "",
+        "expected": true
+    },
+    {
+        "desc": "Only spaces",
+        "value": "   ",
+        "expected": true
+    },
+    {
+        "desc": "Normal text",
+        "value": "abc",
+        "expected": false
+    }
+]

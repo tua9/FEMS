@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<coverage generated="1769047212354" clover="3.2.0">
+  <project timestamp="1769047212354" name="All files">
+    <metrics statements="20" coveredstatements="20" conditionals="17" coveredconditionals="17" methods="8" coveredmethods="8" elements="45" coveredelements="45" complexity="0" loc="20" ncloc="20" packages="3" files="7" classes="7"/>
+    <package name="data">
+      <metrics statements="0" coveredstatements="0" conditionals="0" coveredconditionals="0" methods="0" coveredmethods="0"/>
+      <file name="register.testcases.json" path="E:\SourceCode\Projects\fems\src\data\register.testcases.json">
+        <metrics statements="0" coveredstatements="0" conditionals="0" coveredconditionals="0" methods="0" coveredmethods="0"/>
+      </file>
+      <file name="users.json" path="E:\SourceCode\Projects\fems\src\data\users.json">
+        <metrics statements="0" coveredstatements="0" conditionals="0" coveredconditionals="0" methods="0" coveredmethods="0"/>
+      </file>
+      <file name="validators.testcases.json" path="E:\SourceCode\Projects\fems\src\data\validators.testcases.json">
+        <metrics statements="0" coveredstatements="0" conditionals="0" coveredconditionals="0" methods="0" coveredmethods="0"/>
+      </file>
+    </package>
+    <package name="services">
+      <metrics statements="14" coveredstatements="14" conditionals="13" coveredconditionals="13" methods="5" coveredmethods="5"/>
+      <file name="registerService.js" path="E:\SourceCode\Projects\fems\src\services\registerService.js">
+        <metrics statements="12" coveredstatements="12" conditionals="13" coveredconditionals="13" methods="1" coveredmethods="1"/>
+        <line num="6" count="6" type="stmt"/>
+        <line num="8" count="6" type="cond" truecount="5" falsecount="0"/>
+        <line num="9" count="1" type="stmt"/>
+        <line num="11" count="5" type="cond" truecount="2" falsecount="0"/>
+        <line num="12" count="1" type="stmt"/>
+        <line num="14" count="4" type="cond" truecount="2" falsecount="0"/>
+        <line num="15" count="1" type="stmt"/>
+        <line num="17" count="3" type="cond" truecount="2" falsecount="0"/>
+        <line num="18" count="1" type="stmt"/>
+        <line num="20" count="2" type="cond" truecount="2" falsecount="0"/>
+        <line num="21" count="2" type="stmt"/>
+        <line num="23" count="1" type="stmt"/>
+      </file>
+      <file name="userService.js" path="E:\SourceCode\Projects\fems\src\services\userService.js">
+        <metrics statements="2" coveredstatements="2" conditionals="0" coveredconditionals="0" methods="4" coveredmethods="4"/>
+        <line num="2" count="16" type="stmt"/>
+        <line num="6" count="12" type="stmt"/>
+      </file>
+    </package>
+    <package name="utils">
+      <metrics statements="6" coveredstatements="6" conditionals="4" coveredconditionals="4" methods="3" coveredmethods="3"/>
+      <file name="registerResult.js" path="E:\SourceCode\Projects\fems\src\utils\registerResult.js">
+        <metrics statements="1" coveredstatements="1" conditionals="0" coveredconditionals="0" methods="0" coveredmethods="0"/>
+        <line num="1" count="1" type="stmt"/>
+      </file>
+      <file name="validators.js" path="E:\SourceCode\Projects\fems\src\utils\validators.js">
+        <metrics statements="5" coveredstatements="5" conditionals="4" coveredconditionals="4" methods="3" coveredmethods="3"/>
+        <line num="2" count="27" type="cond" truecount="2" falsecount="0"/>
+        <line num="6" count="6" type="stmt"/>
+        <line num="10" count="8" type="cond" truecount="2" falsecount="0"/>
+        <line num="11" count="7" type="stmt"/>
+        <line num="12" count="7" type="stmt"/>
+      </file>
+    </package>
+  </project>
+</coverage>
