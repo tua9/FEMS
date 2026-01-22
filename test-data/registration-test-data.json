@@ -1,0 +1,196 @@
+{
+  "validRegistrations": [
+    {
+      "description": "Valid user with standard email",
+      "email": "john@test.com",
+      "username": "johndoe",
+      "password": "password123",
+      "shouldPass": true,
+      "expectedError": null
+    },
+    {
+      "description": "Valid user with plus in email",
+      "email": "user+tag@example.com",
+      "username": "userplus",
+      "password": "mypassword",
+      "shouldPass": true,
+      "expectedError": null
+    },
+    {
+      "description": "Valid user with subdomain",
+      "email": "admin@mail.company.com",
+      "username": "admin",
+      "password": "adminpass",
+      "shouldPass": true,
+      "expectedError": null
+    },
+    {
+      "description": "Valid user with numbers",
+      "email": "test123@domain.org",
+      "username": "testuser123",
+      "password": "validpass456",
+      "shouldPass": true,
+      "expectedError": null
+    }
+  ],
+  
+  "invalidEmails": [
+    {
+      "description": "Empty email",
+      "email": "",
+      "username": "johndoe",
+      "password": "password123",
+      "shouldPass": false,
+      "expectedError": "Email is required"
+    },
+    {
+      "description": "Email without @ symbol",
+      "email": "invalid-email",
+      "username": "johndoe",
+      "password": "password123",
+      "shouldPass": false,
+      "expectedError": "Invalid email format"
+    },
+    {
+      "description": "Email starting with @",
+      "email": "@example.com",
+      "username": "johndoe",
+      "password": "password123",
+      "shouldPass": false,
+      "expectedError": "Invalid email format"
+    },
+    {
+      "description": "Email ending with @",
+      "email": "test@",
+      "username": "johndoe",
+      "password": "password123",
+      "shouldPass": false,
+      "expectedError": "Invalid email format"
+    },
+    {
+      "description": "Email with spaces",
+      "email": "test @example.com",
+      "username": "johndoe",
+      "password": "password123",
+      "shouldPass": false,
+      "expectedError": "Invalid email format"
+    }
+  ],
+  
+  "invalidUsernames": [
+    {
+      "description": "Empty username",
+      "email": "john@test.com",
+      "username": "",
+      "password": "password123",
+      "shouldPass": false,
+      "expectedError": "Username is required"
+    },
+    {
+      "description": "Username too short (2 chars)",
+      "email": "jane@test.com",
+      "username": "ab",
+      "password": "password123",
+      "shouldPass": false,
+      "expectedError": "Username must be at least 3 characters long"
+    },
+    {
+      "description": "Username too short (1 char)",
+      "email": "user@test.com",
+      "username": "a",
+      "password": "password123",
+      "shouldPass": false,
+      "expectedError": "Username must be at least 3 characters long"
+    }
+  ],
+  
+  "invalidPasswords": [
+    {
+      "description": "Empty password",
+      "email": "john@test.com",
+      "username": "johndoe",
+      "password": "",
+      "shouldPass": false,
+      "expectedError": "Password is required"
+    },
+    {
+      "description": "Password too short (3 chars)",
+      "email": "jane@test.com",
+      "username": "janedoe",
+      "password": "123",
+      "shouldPass": false,
+      "expectedError": "Password must be at least 6 characters long"
+    },
+    {
+      "description": "Password too short (5 chars)",
+      "email": "user@test.com",
+      "username": "testuser",
+      "password": "12345",
+      "shouldPass": false,
+      "expectedError": "Password must be at least 6 characters long"
+    }
+  ],
+  
+  "loginTestData": [
+    {
+      "description": "Valid login",
+      "registerFirst": {
+        "email": "login@test.com",
+        "username": "loginuser",
+        "password": "loginpass123"
+      },
+      "loginData": {
+        "email": "login@test.com",
+        "password": "loginpass123"
+      },
+      "shouldPass": true,
+      "expectedError": null
+    },
+    {
+      "description": "Wrong password",
+      "registerFirst": {
+        "email": "wrong@test.com",
+        "username": "wronguser",
+        "password": "correctpass"
+      },
+      "loginData": {
+        "email": "wrong@test.com",
+        "password": "wrongpass"
+      },
+      "shouldPass": false,
+      "expectedError": "Invalid password"
+    },
+    {
+      "description": "Non-existent user",
+      "registerFirst": null,
+      "loginData": {
+        "email": "notfound@test.com",
+        "password": "somepass"
+      },
+      "shouldPass": false,
+      "expectedError": "Student not found"
+    }
+  ],
+  
+  "edgeCases": [
+    {
+      "description": "Email with whitespace (should be trimmed)",
+      "email": "  trimme@test.com  ",
+      "username": "  trimuser  ",
+      "password": "password123",
+      "shouldPass": true,
+      "expectedError": null,
+      "expectedTrimmedEmail": "trimme@test.com",
+      "expectedTrimmedUsername": "trimuser"
+    },
+    {
+      "description": "Case insensitive email lookup",
+      "email": "CASE@TEST.COM",
+      "username": "caseuser",
+      "password": "password123",
+      "shouldPass": true,
+      "expectedError": null,
+      "searchEmail": "case@test.com"
+    }
+  ]
+}
