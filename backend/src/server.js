@@ -1,20 +1,36 @@
-import express from 'express';
-import cors from 'cors';
+import express from "express";
+import cors from "cors";
+import dotenv from "dotenv";
+import { testDBConnection } from "./configs/db.js";
+
+dotenv.config();
 
 const app = express();
-const PORT = 8080;
+const PORT = process.env.PORT || 8080;
 
 app.use(cors());
 app.use(express.json());
 
-// API demo
-app.get('/api/health', (req, res) => {
+
+app.get("/api/health", (req, res) => {
   res.json({
-    status: 'OK',
-    message: 'Backend connected successfully 🚀'
+    status: "OK",
+    message: "Kết nối backend thành công",
   });
 });
 
-app.listen(PORT, () => {
-  console.log(`🚀 Backend running at http://localhost:${PORT}`);
-});
+
+const startServer = async () => {
+  try {
+    await testDBConnection();
+
+    app.listen(PORT, () => {
+      console.log(`🚀 Backend running at http://localhost:${PORT}`);
+    });
+  } catch (error) {
+    console.error("Sever dừng do không kết nối được DB");
+    process.exit(1);
+  }
+};
+
+startServer();
