@@ -1,5 +1,5 @@
 
-
+thêm cấu hình .evn (1) 
 
 
 \# Terminal 1
@@ -27,8 +27,8 @@ npm run dev
 Nếu kết nối thành công, frontend sẽ hiển thị:
 
 Status: OK
+kết nối backend thành công . 
 
-Backend connected successfully 🚀
 
 
 
