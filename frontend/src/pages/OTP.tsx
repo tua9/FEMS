@@ -30,13 +30,13 @@ const OTP: React.FC<{ onVerify: () => void }> = ({ onVerify }) => {
         </p>
 
         <form onSubmit={handleVerify} className="space-y-8">
-          <div className="flex justify-between gap-2 md:gap-4">
+          <div className="flex justify-center gap-2 md:gap-4 px-4">
             {[1, 2, 3, 4, 5, 6].map((i) => (
               <input
                 key={i}
                 type="text"
                 maxLength={1}
-                className="w-12 h-14 md:w-16 md:h-16 text-center text-2xl font-bold bg-white dark:bg-slate-800/80 border-slate-100 dark:border-slate-700/50 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent shadow-sm text-slate-800 dark:text-white transition-all"
+                className="w-12 h-14 md:w-16 md:h-16 text-center text-2xl font-bold bg-white dark:bg-slate-800/80 border border-slate-100 dark:border-slate-700/50 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent shadow-sm text-slate-800 dark:text-white transition-all"
               />
             ))}
           </div>
