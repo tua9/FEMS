@@ -11,10 +11,13 @@ interface NavLink {
 }
 
 const STUDENT_NAV_LINKS: NavLink[] = [
-  { name: 'Home', path: '/student/dashboard' },
-  { name: 'Equipment List', path: '/student/equipment' },
-  { name: 'My History', path: '/student/history' },
-  { name: 'Report Issue', path: '/student/report' },
+  { name: 'Home', path: '/lecturer' },
+  { name: 'Room Status', path: '/lecturer/room-status' },
+  { name: 'Equipment', path: '/lecturer/equipment' },
+  { name: 'Borrow Approval', path: '/lecturer/approval' },
+  { name: 'Usage Stats', path: '/lecturer/stats' },
+  { name: 'Report Issue', path: '/lecturer/report' },
+  { name: 'My History', path: '/lecturer/history' },
 ];
 
 const Navbar: React.FC = () => {
