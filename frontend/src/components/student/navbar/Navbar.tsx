@@ -11,7 +11,7 @@ interface NavLink {
 }
 
 const STUDENT_NAV_LINKS: NavLink[] = [
-  { name: 'Dashboard', path: '/dashboard' },
+  { name: 'Home', path: '/dashboard' },
   { name: 'Equipment List', path: '/equipment' },
   { name: 'My History', path: '/history' },
   { name: 'Report Issue', path: '/report' },
