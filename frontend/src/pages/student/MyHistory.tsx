@@ -11,7 +11,7 @@ const MyHistory: React.FC = () => {
   const [showDetails, setShowDetails] = useState(false);
 
   return (
-    <div className="max-w-7xl mx-auto px-6">
+    <div className="max-w-7xl mx-auto px-16">
       <HistoryHeader />
 
       <div className="space-y-8">

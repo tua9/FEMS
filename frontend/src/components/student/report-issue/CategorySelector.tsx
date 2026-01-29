@@ -26,8 +26,8 @@ const CategorySelector: React.FC<CategorySelectorProps> = ({
                         type="button"
                         onClick={() => onSelect(cat.id)}
                         className={`flex flex-col items-center justify-center gap-2 py-5 rounded-2xl transition-all ${selectedCategory === cat.id
-                                ? 'bg-white shadow-lg border-2 border-navy-deep text-navy-deep'
-                                : 'bg-white/40 border border-transparent text-slate-500'
+                            ? 'bg-white dark:bg-slate-700 shadow-lg border-2 border-navy-deep dark:border-slate-500 text-navy-deep dark:text-slate-200'
+                            : 'bg-white/40 dark:bg-slate-800/30 border border-transparent dark:border-slate-700/30 text-slate-500 dark:text-slate-400'
                             }`}
                     >
                         <span className="material-symbols-outlined text-2xl">{cat.icon}</span>

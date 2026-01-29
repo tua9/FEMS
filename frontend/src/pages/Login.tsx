@@ -30,15 +30,12 @@ const Login: React.FC<{ onLogin: () => void }> = ({ onLogin }) => {
           <div>
             <label className="block text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-2 ml-1">Select Role</label>
             <div className="relative group">
-              <select className="block w-full px-4 py-3.5 bg-white dark:bg-slate-800/80 border-slate-100 dark:border-slate-700/50 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent shadow-sm text-slate-800 dark:text-white transition-all appearance-none cursor-pointer">
+              <select className="block w-full px-4 py-3.5 pr-10 bg-white dark:bg-slate-800/80 border border-slate-100 dark:border-slate-700/50 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent shadow-sm text-slate-800 dark:text-white transition-all appearance-none cursor-pointer">
                 <option value="student">Student</option>
                 <option value="faculty">Faculty / Lecturer</option>
                 <option value="tech-staff">Technical Staff</option>
                 <option value="admin">Administrator</option>
               </select>
-              <div className="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none text-slate-400">
-                <span className="material-symbols-outlined">expand_more</span>
-              </div>
             </div>
           </div>
 
@@ -46,7 +43,7 @@ const Login: React.FC<{ onLogin: () => void }> = ({ onLogin }) => {
             <label className="block text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-2 ml-1">Username</label>
             <div className="relative">
               <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">account_circle</span>
-              <input type="text" placeholder="Username or Email" className="block w-full pl-12 pr-4 py-3.5 bg-white dark:bg-slate-800/80 border-slate-100 dark:border-slate-700/50 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent shadow-sm text-slate-800 dark:text-white transition-all"/>
+              <input type="text" placeholder="Username or Email" className="block w-full pl-12 pr-4 py-3.5 bg-white dark:bg-slate-800/80 border-slate-100 dark:border-slate-700/50 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent shadow-sm text-slate-800 dark:text-white transition-all" />
             </div>
           </div>
 
@@ -57,12 +54,12 @@ const Login: React.FC<{ onLogin: () => void }> = ({ onLogin }) => {
             </div>
             <div className="relative">
               <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">lock</span>
-              <input type="password" placeholder="••••••••••••" className="block w-full pl-12 pr-4 py-3.5 bg-white dark:bg-slate-800/80 border-slate-100 dark:border-slate-700/50 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent shadow-sm text-slate-800 dark:text-white transition-all"/>
+              <input type="password" placeholder="••••••••••••" className="block w-full pl-12 pr-4 py-3.5 bg-white dark:bg-slate-800/80 border-slate-100 dark:border-slate-700/50 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent shadow-sm text-slate-800 dark:text-white transition-all" />
             </div>
           </div>
 
           <div className="flex items-center ml-1">
-            <input type="checkbox" id="remember" className="h-4 w-4 text-primary border-slate-300 rounded cursor-pointer transition-colors"/>
+            <input type="checkbox" id="remember" className="h-4 w-4 text-primary border-slate-300 rounded cursor-pointer transition-colors" />
             <label htmlFor="remember" className="ml-2 block text-xs font-semibold text-slate-500 dark:text-slate-400 cursor-pointer">Remember me</label>
           </div>
 

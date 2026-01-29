@@ -28,8 +28,8 @@ const CategoryFilter: React.FC<CategoryFilterProps> = ({ activeCategory, onCateg
                     key={cat.id}
                     onClick={() => onCategoryChange(cat.id)}
                     className={`flex flex-col items-center justify-center gap-2 p-5 rounded-2xl transition-all duration-300 border ${activeCategory === cat.id
-                            ? 'bg-white shadow-xl text-navy-deep border-white scale-105'
-                            : 'bg-white/20 text-slate-600 hover:bg-white/50 border-white/40'
+                        ? 'bg-white dark:bg-slate-700 shadow-xl text-navy-deep dark:text-slate-200 border-white dark:border-slate-600 scale-105'
+                        : 'bg-white/20 dark:bg-slate-800/30 text-slate-600 dark:text-slate-400 hover:bg-white/50 dark:hover:bg-slate-700/50 border-white/40 dark:border-slate-600/40'
                         }`}
                 >
                     <span className="material-symbols-outlined text-2xl">{cat.icon}</span>
