@@ -17,7 +17,7 @@ const OTP: React.FC<{ onVerify: () => void }> = ({ onVerify }) => {
         <button onClick={() => navigate('/login')} className="absolute top-8 left-8 text-slate-400 hover:text-primary transition-colors">
           <span className="material-symbols-outlined">arrow_back</span>
         </button>
-        
+
         <div className="flex flex-col items-center mb-6">
           <div className="w-16 h-16 bg-white dark:bg-slate-800 rounded-full flex items-center justify-center shadow-sm border border-slate-100 dark:border-slate-700 mb-6">
             <span className="material-symbols-outlined text-3xl text-primary dark:text-blue-400">shield_lock</span>
