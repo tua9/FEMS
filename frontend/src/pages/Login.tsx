@@ -1,12 +1,16 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useRole } from '@/context/RoleContext';
 
 const Login: React.FC<{ onLogin: () => void }> = ({ onLogin }) => {
   const navigate = useNavigate();
+  const { setRole } = useRole();
+  const [selectedRole, setSelectedRole] = useState('student');
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
+    setRole(selectedRole as 'student' | 'faculty' | 'tech-staff' | 'admin');
     navigate('/otp');
   };
 
@@ -30,7 +34,10 @@ const Login: React.FC<{ onLogin: () => void }> = ({ onLogin }) => {
           <div>
             <label className="block text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-2 ml-1">Select Role</label>
             <div className="relative group">
-              <select className="block w-full px-4 py-3.5 pr-10 bg-white dark:bg-slate-800/80 border border-slate-100 dark:border-slate-700/50 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent shadow-sm text-slate-800 dark:text-white transition-all appearance-none cursor-pointer">
+              <select
+                value={selectedRole}
+                onChange={(e) => setSelectedRole(e.target.value)}
+                className="block w-full px-4 py-3.5 pr-10 bg-white dark:bg-slate-800/80 border border-slate-100 dark:border-slate-700/50 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent shadow-sm text-slate-800 dark:text-white transition-all appearance-none cursor-pointer">
                 <option value="student">Student</option>
                 <option value="faculty">Faculty / Lecturer</option>
                 <option value="tech-staff">Technical Staff</option>

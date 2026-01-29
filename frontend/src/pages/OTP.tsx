@@ -1,14 +1,26 @@
 
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useRole } from '@/context/RoleContext';
 
 const OTP: React.FC<{ onVerify: () => void }> = ({ onVerify }) => {
   const navigate = useNavigate();
+  const { role } = useRole();
 
   const handleVerify = (e: React.FormEvent) => {
     e.preventDefault();
     onVerify();
-    navigate('/dashboard');
+
+    // Redirect dựa trên role
+    if (role === 'faculty') {
+      navigate('/lecturer');
+    } else if (role === 'tech-staff') {
+      navigate('/tech-staff');
+    } else if (role === 'admin') {
+      navigate('/admin');
+    } else {
+      navigate('/student/dashboard');
+    }
   };
 
   return (
