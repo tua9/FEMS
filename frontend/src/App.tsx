@@ -1,16 +1,18 @@
 
 import React, { useState, useEffect } from 'react';
 import { HashRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
-import Navbar from './components/student/Navbar';
+import { useDarkMode } from './hooks/useDarkMode';
+import Navbar from './components/student/navbar/Navbar';
 import Footer from './components/student/Footer';
 import Dashboard from './pages/student/Dashboard';
 import EquipmentList from './pages/student/EquipmentList';
 import MyHistory from './pages/student/MyHistory';
 import ReportIssue from './pages/student/ReportIssue';
 import Profile from './pages/student/Profile';
+import Notifications from './pages/student/Notifications';
 import ChangePassword from './pages/ChangePassword';
 import Login from './pages/Login';
-import OTP from './pages/student/OTP';
+import OTP from './pages/OTP';
 
 const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const location = useLocation();
@@ -29,6 +31,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 
 const App: React.FC = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  useDarkMode();
 
   return (
     <HashRouter>
@@ -41,6 +44,7 @@ const App: React.FC = () => {
           <Route path="/history" element={<MyHistory />} />
           <Route path="/report" element={<ReportIssue />} />
           <Route path="/profile" element={<Profile />} />
+          <Route path="/notifications" element={<Notifications />} />
           <Route path="/change-password" element={<ChangePassword />} />
           <Route path="/" element={<Navigate to="/login" replace />} />
         </Routes>
