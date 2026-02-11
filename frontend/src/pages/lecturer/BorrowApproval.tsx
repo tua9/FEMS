@@ -81,12 +81,12 @@ const BorrowApproval: React.FC = () => {
           <div className="flex-1 w-full">
             <div className="relative">
               <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">search</span>
-                      <input
-                        value={search}
-                        onChange={(e) => setSearch(e.target.value)}
-                        placeholder="Search by student name, ID or asset..."
-                        className="w-full pl-12 pr-4 py-3 rounded-full bg-white/60 dark:bg-slate-900/40 border border-white/20 dark:border-slate-700/40 outline-none text-sm"
-                      />
+              <input
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search by student name, ID or asset..."
+                className="w-full pl-12 pr-4 py-3 rounded-full bg-white/60 dark:bg-slate-900/40 border-none outline-none text-sm"
+              />
             </div>
           </div>
 
