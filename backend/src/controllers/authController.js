@@ -7,11 +7,14 @@ import Session from '../models/Session.js'
 const ACCESS_TOKEN_TTL = '30m' // 15minutes
 const REFRESH_TOKEN_TTL = 14 * 24 * 60 * 60 * 1000 // 7 days in milliseconds
 
+// Unused function, just for testing
 export const signUp = async (req, res) => {
-  try {
-    const { username, email, password, firstname, lastname } = req.body
+  console.log('sign in')
 
-    if (!username || !email || !password || !firstname || !lastname) {
+  try {
+    const { username, email, password, role, firstname, lastname } = req.body
+
+    if (!username || !email || !password || !role || !firstname || !lastname) {
       return res.status(400).json({ message: 'All fields are required!' })
     }
 
@@ -29,6 +32,7 @@ export const signUp = async (req, res) => {
       username,
       email,
       hashedPassword,
+      role,
       displayName: `${firstname} ${lastname}`,
     })
 
@@ -41,22 +45,28 @@ export const signUp = async (req, res) => {
 
 export const signIn = async (req, res) => {
   try {
-    const { email, password } = req.body
+    const { username, password, role } = req.body
 
-    if (!email || !password) {
+    if (!username || !password || !role) {
       return res
         .status(400)
-        .json({ message: 'Email and password are required!' })
+        .json({ message: 'Username, password and role are required!' })
     }
 
-    const user = await User.findOne({ email })
+    const user = await User.findOne({ username })
     if (!user) {
-      return res.status(404).json({ message: 'Invalid email' })
+      return res.status(404).json({ message: 'Invalid username' })
     }
 
     const isPasswordValid = await bcrypt.compare(password, user.hashedPassword)
     if (!isPasswordValid) {
       return res.status(401).json({ message: 'Invalid password' })
+    }
+
+    if (user.role !== role) {
+      return res
+        .status(403)
+        .json({ message: `User does not have the role: ${role}` })
     }
 
     // Tao Access Token
@@ -80,7 +90,7 @@ export const signIn = async (req, res) => {
       httpOnly: true,
       secure: true,
       sameSite: 'none',
-      maxAge: REFRESH_TOKEN_TTL, // 7 days
+      maxAge: REFRESH_TOKEN_TTL,
     })
 
     return res.status(200).json({
@@ -93,4 +103,20 @@ export const signIn = async (req, res) => {
   }
 }
 
-export const signOut = async (req, res) => {}
+export const signOut = async (req, res) => {
+  console.log('signout')
+
+  try {
+    const token = req.cookies?.refreshToken
+    console.log('Refresh Token: ', token)
+
+    if (token) {
+      await Session.deleteOne({ refreshToken: token })
+      res.clearCookie('refreshToken')
+    }
+    return res.status(204).json({ message: 'Sign out successful' })
+  } catch (error) {
+    console.error('Error during call sign out: ', error)
+    res.status(500).json({ message: 'Internal server error' })
+  }
+}
