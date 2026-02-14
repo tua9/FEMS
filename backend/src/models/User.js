@@ -24,6 +24,12 @@ const userSchema = new mongoose.Schema(
       type: String,
       trim: true,
     },
+    role: {
+      type: String,
+      enum: ['admin', 'student', 'lecturer', 'technician'],
+      trim: true,
+      required: true,
+    },
     avatarUrl: {
       //CDN link
       type: String,
