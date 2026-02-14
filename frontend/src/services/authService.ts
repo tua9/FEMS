@@ -13,4 +13,13 @@ export const authService = {
     );
     return response.data;
   },
+
+  signOut: async () => {
+    return api.post("/auth/signout", {}, { withCredentials: true });
+  },
+
+  fetchUserProfile: async () => {
+    const response = await api.get("/users/profile", { withCredentials: true });
+    return response.data.user;
+  },
 };

@@ -9,6 +9,8 @@ const REFRESH_TOKEN_TTL = 14 * 24 * 60 * 60 * 1000 // 7 days in milliseconds
 
 // Unused function, just for testing
 export const signUp = async (req, res) => {
+  console.log('sign in')
+
   try {
     const { username, email, password, role, firstname, lastname } = req.body
 
@@ -43,17 +45,17 @@ export const signUp = async (req, res) => {
 
 export const signIn = async (req, res) => {
   try {
-    const { email, password, role } = req.body
+    const { username, password, role } = req.body
 
-    if (!email || !password || !role) {
+    if (!username || !password || !role) {
       return res
         .status(400)
-        .json({ message: 'Email, password and role are required!' })
+        .json({ message: 'Username, password and role are required!' })
     }
 
-    const user = await User.findOne({ email })
+    const user = await User.findOne({ username })
     if (!user) {
-      return res.status(404).json({ message: 'Invalid email' })
+      return res.status(404).json({ message: 'Invalid username' })
     }
 
     const isPasswordValid = await bcrypt.compare(password, user.hashedPassword)
@@ -102,12 +104,17 @@ export const signIn = async (req, res) => {
 }
 
 export const signOut = async (req, res) => {
+  console.log('signout')
+
   try {
     const token = req.cookies?.refreshToken
+    console.log('Refresh Token: ', token)
+
     if (token) {
-      await Sessinon.deleteOne({ refreshToken: token })
+      await Session.deleteOne({ refreshToken: token })
       res.clearCookie('refreshToken')
     }
+    return res.status(204).json({ message: 'Sign out successful' })
   } catch (error) {
     console.error('Error during call sign out: ', error)
     res.status(500).json({ message: 'Internal server error' })
