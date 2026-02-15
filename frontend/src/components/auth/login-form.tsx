@@ -3,7 +3,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Field,
-  FieldDescription,
   FieldGroup,
   FieldLabel,
   FieldSeparator,
@@ -105,6 +104,7 @@ export function LoginForm({
                 <Input
                   id="username"
                   type="text"
+                  autoComplete="username"
                   placeholder="Enter your username or email"
                   {...register("username")}
                   required
@@ -128,6 +128,7 @@ export function LoginForm({
                 <Input
                   id="password"
                   type="password"
+                  autoComplete="password"
                   placeholder="Enter your password"
                   {...register("password")}
                   required
