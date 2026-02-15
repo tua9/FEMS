@@ -3,6 +3,8 @@ import User from '../models/User.js'
 
 // authorization
 export const protectedRoute = async (req, res, next) => {
+  console.log('Call: authMiddlewares.js -> protectedRoute()')
+
   try {
     // Get Access Token from cookies
     const authHeader = req.headers['authorization']

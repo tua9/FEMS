@@ -22,4 +22,9 @@ export const authService = {
     const response = await api.get("/users/profile", { withCredentials: true });
     return response.data.user;
   },
+
+  refreshToken: async () => {
+    const response = await api.post("/auth/refresh", { withCredentials: true });
+    return response.data.accessToken;
+  },
 };

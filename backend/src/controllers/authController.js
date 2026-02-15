@@ -3,6 +3,7 @@ import User from '../models/User.js'
 import jwt from 'jsonwebtoken'
 import crypto from 'crypto'
 import Session from '../models/Session.js'
+import { access } from 'fs'
 
 const ACCESS_TOKEN_TTL = '30m' // 15minutes
 const REFRESH_TOKEN_TTL = 14 * 24 * 60 * 60 * 1000 // 7 days in milliseconds
@@ -44,6 +45,8 @@ export const signUp = async (req, res) => {
 }
 
 export const signIn = async (req, res) => {
+  console.log('Call: ⛳authController.js -> signIn()')
+
   try {
     const { username, password, role } = req.body
 
@@ -104,7 +107,7 @@ export const signIn = async (req, res) => {
 }
 
 export const signOut = async (req, res) => {
-  console.log('signout')
+  console.log('Call: ⛳authController.js -> signOut()')
 
   try {
     const token = req.cookies?.refreshToken
@@ -117,6 +120,43 @@ export const signOut = async (req, res) => {
     return res.status(204).json({ message: 'Sign out successful' })
   } catch (error) {
     console.error('Error during call sign out: ', error)
+    res.status(500).json({ message: 'Internal server error' })
+  }
+}
+
+export const refreshToken = async (req, res) => {
+  console.log('Call: ⛳authController.js -> refreshToken()')
+
+  try {
+    const token = req.cookies?.refreshToken
+    console.log('Refresh Token: ', token)
+    if (!token) {
+      return res.status(401).json({ message: 'Refresh token is required' })
+    }
+
+    const session = await Session.findOne({ refreshToken: token })
+    if (!session) {
+      return res
+        .status(403)
+        .json({ message: 'Invalid refresh token or session expired' })
+    }
+
+    if (session.expiresAt < new Date()) {
+      return res.status(403).json({ message: 'Refresh token has expired' })
+    }
+
+    const accessToken = jwt.sign(
+      { userId: session.userId },
+      process.env.ACCESS_TOKEN_SECRET,
+      { expiresIn: ACCESS_TOKEN_TTL },
+    )
+
+    return res.status(200).json({
+      message: 'Access token refreshed successfully',
+      accessToken,
+    })
+  } catch (error) {
+    console.error('Error during refresh token: ', error)
     res.status(500).json({ message: 'Internal server error' })
   }
 }
