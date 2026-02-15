@@ -25,7 +25,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         password,
         role,
       );
-      set({ accessToken });
+      get().setAccessToken(accessToken);
 
       await get().fetchUserProfile();
 
@@ -67,12 +67,12 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   refreshToken: async () => {
     try {
       set({ loading: true });
-      const { user } = get();
+      const { user, fetchUserProfile, setAccessToken } = get();
       const newAccessToken = await authService.refreshToken();
-      set({ accessToken: newAccessToken });
+      setAccessToken(newAccessToken);
 
       if (!user) {
-        await get().fetchUserProfile();
+        await fetchUserProfile();
       }
     } catch (error) {
       console.log("Error refreshing token:", error);
