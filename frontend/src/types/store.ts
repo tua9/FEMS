@@ -9,4 +9,5 @@ export interface AuthState {
   signIn: (username: string, password: string, role: string) => Promise<void>;
   signOut: () => Promise<void>;
   fetchUserProfile: () => Promise<void>;
+  refreshToken: () => Promise<void>;
 }

@@ -1,4 +1,6 @@
 export const authUser = async (req, res) => {
+  console.log('Call: userController.js -> authUser()')
+
   try {
     const user = req.user
     if (!user) {
