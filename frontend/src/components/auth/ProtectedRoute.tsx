@@ -8,7 +8,6 @@ export default function ProtectedRoute() {
     useAuthStore();
 
   const [starting, setStarting] = useState(true);
-
   const init = async () => {
     if (!accessToken) {
       await refreshToken();

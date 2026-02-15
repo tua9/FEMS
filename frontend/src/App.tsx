@@ -1,7 +1,7 @@
 import { BrowserRouter, Route, Routes } from "react-router";
 import { Toaster, toast } from "sonner";
 import LoginPage from "./pages/LoginPage/LoginPage";
-import Logout from "./components/auth/logout";
+import Logout from "./components/auth/Logout";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 
 export default function App() {

@@ -35,7 +35,7 @@ export function LoginForm({
     handleSubmit,
     register,
     control,
-    formState: { errors, isSubmitting },
+    formState: { isSubmitting },
   } = useForm<SignInFormValues>({
     resolver: zodResolver(signInSchema),
     defaultValues: {
