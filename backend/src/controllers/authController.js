@@ -5,7 +5,7 @@ import crypto from 'crypto'
 import Session from '../models/Session.js'
 import { access } from 'fs'
 
-const ACCESS_TOKEN_TTL = '30m' // 15minutes
+const ACCESS_TOKEN_TTL = '15s' // 15minutes
 const REFRESH_TOKEN_TTL = 14 * 24 * 60 * 60 * 1000 // 7 days in milliseconds
 
 // Unused function, just for testing
@@ -129,7 +129,6 @@ export const refreshToken = async (req, res) => {
 
   try {
     const token = req.cookies?.refreshToken
-    console.log('Refresh Token: ', token)
     if (!token) {
       return res.status(401).json({ message: 'Refresh token is required' })
     }
