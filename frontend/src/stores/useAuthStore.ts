@@ -13,7 +13,11 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   },
 
   clearState: () => {
-    set({ accessToken: null, user: null, loading: false });
+    set({
+      accessToken: null,
+      user: null,
+      loading: false,
+    });
   },
 
   signIn: async (username: string, password: string, role: string) => {

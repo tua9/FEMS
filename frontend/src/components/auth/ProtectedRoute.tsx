@@ -6,8 +6,10 @@ import { Navigate } from "react-router-dom";
 export default function ProtectedRoute() {
   const { accessToken, user, loading, refreshToken, fetchUserProfile } =
     useAuthStore();
-
   const [starting, setStarting] = useState(true);
+
+  console.log("Protected Route: ", useAuthStore());
+
   const init = async () => {
     if (!accessToken) {
       await refreshToken();
