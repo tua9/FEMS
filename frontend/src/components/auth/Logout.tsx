@@ -22,10 +22,11 @@ export default function Logout() {
 
   return (
     <>
-      <h1>
-        Welcome, {user?.role} {user?.displayName || "Guest"}!
-      </h1>
-      <Button variant="outline" onClick={handleLogout}>
+      <Button
+        className="w-full border-0"
+        variant="destructive"
+        onClick={handleLogout}
+      >
         Logout
       </Button>
     </>
