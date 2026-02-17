@@ -144,7 +144,7 @@ export function LoginForm({
                   variant="outline"
                   type="submit"
                   disabled={isSubmitting}
-                  className="w-full"
+                  className="bg-primary/10 w-full"
                 >
                   {isSubmitting
                     ? "Đang đăng nhập..."
@@ -163,7 +163,7 @@ export function LoginForm({
                 <Button
                   variant="outline"
                   type="button"
-                  className="w-full gap-2"
+                  className="bg-primary/10 text-primary w-full gap-2"
                 >
                   <svg
                     xmlns="http://www.w3.org/2000/svg"

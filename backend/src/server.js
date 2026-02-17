@@ -1,21 +1,20 @@
 import express from 'express'
-import dotenv from 'dotenv'
 import { connectDB } from './libs/db.js'
 import authRoutes from './routes/authRoute.js'
 import cookieParser from 'cookie-parser'
 import userRoutes from './routes/userRoute.js'
 import { protectedRoute } from './middlewares/authMiddlewares.js'
 import cors from 'cors'
-
-dotenv.config()
+import { corsOptions } from './config/cors.js'
+import { env } from './config/environment.js'
 
 const app = express()
-const PORT = process.env.PORT || 5001
+const PORT = env.PORT || 5001
 
 // middlewares
 app.use(express.json())
 app.use(cookieParser())
-app.use(cors({ origin: process.env.CLIENT_URL, credentials: true }))
+app.use(cors(corsOptions))
 
 // public routes
 
