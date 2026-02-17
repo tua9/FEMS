@@ -1,9 +1,9 @@
 import bcrypt from 'bcrypt'
 import User from '../models/User.js'
-import jwt from 'jsonwebtoken'
-import crypto from 'crypto'
 import Session from '../models/Session.js'
-import { access } from 'fs'
+import { JwtProvider } from '../providers/JwtProvider.js'
+import { env } from '../config/environment.js'
+import ms from 'ms'
 
 const ACCESS_TOKEN_TTL = '15s' // 15minutes
 const REFRESH_TOKEN_TTL = 14 * 24 * 60 * 60 * 1000 // 7 days in milliseconds
@@ -73,14 +73,18 @@ export const signIn = async (req, res) => {
     }
 
     // Tao Access Token
-    const accessToken = jwt.sign(
+    const accessToken = await JwtProvider.generateToken(
       { userId: user._id },
-      process.env.ACCESS_TOKEN_SECRET,
-      { expiresIn: ACCESS_TOKEN_TTL },
+      env.ACCESS_TOKEN_SECRET,
+      ACCESS_TOKEN_TTL,
     )
 
     // Tao Refresh Token
-    const refreshToken = crypto.randomBytes(64).toString('hex')
+    const refreshToken = await JwtProvider.generateToken(
+      { userId: user._id },
+      env.REFRESH_TOKEN_SECRET,
+      REFRESH_TOKEN_TTL,
+    )
 
     // tao session
     await Session.create({
@@ -89,16 +93,24 @@ export const signIn = async (req, res) => {
       expiresAt: new Date(Date.now() + REFRESH_TOKEN_TTL),
     })
 
+    res.cookie('accessToken', accessToken, {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'none',
+      maxAge: ms('14 days'),
+    })
+
     res.cookie('refreshToken', refreshToken, {
       httpOnly: true,
       secure: true,
       sameSite: 'none',
-      maxAge: REFRESH_TOKEN_TTL,
+      maxAge: ms('14 days'),
     })
 
     return res.status(200).json({
       message: `Sign in successful: User[${user.displayName}]`,
       accessToken,
+      refreshToken,
     })
   } catch (error) {
     console.error('Error during sign in: ', error)
@@ -144,10 +156,10 @@ export const refreshToken = async (req, res) => {
       return res.status(403).json({ message: 'Refresh token has expired' })
     }
 
-    const accessToken = jwt.sign(
+    const accessToken = await JwtProvider.generateToken(
       { userId: session.userId },
-      process.env.ACCESS_TOKEN_SECRET,
-      { expiresIn: ACCESS_TOKEN_TTL },
+      env.ACCESS_TOKEN_SECRET,
+      ACCESS_TOKEN_TTL,
     )
 
     return res.status(200).json({
