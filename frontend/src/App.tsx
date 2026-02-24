@@ -1,10 +1,9 @@
 import { BrowserRouter, Route, Routes } from "react-router";
-import { Toaster, toast } from "sonner";
+import { Toaster } from "sonner";
 import LoginPage from "./pages/LoginPage/LoginPage";
-import Logout from "./components/auth/Logout";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 import HomePage from "./pages/HomePage";
-import { NavBar } from "./components/common/Navbar";
+import GuestRoute from "./components/auth/GuestRoute";
 
 export default function App() {
   return (
@@ -14,8 +13,10 @@ export default function App() {
         <BrowserRouter>
           <Routes>
             {/*public*/}
-            <Route path="/login" element={<LoginPage />} />
-            <Route path="/home" element={<HomePage />} />
+            <Route element={<GuestRoute />}>
+              <Route path="/login" element={<LoginPage />} />
+            </Route>
+
             {/*private*/}
             <Route element={<ProtectedRoute />}>
               <Route path="/" element={<HomePage />} />

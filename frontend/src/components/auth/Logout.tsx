@@ -18,8 +18,6 @@ export default function Logout() {
     }
   };
 
-  const user = useAuthStore((s) => s.user);
-
   return (
     <>
       <Button

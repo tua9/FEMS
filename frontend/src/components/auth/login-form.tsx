@@ -46,8 +46,6 @@ export function LoginForm({
   const navigate = useNavigate();
 
   const onSubmit = async (data: SignInFormValues) => {
-    console.log(data);
-
     const { username, password, role } = data;
     //goi api
     await signIn(username, password, role);
