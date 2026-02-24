@@ -12,7 +12,10 @@ export const authService = {
       { withCredentials: true },
     );
 
-    localStorage.setItem("user", response.data.userInfo);
+    console.log("9999 - ", response.data.userInfo);
+
+    localStorage.setItem("user", JSON.stringify(response.data.userInfo));
+
     return response.data;
   },
 

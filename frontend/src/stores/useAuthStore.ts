@@ -56,20 +56,15 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   },
 
   fetchUserProfile: async () => {
-    console.log("Fetch User Profile");
-
     const { user } = get();
     if (user) return;
-    console.log("Call Fetch User P: ", user);
 
     try {
       set({ loading: true });
       const fetched = await authService.fetchUserProfile();
-      toast.success("Fetch user success.");
       set({ user: fetched });
     } catch (error) {
       console.log("Error fetching user profile:", error);
-      toast.error("Failed to fetch user profile.");
     } finally {
       set({ loading: false });
     }
