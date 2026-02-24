@@ -5,7 +5,7 @@ import { JwtProvider } from '../providers/JwtProvider.js'
 import { env } from '../config/environment.js'
 import ms from 'ms'
 
-const ACCESS_TOKEN_TTL = '15s' // 15minutes
+const ACCESS_TOKEN_TTL = '5s' // 15minutes
 const REFRESH_TOKEN_TTL = 14 * 24 * 60 * 60 * 1000 // 7 days in milliseconds
 
 // Unused function, just for testing
@@ -44,6 +44,25 @@ export const signUp = async (req, res) => {
   }
 }
 
+export const signOut = async (req, res) => {
+  console.log('Call: ⛳authController.js -> signOut()')
+
+  try {
+    const refreshToken = req.cookies?.refreshToken
+    console.log('Signout delete Refresh Token: ', refreshToken)
+
+    if (refreshToken) {
+      await Session.deleteOne({ refreshToken })
+      res.clearCookie('refreshToken')
+      res.clearCookie('accessToken')
+    }
+    return res.status(204).json({ message: 'Sign out successful' })
+  } catch (error) {
+    console.error('Error during call sign out: ', error)
+    res.status(500).json({ message: 'Internal server error' })
+  }
+}
+
 export const signIn = async (req, res) => {
   console.log('Call: ⛳authController.js -> signIn()')
 
@@ -73,15 +92,18 @@ export const signIn = async (req, res) => {
     }
 
     // Tao Access Token
+
+    const userInfo = { _id: user._id }
+
     const accessToken = await JwtProvider.generateToken(
-      { userId: user._id },
+      { userInfo },
       env.ACCESS_TOKEN_SECRET,
       ACCESS_TOKEN_TTL,
     )
 
     // Tao Refresh Token
     const refreshToken = await JwtProvider.generateToken(
-      { userId: user._id },
+      { userInfo },
       env.REFRESH_TOKEN_SECRET,
       REFRESH_TOKEN_TTL,
     )
@@ -93,6 +115,7 @@ export const signIn = async (req, res) => {
       expiresAt: new Date(Date.now() + REFRESH_TOKEN_TTL),
     })
 
+    // luu vao cookie
     res.cookie('accessToken', accessToken, {
       httpOnly: true,
       secure: true,
@@ -109,6 +132,7 @@ export const signIn = async (req, res) => {
 
     return res.status(200).json({
       message: `Sign in successful: User[${user.displayName}]`,
+      userInfo,
       accessToken,
       refreshToken,
     })
@@ -118,56 +142,75 @@ export const signIn = async (req, res) => {
   }
 }
 
-export const signOut = async (req, res) => {
-  console.log('Call: ⛳authController.js -> signOut()')
-
-  try {
-    const token = req.cookies?.refreshToken
-    console.log('Refresh Token: ', token)
-
-    if (token) {
-      await Session.deleteOne({ refreshToken: token })
-      res.clearCookie('refreshToken')
-    }
-    return res.status(204).json({ message: 'Sign out successful' })
-  } catch (error) {
-    console.error('Error during call sign out: ', error)
-    res.status(500).json({ message: 'Internal server error' })
-  }
-}
-
 export const refreshToken = async (req, res) => {
-  console.log('Call: ⛳authController.js -> refreshToken()')
+  console.log('>> Refresh Token called')
 
   try {
-    const token = req.cookies?.refreshToken
-    if (!token) {
-      return res.status(401).json({ message: 'Refresh token is required' })
+    const refreshToken = req.cookies?.refreshToken
+
+    if (!refreshToken) {
+      return res.status(401).json({
+        message: 'Refresh token is required',
+      })
     }
 
-    const session = await Session.findOne({ refreshToken: token })
+    const session = await Session.findOne({ refreshToken })
+
     if (!session) {
-      return res
-        .status(403)
-        .json({ message: 'Invalid refresh token or session expired' })
+      return res.status(401).json({ message: 'Session not found' })
     }
 
     if (session.expiresAt < new Date()) {
-      return res.status(403).json({ message: 'Refresh token has expired' })
+      await Session.deleteOne({ _id: session._id }) // dọn rác
+      return res.status(401).json({ message: 'Refresh token expired (DB)' })
     }
 
-    const accessToken = await JwtProvider.generateToken(
-      { userId: session.userId },
-      env.ACCESS_TOKEN_SECRET,
+    let decoded
+    try {
+      decoded = await JwtProvider.verifyToken(
+        refreshToken,
+        process.env.REFRESH_TOKEN_SECRET,
+      )
+    } catch (err) {
+      if (err.name === 'TokenExpiredError') {
+        return res.status(401).json({
+          message: 'Refresh token expired',
+        })
+      }
+
+      if (err.name === 'JsonWebTokenError') {
+        return res.status(401).json({
+          message: 'Invalid refresh token',
+        })
+      }
+
+      throw err
+    }
+
+    const userInfo = { userInfo: decoded.userInfo }
+
+    console.log('\n\nuserInfo = decoded: ', userInfo)
+
+    const newAccessToken = await JwtProvider.generateToken(
+      userInfo,
+      process.env.ACCESS_TOKEN_SECRET,
       ACCESS_TOKEN_TTL,
     )
 
+    res.cookie('accessToken', newAccessToken, {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'none',
+      maxAge: ms('14 days'),
+    })
+
     return res.status(200).json({
-      message: 'Access token refreshed successfully',
-      accessToken,
+      accessToken: newAccessToken,
     })
   } catch (error) {
-    console.error('Error during refresh token: ', error)
-    res.status(500).json({ message: 'Internal server error' })
+    console.error('Refresh token error:', error)
+    return res.status(500).json({
+      message: 'Internal server error',
+    })
   }
 }

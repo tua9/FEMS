@@ -29,11 +29,11 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         password,
         role,
       );
+
       get().setAccessToken(accessToken);
 
-      await get().fetchUserProfile();
-
       toast.success("Login successful!");
+      await get().fetchUserProfile();
     } catch (error) {
       console.log("Error: " + error);
       toast.error("Login failed. Please try again.");
@@ -56,10 +56,17 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   },
 
   fetchUserProfile: async () => {
+    console.log("Fetch User Profile");
+
+    const { user } = get();
+    if (user) return;
+    console.log("Call Fetch User P: ", user);
+
     try {
       set({ loading: true });
-      const user = await authService.fetchUserProfile();
-      set({ user });
+      const fetched = await authService.fetchUserProfile();
+      toast.success("Fetch user success.");
+      set({ user: fetched });
     } catch (error) {
       console.log("Error fetching user profile:", error);
       toast.error("Failed to fetch user profile.");
@@ -69,9 +76,16 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   },
 
   refreshToken: async () => {
+    console.log("🔄️refresh token");
+
     try {
       set({ loading: true });
-      const { user, fetchUserProfile, setAccessToken } = get();
+      const { accessToken, user, fetchUserProfile, setAccessToken } = get();
+
+      if (accessToken) return;
+      console.log("⛳ AccessToken: ", accessToken);
+      console.log(get().accessToken);
+
       const newAccessToken = await authService.refreshToken();
       setAccessToken(newAccessToken);
 

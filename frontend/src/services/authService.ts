@@ -11,11 +11,15 @@ export const authService = {
       },
       { withCredentials: true },
     );
+
+    localStorage.setItem("user", response.data.userInfo);
     return response.data;
   },
 
   signOut: async () => {
-    return api.post("/auth/signout", {}, { withCredentials: true });
+    await api.delete("/auth/signout");
+    localStorage.removeItem("user");
+    return;
   },
 
   fetchUserProfile: async () => {
@@ -24,7 +28,9 @@ export const authService = {
   },
 
   refreshToken: async () => {
-    const response = await api.post("/auth/refresh", { withCredentials: true });
+    const response = await api.post("/auth/refresh-token", {
+      withCredentials: true,
+    });
     return response.data.accessToken;
   },
 };

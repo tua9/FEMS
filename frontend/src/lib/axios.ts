@@ -1,58 +1,45 @@
-import { useAuthStore } from "@/stores/useAuthStore";
+import { authService } from "@/services/authService";
 import axios from "axios";
 
 const api = axios.create({
-  baseURL:
-    import.meta.env.MODE == "development"
-      ? "http://localhost:5001/api"
-      : "/api",
+  baseURL: "http://localhost:5001/api",
   withCredentials: true,
+  headers: {
+    "Cache-Control": "no-cache",
+  },
 });
 
-// mount access token to request header
-api.interceptors.request.use((config) => {
-  const { accessToken } = useAuthStore.getState();
-  if (accessToken) {
-    config.headers.Authorization = `Bearer ${accessToken}`;
-  }
-  return config;
-});
+api.defaults.timeout = 1000 * 60 * 10;
 
 api.interceptors.response.use(
-  (req) => req,
+  (res) => res,
   async (error) => {
     const originalRequest = error.config;
 
-    if (
-      originalRequest.url.includes("/auth/signin") ||
-      originalRequest.url.includes("/auth/refresh")
-    ) {
-      return Promise.reject(error);
-    }
-
-    originalRequest._retryCount = originalRequest._retryCount || 0;
-
-    if (error.response?.status === 403 && originalRequest._retryCount < 4) {
-      originalRequest._retryCount += 1;
-
-      console.log("Refresh", originalRequest._retryCount);
-      console.log("OriginalRequest: " + originalRequest);
+    // Nếu đã retry rồi thì không làm nữa
+    if (error.response?.status === 410 && !originalRequest._retry) {
+      originalRequest._retry = true;
 
       try {
-        const response = await api.post("/auth/refresh", {
-          withCredentials: true,
-        });
-        const newAccessToken = response.data.accessToken;
+        console.log("🔄 Refreshing token...");
 
-        useAuthStore.getState().setAccessToken(newAccessToken);
+        await authService.refreshToken();
+        // BE sẽ set cookie mới
 
-        originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
-        return api(originalRequest);
-      } catch (refreshError) {
-        useAuthStore.getState().clearState();
-        return Promise.reject(refreshError);
+        return api(originalRequest); // retry lại request cũ
+      } catch (err) {
+        await authService.signOut();
+        location.href = "/login";
+        return Promise.reject(err);
       }
     }
+
+    // 401 / 403 → logout luôn
+    if (error.response?.status === 401 || error.response?.status === 403) {
+      await authService.signOut();
+      location.href = "/login";
+    }
+
     return Promise.reject(error);
   },
 );
