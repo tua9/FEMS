@@ -81,3 +81,61 @@ export const signOutService = async (refreshToken) => {
     await Session.deleteOne({ refreshToken })
   }
 }
+
+import { verifyGoogleToken } from '../providers/google.js'
+
+export const googleLoginService = async ({ idToken, role }) => {
+  if (!idToken || !role) throw new Error('MISSING_FIELDS')
+
+  // 1. Verify Google token
+  let payload
+  try {
+    payload = await verifyGoogleToken(idToken)
+  } catch (e) {
+    throw new Error('INVALID_GOOGLE_TOKEN')
+  }
+
+  const { email } = payload
+  if (!email) throw new Error('INVALID_GOOGLE_TOKEN')
+
+  // 2. Check user in DB
+  const user = await User.findOne({ email })
+  if (!user) throw new Error('EMAIL_NOT_REGISTERED') // ❌ không cho đăng ký
+
+  // 3. Check role
+  if (user.role !== role) throw new Error('INVALID_ROLE')
+
+  // 4. JWT payload
+  const userPayload = {
+    id: user._id,
+    role: user.role,
+    email: user.email,
+  }
+
+  // 5. Generate tokens
+  const accessToken = await JwtProvider.generateToken(
+    { userInfo: userPayload },
+    env.ACCESS_TOKEN_SECRET,
+    ACCESS_TOKEN_TTL,
+  )
+
+  const refreshToken = await JwtProvider.generateToken(
+    { userInfo: userPayload },
+    env.REFRESH_TOKEN_SECRET,
+    REFRESH_TOKEN_TTL,
+  )
+
+  // 6. Save session
+  await Session.create({
+    userId: user._id,
+    refreshToken,
+    expiresAt: new Date(Date.now() + REFRESH_TOKEN_TTL),
+  })
+
+  return {
+    user,
+    userInfo: userPayload,
+    accessToken,
+    refreshToken,
+  }
+}

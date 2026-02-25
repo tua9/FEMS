@@ -98,3 +98,44 @@ export const signOut = async (req, res) => {
     return res.status(500).json({ message: 'Internal server error' })
   }
 }
+
+export const googleLogin = async (req, res) => {
+  try {
+    const { idToken, role } = req.body
+
+    const result = await googleLoginService({ idToken, role })
+
+    res.cookie('accessToken', result.accessToken, {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'none',
+      maxAge: ms('14 days'),
+    })
+
+    res.cookie('refreshToken', result.refreshToken, {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'none',
+      maxAge: ms('14 days'),
+    })
+
+    return res.status(200).json({
+      message: `Google login success: ${result.user.email}`,
+      userInfo: result.userInfo,
+      accessToken: result.accessToken,
+      refreshToken: result.refreshToken,
+    })
+  } catch (error) {
+    if (error.message === 'INVALID_GOOGLE_TOKEN')
+      return res.status(401).json({ message: 'Invalid Google token' })
+
+    if (error.message === 'EMAIL_NOT_REGISTERED')
+      return res.status(403).json({ message: 'Account not allowed' })
+
+    if (error.message === 'INVALID_ROLE')
+      return res.status(403).json({ message: 'Invalid role' })
+
+    console.error('Google login error:', error)
+    return res.status(500).json({ message: 'Internal server error' })
+  }
+}
