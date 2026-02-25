@@ -1,11 +1,7 @@
-export const authUser = async (req, res) => {
-  console.log('Call: userController.js -> authUser()')
-
+export const getUserProfile = async (req, res) => {
+  console.log('Call: userController.js -> getUserProfile()')
+  const user = req.user
   try {
-    const user = req.user
-    if (!user) {
-      return res.status(404).json({ message: 'User not found' })
-    }
     return res.status(200).json({ user })
   } catch (error) {
     console.error('Error during authentication: ', error)

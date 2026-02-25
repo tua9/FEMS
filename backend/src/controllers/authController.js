@@ -1,59 +1,100 @@
+// controllers/authController.js
+import ms from 'ms'
 import {
-  signUpService,
   signInService,
-  signOutService,
   refreshTokenService,
+  signOutService,
 } from '../services/authService.js'
-import { REFRESH_TOKEN_TTL } from '../services/tokenService.js'
-
-export const signUp = async (req, res) => {
-  try {
-    await signUpService(req.body)
-    res.status(201).json({ message: 'User created successfully' })
-  } catch (e) {
-    res.status(400).json({ message: e.message })
-  }
-}
 
 export const signIn = async (req, res) => {
   try {
-    const { accessToken, refreshToken, user } = await signInService(req.body)
+    const result = await signInService(req.body)
 
-    res.cookie('refreshToken', refreshToken, {
+    res.cookie('accessToken', result.accessToken, {
       httpOnly: true,
       secure: true,
       sameSite: 'none',
-      maxAge: REFRESH_TOKEN_TTL,
+      maxAge: ms('14 days'),
     })
 
-    res.status(200).json({
-      message: `Sign in successful: ${user.displayName}`,
-      accessToken,
+    res.cookie('refreshToken', result.refreshToken, {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'none',
+      maxAge: ms('14 days'),
     })
-  } catch (e) {
-    res.status(401).json({ message: e.message })
-  }
-}
 
-export const signOut = async (req, res) => {
-  try {
-    const token = req.cookies?.refreshToken
-    await signOutService(token)
-    res.clearCookie('refreshToken')
-    res.status(204).send()
-  } catch (e) {
-    res.status(500).json({ message: e.message })
+    return res.status(200).json({
+      message: `Sign in successful: User[${result.user.displayName}]`,
+      userInfo: result.userInfo,
+      accessToken: result.accessToken,
+      refreshToken: result.refreshToken,
+    })
+  } catch (error) {
+    if (error.message === 'MISSING_FIELDS')
+      return res.status(400).json({ message: 'Missing fields' })
+
+    if (error.message === 'INVALID_USERNAME')
+      return res.status(404).json({ message: 'Invalid username' })
+
+    if (error.message === 'INVALID_PASSWORD')
+      return res.status(401).json({ message: 'Invalid password' })
+
+    if (error.message === 'INVALID_ROLE')
+      return res.status(403).json({ message: 'Invalid role' })
+
+    console.error('Sign in error:', error)
+    return res.status(500).json({ message: 'Internal server error' })
   }
 }
 
 export const refreshToken = async (req, res) => {
   try {
     const token = req.cookies?.refreshToken
-    if (!token) return res.status(401).json({ message: 'Missing refresh token' })
+    const result = await refreshTokenService(token)
 
-    const newAccessToken = await refreshTokenService(token)
-    res.status(200).json({ accessToken: newAccessToken })
-  } catch (e) {
-    res.status(403).json({ message: e.message })
+    res.cookie('accessToken', result.accessToken, {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'none',
+      maxAge: ms('14 days'),
+    })
+
+    return res.status(200).json({
+      accessToken: result.accessToken,
+    })
+  } catch (error) {
+    if (error.message === 'NO_REFRESH_TOKEN')
+      return res.status(401).json({ message: 'Refresh token required' })
+
+    if (error.message === 'INVALID_SESSION')
+      return res.status(401).json({ message: 'Invalid session' })
+
+    if (
+      error.message === 'TOKEN_EXPIRED' ||
+      error.message === 'TOKEN_EXPIRED_DB'
+    )
+      return res.status(401).json({ message: 'Refresh token expired' })
+
+    if (error.message === 'INVALID_TOKEN')
+      return res.status(401).json({ message: 'Invalid refresh token' })
+
+    console.error('Refresh token error:', error)
+    return res.status(500).json({ message: 'Internal server error' })
+  }
+}
+
+export const signOut = async (req, res) => {
+  try {
+    const refreshToken = req.cookies?.refreshToken
+    await signOutService(refreshToken)
+
+    res.clearCookie('refreshToken')
+    res.clearCookie('accessToken')
+
+    return res.status(204).json({ message: 'Sign out successful' })
+  } catch (error) {
+    console.error('Sign out error:', error)
+    return res.status(500).json({ message: 'Internal server error' })
   }
 }

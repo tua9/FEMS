@@ -8,4 +8,5 @@ export const env = {
   CLIENT_URL: process.env.CLIENT_URL || 'http://localhost:5173',
   MONGODB_CONNECTION_STRING: process.env.MONGODB_CONNECTION_STRING,
   ACCESS_TOKEN_SECRET: process.env.ACCESS_TOKEN_SECRET,
+  REFRESH_TOKEN_SECRET: process.env.REFRESH_TOKEN_SECRET,
 }

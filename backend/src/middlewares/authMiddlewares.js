@@ -6,29 +6,24 @@ export const protectedRoute = async (req, res, next) => {
   console.log('Call: authMiddlewares.js -> protectedRoute()')
 
   try {
-    // Get Access Token from cookies
-    const authHeader = req.headers['authorization']
-    const token = authHeader && authHeader.split(' ')[1]
-    if (!token) {
-      return res.status(401).json({ message: 'Access token is missing' })
-    }
-
     // Verify Accress Token
+    const accessToken = req.cookies?.accessToken
+
     jwt.verify(
-      token,
+      accessToken,
       process.env.ACCESS_TOKEN_SECRET,
       async (err, decodedUser) => {
         if (err) {
-          console.error('Error Verify Accress Token: ' + err)
+          if (err.name === 'TokenExpiredError') {
+            return res
+              .status(410)
+              .json({ message: 'Need to refresh Access Token' })
+          }
 
           return res.status(403).json({ message: 'Invalid access token' })
         }
 
-        // Find user by Id
-        const user = await User.findById(decodedUser.userId).select(
-          '-hashedPassword',
-        )
-
+        const user = await User.findById(decodedUser.userInfo._id)
         if (!user) {
           return res.status(404).json({ message: 'User not found' })
         }
