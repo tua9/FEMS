@@ -11,7 +11,7 @@ const sessionSchema = new mongoose.Schema(
     refreshToken: { type: String, required: true, unique: true },
     expiresAt: { type: Date, required: true },
   },
-  { timestamps: true },
+  { timestamps: { createdAt: 'create_at', updatedAt: false } },
 )
 
 sessionSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 })
