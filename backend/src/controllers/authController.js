@@ -93,7 +93,7 @@ export const signIn = async (req, res) => {
 
     // Tao Access Token
 
-    const userInfo = { _id: user._id }
+    const userInfo = { _id: user._id, username, role }
 
     const accessToken = await JwtProvider.generateToken(
       { userInfo },

@@ -3,8 +3,7 @@ import { Navigate } from "react-router-dom";
 
 export default function ProtectedRoute() {
   console.log("############# ProtectedRoute");
-
-  const user = localStorage.getItem("user");
+  const user = JSON.parse(localStorage.getItem("user") || "null");
   console.log("user: ", user);
 
   if (!user) {
