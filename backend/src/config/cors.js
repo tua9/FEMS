@@ -1,4 +1,4 @@
-import { WHITELIST_DOMAINS } from '../constants.js'
+import { WHITELIST_DOMAINS } from '../utils/constants.js'
 import ApiError from '../utils/ApiError.js'
 import { env } from './environment.js'
 import { StatusCodes } from 'http-status-codes'
