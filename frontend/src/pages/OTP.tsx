@@ -8,7 +8,25 @@ const OTP: React.FC<{ onVerify: () => void }> = ({ onVerify }) => {
   const handleVerify = (e: React.FormEvent) => {
     e.preventDefault();
     onVerify();
-    navigate('/dashboard');
+    
+    // Get role from localStorage and navigate to appropriate dashboard
+    const userRole = localStorage.getItem('userRole') || 'student';
+    
+    switch(userRole) {
+      case 'technician':
+        navigate('/technician/dashboard');
+        break;
+      case 'lecturer':
+        navigate('/lecturer/dashboard');
+        break;
+      case 'admin':
+        navigate('/admin/dashboard');
+        break;
+      case 'student':
+      default:
+        navigate('/dashboard');
+        break;
+    }
   };
 
   return (
