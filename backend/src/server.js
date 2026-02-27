@@ -22,7 +22,7 @@ app.use('/api/auth', authRoutes)
 
 // private routes
 app.use(protectedRoute)
-app.use('/api/users', userRoutes)
+app.use('/api/users', protectedRoute, userRoutes)
 
 connectDB().then(() => {
   app.listen(PORT, () => {
