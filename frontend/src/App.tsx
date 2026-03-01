@@ -1,29 +1,31 @@
-import { BrowserRouter, Route, Routes } from "react-router";
 import { Toaster } from "sonner";
-import LoginPage from "./pages/LoginPage/LoginPage";
-import ProtectedRoute from "./components/auth/ProtectedRoute";
-import HomePage from "./pages/HomePage";
-import GuestRoute from "./components/auth/GuestRoute";
+import { NavBar } from "./components/common/NavBar";
+import { Outlet } from "react-router";
+import { ThemeProvider } from "./components/common/theme-provider";
+import Footer from "./components/common/Footer";
 
 export default function App() {
   return (
     <>
       <Toaster richColors />
-      <div className="flex justify-center">
-        <BrowserRouter>
-          <Routes>
-            {/*public*/}
-            <Route element={<GuestRoute />}>
-              <Route path="/login" element={<LoginPage />} />
-            </Route>
-
-            {/*private*/}
-            <Route element={<ProtectedRoute />}>
-              <Route path="/" element={<HomePage />} />
-            </Route>
-          </Routes>
-        </BrowserRouter>
-      </div>
+      <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
+        <div className="container w-[90%] p-1">
+          <header className="my-4 mb-6">
+            <NavBar></NavBar>
+          </header>
+          <Outlet /> {/* Nơi render các route con */}
+          {/* <Button
+            onClick={async () => {
+              const user = await authService.fetchUserProfile();
+              console.log("✅Success fetching user profile");
+              console.log("User = ", user);
+            }}
+          >
+            Fetch Profile
+          </Button> */}
+          <Footer />
+        </div>
+      </ThemeProvider>
     </>
   );
 }
