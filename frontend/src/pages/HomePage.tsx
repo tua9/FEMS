@@ -185,8 +185,8 @@ function ActiveBorrowCard() {
 
 export default function HomePage() {
   return (
-    <div className="bg-background text-foreground min-h-screen antialiased">
-      <main className="mx-auto grid max-w-7xl grid-cols-1 gap-6 pb-12 lg:grid-cols-12 lg:gap-8">
+    <div className="text-foreground bg-background min-h-screen w-full antialiased">
+      <main className="gap-6pb-12 grid w-full grid-cols-1 lg:grid-cols-12 lg:gap-8">
         {/* Sidebar: ẩn trên mobile, hiện trên lg */}
         <aside className="hidden lg:sticky lg:top-6 lg:col-span-3 lg:block lg:self-start">
           <Sidebar />

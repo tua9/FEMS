@@ -1,5 +1,4 @@
 import { SearchBar } from "@/components/common/SearchBar";
-import React from "react";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import TransactionDatatable, {
@@ -231,7 +230,7 @@ const transactionData: Item[] = [
 
 const BorrowingHistoryTab = () => {
   return (
-    <Card className="col-span-full w-full rounded py-0">
+    <Card className="bg-muted text-muted-foreground col-span-full w-full rounded p-0">
       <TransactionDatatable data={transactionData} />
     </Card>
   );
@@ -240,7 +239,7 @@ const BorrowingHistoryTab = () => {
 const CurrentBorrowingTab = () => {
   const items = transactionData.filter((item) => item.status === "borrowing");
   return (
-    <Card className="col-span-full w-full rounded py-0">
+    <Card className="bg-muted text-muted-foreground col-span-full w-full rounded p-0">
       <TransactionDatatable data={items} />
     </Card>
   );
@@ -249,7 +248,7 @@ const CurrentBorrowingTab = () => {
 const PendingRequestsTab = () => {
   const items = transactionData.filter((item) => item.status === "pending");
   return (
-    <Card className="col-span-full w-full rounded py-0">
+    <Card className="bg-muted text-muted-foreground col-span-full w-full rounded p-0">
       <TransactionDatatable data={items} />
     </Card>
   );
@@ -291,7 +290,7 @@ const BorrowHistoryTable = () => {
         <TabsContent
           key={tab.value}
           value={tab.value}
-          className="text-muted-foreground w-full bg-red-100 text-sm"
+          className="text-muted-foreground w-fulltext-sm rounded-none border-none"
         >
           {tab.component}
         </TabsContent>
@@ -300,14 +299,14 @@ const BorrowHistoryTable = () => {
   );
 };
 
-const BorrowHistory: React.FC = () => {
+const BorrowHistory = () => {
   return (
     <div className="mx-auto w-full">
       <div className="mb-12 text-left">
-        <h1 className="mb-2 text-4xl font-extrabold dark:text-white">
+        <h1 className="text-foreground mb-2 text-4xl font-extrabold">
           My History
         </h1>
-        <p className="text-base font-medium text-slate-600 dark:text-slate-400">
+        <p className="text-muted-foreground text-base font-medium">
           Keep track of your past equipment borrowings and service resolutions.
         </p>
       </div>

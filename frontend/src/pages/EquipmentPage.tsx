@@ -1,5 +1,6 @@
 import EquipmentList from "@/components/common/EquipmentList";
 import { SearchBar } from "@/components/common/SearchBar";
+import { AspectRatio } from "@/components/ui/aspect-ratio";
 import { Card } from "@/components/ui/card";
 import {
   AppWindow,
@@ -45,19 +46,19 @@ const ListCategory = () => {
     },
     {
       id: 7,
-      name: "Cafe & Lifestyle",
+      name: "Cafe",
       icon: <Coffee size={32} />,
     },
   ];
 
   return (
-    <div className="grid grid-cols-2 gap-4 py-6 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-7">
+    <div className="my-2 grid grid-cols-4 gap-2 py-2 sm:grid-cols-3 sm:gap-4 md:grid-cols-4 md:gap-4 lg:grid-cols-5 lg:gap-6 xl:grid-cols-7">
       {listCategory.map((category) => (
         <Card
           key={category.id}
-          className="border-border flex aspect-square cursor-pointer flex-col items-center justify-center gap-0 rounded-lg border p-6 transition-all duration-200 hover:scale-[1.02] hover:shadow-md"
+          className="bg-muted border-border flex aspect-square cursor-pointer flex-col items-center justify-center gap-0 rounded-lg border p-6 transition-all duration-200 hover:scale-101"
         >
-          <div className="text-primary mb-4 scale-110">{category.icon}</div>
+          <div className="text-primary mb-4">{category.icon}</div>
           <p className="line-clamp-2 text-center text-sm leading-tight font-medium">
             {category.name}
           </p>

@@ -9,6 +9,7 @@ import ProtectedRoute from "./components/auth/ProtectedRoute.tsx";
 import HomePage from "./pages/HomePage.tsx";
 import EquipmentPage from "./pages/EquipmentPage.tsx";
 import BorrowHistory from "./pages/BorrowHistoryPage.tsx";
+import ReportPage from "./pages/ReportPage.tsx";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
@@ -22,6 +23,7 @@ createRoot(document.getElementById("root")!).render(
 
           <Route path="/equipments" element={<EquipmentPage />} />
           <Route path="/borrow-history" element={<BorrowHistory />} />
+          <Route path="/report-issue" element={<ReportPage />} />
 
           {/*private*/}
           <Route element={<ProtectedRoute />}>

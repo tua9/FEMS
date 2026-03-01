@@ -1,6 +1,4 @@
-import { ArrowRightIcon, HeartIcon, ShoppingCartIcon } from "lucide-react";
-
-import { Checkbox as CheckboxPrimitive } from "radix-ui";
+import { ArrowRightIcon } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -13,7 +11,7 @@ export type EquipmentItem = {
   image: string;
   imgAlt: string;
   name: string;
-  price: number;
+  price?: number;
   salePrice?: number;
   badges: string[];
 };
@@ -81,13 +79,13 @@ const EquipmentList = ({ equipments }: EquipmentProps) => {
           All Equipments
         </div>
 
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid grid-cols-2 gap-6 md:grid-cols-4 lg:grid-cols-5">
           {/* Product Cards */}
           {equipments.map((equipment, index) => (
             <Card
               key={index}
               className={cn(
-                "border-border bg-card overflow-hidden border shadow-sm transition-all hover:shadow-md",
+                "border-border bg-muted overflow-hidden border shadow-sm transition-all hover:shadow-md",
                 equipment.salePrice && "relative",
               )}
             >
@@ -111,11 +109,7 @@ const EquipmentList = ({ equipments }: EquipmentProps) => {
                 {/* Product Details */}
                 <div className="space-y-4">
                   <div className="flex flex-col gap-2 text-center">
-                    <a href="#">
-                      <h3 className="text-xl font-semibold">
-                        {equipment.name}
-                      </h3>
-                    </a>
+                    <p className="text-sm font-semibold">{equipment.name}</p>
                     <div className="flex items-center justify-center gap-2">
                       {equipment.badges.map((badge, idx) => (
                         <Badge
@@ -132,7 +126,7 @@ const EquipmentList = ({ equipments }: EquipmentProps) => {
 
                   {/* Product Price */}
                   <div className="flex items-center justify-center">
-                    <Button variant="default" className="w-full">
+                    <Button variant="default" className="w-full text-xs">
                       Request Borrow <ArrowRightIcon />
                     </Button>
                   </div>
