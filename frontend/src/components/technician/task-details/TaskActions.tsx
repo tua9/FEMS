@@ -2,6 +2,10 @@ import { technicianApi } from '@/services/api/technicianApi';
 import { Task } from '@/types/technician.types';
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import {
+  MODAL_OVERLAY, MODAL_CARD, CLOSE_BTN,
+  BTN_PRIMARY, BTN_SECONDARY, SECTION_LABEL, TEXTAREA_CLASS,
+} from '@/components/technician/common/modalStyles';
 
 interface TaskActionsProps {
   task: Task;
@@ -124,65 +128,73 @@ const TaskActions: React.FC<TaskActionsProps> = ({ task, onUpdate }) => {
 
       {/* Complete Task Modal */}
       {showCompleteModal && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-6">
-          <div className="glass-main rounded-4xl p-8 max-w-md w-full shadow-2xl">
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-2xl font-extrabold text-navy-deep dark:text-white flex items-center gap-2">
-                <span className="material-symbols-outlined text-3xl">check_circle</span>
-                Complete Task
-              </h3>
-              <button
-                onClick={() => setShowCompleteModal(false)}
-                className="w-10 h-10 rounded-xl bg-white/30 dark:bg-white/5 flex items-center justify-center hover:bg-white/50 dark:hover:bg-white/10 transition-all"
-              >
-                <span className="material-symbols-outlined text-slate-600 dark:text-slate-400">close</span>
+        <div className={MODAL_OVERLAY} onClick={() => setShowCompleteModal(false)}>
+          <div
+            className={`${MODAL_CARD} max-w-md`}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="px-7 pt-7 pb-5 flex items-start justify-between">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-xl bg-emerald-50 flex items-center justify-center shrink-0">
+                  <span className="material-symbols-outlined text-emerald-500 text-2xl">check_circle</span>
+                </div>
+                <div>
+                  <h3 className="text-base font-extrabold text-[#1A2B56] leading-tight">Complete Task</h3>
+                  <p className="text-xs text-slate-500 mt-0.5">Provide notes before marking as complete.</p>
+                </div>
+              </div>
+              <button onClick={() => setShowCompleteModal(false)} className={CLOSE_BTN}>
+                <span className="material-symbols-outlined text-lg">close</span>
               </button>
             </div>
 
-            <p className="text-sm text-slate-600 dark:text-slate-400 mb-6">
-              Please provide completion notes describing what was done to resolve this issue.
-            </p>
+            <div className="mx-7 border-t border-slate-100" />
 
-            <div className="space-y-4">
-              <div>
-                <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mb-3 block">
-                  Completion Notes *
+            {/* Body */}
+            <div className="px-7 py-6 space-y-4">
+              <div className="space-y-2">
+                <label className={`${SECTION_LABEL} flex items-center gap-1`}>
+                  Completion Notes <span className="text-rose-400 normal-case">*</span>
                 </label>
                 <textarea
                   value={completionNotes}
                   onChange={(e) => setCompletionNotes(e.target.value)}
                   placeholder="Describe the work completed, parts used, etc..."
                   rows={5}
-                  className="w-full bg-white/30 dark:bg-white/5 border border-white/50 dark:border-white/10 rounded-2xl px-5 py-4 text-sm font-medium outline-none focus:ring-2 focus:ring-navy-deep transition-all resize-none"
+                  className={TEXTAREA_CLASS}
                   required
                 />
               </div>
+            </div>
 
-              <div className="flex gap-3">
-                <button
-                  onClick={() => setShowCompleteModal(false)}
-                  className="flex-1 bg-white/30 dark:bg-white/5 border border-white/50 dark:border-white/10 px-6 py-4 rounded-2xl font-bold text-sm text-navy-deep dark:text-white hover:bg-white/50 dark:hover:bg-white/10 transition-all"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleCompleteTask}
-                  disabled={loading === 'complete' || !completionNotes.trim()}
-                  className="flex-1 btn-navy-gradient text-white px-6 py-4 rounded-2xl font-bold text-sm flex items-center justify-center gap-2 shadow-xl disabled:opacity-50 disabled:cursor-not-allowed transition-opacity"
-                >
-                  {loading === 'complete' ? (
-                    <>
-                      <span className="inline-block animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></span>
-                      Completing...
-                    </>
-                  ) : (
-                    <>
-                      <span className="material-symbols-outlined text-lg">done</span>
-                      Complete
-                    </>
-                  )}
-                </button>
-              </div>
+            {/* Footer */}
+            <div className="px-7 py-5 border-t border-slate-100 flex gap-3">
+              <button
+                type="button"
+                onClick={() => setShowCompleteModal(false)}
+                className={BTN_SECONDARY}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleCompleteTask}
+                disabled={loading === 'complete' || !completionNotes.trim()}
+                className={`${BTN_PRIMARY} disabled:opacity-50 disabled:cursor-not-allowed`}
+              >
+                {loading === 'complete' ? (
+                  <>
+                    <span className="inline-block animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent" />
+                    Completing...
+                  </>
+                ) : (
+                  <>
+                    <span className="material-symbols-outlined text-base">done</span>
+                    Complete Task
+                  </>
+                )}
+              </button>
             </div>
           </div>
         </div>

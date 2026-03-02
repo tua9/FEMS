@@ -42,10 +42,9 @@ const ActionButtons: React.FC<{
   onStartRepair?: (id: string) => void;
   onMarkResolved?: (id: string) => void;
 }> = ({ id, status, onView, onApprove, onReject, onStartRepair, onMarkResolved }) => {
-  const viewBtn = (
-    <button
+  const viewBtn = (      <button
       onClick={() => onView?.(id)}
-      className="px-4 py-2 rounded-xl border border-slate-200 text-slate-600 text-xs font-bold hover:bg-white transition-all"
+      className="px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300 text-xs font-bold hover:bg-white dark:hover:bg-slate-700 transition-all"
     >
       View
     </button>
@@ -131,35 +130,69 @@ const TicketTable: React.FC<Props> = ({
   }
 
   return (
-    <table className="w-full text-left">
+    <table className="w-full text-left table-fixed">
+      <colgroup>
+        <col style={{ width: '120px' }} />  {/* Ticket ID */}
+        <col style={{ width: '220px' }} />  {/* Equipment */}
+        <col style={{ width: '170px' }} />  {/* Room */}
+        <col style={{ width: '200px' }} />  {/* Reporter / Assignee */}
+        <col style={{ width: '110px' }} />  {/* Priority */}
+        <col style={{ width: '140px' }} />  {/* Status */}
+        <col style={{ width: '240px' }} />  {/* Actions */}
+      </colgroup>
       <thead>
-        <tr className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest border-b border-white/20">
+        <tr
+          style={{
+            background: 'rgba(26,43,86,0.06)',
+            borderTop: '1px solid rgba(26,43,86,0.08)',
+            borderBottom: '1px solid rgba(26,43,86,0.10)',
+          }}
+        >
           {headers.map((h, i) => (
-            <th key={h} className={`px-8 py-6 ${i === headers.length - 1 ? 'text-right' : ''}`}>{h}</th>
+            <th
+              key={h}
+              className={`px-5 py-4 ${i === headers.length - 1 ? 'text-right' : ''}`}
+            >
+              <span className="inline-flex items-center gap-1.5 text-[11px] font-extrabold text-[#1A2B56] dark:text-blue-200 uppercase tracking-[0.15em]">
+                {h}
+              </span>
+            </th>
           ))}
         </tr>
       </thead>
-      <tbody className="text-sm divide-y divide-white/20">
-        {paged.map((ticket) => {
+      <tbody className="text-sm">
+        {paged.map((ticket, rowIdx) => {
           const statusDisplay = getStatusDisplay(ticket.status);
           const person = activeStatus === 'In Progress' ? ticket.assignee : ticket.reporter;
 
           return (
-            <tr key={ticket.id} className="hover:bg-white/20 transition-colors">
+            <tr
+              key={ticket.id}
+              className="hover:bg-white/30 dark:hover:bg-white/5 transition-colors"
+              style={{
+                borderBottom: rowIdx < paged.length - 1
+                  ? '1px solid rgba(26,43,86,0.06)'
+                  : 'none',
+              }}
+            >
               {/* Ticket ID */}
-              <td className="px-8 py-6 font-bold text-[#232F58]">#{ticket.id}</td>
+              <td className="px-5 py-6">
+                <span className="font-extrabold text-[#1A2B56] dark:text-blue-400 text-sm tracking-tight">
+                  #{ticket.id}
+                </span>
+              </td>
 
               {/* Equipment */}
-              <td className="px-8 py-6">
-                <div className="font-bold text-slate-900">{ticket.equipment}</div>
-                <div className="text-[10px] text-slate-500 uppercase tracking-tight">{ticket.equipmentType}</div>
+              <td className="px-5 py-6">
+                <div className="font-bold text-slate-900 dark:text-white truncate">{ticket.equipment}</div>
+                <div className="text-[10px] text-slate-500 dark:text-slate-400 uppercase tracking-tight mt-0.5 truncate">{ticket.equipmentType}</div>
               </td>
 
               {/* Room */}
-              <td className="px-8 py-6 text-slate-600 font-medium">{ticket.room}</td>
+              <td className="px-5 py-6 text-slate-600 dark:text-slate-300 font-medium truncate">{ticket.room}</td>
 
               {/* Reporter / Assignee */}
-              <td className="px-8 py-6">
+              <td className="px-5 py-6">
                 {person ? (
                   <Avatar name={person.name} initials={person.initials} src={'avatar' in person ? (person as { name: string; initials: string; avatar?: string }).avatar : undefined} />
                 ) : (
@@ -168,22 +201,28 @@ const TicketTable: React.FC<Props> = ({
               </td>
 
               {/* Priority */}
-              <td className="px-8 py-6">
-                <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${getPriorityStyle(ticket.priority)}`}>
+              <td className="px-5 py-6">
+                <span className={`px-3 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider ${getPriorityStyle(ticket.priority)}`}>
                   {ticket.priority}
                 </span>
               </td>
 
-              {/* Status */}
-              <td className="px-8 py-6">
-                <span className={`flex items-center gap-2 font-bold text-xs uppercase ${statusDisplay.color}`}>
-                  <span className={`w-2 h-2 rounded-full ${statusDisplay.dot}`}></span>
+              {/* Status — badge style */}
+              <td className="px-5 py-6">
+                <span
+                  className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider whitespace-nowrap"
+                  style={{ background: statusDisplay.bgColor, color: statusDisplay.textColor }}
+                >
+                  <span
+                    className="w-1.5 h-1.5 rounded-full flex-shrink-0"
+                    style={{ background: statusDisplay.dotColor }}
+                  ></span>
                   {statusDisplay.label}
                 </span>
               </td>
 
               {/* Actions */}
-              <td className="px-8 py-6 text-right">
+              <td className="px-5 py-6 text-right">
                 <ActionButtons
                   id={ticket.id}
                   status={ticket.status}

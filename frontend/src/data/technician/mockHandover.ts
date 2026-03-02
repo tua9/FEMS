@@ -3,82 +3,154 @@
 // ── Tab type ─────────────────────────────────────────────────────────────────
 export type HandoverTab = 'Requests' | 'Handover' | 'Collect' | 'History';
 
+// ── Shared sub-types ─────────────────────────────────────────────────────────
+export interface HandoverItem {
+  icon: string;
+  name: string;
+  serial: string;
+  condition?: string;
+}
+
+export interface TimelineEvent {
+  date: string;
+  label: string;
+  sub?: string;
+  done: boolean;
+}
+
 // ── Borrow Requests (tab: Requests) ──────────────────────────────────────────
 export interface BorrowRequest {
-  id: string;            // e.g. #REQ-2024-089
-  borrower: {
-    name: string;
-    userId: string;
-    avatar?: string;
-  };
+  id: string;
+  borrower: { name: string; userId: string; avatar?: string; department?: string; email?: string };
   equipment: { name: string; location: string };
-  duration: string;      // e.g. "3 Days"
+  duration: string;
   purpose: string;
+  items?: HandoverItem[];
+  timeline?: TimelineEvent[];
 }
 
 export const MOCK_BORROW_REQUESTS: BorrowRequest[] = [
   {
     id: '#REQ-2024-089',
-    borrower: { name: 'Prof. Sarah Jenkins', userId: '102938' },
+    borrower: { name: 'Prof. Sarah Jenkins', userId: '102938', department: 'Arts & Design', email: 'sarah.jenkins@fpt.edu.vn' },
     equipment: { name: 'iPad Pro + Apple Pencil', location: 'Art Dept Inventory' },
     duration: '3 Days',
     purpose: 'Digital Illustration Workshop for Year 2 Students',
+    items: [
+      { icon: 'tablet_mac',   name: 'iPad Pro 12.9"',   serial: 'AP-IPD-2023-014', condition: 'Good' },
+      { icon: 'stylus_note',  name: 'Apple Pencil 2nd', serial: 'AP-PCL-2023-055', condition: 'Good' },
+    ],
+    timeline: [
+      { date: 'Oct 26, 09:00', label: 'Request Submitted',    done: true },
+      { date: 'Oct 26, 10:30', label: 'Pending Approval',     done: true },
+      { date: '—',             label: 'Approved / Rejected',  done: false },
+      { date: '—',             label: 'Equipment Picked Up',  done: false },
+    ],
   },
   {
     id: '#REQ-2024-092',
-    borrower: { name: 'James Wilson', userId: 'STU-4402' },
+    borrower: { name: 'James Wilson', userId: 'STU-4402', department: 'Media Studies', email: 'james.wilson@fpt.edu.vn' },
     equipment: { name: 'Canon EOS R6 Kit', location: 'Media Lab' },
     duration: '24 Hours',
     purpose: 'Outdoor Photography Assignment',
+    items: [
+      { icon: 'camera',       name: 'Canon EOS R6 Body', serial: 'CN-R6-2022-009', condition: 'Good' },
+      { icon: 'lens_blur',    name: '24-70mm RF Lens',   serial: 'CN-LNS-2022-017', condition: 'Good' },
+      { icon: 'inventory_2',  name: 'Camera Bag + Strap',serial: 'ACC-BAG-2022-033', condition: 'Fair' },
+    ],
+    timeline: [
+      { date: 'Oct 25, 14:10', label: 'Request Submitted', done: true },
+      { date: '—',             label: 'Pending Approval',  done: false },
+    ],
   },
   {
     id: '#REQ-2024-095',
-    borrower: { name: 'Dr. Elena Rodriguez', userId: '559021' },
+    borrower: { name: 'Dr. Elena Rodriguez', userId: '559021', department: 'Computer Engineering', email: 'e.rodriguez@fpt.edu.vn' },
     equipment: { name: 'Dell Precision Workstation', location: 'Engineering Tower' },
     duration: '14 Days',
     purpose: 'High-performance computing for research project',
+    items: [
+      { icon: 'desktop_windows', name: 'Dell Precision 5860', serial: 'DL-WS-2023-007', condition: 'Excellent' },
+    ],
+    timeline: [
+      { date: 'Oct 24, 08:45', label: 'Request Submitted', done: true },
+      { date: 'Oct 24, 09:15', label: 'Pending Approval',  done: true },
+    ],
   },
   {
     id: '#REQ-2024-101',
-    borrower: { name: 'Mark Thompson', userId: 'STU-8821' },
+    borrower: { name: 'Mark Thompson', userId: 'STU-8821', department: 'Interaction Design', email: 'm.thompson@fpt.edu.vn' },
     equipment: { name: 'Oculus Rift S + Controllers', location: 'VR Lab' },
     duration: '2 Days',
     purpose: 'Interaction design prototype testing',
+    items: [
+      { icon: 'view_in_ar',  name: 'Oculus Rift S Headset',  serial: 'VR-RFT-2021-003', condition: 'Good' },
+      { icon: 'sports_esports', name: 'Touch Controllers (x2)', serial: 'VR-CTL-2021-003', condition: 'Good' },
+    ],
+    timeline: [
+      { date: 'Oct 25, 11:30', label: 'Request Submitted', done: true },
+    ],
   },
   {
     id: '#REQ-2024-105',
-    borrower: { name: 'Dr. Alan Park', userId: '881102' },
+    borrower: { name: 'Dr. Alan Park', userId: '881102', department: 'Communications', email: 'alan.park@fpt.edu.vn' },
     equipment: { name: 'Sony A7 IV Camera', location: 'Media Lab' },
     duration: '7 Days',
     purpose: 'Documentary production for university research',
+    items: [
+      { icon: 'camera', name: 'Sony A7 IV Body', serial: 'SNY-A7-2023-011', condition: 'Excellent' },
+    ],
+    timeline: [
+      { date: 'Oct 23, 16:00', label: 'Request Submitted', done: true },
+    ],
   },
   {
     id: '#REQ-2024-108',
-    borrower: { name: 'Lisa Nguyen', userId: 'STU-3310' },
+    borrower: { name: 'Lisa Nguyen', userId: 'STU-3310', department: 'Graphic Design', email: 'lisa.nguyen@fpt.edu.vn' },
     equipment: { name: 'Wacom Cintiq 22', location: 'Design Studio' },
     duration: '5 Days',
     purpose: 'Final year design thesis project',
+    items: [
+      { icon: 'stylus_note', name: 'Wacom Cintiq 22',  serial: 'WC-CQ-2022-009', condition: 'Good' },
+      { icon: 'cable',       name: 'USB-C Power Cable', serial: 'ACC-USB-2022-044', condition: 'Good' },
+    ],
+    timeline: [
+      { date: 'Oct 22, 13:00', label: 'Request Submitted', done: true },
+    ],
   },
   {
     id: '#REQ-2024-112',
-    borrower: { name: 'Prof. Kevin Lee', userId: '770044' },
+    borrower: { name: 'Prof. Kevin Lee', userId: '770044', department: 'Business Admin', email: 'kevin.lee@fpt.edu.vn' },
     equipment: { name: 'Polycom Video Conferencing', location: 'AV Room' },
     duration: '1 Day',
     purpose: 'International faculty meeting',
+    items: [
+      { icon: 'video_call', name: 'Polycom RealPresence', serial: 'PLC-VP-2020-002', condition: 'Fair' },
+    ],
+    timeline: [
+      { date: 'Oct 26, 07:30', label: 'Request Submitted', done: true },
+    ],
   },
   {
     id: '#REQ-2024-119',
-    borrower: { name: 'Tom Baker', userId: 'STU-9901' },
+    borrower: { name: 'Tom Baker', userId: 'STU-9901', department: 'Journalism', email: 'tom.baker@fpt.edu.vn' },
     equipment: { name: 'DJI Mavic 3 Drone', location: 'Media Lab' },
     duration: '3 Days',
     purpose: 'Aerial photography assignment for journalism class',
+    items: [
+      { icon: 'flight',     name: 'DJI Mavic 3 Drone', serial: 'DJI-M3-2023-006', condition: 'Excellent' },
+      { icon: 'battery_charging_full', name: 'Battery Pack x2', serial: 'DJI-BAT-2023-012', condition: 'Good' },
+    ],
+    timeline: [
+      { date: 'Oct 26, 10:00', label: 'Request Submitted', done: true },
+    ],
   },
 ];
 
 // ── Handover Fulfillment (tab: Handover) ─────────────────────────────────────
 export interface FulfillmentItem { icon: string; name: string; serial: string }
 export interface FulfillmentRequest {
-  id: string;            // e.g. REQ-8821
+  id: string;
   time: string;
   borrowerName: string;
   borrowerRole: string;
@@ -152,7 +224,7 @@ export type LoanStatus = 'Overdue' | 'Due Today' | 'Active';
 
 export interface ActiveLoan {
   id: string;
-  borrower: { name: string; idLabel: string; avatar?: string };
+  borrower: { name: string; idLabel: string; avatar?: string; email?: string; department?: string };
   status: LoanStatus;
   itemCount: number;
   itemNames: string;
@@ -160,12 +232,15 @@ export interface ActiveLoan {
   dueColor: 'red' | 'yellow' | 'slate';
   dueIcon: string;
   borrowedDate: string;
+  items?: HandoverItem[];
+  timeline?: TimelineEvent[];
+  notes?: string;
 }
 
 export const MOCK_ACTIVE_LOANS: ActiveLoan[] = [
   {
     id: 'LOAN-001',
-    borrower: { name: 'Dr. Sarah Jenkins', idLabel: 'Faculty ID: #F-1029' },
+    borrower: { name: 'Dr. Sarah Jenkins', idLabel: 'Faculty ID: #F-1029', email: 'sarah.jenkins@fpt.edu.vn', department: 'Arts & Design' },
     status: 'Overdue',
     itemCount: 2,
     itemNames: 'Sony Alpha A7 IV, 24-70mm Lens',
@@ -173,10 +248,20 @@ export const MOCK_ACTIVE_LOANS: ActiveLoan[] = [
     dueColor: 'red',
     dueIcon: 'event_busy',
     borrowedDate: 'Oct 17, 2024',
+    items: [
+      { icon: 'camera',    name: 'Sony Alpha A7 IV', serial: 'SNY-A7-2023-011', condition: 'Good' },
+      { icon: 'lens_blur', name: '24-70mm Lens',     serial: 'SNY-LNS-2023-005', condition: 'Good' },
+    ],
+    timeline: [
+      { date: 'Oct 17, 09:00', label: 'Equipment Borrowed',      sub: 'Picked up from Media Lab', done: true },
+      { date: 'Oct 24, 17:00', label: 'Due Date Passed',         sub: 'No return recorded',        done: true },
+      { date: '—',             label: 'Awaiting Return',         sub: 'Overdue — please contact',  done: false },
+    ],
+    notes: 'Borrower contacted via email on Oct 25. Awaiting response.',
   },
   {
     id: 'LOAN-002',
-    borrower: { name: 'James Wilson', idLabel: 'Student ID: #S-8821' },
+    borrower: { name: 'James Wilson', idLabel: 'Student ID: #S-8821', email: 'james.wilson@fpt.edu.vn', department: 'Media Studies' },
     status: 'Due Today',
     itemCount: 1,
     itemNames: 'Wacom Intuos Pro L',
@@ -184,10 +269,17 @@ export const MOCK_ACTIVE_LOANS: ActiveLoan[] = [
     dueColor: 'yellow',
     dueIcon: 'event',
     borrowedDate: 'Oct 26, 2024',
+    items: [
+      { icon: 'stylus_note', name: 'Wacom Intuos Pro L', serial: 'WC-INT-2022-008', condition: 'Good' },
+    ],
+    timeline: [
+      { date: 'Oct 26, 10:00', label: 'Equipment Borrowed',   sub: 'Picked up from Design Studio', done: true },
+      { date: 'Oct 27, 17:00', label: 'Return Due Today',     sub: 'Must be returned by 5:00 PM',  done: false },
+    ],
   },
   {
     id: 'LOAN-003',
-    borrower: { name: 'Maria Garcia', idLabel: 'Student ID: #S-4432' },
+    borrower: { name: 'Maria Garcia', idLabel: 'Student ID: #S-4432', email: 'maria.garcia@fpt.edu.vn', department: 'Computer Science' },
     status: 'Active',
     itemCount: 3,
     itemNames: 'MacBook Pro M2, Laptop Stand, Mouse',
@@ -195,6 +287,15 @@ export const MOCK_ACTIVE_LOANS: ActiveLoan[] = [
     dueColor: 'slate',
     dueIcon: 'calendar_today',
     borrowedDate: 'Oct 20, 2024',
+    items: [
+      { icon: 'laptop_mac',   name: 'MacBook Pro M2',    serial: 'AP-MB-2024-044', condition: 'Excellent' },
+      { icon: 'laptop_mac',   name: 'Laptop Stand',      serial: 'ACC-STD-2023-012', condition: 'Good' },
+      { icon: 'mouse',        name: 'Logitech MX Master', serial: 'LG-MX-2023-007', condition: 'Good' },
+    ],
+    timeline: [
+      { date: 'Oct 20, 14:00', label: 'Equipment Borrowed', sub: 'Picked up from IT Store', done: true },
+      { date: 'Oct 30, 17:00', label: 'Return Due',         sub: 'On schedule',             done: false },
+    ],
   },
 ];
 
@@ -205,12 +306,15 @@ export interface HistoryRecord {
   id: string;
   eventType: EventType;
   logId: string;
-  recipient: { initials: string; name: string; role: string; avatarBg: string; avatarColor: string };
+  recipient: { initials: string; name: string; role: string; avatarBg: string; avatarColor: string; email?: string };
   equipment: { icon: string; name: string };
   date: string;
   time: string;
   condition: string;
   conditionColor: string;
+  items?: HandoverItem[];
+  timeline?: TimelineEvent[];
+  notes?: string;
 }
 
 export const MOCK_HISTORY: HistoryRecord[] = [
@@ -218,37 +322,69 @@ export const MOCK_HISTORY: HistoryRecord[] = [
     id: 'H1',
     eventType: 'Handover',
     logId: '#H-2024-0012',
-    recipient: { initials: 'SC', name: 'Sarah Connor',  role: 'Faculty Member', avatarBg: 'bg-blue-100',   avatarColor: 'text-blue-600'   },
+    recipient: { initials: 'SC', name: 'Sarah Connor',  role: 'Faculty Member', avatarBg: 'bg-blue-100',   avatarColor: 'text-blue-600',   email: 'sarah.connor@fpt.edu.vn' },
     equipment: { icon: 'laptop_mac',    name: 'MacBook Pro M2 (SN: 9921)'  },
     date: 'Oct 24, 2024', time: '10:45 AM',
     condition: 'Mint Condition', conditionColor: 'text-emerald-500',
+    items: [
+      { icon: 'laptop_mac', name: 'MacBook Pro M2', serial: 'AP-MB-2024-009', condition: 'Mint' },
+    ],
+    timeline: [
+      { date: 'Oct 22', label: 'Request Approved',   done: true },
+      { date: 'Oct 24', label: 'Equipment Collected', done: true },
+      { date: 'Oct 24 10:45', label: 'Handover Confirmed', sub: 'Signed by both parties', done: true },
+    ],
   },
   {
     id: 'H2',
     eventType: 'Return',
     logId: '#R-2024-0008',
-    recipient: { initials: 'JD', name: 'James Doe',     role: 'Student',       avatarBg: 'bg-purple-100', avatarColor: 'text-purple-600' },
-    equipment: { icon: 'tablet_android', name: 'iPad Air (SN: 1102)'          },
+    recipient: { initials: 'JD', name: 'James Doe',    role: 'Student',       avatarBg: 'bg-purple-100', avatarColor: 'text-purple-600', email: 'james.doe@fpt.edu.vn' },
+    equipment: { icon: 'tablet_android', name: 'iPad Air (SN: 1102)' },
     date: 'Oct 23, 2024', time: '03:20 PM',
     condition: 'Scratched Screen', conditionColor: 'text-amber-500',
+    items: [
+      { icon: 'tablet_android', name: 'iPad Air 5th Gen', serial: 'AP-IA-2022-011', condition: 'Scratched Screen' },
+    ],
+    timeline: [
+      { date: 'Oct 18', label: 'Equipment Borrowed', done: true },
+      { date: 'Oct 23', label: 'Returned',           sub: 'Minor damage noted on screen', done: true },
+    ],
+    notes: 'Screen scratch documented. User notified of potential damage charge.',
   },
   {
     id: 'H3',
     eventType: 'Reject',
     logId: '#X-2024-0044',
-    recipient: { initials: 'ML', name: 'Mark Lee',      role: 'Guest Speaker', avatarBg: 'bg-slate-100',  avatarColor: 'text-slate-600'  },
-    equipment: { icon: 'videocam',       name: 'DSLR Camera (SN: 4432)'       },
+    recipient: { initials: 'ML', name: 'Mark Lee',     role: 'Guest Speaker', avatarBg: 'bg-slate-100',  avatarColor: 'text-slate-600',  email: 'mark.lee@external.com' },
+    equipment: { icon: 'videocam', name: 'DSLR Camera (SN: 4432)' },
     date: 'Oct 22, 2024', time: '09:12 AM',
     condition: 'Major Damage', conditionColor: 'text-rose-500',
+    items: [
+      { icon: 'videocam', name: 'DSLR Camera Body', serial: 'CAM-DL-2021-004', condition: 'Major Damage — Lens cracked' },
+    ],
+    timeline: [
+      { date: 'Oct 22', label: 'Return Attempted', done: true },
+      { date: 'Oct 22 09:12', label: 'Rejected — Damage Found', sub: 'Incident report filed', done: true },
+    ],
+    notes: 'Lens cracked upon return. Incident report filed. Asset sent to repair bay.',
   },
   {
     id: 'H4',
     eventType: 'Handover',
     logId: '#H-2024-0011',
-    recipient: { initials: 'AW', name: 'Alan Wake',     role: 'External Vendor', avatarBg: 'bg-orange-100', avatarColor: 'text-orange-600' },
-    equipment: { icon: 'mic',           name: 'Wireless Mic Set (SN: 221)'   },
+    recipient: { initials: 'AW', name: 'Alan Wake',    role: 'External Vendor', avatarBg: 'bg-orange-100', avatarColor: 'text-orange-600', email: 'alan.wake@vendor.com' },
+    equipment: { icon: 'mic', name: 'Wireless Mic Set (SN: 221)' },
     date: 'Oct 21, 2024', time: '01:55 PM',
     condition: 'Good', conditionColor: 'text-slate-500',
+    items: [
+      { icon: 'mic',       name: 'Wireless Mic Transmitter', serial: 'MIC-WL-2022-021', condition: 'Good' },
+      { icon: 'mic_none',  name: 'Mic Receiver Unit',        serial: 'MIC-WL-2022-022', condition: 'Good' },
+    ],
+    timeline: [
+      { date: 'Oct 21', label: 'Approved for Handover', done: true },
+      { date: 'Oct 21 13:55', label: 'Handover Completed', sub: 'Vendor signed receipt', done: true },
+    ],
   },
 ];
 
@@ -266,9 +402,9 @@ export function getEventStyle(type: EventType): EventStyle {
 
 export function getLoanStatusStyle(status: LoanStatus) {
   const map = {
-    Overdue:   { badge: 'bg-red-100 text-red-600',    border: 'border-red-500/50'    },
-    'Due Today': { badge: 'bg-yellow-100 text-yellow-700', border: 'border-yellow-500/50' },
-    Active:    { badge: 'bg-blue-50 text-blue-600',   border: 'border-white/50'      },
+    Overdue:     { badge: 'bg-red-100 text-red-600',        border: 'border-red-500/50'     },
+    'Due Today': { badge: 'bg-yellow-100 text-yellow-700',  border: 'border-yellow-500/50'  },
+    Active:      { badge: 'bg-blue-50 text-blue-600',       border: 'border-white/50'       },
   };
   return map[status];
 }

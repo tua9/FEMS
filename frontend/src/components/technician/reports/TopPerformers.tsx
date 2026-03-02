@@ -1,5 +1,8 @@
-import React from 'react';
-import { TOP_PERFORMERS, Performer } from '@/data/technician/mockReports';
+import React, { useState } from 'react';
+import { getTopPerformers, type Performer, type DateRangeDays } from '@/data/technician/mockReports';
+import LeaderboardModal from './LeaderboardModal';
+
+interface Props { dateRangeDays: DateRangeDays }
 
 const PerformerRow: React.FC<{ performer: Performer }> = ({ performer: p }) => (
   <div className="flex items-center justify-between">
@@ -39,20 +42,40 @@ const PerformerRow: React.FC<{ performer: Performer }> = ({ performer: p }) => (
   </div>
 );
 
-const TopPerformers: React.FC = () => (
-  <div className="bg-white/60 glass-card p-8 rounded-3xl border border-white/50 shadow-sm">
-    <h3 className="text-lg font-bold text-[#232F58] mb-6">Top Performers</h3>
+const TopPerformers: React.FC<Props> = ({ dateRangeDays }) => {
+  const performers = getTopPerformers(dateRangeDays);
+  const [showLeaderboard, setShowLeaderboard] = useState(false);
 
-    <div className="space-y-6">
-      {TOP_PERFORMERS.map((p) => (
-        <PerformerRow key={p.rank} performer={p} />
-      ))}
+  return (
+    <>
+      <div className="bg-white/60 glass-card p-8 rounded-3xl border border-white/50 shadow-sm">
+        <h3 className="text-lg font-bold text-[#232F58] mb-6">Top Performers</h3>
 
-      <button className="w-full py-3 mt-4 rounded-2xl bg-slate-50 text-[10px] font-extrabold text-slate-500 uppercase tracking-widest hover:bg-slate-100 transition-colors">
-        View Full Leaderboard
-      </button>
-    </div>
-  </div>
-);
+        <div className="space-y-6">
+          {performers.map((p) => (
+            <PerformerRow key={p.rank} performer={p} />
+          ))}
+
+          <button
+            onClick={() => setShowLeaderboard(true)}
+            className="w-full py-3 mt-4 rounded-2xl bg-slate-50 text-[10px] font-extrabold text-slate-500 uppercase tracking-widest hover:bg-slate-100 hover:text-[#232F58] transition-all flex items-center justify-center gap-2"
+          >
+            <span className="material-symbols-outlined text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>
+              emoji_events
+            </span>
+            View Full Leaderboard
+          </button>
+        </div>
+      </div>
+
+      {showLeaderboard && (
+        <LeaderboardModal
+          dateRangeDays={dateRangeDays}
+          onClose={() => setShowLeaderboard(false)}
+        />
+      )}
+    </>
+  );
+};
 
 export default TopPerformers;

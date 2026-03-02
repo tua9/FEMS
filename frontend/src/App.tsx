@@ -23,6 +23,7 @@ import TechnicianProfile from './pages/technician/Profile';
 import EquipmentInventory from './pages/technician/EquipmentInventory';
 import HandoverManagement from './pages/technician/HandoverManagement';
 import PerformanceInsights from './pages/technician/PerformanceInsights';
+import TechnicianNotifications from './pages/technician/TechnicianNotifications';
 
 const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const location = useLocation();
@@ -30,7 +31,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const isTechnicianPage = location.pathname.startsWith('/technician');
 
   return (
-    <div className={`min-h-screen flex flex-col ${isTechnicianPage ? 'bg-[#E0EAFC]' : ''}`}>
+    <div className={`min-h-screen flex flex-col ${isTechnicianPage ? 'bg-[#E0EAFC] dark:bg-[#0f172a]' : ''}`}>
       {!isAuthPage && (isTechnicianPage ? <TechnicianNavbar /> : <Navbar />)}
       <main className="flex-grow">
         {children}
@@ -69,6 +70,7 @@ const App: React.FC = () => {
           <Route path="/technician/handover" element={<HandoverManagement />} />
           <Route path="/technician/reports" element={<PerformanceInsights />} />
           <Route path="/technician/profile" element={<TechnicianProfile />} />
+          <Route path="/technician/notifications" element={<TechnicianNotifications />} />
           
           <Route path="/" element={<Navigate to="/login" replace />} />
         </Routes>

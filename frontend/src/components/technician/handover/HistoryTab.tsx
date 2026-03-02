@@ -5,11 +5,39 @@ import {
   getEventStyle,
 } from '@/data/technician/mockHandover';
 import HandoverPagination from './HandoverPagination';
+import HandoverDetailModal, { HandoverDetailRecord } from './HandoverDetailModal';
+
+// ── Convert HistoryRecord → HandoverDetailRecord ──────────────────────────────
+function toDetailRecord(rec: HistoryRecord): HandoverDetailRecord {
+  const ev = getEventStyle(rec.eventType);
+  return {
+    id: rec.logId,
+    title: rec.logId,
+    badge: { label: rec.eventType, className: ev.pill },
+    person: {
+      name:        rec.recipient.name,
+      sub:         rec.recipient.role,
+      initials:    rec.recipient.initials,
+      avatarBg:    rec.recipient.avatarBg,
+      avatarColor: rec.recipient.avatarColor,
+      email:       rec.recipient.email,
+    },
+    meta: [
+      { label: 'Equipment',  value: rec.equipment.name,   icon: rec.equipment.icon },
+      { label: 'Date',       value: rec.date,             icon: 'calendar_today'   },
+      { label: 'Time',       value: rec.time,             icon: 'schedule'         },
+      { label: 'Condition',  value: rec.condition,        icon: 'health_and_safety' },
+    ],
+    items:    rec.items,
+    timeline: rec.timeline,
+    notes:    rec.notes,
+  };
+}
 
 const ITEMS_PER_PAGE = 4;
 
 // ── Single row ────────────────────────────────────────────────────────────────
-const HistoryRow: React.FC<{ record: HistoryRecord }> = ({ record }) => {
+const HistoryRow: React.FC<{ record: HistoryRecord; onDetails: () => void }> = ({ record, onDetails }) => {
   const ev = getEventStyle(record.eventType);
 
   return (
@@ -59,7 +87,11 @@ const HistoryRow: React.FC<{ record: HistoryRecord }> = ({ record }) => {
       </td>
       {/* Action */}
       <td className="px-6 py-5">
-        <button className="p-2 hover:bg-slate-200 rounded-lg transition-colors">
+        <button
+          onClick={onDetails}
+          className="p-2 hover:bg-slate-200 rounded-lg transition-colors"
+          title="View Details"
+        >
           <span className="material-symbols-outlined text-slate-400">visibility</span>
         </button>
       </td>
@@ -72,6 +104,7 @@ const HistoryTab: React.FC = () => {
   const [search, setSearch] = useState('');
   const [typeFilter, setTypeFilter] = useState('All Types');
   const [currentPage, setCurrentPage] = useState(1);
+  const [modalRecord, setModalRecord] = useState<HandoverDetailRecord | null>(null);
 
   const filtered = MOCK_HISTORY.filter((r) => {
     const matchSearch =
@@ -162,7 +195,13 @@ const HistoryTab: React.FC = () => {
             </thead>
             <tbody className="divide-y divide-slate-100">
               {paged.length > 0 ? (
-                paged.map((r) => <HistoryRow key={r.id} record={r} />)
+                paged.map((r) => (
+                  <HistoryRow
+                    key={r.id}
+                    record={r}
+                    onDetails={() => setModalRecord(toDetailRecord(r))}
+                  />
+                ))
               ) : (
                 <tr>
                   <td colSpan={7} className="py-16 text-center text-slate-400 text-sm font-semibold">
@@ -181,6 +220,14 @@ const HistoryTab: React.FC = () => {
           onPageChange={setCurrentPage}
         />
       </div>
+
+      {/* Detail modal */}
+      {modalRecord && (
+        <HandoverDetailModal
+          record={modalRecord}
+          onClose={() => setModalRecord(null)}
+        />
+      )}
     </div>
   );
 };

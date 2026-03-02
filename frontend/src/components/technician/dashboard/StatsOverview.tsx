@@ -69,7 +69,7 @@ const StatsOverview: React.FC = () => {
           )}
 
           {/* Label */}
-          <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mt-2">
+          <p className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mt-2">
             {stat.label}
           </p>
         </div>

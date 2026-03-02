@@ -3,13 +3,31 @@ import { Task } from '@/types/technician.types';
 // Extended type to carry a UI-only display label for issue category
 export interface MockTask extends Task {
   displayCategory?: string;
+  imageUrl?: string;
 }
+
+// Equipment images mapped by category/title keyword
+const IMG = {
+  projector:   'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&q=80',
+  ac:          'https://images.unsplash.com/photo-1585771724684-38269d6639fd?w=400&q=80',
+  computer:    'https://images.unsplash.com/photo-1593640408182-31c228e5e29e?w=400&q=80',
+  whiteboard:  'https://images.unsplash.com/photo-1596496181848-3091d4878b24?w=400&q=80',
+  fan:         'https://images.unsplash.com/photo-1600210492493-0946911123ea?w=400&q=80',
+  pump:        'https://images.unsplash.com/photo-1504328345606-18bbc8c9d7d1?w=400&q=80',
+  printer:     'https://images.unsplash.com/photo-1612815154858-60aa4c59eaa6?w=400&q=80',
+  hvac:        'https://images.unsplash.com/photo-1607472586893-edb57bdc0e39?w=400&q=80',
+  exitlight:   'https://images.unsplash.com/photo-1558618047-3c8c76ca7d13?w=400&q=80',
+  door:        'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&q=80',
+  network:     'https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=400&q=80',
+  screen:      'https://images.unsplash.com/photo-1601784551446-20c9e07cdbdb?w=400&q=80',
+};
 
 export const MOCK_TASKS: MockTask[] = [
   {
     id: 'REP-7742', title: 'Epson Laser Projector',
     description: 'Block A, Room 402', category: 'Safety',
     displayCategory: 'AV Device',
+    imageUrl: IMG.projector,
     priority: 'High', status: 'Completed',
     location: { building: 'Block A', room: 'Room 402', floor: '4' },
     reportedBy: { id: '1', name: 'John', email: '' },
@@ -19,6 +37,7 @@ export const MOCK_TASKS: MockTask[] = [
     id: 'REP-7810', title: 'Central AC Unit #12',
     description: 'Main Library, Level 2', category: 'Maintenance',
     displayCategory: 'HVAC',
+    imageUrl: IMG.ac,
     priority: 'Medium', status: 'Pending',
     location: { building: 'Main Library', room: 'Level 2', floor: '2' },
     reportedBy: { id: '2', name: 'Jane', email: '' },
@@ -28,6 +47,7 @@ export const MOCK_TASKS: MockTask[] = [
     id: 'REP-7901', title: 'Dell Precision Tower',
     description: 'CS Lab 102', category: 'Electrical',
     displayCategory: 'IT Device',
+    imageUrl: IMG.computer,
     priority: 'Low', status: 'Pending',
     location: { building: 'CS Lab', room: '102', floor: '1' },
     reportedBy: { id: '3', name: 'Bob', email: '' },
@@ -37,6 +57,7 @@ export const MOCK_TASKS: MockTask[] = [
     id: 'REP-7955', title: 'Smart Whiteboard Panel',
     description: 'Block B, Room 201', category: 'Safety',
     displayCategory: 'AV Device',
+    imageUrl: IMG.whiteboard,
     priority: 'High', status: 'Pending',
     location: { building: 'Block B', room: 'Room 201', floor: '2' },
     reportedBy: { id: '4', name: 'Alice', email: '' },
@@ -46,6 +67,7 @@ export const MOCK_TASKS: MockTask[] = [
     id: 'REP-8012', title: 'Ceiling Fan Unit #5',
     description: 'Cafeteria, Level 1', category: 'Electrical',
     displayCategory: 'Electrical',
+    imageUrl: IMG.fan,
     priority: 'Medium', status: 'Pending',
     location: { building: 'Cafeteria', room: 'Level 1', floor: '1' },
     reportedBy: { id: '5', name: 'Charlie', email: '' },
@@ -55,6 +77,7 @@ export const MOCK_TASKS: MockTask[] = [
     id: 'REP-8034', title: 'Water Pump Room B',
     description: 'Block B, Basement', category: 'Plumbing',
     displayCategory: 'Plumbing',
+    imageUrl: IMG.pump,
     priority: 'Urgent', status: 'Pending',
     location: { building: 'Block B', room: 'Basement', floor: 'B' },
     reportedBy: { id: '6', name: 'Diana', email: '' },
@@ -64,6 +87,7 @@ export const MOCK_TASKS: MockTask[] = [
     id: 'REP-8101', title: 'HP LaserJet Printer',
     description: 'Admin Office, Level 3', category: 'Electrical',
     displayCategory: 'IT Device',
+    imageUrl: IMG.printer,
     priority: 'Low', status: 'Completed',
     location: { building: 'Admin Office', room: 'Level 3', floor: '3' },
     reportedBy: { id: '7', name: 'Eve', email: '' },
@@ -73,6 +97,7 @@ export const MOCK_TASKS: MockTask[] = [
     id: 'REP-8145', title: 'HVAC Duct Cleaning',
     description: 'Library, Level 3', category: 'Maintenance',
     displayCategory: 'HVAC',
+    imageUrl: IMG.hvac,
     priority: 'Medium', status: 'Pending',
     location: { building: 'Library', room: 'Level 3', floor: '3' },
     reportedBy: { id: '8', name: 'Frank', email: '' },
@@ -82,6 +107,7 @@ export const MOCK_TASKS: MockTask[] = [
     id: 'REP-8201', title: 'Emergency Exit Light',
     description: 'Block C, Stairwell', category: 'Safety',
     displayCategory: 'Safety',
+    imageUrl: IMG.exitlight,
     priority: 'Urgent', status: 'Pending',
     location: { building: 'Block C', room: 'Stairwell', floor: '2' },
     reportedBy: { id: '9', name: 'Grace', email: '' },
@@ -91,6 +117,7 @@ export const MOCK_TASKS: MockTask[] = [
     id: 'REP-8230', title: 'Broken Door Lock',
     description: 'Lab 305, Block D', category: 'Furniture',
     displayCategory: 'Furniture',
+    imageUrl: IMG.door,
     priority: 'High', status: 'Pending',
     location: { building: 'Block D', room: 'Lab 305', floor: '3' },
     reportedBy: { id: '10', name: 'Henry', email: '' },
@@ -100,6 +127,7 @@ export const MOCK_TASKS: MockTask[] = [
     id: 'REP-8267', title: 'Network Switch Cabinet',
     description: 'Server Room, Level 1', category: 'Electrical',
     displayCategory: 'IT Device',
+    imageUrl: IMG.network,
     priority: 'High', status: 'Completed',
     location: { building: 'Server Room', room: 'Level 1', floor: '1' },
     reportedBy: { id: '11', name: 'Iris', email: '' },
@@ -109,6 +137,7 @@ export const MOCK_TASKS: MockTask[] = [
     id: 'REP-8310', title: 'Projector Screen Motor',
     description: 'Lecture Hall A', category: 'Safety',
     displayCategory: 'AV Device',
+    imageUrl: IMG.screen,
     priority: 'Medium', status: 'Pending',
     location: { building: 'Lecture Hall', room: 'Hall A', floor: '1' },
     reportedBy: { id: '12', name: 'Jack', email: '' },

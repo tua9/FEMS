@@ -1,5 +1,32 @@
 import React, { useState } from 'react';
 import { MOCK_FULFILLMENTS, FulfillmentRequest } from '@/data/technician/mockHandover';
+import HandoverDetailModal, { HandoverDetailRecord } from './HandoverDetailModal';
+import ConfirmHandoverModal from './ConfirmHandoverModal';
+
+// ── Convert FulfillmentRequest → HandoverDetailRecord ─────────────────────────
+function toDetailRecord(req: FulfillmentRequest): HandoverDetailRecord {
+  const initials = req.recipient.name
+    .split(' ').slice(0, 2).map((w) => w[0]).join('').toUpperCase();
+  return {
+    id: `REQ-${req.id}`,
+    title: `REQ-${req.id}`,
+    badge: { label: 'Ready for Pickup', className: 'bg-blue-100 text-blue-700' },
+    person: {
+      name:        req.recipient.name,
+      sub:         `${req.recipient.department} · ${req.recipient.designation}`,
+      initials,
+      avatarBg:    'bg-[#1A2B56]/10',
+      avatarColor: 'text-[#1A2B56]',
+    },
+    meta: [
+      { label: 'Request ID',   value: req.id,                           icon: 'tag'            },
+      { label: 'Pickup Time',  value: req.time,                         icon: 'schedule'       },
+      { label: 'Items',        value: `${req.itemCount} approved item${req.itemCount > 1 ? 's' : ''}`, icon: 'inventory_2' },
+      { label: 'Designation',  value: req.recipient.designation,        icon: 'badge'          },
+    ],
+    items: req.items.map((it) => ({ icon: it.icon, name: it.name, serial: it.serial })),
+  };
+}
 
 // ── Left list item ────────────────────────────────────────────────────────────
 interface ListItemProps {
@@ -39,7 +66,13 @@ const FulfillmentListItem: React.FC<ListItemProps> = ({ req, isSelected, onClick
 );
 
 // ── Right detail panel ────────────────────────────────────────────────────────
-const FulfillmentDetail: React.FC<{ req: FulfillmentRequest }> = ({ req }) => (
+interface DetailProps {
+  req: FulfillmentRequest;
+  isDone: boolean;
+  onDetails: () => void;
+  onConfirmHandover: () => void;
+}
+const FulfillmentDetail: React.FC<DetailProps> = ({ req, isDone, onDetails, onConfirmHandover }) => (
   <div
     className="rounded-3xl border border-white/50 shadow-2xl overflow-hidden"
     style={{ background: 'rgba(255,255,255,0.7)', backdropFilter: 'blur(24px)' }}
@@ -60,10 +93,24 @@ const FulfillmentDetail: React.FC<{ req: FulfillmentRequest }> = ({ req }) => (
         </div>
         <div className="text-right">
           <p className="text-xs font-bold text-slate-400 uppercase tracking-tighter">Status</p>
-          <span className="inline-flex items-center gap-1.5 text-blue-600 font-bold text-sm">
-            <span className="w-2 h-2 rounded-full bg-blue-600 animate-pulse" />
-            Ready for Distribution
-          </span>
+          {isDone ? (
+            <span className="inline-flex items-center gap-1.5 text-emerald-600 font-bold text-sm">
+              <span className="w-2 h-2 rounded-full bg-emerald-500" />
+              Completed
+            </span>
+          ) : (
+            <span className="inline-flex items-center gap-1.5 text-blue-600 font-bold text-sm">
+              <span className="w-2 h-2 rounded-full bg-blue-600 animate-pulse" />
+              Ready for Distribution
+            </span>
+          )}
+          <button
+            onClick={onDetails}
+            className="mt-2 flex items-center gap-1.5 ml-auto px-4 py-2 rounded-xl bg-slate-100 text-slate-600 hover:bg-[#1A2B56] hover:text-white text-xs font-bold transition-all"
+          >
+            <span className="material-symbols-outlined text-[15px]">info</span>
+            View Details
+          </button>
         </div>
       </div>
     </div>
@@ -177,12 +224,22 @@ const FulfillmentDetail: React.FC<{ req: FulfillmentRequest }> = ({ req }) => (
 
         {/* Confirm button */}
         <div className="pt-4">
-          <button className="w-full bg-[#1A2B56] hover:bg-slate-900 text-white py-4 rounded-2xl flex items-center justify-center gap-3 font-extrabold text-sm shadow-2xl shadow-[#1A2B56]/30 transition-all active:scale-95 group">
-            Confirm Physical Handover
-            <span className="material-symbols-outlined text-lg group-hover:translate-x-1 transition-transform">
-              verified_user
-            </span>
-          </button>
+          {isDone ? (
+            <div className="w-full py-4 rounded-2xl bg-emerald-50 border border-emerald-200 flex items-center justify-center gap-3 text-emerald-600 font-extrabold text-sm">
+              <span className="material-symbols-outlined text-lg" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
+              Handover Completed
+            </div>
+          ) : (
+            <button
+              onClick={onConfirmHandover}
+              className="w-full bg-[#1A2B56] hover:bg-slate-900 text-white py-4 rounded-2xl flex items-center justify-center gap-3 font-extrabold text-sm shadow-2xl shadow-[#1A2B56]/30 transition-all active:scale-95 group"
+            >
+              Confirm Physical Handover
+              <span className="material-symbols-outlined text-lg group-hover:translate-x-1 transition-transform">
+                verified_user
+              </span>
+            </button>
+          )}
         </div>
       </div>
     </div>
@@ -192,41 +249,73 @@ const FulfillmentDetail: React.FC<{ req: FulfillmentRequest }> = ({ req }) => (
 // ── Tab component ─────────────────────────────────────────────────────────────
 const HandoverTab: React.FC = () => {
   const [selectedId, setSelectedId] = useState(MOCK_FULFILLMENTS[0].id);
+  const [modalRecord, setModalRecord] = useState<HandoverDetailRecord | null>(null);
+  const [confirmReq, setConfirmReq] = useState<FulfillmentRequest | null>(null);
+  const [doneIds, setDoneIds] = useState<Set<string>>(new Set());
+
   const selected = MOCK_FULFILLMENTS.find((r) => r.id === selectedId) ?? MOCK_FULFILLMENTS[0];
 
+  const handleConfirmed = (id: string) => {
+    setDoneIds((prev) => new Set([...prev, id]));
+  };
+
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-      {/* Left list */}
-      <div
-        className="lg:col-span-4 rounded-3xl border border-white/50 shadow-xl overflow-hidden flex flex-col h-[700px]"
-        style={{ background: 'rgba(255,255,255,0.7)', backdropFilter: 'blur(24px)' }}
-      >
-        <div className="p-6 border-b border-slate-200/50">
-          <h3 className="text-lg font-bold text-[#1A2B56] flex items-center gap-2">
-            <span className="material-symbols-outlined text-blue-500">pending_actions</span>
-            Approved for Pickup
-          </h3>
-          <p className="text-[10px] text-slate-500 uppercase font-bold tracking-widest mt-1">
-            Select a request to fulfill
-          </p>
+    <>
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        {/* Left list */}
+        <div
+          className="lg:col-span-4 rounded-3xl border border-white/50 shadow-xl overflow-hidden flex flex-col h-[700px]"
+          style={{ background: 'rgba(255,255,255,0.7)', backdropFilter: 'blur(24px)' }}
+        >
+          <div className="p-6 border-b border-slate-200/50">
+            <h3 className="text-lg font-bold text-[#1A2B56] flex items-center gap-2">
+              <span className="material-symbols-outlined text-blue-500">pending_actions</span>
+              Approved for Pickup
+            </h3>
+            <p className="text-[10px] text-slate-500 uppercase font-bold tracking-widest mt-1">
+              Select a request to fulfill
+            </p>
+          </div>
+          <div className="flex-1 overflow-y-auto p-4 space-y-3 custom-scrollbar">
+            {MOCK_FULFILLMENTS.map((req) => (
+              <FulfillmentListItem
+                key={req.id}
+                req={req}
+                isSelected={req.id === selectedId}
+                onClick={() => setSelectedId(req.id)}
+              />
+            ))}
+          </div>
         </div>
-        <div className="flex-1 overflow-y-auto p-4 space-y-3 custom-scrollbar">
-          {MOCK_FULFILLMENTS.map((req) => (
-            <FulfillmentListItem
-              key={req.id}
-              req={req}
-              isSelected={req.id === selectedId}
-              onClick={() => setSelectedId(req.id)}
-            />
-          ))}
+
+        {/* Right detail */}
+        <div className="lg:col-span-8">
+          <FulfillmentDetail
+            req={selected}
+            isDone={doneIds.has(selected.id)}
+            onDetails={() => setModalRecord(toDetailRecord(selected))}
+            onConfirmHandover={() => setConfirmReq(selected)}
+          />
         </div>
       </div>
 
-      {/* Right detail */}
-      <div className="lg:col-span-8">
-        <FulfillmentDetail req={selected} />
-      </div>
-    </div>
+      {/* Detail modal */}
+      {modalRecord && (
+        <HandoverDetailModal
+          record={modalRecord}
+          onClose={() => setModalRecord(null)}
+        />
+      )}
+
+      {/* Confirm physical handover modal */}
+      {confirmReq && (
+        <ConfirmHandoverModal
+          req={confirmReq}
+          onClose={() => setConfirmReq(null)}
+          onConfirm={(id) => { handleConfirmed(id); setConfirmReq(null); }}
+        />
+      )}
+    </>
   );
 };
 
