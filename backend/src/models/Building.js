@@ -19,5 +19,11 @@ const buildingSchema = new mongoose.Schema(
   },
 )
 
+// Default sort by newest first
+buildingSchema.pre('find', function (next) {
+  this.sort({ createdAt: -1 })
+  next()
+})
+
 const Building = mongoose.model('Building', buildingSchema)
 export default Building

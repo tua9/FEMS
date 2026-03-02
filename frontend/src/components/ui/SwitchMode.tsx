@@ -23,6 +23,7 @@ const SwitchMode = () => {
         checked={checked}
         onCheckedChange={setChecked}
         aria-label="Toggle switch"
+        className="border-border border"
       />
       <Label htmlFor="icon-label">
         <span className="sr-only">Toggle switch</span>

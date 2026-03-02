@@ -18,7 +18,7 @@ export function NavBar() {
               <span className="material-symbols-outlined text-2xl"></span>
             </div>
 
-            <div className="flex flex-col">
+            <div className="hidden flex-col md:flex">
               <h1 className="text-foreground text-xl leading-none font-bold tracking-tight">
                 F-EMS
               </h1>
@@ -58,7 +58,7 @@ export function NavBar() {
             <ProfileDropdown
               trigger={
                 <Button variant="ghost" size="icon" className="size-9.5">
-                  <Avatar className="size-9.5 rounded-md">
+                  <Avatar className="size-9.5 rounded-full">
                     <AvatarImage src="https://cdn.shadcnstudio.com/ss-assets/avatar/avatar-1.png" />
                     <AvatarFallback>JD</AvatarFallback>
                   </Avatar>
