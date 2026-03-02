@@ -40,11 +40,11 @@ const AdminNotificationDropdown: React.FC<Props> = ({ isDark }) => {
             {/* Bell button */}
             <button
                 onClick={() => setOpen((o) => !o)}
-                className="p-2 rounded-full text-slate-600 dark:text-slate-300 hover:bg-white/50 dark:hover:bg-white/10 transition-all relative"
+                className="w-10 h-10 flex items-center justify-center rounded-full text-slate-600 dark:text-slate-300 hover:bg-white/40 dark:hover:bg-slate-700/50 transition-all relative group"
             >
-                <span className="material-symbols-outlined text-[20px]">notifications</span>
+                <span className="material-symbols-outlined text-[22px] group-hover:scale-110 transition-transform">notifications</span>
                 {unread > 0 && (
-                    <span className="absolute top-2 right-2 w-2 h-2 bg-rose-500 rounded-full border-[1.5px] border-white dark:border-slate-900 flex items-center justify-center">
+                    <span className="absolute top-2.5 right-2.5 w-2 h-2 bg-rose-500 rounded-full border-[1.5px] border-white dark:border-slate-800 flex items-center justify-center">
                     </span>
                 )}
             </button>
@@ -143,8 +143,8 @@ const AdminNotificationDropdown: React.FC<Props> = ({ isDark }) => {
                                         <div className="flex-1 min-w-0">
                                             <div className="flex items-start justify-between gap-1">
                                                 <p className={`text-xs font-extrabold leading-tight truncate ${notif.read
-                                                        ? 'text-slate-500 dark:text-slate-400'
-                                                        : 'text-[#1A2B56] dark:text-white'
+                                                    ? 'text-slate-500 dark:text-slate-400'
+                                                    : 'text-[#1A2B56] dark:text-white'
                                                     }`}>
                                                     {notif.title}
                                                 </p>

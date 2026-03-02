@@ -10,21 +10,54 @@ const BorrowingManagement: React.FC = () => {
     const [borrowRecords, setBorrowRecords] = useState<BorrowRecord[]>([]);
     const [loading, setLoading] = useState(true);
     const [isNewBorrowModalOpen, setIsNewBorrowModalOpen] = useState(false);
+    const [searchQuery, setSearchQuery] = useState('');
+    const [statusFilter, setStatusFilter] = useState<BorrowRecord['status'] | 'All'>('All');
+
+    const fetchBorrowingData = async () => {
+        setLoading(true);
+        try {
+            const records = await adminApi.getBorrowingList();
+            setBorrowRecords(records);
+        } catch (error) {
+            console.error("Failed to fetch borrowing data", error);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     useEffect(() => {
-        const fetchBorrowingData = async () => {
-            try {
-                const records = await adminApi.getBorrowingList();
-                setBorrowRecords(records);
-            } catch (error) {
-                console.error("Failed to fetch borrowing data", error);
-            } finally {
-                setLoading(false);
-            }
-        };
-
         fetchBorrowingData();
     }, []);
+
+    const handleUpdateStatus = async (id: string, status: BorrowRecord['status']) => {
+        try {
+            await adminApi.updateBorrowStatus(id, status);
+            // Refresh local state
+            setBorrowRecords(prev => prev.map(r => r.id === id ? { ...r, status } : r));
+        } catch (error) {
+            alert("Failed to update status");
+        }
+    };
+
+    const handleAlert = async (id: string) => {
+        try {
+            await adminApi.sendBorrowAlert(id);
+            alert("Alert sent successfully to the borrower.");
+        } catch (error) {
+            alert("Failed to send alert");
+        }
+    };
+
+    const filteredRecords = borrowRecords.filter(record => {
+        const matchesSearch =
+            record.borrowerName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            record.equipmentName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            record.borrowerId.toLowerCase().includes(searchQuery.toLowerCase());
+
+        const matchesStatus = statusFilter === 'All' || record.status === statusFilter;
+
+        return matchesSearch && matchesStatus;
+    });
 
     if (loading) {
         return (
@@ -96,26 +129,54 @@ const BorrowingManagement: React.FC = () => {
                                 <h4 className="font-extrabold text-[#1A2B56] dark:text-white text-lg">Loan Requests & Active Borrowings</h4>
 
                                 <div className="flex items-center gap-3">
-                                    <div className="relative w-full sm:w-64 bg-white/60 dark:bg-slate-700/50 rounded-xl border border-white/80 dark:border-slate-600 p-0.5">
+                                    <div className="relative w-full sm:w-64 bg-white/60 dark:bg-slate-700/50 rounded-xl border border-white/80 dark:border-slate-600 p-0.5 transition-all focus-within:ring-2 focus-within:ring-[#1A2B56]/10">
                                         <div className="relative flex items-center">
                                             <span className="material-symbols-outlined absolute left-3 text-slate-400 text-sm">search</span>
                                             <input
                                                 className="w-full pl-9 pr-3 py-2 bg-transparent border-none rounded-xl text-xs font-medium focus:ring-0 transition-all outline-none placeholder:text-slate-400 dark:text-white"
                                                 placeholder="Search user or item..."
                                                 type="text"
+                                                value={searchQuery}
+                                                onChange={(e) => setSearchQuery(e.target.value)}
                                             />
+                                            {searchQuery && (
+                                                <button
+                                                    onClick={() => setSearchQuery('')}
+                                                    className="absolute right-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+                                                >
+                                                    <span className="material-symbols-outlined text-sm">close</span>
+                                                </button>
+                                            )}
                                         </div>
                                     </div>
-                                    <button className="flex items-center justify-center p-2.5 bg-white/70 dark:bg-slate-700 hover:bg-white dark:hover:bg-slate-600 rounded-xl text-slate-700 dark:text-slate-200 border border-white/80 dark:border-slate-500 shadow-sm transition-all">
-                                        <span className="material-symbols-outlined text-sm">filter_list</span>
-                                    </button>
+                                    <div className="relative">
+                                        <select
+                                            value={statusFilter}
+                                            onChange={(e) => setStatusFilter(e.target.value as any)}
+                                            className="appearance-none pl-3 pr-8 py-2.5 bg-white/70 dark:bg-slate-700 hover:bg-white dark:hover:bg-slate-600 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 border border-white/80 dark:border-slate-500 shadow-sm transition-all outline-none cursor-pointer"
+                                        >
+                                            <option value="All">All Status</option>
+                                            <option value="Pending">Pending</option>
+                                            <option value="Approved">Approved</option>
+                                            <option value="Overdue">Overdue</option>
+                                            <option value="Returned">Returned</option>
+                                            <option value="Rejected">Rejected</option>
+                                        </select>
+                                        <span className="material-symbols-outlined absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none text-sm">filter_list</span>
+                                    </div>
                                 </div>
                             </div>
 
-                            <BorrowingTable records={borrowRecords} />
+                            <BorrowingTable
+                                records={filteredRecords}
+                                onApprove={(id) => handleUpdateStatus(id, 'Approved')}
+                                onReject={(id) => handleUpdateStatus(id, 'Rejected')}
+                                onReturn={(id) => handleUpdateStatus(id, 'Returned')}
+                                onAlert={handleAlert}
+                            />
                         </div>
 
-                        <UpcomingReturnCards records={borrowRecords} />
+                        <UpcomingReturnCards records={filteredRecords} />
                     </div>
 
                     {/* Sidebar Area */}

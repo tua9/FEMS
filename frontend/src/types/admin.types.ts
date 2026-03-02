@@ -3,19 +3,20 @@ export interface User {
   name: string;
   email: string;
   role: 'Lecturer' | 'Student' | 'Manager' | 'Technician' | 'Super Admin';
-  status: 'Active' | 'Locked' | 'Pending';
+  status: 'Active' | 'Inactive' | 'Pending';
   avatar?: string;
 }
 
 export interface Asset {
   id: string;
   name: string;
-  category: 'Laptop' | 'Photography' | 'Peripheral' | 'Tablet' | 'Other';
+  category: 'Laptop' | 'Photography' | 'Peripheral' | 'Tablet' | 'Network' | 'Other';
   location: string;
   quantity: number;
   status: 'Available' | 'In Use' | 'Maintenance' | 'Broken' | 'Repairing' | 'Broken Screen';
   imageUrl?: string;
   lastInspection?: string;
+  description?: string;
 }
 
 export interface EquipmentRequest {
@@ -50,7 +51,7 @@ export interface BorrowRecord {
   equipmentId: string;
   equipmentName: string;
   dueDate: string; // YYYY-MM-DD
-  status: 'Pending' | 'Approved' | 'Overdue' | 'Returned';
+  status: 'Pending' | 'Approved' | 'Overdue' | 'Returned' | 'Rejected';
   isDueTodayOrTomorrow?: boolean;
 }
 

@@ -5,9 +5,11 @@ interface EquipmentTableProps {
     equipments: Asset[];
     onOpenDetails?: (asset: Asset) => void;
     onOpenQRCode?: (asset: Asset) => void;
+    onEdit?: (asset: Asset) => void;
+    onDelete?: (asset: Asset) => void;
 }
 
-const EquipmentTable: React.FC<EquipmentTableProps> = ({ equipments, onOpenDetails, onOpenQRCode }) => {
+const EquipmentTable: React.FC<EquipmentTableProps> = ({ equipments, onOpenDetails, onOpenQRCode, onEdit, onDelete }) => {
 
     const getStatusStyle = (status: string) => {
         switch (status) {
@@ -35,48 +37,71 @@ const EquipmentTable: React.FC<EquipmentTableProps> = ({ equipments, onOpenDetai
                     </tr>
                 </thead>
                 <tbody className="space-y-4">
-                    {equipments.map(item => (
-                        <tr key={item.id} className="group cursor-pointer" onClick={() => onOpenDetails && onOpenDetails(item)}>
-                            <td className={`p-4 rounded-l-2xl ${rowBg}`}>
-                                <div className="flex items-center gap-4">
-                                    <div className="w-12 h-12 rounded-xl bg-white dark:bg-slate-700 p-1 shadow-sm overflow-hidden flex-shrink-0">
-                                        <img alt={item.name} className="w-full h-full object-cover rounded-lg" src={item.imageUrl || 'https://via.placeholder.com/150'} />
+                    {equipments.length > 0 ? (
+                        equipments.map(item => (
+                            <tr key={item.id} className="group cursor-pointer" onClick={() => onOpenDetails && onOpenDetails(item)}>
+                                <td className={`p-4 rounded-l-2xl ${rowBg}`}>
+                                    <div className="flex items-center gap-4">
+                                        <div className="w-12 h-12 rounded-xl bg-white dark:bg-slate-700 p-1 shadow-sm overflow-hidden flex-shrink-0">
+                                            <img alt={item.name} className="w-full h-full object-cover rounded-lg" src={item.imageUrl || 'https://via.placeholder.com/150'} />
+                                        </div>
+                                        <div>
+                                            <p className="text-sm font-bold text-slate-800 dark:text-white">{item.name}</p>
+                                            <p className="text-[10px] text-slate-500 dark:text-slate-400 font-semibold">ID: {item.id}</p>
+                                        </div>
                                     </div>
+                                </td>
+                                <td className={`p-4 text-sm font-bold text-slate-600 dark:text-slate-300 hidden md:table-cell ${rowBg}`}>{item.category}</td>
+                                <td className={`p-4 text-sm font-bold text-slate-600 dark:text-slate-300 hidden sm:table-cell ${rowBg}`}>{item.location}</td>
+                                <td className={`p-4 text-sm font-bold text-slate-800 dark:text-white ${rowBg}`}>{String(item.quantity).padStart(2, '0')}</td>
+                                <td className={`p-4 ${rowBg}`}>
+                                    <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider inline-flex items-center justify-center whitespace-nowrap ${getStatusStyle(item.status)}`}>
+                                        {item.status}
+                                    </span>
+                                </td>
+                                <td className={`p-4 rounded-r-2xl text-right ${rowBg}`} onClick={e => e.stopPropagation()}>
+                                    <div className="flex items-center justify-end gap-2 text-slate-400">
+                                        <button
+                                            onClick={(e) => { e.stopPropagation(); onOpenQRCode && onOpenQRCode(item); }}
+                                            className="p-2 hover:bg-white/80 dark:hover:bg-slate-600 rounded-lg transition-all text-slate-400 hover:text-[#1A2B56] dark:hover:text-blue-400"
+                                        >
+                                            <span className="material-symbols-outlined text-xl">qr_code_2</span>
+                                        </button>
+                                        <button
+                                            onClick={(e) => { e.stopPropagation(); onEdit && onEdit(item); }}
+                                            className="p-2 hover:bg-white/80 dark:hover:bg-slate-600 rounded-lg transition-all text-slate-400 hover:text-[#1A2B56] dark:hover:text-blue-400"
+                                        >
+                                            <span className="material-symbols-outlined text-xl">edit</span>
+                                        </button>
+                                        <button
+                                            onClick={(e) => { e.stopPropagation(); onDelete && onDelete(item); }}
+                                            className="p-2 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition-all text-slate-400 hover:text-red-500"
+                                        >
+                                            <span className="material-symbols-outlined text-xl">delete</span>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        ))
+                    ) : (
+                        <tr>
+                            <td colSpan={6} className="py-16 text-center bg-white/40 dark:bg-slate-800/40 rounded-3xl border border-dashed border-slate-200 dark:border-slate-700">
+                                <div className="flex flex-col items-center gap-4">
+                                    <span className="material-symbols-outlined text-5xl text-slate-300">inventory</span>
                                     <div>
-                                        <p className="text-sm font-bold text-slate-800 dark:text-white">{item.name}</p>
-                                        <p className="text-[10px] text-slate-500 dark:text-slate-400 font-semibold">ID: {item.id}</p>
+                                        <p className="text-sm font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-1">No equipment found</p>
+                                        <p className="text-xs text-slate-400 font-medium">No assets matching your current search or filter criteria.</p>
                                     </div>
-                                </div>
-                            </td>
-                            <td className={`p-4 text-sm font-bold text-slate-600 dark:text-slate-300 hidden md:table-cell ${rowBg}`}>{item.category}</td>
-                            <td className={`p-4 text-sm font-bold text-slate-600 dark:text-slate-300 hidden sm:table-cell ${rowBg}`}>{item.location}</td>
-                            <td className={`p-4 text-sm font-bold text-slate-800 dark:text-white ${rowBg}`}>{String(item.quantity).padStart(2, '0')}</td>
-                            <td className={`p-4 ${rowBg}`}>
-                                <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider inline-flex items-center justify-center whitespace-nowrap ${getStatusStyle(item.status)}`}>
-                                    {item.status}
-                                </span>
-                            </td>
-                            <td className={`p-4 rounded-r-2xl text-right ${rowBg}`} onClick={e => e.stopPropagation()}>
-                                <div className="flex items-center justify-end gap-2 text-slate-400">
                                     <button
-                                        onClick={(e) => { e.stopPropagation(); onOpenQRCode && onOpenQRCode(item); }}
-                                        className="p-2 hover:bg-white/80 dark:hover:bg-slate-600 rounded-lg transition-all text-slate-400 hover:text-[#1A2B56] dark:hover:text-blue-400"
+                                        onClick={() => window.location.reload()}
+                                        className="mt-2 px-6 py-2 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all"
                                     >
-                                        <span className="material-symbols-outlined text-xl">qr_code_2</span>
-                                    </button>
-                                    <button
-                                        onClick={(e) => { e.stopPropagation(); onOpenDetails && onOpenDetails(item); }}
-                                        className="p-2 hover:bg-white/80 dark:hover:bg-slate-600 rounded-lg transition-all text-slate-400 hover:text-[#1A2B56] dark:hover:text-blue-400"
-                                    >
-                                        <span className="material-symbols-outlined text-xl">edit</span>
-                                    </button>
-                                    <button className="p-2 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition-all text-slate-400 hover:text-red-500">
-                                        <span className="material-symbols-outlined text-xl">delete</span>
+                                        Clear All Filters
                                     </button>
                                 </div>
                             </td>
                         </tr>
-                    ))}
+                    )}
                 </tbody>
             </table>
         </div>

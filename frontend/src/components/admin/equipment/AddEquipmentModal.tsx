@@ -1,12 +1,75 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
+import { Asset } from '../../../types/admin.types';
 
 interface AddEquipmentModalProps {
     isOpen: boolean;
     onClose: () => void;
+    equipment?: Asset | null;
+    onEquipmentUpdated?: () => void;
 }
 
-const AddEquipmentModal: React.FC<AddEquipmentModalProps> = ({ isOpen, onClose }) => {
+import { adminApi } from '../../../services/api/adminApi';
+
+const generateDeviceId = () => `EQ-${Math.floor(100000 + Math.random() * 900000)}`;
+
+const AddEquipmentModal: React.FC<AddEquipmentModalProps> = ({ isOpen, onClose, equipment, onEquipmentUpdated }) => {
+    const isEdit = !!equipment;
+
+    const [name, setName] = useState('');
+    const [category, setCategory] = useState('');
+    const [quantity, setQuantity] = useState(1);
+    const [location, setLocation] = useState('');
+    const [description, setDescription] = useState('');
+    const [isSubmitting, setIsSubmitting] = useState(false);
+
+    useEffect(() => {
+        if (equipment) {
+            setName(equipment.name);
+            setCategory(equipment.category);
+            setQuantity(equipment.quantity);
+            setLocation(equipment.location);
+            setDescription(equipment.description || '');
+        } else {
+            setName('');
+            setCategory('');
+            setQuantity(1);
+            setLocation('');
+            setDescription('');
+        }
+    }, [equipment, isOpen]);
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setIsSubmitting(true);
+
+        const assetData: Asset = {
+            id: equipment?.id || generateDeviceId(),
+            name,
+            category: category as any,
+            quantity,
+            location,
+            status: equipment?.status || 'Available',
+            imageUrl: equipment?.imageUrl || 'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?auto=format&fit=crop&q=80&w=1026',
+            description
+        };
+
+        try {
+            if (isEdit) {
+                await adminApi.updateEquipment(assetData);
+            } else {
+                await adminApi.createEquipment(assetData);
+            }
+            if (onEquipmentUpdated) onEquipmentUpdated();
+            onClose();
+        } catch (error) {
+            console.error("Failed to save equipment", error);
+            alert("An error occurred while saving. Please try again.");
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
     if (!isOpen) return null;
 
     // Use portal to render modal outside the DOM hierarchy to avoid stacking context issues
@@ -19,8 +82,12 @@ const AddEquipmentModal: React.FC<AddEquipmentModalProps> = ({ isOpen, onClose }
                 {/* Header */}
                 <div className="flex items-center justify-between p-6 border-b border-slate-200/50 dark:border-slate-700/50">
                     <div>
-                        <h3 className="text-xl font-extrabold text-[#1A2B56] dark:text-white">Add New Equipment</h3>
-                        <p className="text-xs text-slate-500 font-semibold mt-1">Enter details to register a new asset into the system.</p>
+                        <h3 className="text-xl font-extrabold text-[#1A2B56] dark:text-white">
+                            {isEdit ? 'Edit Equipment' : 'Add New Equipment'}
+                        </h3>
+                        <p className="text-xs text-slate-500 font-semibold mt-1">
+                            {isEdit ? 'Update details for this university asset.' : 'Enter details to register a new asset into the system.'}
+                        </p>
                     </div>
                     <button
                         onClick={onClose}
@@ -32,25 +99,34 @@ const AddEquipmentModal: React.FC<AddEquipmentModalProps> = ({ isOpen, onClose }
 
                 {/* Body */}
                 <div className="p-6 overflow-y-auto custom-scrollbar">
-                    <form className="space-y-5">
+                    <form id="equipmentForm" onSubmit={handleSubmit} className="space-y-5">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                             <div className="space-y-1.5">
                                 <label className="text-xs font-bold text-slate-700 dark:text-slate-300 ml-1">Equipment Name <span className="text-red-500">*</span></label>
                                 <input
                                     type="text"
+                                    value={name}
+                                    onChange={e => setName(e.target.value)}
                                     className="w-full bg-white/50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-[#1A2B56] dark:focus:ring-blue-500 outline-none transition-all dark:text-white"
                                     placeholder="e.g. MacBook Pro M3"
+                                    required
                                 />
                             </div>
 
                             <div className="space-y-1.5">
                                 <label className="text-xs font-bold text-slate-700 dark:text-slate-300 ml-1">Category <span className="text-red-500">*</span></label>
-                                <select className="w-full bg-white/50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-[#1A2B56] dark:focus:ring-blue-500 outline-none transition-all dark:text-white appearance-none">
+                                <select
+                                    value={category}
+                                    onChange={e => setCategory(e.target.value)}
+                                    className="w-full bg-white/50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-[#1A2B56] dark:focus:ring-blue-500 outline-none transition-all dark:text-white appearance-none"
+                                    required
+                                >
                                     <option value="">Select Category</option>
                                     <option value="Laptop">Laptop & Computers</option>
                                     <option value="Photography">Photography & Video</option>
                                     <option value="Peripheral">Peripherals</option>
                                     <option value="Tablet">Tablets</option>
+                                    <option value="Network">Network Devices</option>
                                 </select>
                             </div>
 
@@ -58,10 +134,12 @@ const AddEquipmentModal: React.FC<AddEquipmentModalProps> = ({ isOpen, onClose }
                                 <label className="text-xs font-bold text-slate-700 dark:text-slate-300 ml-1">Quantity <span className="text-red-500">*</span></label>
                                 <input
                                     type="number"
+                                    value={quantity}
+                                    onChange={e => setQuantity(parseInt(e.target.value) || 0)}
                                     className="w-full bg-white/50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-[#1A2B56] dark:focus:ring-blue-500 outline-none transition-all dark:text-white"
                                     placeholder="1"
-                                    defaultValue={1}
                                     min={1}
+                                    required
                                 />
                             </div>
 
@@ -69,8 +147,11 @@ const AddEquipmentModal: React.FC<AddEquipmentModalProps> = ({ isOpen, onClose }
                                 <label className="text-xs font-bold text-slate-700 dark:text-slate-300 ml-1">Location / Room <span className="text-red-500">*</span></label>
                                 <input
                                     type="text"
+                                    value={location}
+                                    onChange={e => setLocation(e.target.value)}
                                     className="w-full bg-white/50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-[#1A2B56] dark:focus:ring-blue-500 outline-none transition-all dark:text-white"
                                     placeholder="e.g. Lab 402"
+                                    required
                                 />
                             </div>
                         </div>
@@ -78,6 +159,8 @@ const AddEquipmentModal: React.FC<AddEquipmentModalProps> = ({ isOpen, onClose }
                         <div className="space-y-1.5">
                             <label className="text-xs font-bold text-slate-700 dark:text-slate-300 ml-1">Description</label>
                             <textarea
+                                value={description}
+                                onChange={e => setDescription(e.target.value)}
                                 className="w-full bg-white/50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-[#1A2B56] dark:focus:ring-blue-500 outline-none transition-all dark:text-white min-h-[100px] resize-y"
                                 placeholder="Add technical specifications or notes..."
                             ></textarea>
@@ -104,9 +187,14 @@ const AddEquipmentModal: React.FC<AddEquipmentModalProps> = ({ isOpen, onClose }
                     >
                         Cancel
                     </button>
-                    <button className="px-8 py-2.5 rounded-xl font-bold text-sm bg-[#1A2B56] hover:bg-[#2A3B66] text-white shadow-lg transition-colors flex items-center gap-2">
-                        <span className="material-symbols-outlined text-sm">save</span>
-                        Save Equipment
+                    <button
+                        type="submit"
+                        form="equipmentForm"
+                        disabled={isSubmitting}
+                        className={`px-8 py-2.5 rounded-xl font-bold text-sm bg-[#1A2B56] hover:bg-[#2A3B66] text-white shadow-lg transition-colors flex items-center gap-2 ${isSubmitting ? 'animate-pulse' : ''}`}
+                    >
+                        <span className="material-symbols-outlined text-sm">{isSubmitting ? 'hourglass_top' : (isEdit ? 'update' : 'save')}</span>
+                        {isSubmitting ? 'Saving...' : (isEdit ? 'Update Changes' : 'Save Equipment')}
                     </button>
                 </div>
             </div>

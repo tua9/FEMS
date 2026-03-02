@@ -2,6 +2,7 @@ import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useDarkMode } from '../../../hooks/useDarkMode';
 import AdminNotificationDropdown from './AdminNotificationDropdown';
+import AdminUserDropdown from './AdminUserDropdown';
 
 const AdminNavbar: React.FC = () => {
     const { isDark, toggle } = useDarkMode();
@@ -16,8 +17,8 @@ const AdminNavbar: React.FC = () => {
     const activeLinkClasses = 'px-4 py-2 rounded-xl bg-white/60 dark:bg-slate-700/60 backdrop-blur-md shadow-sm border border-white/80 dark:border-slate-600 text-[#1A2B56] dark:text-white font-bold transition-all';
 
     return (
-        <header className="max-w-7xl mx-auto px-6 py-4 sticky top-0 z-40 w-full transition-all duration-300">
-            <nav className="glass-card hover:transform-none hover:bg-white/70 dark:hover:bg-slate-800/80 dark:bg-slate-800/80 px-8 py-3.5 flex items-center justify-between ambient-shadow rounded-[32px] border border-white/40 dark:border-white/10 backdrop-blur-[30px] bg-white/70">
+        <header className="max-w-7xl mx-auto px-6 py-2 sticky top-0 z-40 w-full transition-all duration-300">
+            <nav className="glass-card hover:transform-none hover:bg-white/50 dark:hover:bg-slate-800/60 dark:bg-slate-800/50 px-8 py-2 flex items-center justify-between ambient-shadow rounded-[32px] border border-white/40 dark:border-white/10 backdrop-blur-[30px] bg-white/40">
                 <div className="flex items-center gap-4">
                     <div className="bg-[#1A2B56] p-2.5 rounded-2xl shadow-lg">
                         <span className="material-symbols-outlined text-white text-2xl block">shield_person</span>
@@ -58,29 +59,20 @@ const AdminNavbar: React.FC = () => {
 
                 <div className="flex items-center gap-4">
                     <div className="flex items-center gap-2">
-                        <div
+                        <button
                             onClick={toggle}
-                            className="p-2 hover:bg-white/40 dark:hover:bg-slate-700/50 rounded-full transition-colors cursor-pointer text-slate-700 dark:text-slate-300 flex items-center justify-center">
-                            <span className="material-symbols-outlined text-xl">
+                            className="w-10 h-10 flex items-center justify-center hover:bg-white/40 dark:hover:bg-slate-700/50 rounded-full transition-all cursor-pointer text-slate-700 dark:text-slate-300 group"
+                        >
+                            <span className="material-symbols-outlined text-[22px] group-hover:scale-110 transition-transform">
                                 {isDark ? 'light_mode' : 'dark_mode'}
                             </span>
-                        </div>
+                        </button>
                         <AdminNotificationDropdown isDark={isDark} />
                     </div>
 
                     <div className="h-8 w-px bg-slate-300 dark:bg-slate-600 mx-1 block"></div>
 
-                    <div className="flex items-center gap-3">
-                        <div className="text-right hidden sm:block">
-                            <p className="text-xs font-bold text-[#1A2B56] dark:text-white leading-tight">Dr. Alex Rivers</p>
-                            <p className="text-[10px] text-slate-600 dark:text-slate-400 font-bold uppercase tracking-wider">Super Admin</p>
-                        </div>
-                        <img
-                            alt="User Avatar"
-                            className="w-10 h-10 rounded-full border-2 border-white dark:border-slate-700 shadow-sm object-cover"
-                            src="https://lh3.googleusercontent.com/aida-public/AB6AXuCcggs7eAYT2sZhh9PUUg92V8HXIIxc0jDm5T-fbIxRUndvYPXR-KaiMKom4de_HNUf5iT0-HXrSSkKxMtksiCqeXY_XGF1VWVo0aCv_toMt8A72BLQ4v8_rNOTrcGhPwgm0qltaPl1Snkr87WwGfeaxWAzmp68qbD9ReQq-riFao0D-mhrHJ2uTB-RSHtnfotQfepINcMPrQjS61Bci7WRtS9u43hLtR7cob_7vOg1HZm3AvAwVWqo8McXaZGEZ3JKnAWygJOar1AQ"
-                        />
-                    </div>
+                    <AdminUserDropdown isDark={isDark} />
                 </div>
             </nav>
         </header>

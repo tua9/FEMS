@@ -22,7 +22,7 @@ export const mockUsersList: User[] = [
         name: 'Elena Rodriguez',
         email: 'e.rodriguez@admin.edu',
         role: 'Manager',
-        status: 'Locked',
+        status: 'Inactive',
         avatar: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDvX1PfwnhMfomA9BdY5TdXBUgw3SGoLYtU1pQYU3kvPrvAQbq1iEEtiHSo6SVjA3uiWVrYyFJazOpxPzeNJ4iBI9RLjZhx8o5tgYk1cwYFltkw17WdN2bKl0VCbRtIkUlir1rFdvUuQzkMD-GQnHximieWrv1m4iVaRhY-opbB44ThB5dIGfPec0vdgsj3czCO_dujITuMrs3Ch_ZZoHWwCuUK_lXY7ej5Ph2G0mg-GiE9de7uy524zd8RsSVhwrXsCx-HIVDzgbeD',
     },
     {
