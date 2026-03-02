@@ -20,12 +20,18 @@ const roomSchema = mongoose.Schema(
     },
     building_id: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'building',
+      ref: 'Building',
       default: null,
     },
   },
   { timestamps: true },
 )
+
+// Default sort by newest first
+roomSchema.pre('find', function (next) {
+  this.sort({ createdAt: -1 })
+  next()
+})
 
 const Room = mongoose.model('Room', roomSchema)
 export default Room

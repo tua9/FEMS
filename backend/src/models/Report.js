@@ -5,7 +5,7 @@ const reportSchema = new mongoose.Schema(
     user_id: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
-      default: null,
+      default: null, // Null means it's a guest report from an unauthenticated user
     },
 
     equipment_id: {
@@ -50,6 +50,12 @@ const reportSchema = new mongoose.Schema(
   },
   { timestamps: true },
 )
+
+// Default sort by newest first
+reportSchema.pre('find', function (next) {
+  this.sort({ createdAt: -1 })
+  next()
+})
 
 const Report = mongoose.model('Report', reportSchema)
 
