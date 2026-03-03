@@ -1,5 +1,5 @@
 import ms from 'ms';
-import { signInService,, signOutService, signUpService } from '../services/authService.js';
+import { signInService, signOutService, signUpService } from '../services/authService.js';
 import { googleLoginService } from '../services/googleAuthService.js';
 
 
