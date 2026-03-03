@@ -19,8 +19,20 @@ const BorrowApproval: React.FC = () => {
   const [search, setSearch] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('All');
 
+  const filteredRequests = requests.filter((r) => {
+    const q = search.trim().toLowerCase();
+    if (categoryFilter !== 'All' && r.category !== categoryFilter) return false;
+    if (!q) return true;
+    return (
+      r.studentName.toLowerCase().includes(q) ||
+      r.studentId.toLowerCase().includes(q) ||
+      r.equipmentName.toLowerCase().includes(q) ||
+      r.assetId.toLowerCase().includes(q)
+    );
+  });
+
   const handleExport = () => {
-    const rows = filteredRequests.map(r => ({
+    const rows = filteredRequests.map((r) => ({
       id: r.id,
       studentName: r.studentName,
       studentId: r.studentId,
@@ -37,7 +49,13 @@ const BorrowApproval: React.FC = () => {
     }
 
     const csvHeader = Object.keys(rows[0] || {}).join(',') + "\n";
-    const csvBody = rows.map(r => Object.values(r).map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\n');
+    const csvBody = rows
+      .map((r) =>
+        Object.values(r)
+          .map((v) => `"${String(v).replace(/"/g, '""')}"`)
+          .join(','),
+      )
+      .join('\n');
     const csv = csvHeader + csvBody;
 
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });

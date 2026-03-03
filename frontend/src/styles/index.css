@@ -2,6 +2,163 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
+/* ─── Glassmorphism & UI classes ─────────────────────────────────────── */
+body {
+    font-family: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif;
+}
+
+/* ─── Radix UI scroll-lock fix ───────────────────────────────────────────
+   Radix (Select/Dialog/Popover) adds `overflow:hidden + padding-right` to
+   <body> when a dropdown opens, shifting all content and making the
+   backdrop-filter navbar look like it moved.
+   We already force `overflow-y: scroll` on <html> (App.css), so the
+   scrollbar never disappears — Radix's padding compensation is unnecessary
+   and actively causes the layout shift we want to prevent.
+ ──────────────────────────────────────────────────────────────────────── */
+body[data-scroll-locked] {
+    padding-right: 0 !important;
+    margin-right: 0 !important;
+}
+
+/* Extreme glass – used by navbar */
+.extreme-glass {
+    background: rgba(255, 255, 255, 0.25);
+    backdrop-filter: blur(40px);
+    -webkit-backdrop-filter: blur(40px);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+}
+.dark .extreme-glass {
+    background: rgba(15, 23, 42, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* Glass nav – alias for extreme-glass used by old components */
+.glass-nav {
+    background: rgba(255, 255, 255, 0.25);
+    backdrop-filter: blur(40px);
+    -webkit-backdrop-filter: blur(40px);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+}
+.dark .glass-nav {
+    background: rgba(15, 23, 42, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* Active pill – used by nav link items */
+.active-pill-premium {
+    background: rgba(255, 255, 255, 0.4);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.8);
+    box-shadow: inset 0 0 12px rgba(255, 255, 255, 0.5), 0 4px 12px rgba(30, 43, 88, 0.08);
+}
+.dark .active-pill-premium {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: inset 0 0 10px rgba(255, 255, 255, 0.05);
+}
+
+/* Glass card – stat cards, panels */
+.glass-card {
+    background: rgba(255, 255, 255, 0.6);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.7);
+    box-shadow: 0 10px 30px -10px rgba(30, 43, 88, 0.08);
+}
+.dark .glass-card {
+    background: rgba(30, 41, 59, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+/* Glass main – modal/form containers */
+.glass-main {
+    background: rgba(255, 255, 255, 0.6);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.7);
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
+}
+.dark .glass-main {
+    background: rgba(30, 41, 59, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+/* Navy gradient button */
+.navy-gradient-btn {
+    background: linear-gradient(135deg, #1E2B58 0%, #2d3f7a 100%);
+    color: white;
+    transition: all 0.2s;
+}
+.navy-gradient-btn:hover {
+    background: linear-gradient(135deg, #162042 0%, #1E2B58 100%);
+}
+
+/* Alias used in OTP / login pages */
+.btn-navy-gradient {
+    background: linear-gradient(135deg, #1E2B58 0%, #2d3f7a 100%);
+    color: white;
+    transition: opacity 0.2s;
+}
+.btn-navy-gradient:hover {
+    opacity: 0.9;
+}
+
+/* Hide scrollbar */
+.hide-scrollbar::-webkit-scrollbar { display: none; }
+.hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* Calendar glass container */
+.calendar-glass-container {
+    background: rgba(255, 255, 255, 0.5);
+    backdrop-filter: blur(40px);
+    -webkit-backdrop-filter: blur(40px);
+    border: 1px solid rgba(255, 255, 255, 0.8);
+    box-shadow: 0 20px 50px -12px rgba(30, 43, 88, 0.12);
+}
+.dark .calendar-glass-container {
+    background: rgba(15, 23, 42, 0.45);
+    border: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+/* Calendar day cell */
+.day-cell {
+    background: rgba(255, 255, 255, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    transition: all 0.2s ease;
+}
+.day-cell:hover {
+    background: rgba(255, 255, 255, 0.4);
+}
+.dark .day-cell {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+}
+.dark .day-cell:hover {
+    background: rgba(255, 255, 255, 0.07);
+}
+
+/* Teaching / event slot */
+.teaching-slot {
+    background: #1E2B58;
+    color: white;
+    box-shadow: 0 4px 10px rgba(30, 43, 88, 0.2);
+}
+
+/* ─── Dropdown / panel open animations ──────────────────────────────────── */
+@keyframes fadeInDown {
+    from { opacity: 0; transform: translateY(-8px) scale(0.97); }
+    to   { opacity: 1; transform: translateY(0)    scale(1);    }
+}
+@keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(8px)  scale(0.97); }
+    to   { opacity: 1; transform: translateY(0)    scale(1);    }
+}
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+
 @custom-variant dark (&:is(.dark *));
 
 :root {

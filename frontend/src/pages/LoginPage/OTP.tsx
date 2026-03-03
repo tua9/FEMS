@@ -11,14 +11,16 @@ const OTP: React.FC<{ onVerify: () => void }> = ({ onVerify }) => {
     e.preventDefault();
     onVerify();
 
-    // Redirect dựa trên role
+    // Redirect dựa trên role từ context sang đúng dashboard
     if (role === 'faculty') {
-      navigate('/lecturer');
+      navigate('/lecturer/dashboard');
     } else if (role === 'tech-staff') {
-      navigate('/tech-staff');
+      navigate('/technician/dashboard');
     } else if (role === 'admin') {
-      navigate('/admin');
+      // hiện tại chưa có route admin riêng, tạm đưa về trang chính
+      navigate('/');
     } else {
+      // mặc định: sinh viên
       navigate('/student/dashboard');
     }
   };
