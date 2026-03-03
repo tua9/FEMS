@@ -1,6 +1,7 @@
 // HomePage.tsx
 import EquipmentList from "@/components/common/EquipmentList";
 import { SearchBar } from "@/components/common/SearchBar";
+import StudentNavBar from "@/components/lecturer/navbar/StudentNavbar";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -187,8 +188,10 @@ export default function HomePage() {
   return (
     <div className="text-foreground bg-background min-h-screen w-full antialiased">
       <main className="gap-6pb-12 grid w-full grid-cols-1 lg:grid-cols-12 lg:gap-8">
+        <StudentNavBar />
+
         {/* Sidebar: ẩn trên mobile, hiện trên lg */}
-        <aside className="hidden lg:sticky lg:top-6 lg:col-span-3 lg:block lg:self-start">
+        <aside className="hidden lg:top-6 lg:col-span-3 lg:block lg:self-start">
           <Sidebar />
         </aside>
 

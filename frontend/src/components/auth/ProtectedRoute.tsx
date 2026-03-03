@@ -1,14 +1,17 @@
-import { Outlet } from "react-router-dom";
-import { Navigate } from "react-router-dom";
+import { Navigate, Outlet } from "react-router-dom";
 
-export default function ProtectedRoute() {
-  console.log("############# ProtectedRoute");
-  const user = JSON.parse(localStorage.getItem("user") || "null");
-  console.log("user: ", user);
+type Props = {
+  allowRoles: string[];
+};
 
-  if (!user) {
-    return <Navigate to="/login" replace />;
+const ProtectedRoute = ({ allowRoles }: Props) => {
+  const role = localStorage.getItem("role");
+
+  if (role && allowRoles.includes(role)) {
+    return <Outlet />;
   }
 
-  return <Outlet />;
-}
+  return <Navigate to="/login" replace />;
+};
+
+export default ProtectedRoute;
