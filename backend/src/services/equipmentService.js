@@ -2,6 +2,7 @@ import Equipment from '../models/Equipment.js';
 
 // Tạo thiết bị mới
 export const createEquipmentService = async ({ name, category, status, room_id, borrowed_by, qr_code }) => {
+  console.log('Creating equipment with data:', { name, category, status, room_id, borrowed_by, qr_code });
   try {
     const newEquipment = new Equipment({
       name,
@@ -12,7 +13,7 @@ export const createEquipmentService = async ({ name, category, status, room_id, 
       qr_code,
     });
 
-    await newEquipment.save();
+   await newEquipment.save();
     return newEquipment;
   } catch (error) {
     throw new Error('Error creating equipment');

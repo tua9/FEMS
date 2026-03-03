@@ -1,37 +1,38 @@
-import jwt from 'jsonwebtoken'
-import crypto from 'crypto'
-import Session from '../models/Session.js'
+import jwt from 'jsonwebtoken';
+import { JwtProvider } from '../providers/JwtProvider.js'; // Nếu bạn có provider để tạo token
+import { env } from '../config/environment.js';
+import Session from '../models/Session.js';
+import ms from 'ms';
 
-const ACCESS_TOKEN_TTL = '15m'
-const REFRESH_TOKEN_TTL = 14 * 24 * 60 * 60 * 1000 // 14 days
+// Hàm tạo AccessToken mới từ refresh token
+export const refreshTokenService = async (refreshToken) => {
+  try {
+    // Kiểm tra refresh token trong cơ sở dữ liệu
+    const session = await Session.findOne({ refreshToken });
+    
+    if (!session) {
+      throw new Error('Session not found');
+    }
 
-export const generateAccessToken = (userId) => {
-  return jwt.sign({ userId }, process.env.ACCESS_TOKEN_SECRET, {
-    expiresIn: ACCESS_TOKEN_TTL,
-  })
-}
+    // Kiểm tra thời gian hết hạn của refresh token
+    if (session.expiresAt < new Date()) {
+      await Session.deleteOne({ _id: session._id }); // Dọn rác nếu token đã hết hạn
+      throw new Error('Refresh token expired');
+    }
 
-export const generateRefreshToken = async (userId) => {
-  const refreshToken = crypto.randomBytes(64).toString('hex')
+    // Giải mã refresh token để lấy thông tin người dùng
+    const decoded = jwt.decode(refreshToken);
+    const { userInfo } = decoded;
 
-  await Session.create({
-    userId,
-    refreshToken,
-    expiresAt: new Date(Date.now() + REFRESH_TOKEN_TTL),
-  })
+    // Tạo mới AccessToken từ thông tin người dùng
+    const newAccessToken = await JwtProvider.generateToken(
+      { userInfo },
+      env.ACCESS_TOKEN_SECRET,
+      '15m' // 15 phút
+    );
 
-  return refreshToken
-}
-
-export const verifyRefreshToken = async (token) => {
-  const session = await Session.findOne({ refreshToken: token })
-  if (!session) return null
-  if (session.expiresAt < new Date()) return null
-  return session
-}
-
-export const removeRefreshToken = async (token) => {
-  await Session.deleteOne({ refreshToken: token })
-}
-
-export { REFRESH_TOKEN_TTL }
+    return { accessToken: newAccessToken };
+  } catch (error) {
+    throw new Error('Error refreshing token');
+  }
+};

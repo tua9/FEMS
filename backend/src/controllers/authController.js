@@ -48,13 +48,13 @@ export const signUp = async (req, res) => {
 
 export const signIn = async (req, res) => {
   try {
-    const { username, password, role } = req.body;
-    
-    if (!username || !password || !role) {
-      return res.status(400).json({ message: 'Username, password and role are required!' });
+    const { username, password } = req.body;
+
+    if (!username || !password) {
+      return res.status(400).json({ message: 'Username and password are required!' });
     }
 
-    const result = await signInService(req.body);
+    const result = await signInService({ username, password });
 
     res.cookie('accessToken', result.accessToken, {
       httpOnly: true,
@@ -137,9 +137,37 @@ export const signOut = async (req, res) => {
     res.clearCookie('refreshToken');
     res.clearCookie('accessToken');
 
-    return res.status(204).json({ message: 'Sign out successful' });
+    return res.status(201).json({ message: 'Sign out successful' });
   } catch (error) {
     console.error('Sign out error:', error);
+    return res.status(500).json({ message: 'Internal server error' });
+  }
+};
+import { refreshTokenService } from '../services/tokenService.js'; // Import service
+
+export const refreshToken = async (req, res) => {
+  try {
+    const { refreshToken } = req.cookies;
+
+    // Kiểm tra nếu không có refresh token trong cookie
+    if (!refreshToken) {
+      return res.status(400).json({ message: 'Refresh token is required' });
+    }
+
+    // Gọi service để xác minh refresh token và tạo access token mới
+    const result = await refreshTokenService(refreshToken);
+
+    // Trả về access token mới và lưu vào cookie
+    res.cookie('accessToken', result.accessToken, {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'none',
+      maxAge: ms('15m'), // 15 phút
+    });
+
+    return res.status(200).json({ accessToken: result.accessToken }); // Trả về access token mới
+  } catch (error) {
+    console.error('Error refreshing token:', error);
     return res.status(500).json({ message: 'Internal server error' });
   }
 };

@@ -3,7 +3,8 @@ import { createEquipmentService, updateEquipmentService, deleteEquipmentService,
 
 // Thêm thiết bị
 export const createEquipment = async (req, res) => {
-  try {
+  console.log('createEquipment Request body:', req.body);
+    try {
     const { name, category, status, room_id, borrowed_by, qr_code } = req.body;
 
     if (!name || !category || !status) {
@@ -12,7 +13,7 @@ export const createEquipment = async (req, res) => {
 
     // Gọi service tạo thiết bị
     const result = await createEquipmentService({ name, category, status, room_id, borrowed_by, qr_code });
-    return res.status(201).json(result);
+    return res.status(204).json(result);
   } catch (error) {
     console.error('Error creating equipment:', error);
     return res.status(500).json({ message: 'Error creating equipment' });
