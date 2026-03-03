@@ -1,114 +1,160 @@
 import { Asset } from '../../types/admin.types';
 
-export const mockEquipmentList: Asset[] = [
-    {
-        id: 'ASSET-78210',
-        name: 'MacBook Pro M3',
-        category: 'Laptop',
-        location: 'Lab 402',
-        quantity: 12,
-        status: 'Available',
-        imageUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBktFUCXfQsygoBf8CpwJaTNdPdMg4rwNAh7Rw2AQ0mJuKOw3DcgMWhGAsUlGc3C6Q5LEehwD-1E8yD37jP0aXRlvea_SLDMYp3R6IRHVNFgLsUHbeo9PCKh5DAW26XvKWfXw1zNeMKZDKfiCsFF600taIUcDiGBXutlbnHK8uP6QC60mHdjSRmUTtiraEpS_jMcWtlZ3IfmWhexLFCFmIPc9STmHE4B1c8Lr_lodu5wNlEDy60w2gKNfSU66p3RIXfYZi6fhYNj3XJ',
-        lastInspection: '2 weeks ago',
-    },
-    {
-        id: 'ASSET-44291',
-        name: 'Canon EOS R6',
-        category: 'Photography',
-        location: 'Media Studio',
-        quantity: 5,
-        status: 'In Use',
-        imageUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAAyDpl-KPOcbkM73lfg-cJByguFPLaTMq-0bDAWLD1LRKU10ZVCc1p3UFwKPQ7JSIcd5McR1xcqkJ3jSezyfiov1HcbVuCm5W37NJsuvZMLU1s8bGeqdtkNyFvNWHxJzTwozLq4T57EwEtdkT-4vfn0eDrVhdniE2u3csPo7PG9d4kRc_eMf-c4MyFqL8camgdKKW0ThCygGOb1fIAg-UOavWhUHrYKrHwhsoz6KkwQePPGjDKifkgxUe6BONvkNly0OPxCv_adS4-',
-        lastInspection: '1 month ago',
-    },
-    {
-        id: 'ASSET-12003',
-        name: 'Epson PowerLite',
-        category: 'Peripheral',
-        location: 'Auditorium B',
-        quantity: 8,
-        status: 'Maintenance',
-        imageUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuA_CTZJ6TkI2kB_bmMvAY5IMrEnmjb9stu7ItOEL5JcXyaDFkLv-zwwaaBgcNvmWb3PQ5cy5ZAQ28KM3eNQevTfAmlo481mwOTJ_zp0FeMbufbH4wjHANP6psTBejCjZgv7eBCQ_EIl3GqfxJ7QFK0VK2ghJb_XBKUJrRkUl6k0Kbw0BXSxCa1NZB0i8LrUDPD_shas-75hpwAj-lAhd-2vdv1taxwpA778NKxHa5qntOVKuZS_H4LvBr2nCWYo8hkCYDVkje02Tyc_',
-        lastInspection: '1 week ago',
-    },
-    {
-        id: 'ASSET-33819',
-        name: 'iPad Pro 12.9"',
-        category: 'Tablet',
-        location: 'Library 1F',
-        quantity: 15,
-        status: 'Broken',
-        imageUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDVzPO2HAOwSBaDgWwiCuz2pDt2XR6MarE9abgyU6ahphmtLTzWLPfG-kAqrnlKha30BKkIktXNy3aDbbK9fZRftRg2-TxViirAHozHCS8n-IznB1wV-Li83fXwycgZoGXmcNidRzoKwejA9vZ_y57SW-RhhKyfcdrbXmNRWo4Jgn2xgRWUa9_2mdZiQmyaxl8WjZE3WnSpUO-8IOBLlZB-Gcz_RLgihfXgygKTStPjF0qL429ylTsH9PoFLaHYrFmCOgOYt4zbMxn9',
-        lastInspection: '3 days ago',
-    },
-    {
-        id: 'ASSET-88219',
-        name: 'Dell XPS 15',
-        category: 'Laptop',
-        location: 'CS Dept Office',
-        quantity: 10,
-        status: 'Available',
-        imageUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBylMG198Pc9b-s9uRfKiz9EwYu_6Eei1TAZsp9ToEA26uUSeMMMaqSoK2KYKifBrURGCYqUXcPJE7rCEFApxbneIppt9x0HeFwaNBmfhKcRuLIdhrs-E_7hva_4jJ97datsWUSgRv0sKGmEQx__P1HAjjShvR_yLdpg8E3dI1rg9kxFV7a-wfGTNsZF9SY71BblqpJDAwNlvhXTrt5NHekmwwqjgxEN5kdHyugPIbOXz2p5jn-5Uw_YewmtqtFCkj0Ot-0fpEd-_RA',
-        lastInspection: '1 month ago',
-    },
-    {
-        id: 'ASSET-11928',
-        name: 'Sony A7 III',
-        category: 'Photography',
-        location: 'Media Studio',
-        quantity: 3,
-        status: 'In Use',
-        imageUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCPaet1jzJu6MZDE8yBhA7Yl80-5phDeQdSw4g7WBE3u4SFftmjUShTgukoQiqrI9LAclOPm9Dx7KZKEbf3zC727D_MN4WdU7rczXK73xPwWrFnCc7zz5_ci5wNypt_EhL_IUbpfaqTi8Pn8ehtFf6cGkdp1_RdYxi82I5xzCkI6NfIkuTcrrQTUnkk2V3uwfZpVh5aP9kKDC-8ozh10Rll1FtmXXA9rLwjNsIO6Fm_x7m2xiVo8xYSPo46fiRzxVgaBbJcVj4TUody',
-        lastInspection: '2 months ago',
-    },
-    {
-        id: 'ASSET-55610',
-        name: 'HP LaserJet Pro',
-        category: 'Peripheral',
-        location: 'Staff Room',
-        quantity: 4,
-        status: 'Available',
-        imageUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCEzdrZRB5UG9ttM4BxH1xmnX03glTHBKhAx57dGbJBF4WN5I7GNTN1TX-IxPYqbxGaXQEE6f9zEV19rMINlC8hLuZIMFhawdEOAYtN0zez1ruMyJFtS-cXHrtqtRFvsJCpt6kZsGTGDWPa4tZrVuGlkDBC_ri3zMm5T1a5D5itJxXSgqRg1kHjyvUuuq0mjNwKQniz19CQPWsxo0b_bGfjvzcnbSzirKU89K1cZRjZENdMP-qDpO-ocuzOTaFG-3k0IdNYW_cOSfN7',
-        lastInspection: '1 week ago',
-    },
-    {
-        id: 'ASSET-22345',
-        name: 'Samsung Galaxy Tab S9',
-        category: 'Tablet',
-        location: 'Lab 101',
-        quantity: 24,
-        status: 'In Use',
-        imageUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAfZmWz-TNdsU6933BxtCtIrmp5-OHIlUcXcusX_urPGBfN0XkylLfuQbMglpUEWMQL1bijjg_npPEAfSzhU1801CX-rTX_ixZkt2Fvzy-1H-yXt-9qne_xnSlyM3UoFzAXdM-SdIXTLY3eLpdFuj_tl_Y9huPJX6kgs5KuWv1SLsyMtSxZ63oIipYVRqreVwKtA8T4SmDzJBujaioEe3vpkBNwUCVP2-HcFbxv5DD3X5cpFpqKHwEfcgoTRkR-1qaZK4ZSv96diMAk',
-        lastInspection: '2 weeks ago',
-    },
-];
+const generateMockAssets = () => {
+    const assets: Asset[] = [];
 
-export const mockBrokenEquipmentAttention: Asset[] = [
-    {
-        id: 'ASSET-33819',
-        name: 'iPad Pro 12.9"',
-        category: 'Tablet',
-        location: 'Library 1F',
-        quantity: 1,
-        status: 'Broken',
-        imageUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDVzPO2HAOwSBaDgWwiCuz2pDt2XR6MarE9abgyU6ahphmtLTzWLPfG-kAqrnlKha30BKkIktXNy3aDbbK9fZRftRg2-TxViirAHozHCS8n-IznB1wV-Li83fXwycgZoGXmcNidRzoKwejA9vZ_y57SW-RhhKyfcdrbXmNRWo4Jgn2xgRWUa9_2mdZiQmyaxl8WjZE3WnSpUO-8IOBLlZB-Gcz_RLgihfXgygKTStPjF0qL429ylTsH9PoFLaHYrFmCOgOYt4zbMxn9',
-    },
-    {
-        id: 'ASSET-12003',
-        name: 'Epson PowerLite',
-        category: 'Peripheral',
-        location: 'Auditorium B',
-        quantity: 1,
-        status: 'Repairing',
-        imageUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuA_CTZJ6TkI2kB_bmMvAY5IMrEnmjb9stu7ItOEL5JcXyaDFkLv-zwwaaBgcNvmWb3PQ5cy5ZAQ28KM3eNQevTfAmlo481mwOTJ_zp0FeMbufbH4wjHANP6psTBejCjZgv7eBCQ_EIl3GqfxJ7QFK0VK2ghJb_XBKUJrRkUl6k0Kbw0BXSxCa1NZB0i8LrUDPD_shas-75hpwAj-lAhd-2vdv1taxwpA778NKxHa5qntOVKuZS_H4LvBr2nCWYo8hkCYDVkje02Tyc_',
-    },
-    {
-        id: 'ASSET-00912',
-        name: 'MacBook Air (Old)',
-        category: 'Laptop',
-        location: 'Lab 402',
-        quantity: 1,
-        status: 'Broken Screen',
-        imageUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBktFUCXfQsygoBf8CpwJaTNdPdMg4rwNAh7Rw2AQ0mJuKOw3DcgMWhGAsUlGc3C6Q5LEehwD-1E8yD37jP0aXRlvea_SLDMYp3R6IRHVNFgLsUHbeo9PCKh5DAW26XvKWfXw1zNeMKZDKfiCsFF600taIUcDiGBXutlbnHK8uP6QC60mHdjSRmUTtiraEpS_jMcWtlZ3IfmWhexLFCFmIPc9STmHE4B1c8Lr_lodu5wNlEDy60w2gKNfSU66p3RIXfYZi6fhYNj3XJ',
-    },
-];
+    // Laptops (10 units)
+    const laptops = [
+        { name: 'MacBook Pro M3', desc: 'M3 Chip, 16GB RAM, 512GB SSD', img: 'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?auto=format&fit=crop&q=80&w=1026' },
+        { name: 'Dell XPS 15', desc: 'Intel i9, 32GB RAM, 1TB SSD, OLED Display', img: 'https://images.unsplash.com/photo-1593642632823-8f785ba67e45?auto=format&fit=crop&q=80&w=1000' },
+        { name: 'Lenovo ThinkPad X1', desc: 'Intel i7, 16GB RAM, Carbon Fiber Chassis', img: 'https://images.unsplash.com/photo-1588872657578-7efd1f1555ed?auto=format&fit=crop&q=80&w=1000' },
+        { name: 'ASUS ROG Zephyrus', desc: 'RTX 4080, 32GB RAM, 240Hz Display', img: 'https://images.unsplash.com/photo-1603302576837-37561b2e2302?auto=format&fit=crop&q=80&w=1000' },
+        { name: 'HP Spectre x360', desc: '2-in-1 Laptop, Intel i7, touch screen', img: 'https://images.unsplash.com/photo-1544006659-f0b21f04cb1d?auto=format&fit=crop&q=80&w=1000' },
+    ];
+
+    laptops.forEach((l, i) => {
+        assets.push({
+            id: `ASSET-LP-${100 + i}1`,
+            name: l.name,
+            category: 'Laptop',
+            location: 'Lab 402',
+            status: i % 3 === 0 ? 'In Use' : 'Available',
+            imageUrl: l.img,
+            description: l.desc,
+            purchaseDate: '2023-08-12',
+            warranty: '2025-08-12'
+        });
+        assets.push({
+            id: `ASSET-LP-${100 + i}2`,
+            name: l.name,
+            category: 'Laptop',
+            location: 'Library 2F',
+            status: 'Available',
+            imageUrl: l.img,
+            description: l.desc,
+            purchaseDate: '2023-08-12',
+            warranty: '2025-08-12'
+        });
+    });
+
+    // Photography (10 units)
+    const photography = [
+        { name: 'DJI Osmo Pocket 3', desc: '1-inch CMOS Gimbal Camera, 4K/120fps', img: 'https://images.unsplash.com/photo-1516035069371-29a1b244cc32?auto=format&fit=crop&q=80&w=1000' },
+        { name: 'Sony A7 IV', desc: 'Full-frame Mirrorless, 33MP', img: 'https://images.unsplash.com/photo-1510127034890-ba27508e9f1c?auto=format&fit=crop&q=80&w=1000' },
+        { name: 'Canon EOS R6', desc: 'High-speed Mirrorless for professional use', img: 'https://images.unsplash.com/photo-1502920917128-1aa500764cbd?auto=format&fit=crop&q=80&w=1000' },
+        { name: 'GoPro Hero 12', desc: 'Action camera, waterproof, 5.3K video', img: 'https://images.unsplash.com/photo-1524338198850-8a2ff63aaceb?auto=format&fit=crop&q=80&w=1000' },
+        { name: 'Fujifilm X-T5', desc: 'APS-C Mirrorless, 40MP, Retro design', img: 'https://images.unsplash.com/photo-1563214594-82a465063077?auto=format&fit=crop&q=80&w=1000' },
+    ];
+
+    photography.forEach((p, i) => {
+        assets.push({
+            id: `ASSET-PH-${200 + i}1`,
+            name: p.name,
+            category: 'Photography',
+            location: 'Media Studio',
+            status: i === 0 ? 'Maintenance' : 'Available',
+            imageUrl: p.img,
+            description: p.desc,
+            purchaseDate: '2024-01-20',
+            warranty: '2026-01-20'
+        });
+        assets.push({
+            id: `ASSET-PH-${200 + i}2`,
+            name: p.name,
+            category: 'Photography',
+            location: 'Media Studio',
+            status: 'Available',
+            imageUrl: p.img,
+            description: p.desc,
+            purchaseDate: '2024-01-20',
+            warranty: '2026-01-20'
+        });
+    });
+
+    // Tablets (10 units)
+    const tablets = [
+        { name: 'iPad Pro 12.9"', desc: 'M2 Chip, Liquid Retina XDR', img: 'https://images.unsplash.com/photo-1544244015-0df4b3ffc6b0?auto=format&fit=crop&q=80&w=1000' },
+        { name: 'Samsung Galaxy Tab S9', desc: 'AMOLED 120Hz, S-Pen included', img: 'https://images.unsplash.com/photo-1611162617213-7d7a39e9b1d7?auto=format&fit=crop&q=80&w=1000' },
+        { name: 'Microsoft Surface Pro 9', desc: 'Tablet that can replace your laptop', img: 'https://images.unsplash.com/photo-1512499617640-c74ae3a79d37?auto=format&fit=crop&q=80&w=1000' },
+    ];
+
+    tablets.forEach((t, i) => {
+        for (let j = 1; j <= 4; j++) {
+            const isBroken = (i + j) % 5 === 0;
+            assets.push({
+                id: `ASSET-TB-${300 + i}${j}`,
+                name: t.name,
+                category: 'Tablet',
+                location: 'Lab 101',
+                status: isBroken ? 'Broken' : 'Available',
+                imageUrl: t.img,
+                description: t.desc,
+                issueDescription: isBroken ? (j % 2 === 0 ? 'Cracked screen at the bottom right corner.' : 'Battery swelling, screen slightly detached.') : undefined,
+                purchaseDate: '2023-11-05',
+                warranty: '2024-11-05'
+            });
+        }
+    });
+
+    // Electronics & IoT (10 units)
+    const electronics = [
+        { name: 'Soldering Iron Station', desc: 'Digital temperature control, 60W', img: 'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&q=80&w=1000' },
+        { name: 'Digital Multimeter', desc: 'Auto-ranging, True RMS', img: 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&q=80&w=1000' },
+        { name: 'Oscilloscope 100MHz', desc: '4 Channels, Digital storage', img: 'https://images.unsplash.com/photo-1581092921461-7d2dc830050c?auto=format&fit=crop&q=80&w=1000' },
+        { name: 'Raspberry Pi 4 Model B', desc: '8GB RAM, Broadcom BCM2711', img: 'https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&q=80&w=1000' },
+        { name: 'Arduino Uno Rev3', desc: 'Microcontroller board based on ATmega328P', img: 'https://images.unsplash.com/photo-1553406830-ef2513450d76?auto=format&fit=crop&q=80&w=1000' },
+    ];
+
+    electronics.forEach((e, i) => {
+        assets.push({
+            id: `ASSET-EL-${400 + i}1`,
+            name: e.name,
+            category: 'Electronics',
+            location: 'IoT Workshop',
+            status: 'Available',
+            imageUrl: e.img,
+            description: e.desc,
+            purchaseDate: '2024-02-10',
+            warranty: '2025-02-10'
+        });
+        assets.push({
+            id: `ASSET-EL-${400 + i}2`,
+            name: e.name,
+            category: 'Electronics',
+            location: 'IoT Workshop',
+            status: 'Available',
+            imageUrl: e.img,
+            description: e.desc,
+            purchaseDate: '2024-02-10',
+            warranty: '2025-02-10'
+        });
+    });
+
+    // Network & Peripherals (remaining)
+    const others = [
+        { name: 'Cisco Router AX', desc: 'WiFi 6 Enterprise Grade Router', cat: 'Network', img: 'https://images.unsplash.com/photo-1544197150-b99a580bb7a8?auto=format&fit=crop&q=80&w=1000' },
+        { name: 'Mechanical Keyboard', desc: 'Cherry MX Blue switches, RGB', cat: 'Peripheral', img: 'https://images.unsplash.com/photo-1511467687858-23d96c32e4ae?auto=format&fit=crop&q=80&w=1000' },
+    ];
+
+    others.forEach((o, i) => {
+        for (let j = 1; j <= 5; j++) {
+            assets.push({
+                id: `ASSET-OT-${500 + i}${j}`,
+                name: o.name,
+                category: o.cat as any,
+                location: 'IT Dept',
+                status: 'Available',
+                imageUrl: o.img,
+                description: o.desc,
+                purchaseDate: '2023-05-20',
+                warranty: '2026-05-20'
+            });
+        }
+    });
+
+    return assets;
+};
+
+export const mockEquipmentList: Asset[] = generateMockAssets();
+
+export const mockBrokenEquipmentAttention: Asset[] = mockEquipmentList.filter(a => a.status === 'Broken' || a.status === 'Broken Screen').slice(0, 3);

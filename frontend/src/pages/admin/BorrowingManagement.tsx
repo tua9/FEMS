@@ -3,15 +3,26 @@ import BorrowingTable from '../../components/admin/borrowing/BorrowingTable';
 import UpcomingReturnCards from '../../components/admin/borrowing/UpcomingReturnCards';
 import ReturnCalendar from '../../components/admin/borrowing/ReturnCalendar';
 import NewBorrowModal from '../../components/admin/borrowing/NewBorrowModal';
+import BorrowingDetailModal from '../../components/admin/borrowing/BorrowingDetailModal';
 import { adminApi } from '../../services/api/adminApi';
 import { BorrowRecord } from '../../types/admin.types';
+import { useLocation } from 'react-router-dom';
 
 const BorrowingManagement: React.FC = () => {
+    const location = useLocation();
     const [borrowRecords, setBorrowRecords] = useState<BorrowRecord[]>([]);
     const [loading, setLoading] = useState(true);
     const [isNewBorrowModalOpen, setIsNewBorrowModalOpen] = useState(false);
+    const [selectedRecord, setSelectedRecord] = useState<BorrowRecord | null>(null);
+    const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
     const [statusFilter, setStatusFilter] = useState<BorrowRecord['status'] | 'All'>('All');
+
+    useEffect(() => {
+        if (location.state && (location.state as any).status) {
+            setStatusFilter((location.state as any).status);
+        }
+    }, [location.state]);
 
     const fetchBorrowingData = async () => {
         setLoading(true);
@@ -48,16 +59,39 @@ const BorrowingManagement: React.FC = () => {
         }
     };
 
-    const filteredRecords = borrowRecords.filter(record => {
-        const matchesSearch =
-            record.borrowerName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            record.equipmentName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            record.borrowerId.toLowerCase().includes(searchQuery.toLowerCase());
+    const handleViewDetails = (record: BorrowRecord) => {
+        setSelectedRecord(record);
+        setIsDetailModalOpen(true);
+    };
 
-        const matchesStatus = statusFilter === 'All' || record.status === statusFilter;
+    const handleViewDetailsById = (recordId: string) => {
+        const record = borrowRecords.find(r => r.id === recordId);
+        if (record) {
+            handleViewDetails(record);
+        }
+    };
 
-        return matchesSearch && matchesStatus;
-    });
+    const parseDateRaw = (dateStr: string) => {
+        const months: Record<string, number> = { Jan: 0, Feb: 1, Mar: 2, Apr: 3, May: 4, Jun: 5, Jul: 6, Aug: 7, Sep: 8, Oct: 9, Nov: 10, Dec: 11 };
+        const parts = dateStr.replace(',', '').split(' ');
+        if (parts.length === 3) {
+            return new Date(parseInt(parts[2]), months[parts[0]], parseInt(parts[1])).getTime();
+        }
+        return 0;
+    };
+
+    const sortedRecords = borrowRecords
+        .filter(record => {
+            const matchesSearch =
+                record.borrowerName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                record.equipmentName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                record.borrowerId.toLowerCase().includes(searchQuery.toLowerCase());
+
+            const matchesStatus = statusFilter === 'All' || record.status === statusFilter;
+
+            return matchesSearch && matchesStatus;
+        })
+        .sort((a, b) => parseDateRaw(a.dueDate) - parseDateRaw(b.dueDate));
 
     if (loading) {
         return (
@@ -72,10 +106,12 @@ const BorrowingManagement: React.FC = () => {
     const overdueCount = borrowRecords.filter(r => r.status === 'Overdue').length;
     const activeLoansCount = borrowRecords.filter(r => r.status === 'Approved').length;
 
+    const isBlurred = isNewBorrowModalOpen || isDetailModalOpen;
+
     return (
         <div className="max-w-7xl mx-auto px-6 pb-16 relative">
             {/* Background Blur for Modals */}
-            <div className={`transition-all duration-300 ${isNewBorrowModalOpen ? 'filter blur-sm opacity-50 pointer-events-none' : ''}`}>
+            <div className={`transition-all duration-300 ${isBlurred ? 'filter blur-sm opacity-50 pointer-events-none' : ''}`}>
                 <div className="mb-8 px-2 flex flex-col md:flex-row md:items-end justify-between gap-6 mt-6">
                     <div>
                         <h2 className="text-3xl font-extrabold text-[#1A2B56] dark:text-white tracking-tight">Borrowing & Circulation</h2>
@@ -92,36 +128,68 @@ const BorrowingManagement: React.FC = () => {
 
                 {/* KPI Cards */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                    <div className="glass-card dark:!bg-slate-800/80 p-6 ambient-shadow flex items-center justify-between rounded-[24px] border border-white/40 dark:border-white/10">
+                    {/* Active Loans Card */}
+                    <button
+                        onClick={() => setStatusFilter('Approved')}
+                        className={`group relative p-6 ambient-shadow flex items-center justify-between rounded-[24px] border transition-all duration-300 hover:scale-[1.02] hover:shadow-2xl active:scale-95 text-left w-full backdrop-blur-xl
+                            ${statusFilter === 'Approved'
+                                ? 'bg-white/90 dark:bg-slate-800 border-blue-500 shadow-lg'
+                                : 'bg-white/60 dark:bg-slate-800/60 border-white/60 dark:border-white/10 hover:bg-white/80 dark:hover:bg-slate-700'}
+                        `}
+                    >
                         <div>
                             <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 mb-1">Active Loans</p>
                             <h3 className="text-3xl font-extrabold text-[#1A2B56] dark:text-white">{activeLoansCount}</h3>
                         </div>
-                        <div className="bg-blue-50 dark:bg-blue-900/30 p-3 rounded-2xl text-blue-500">
+                        <div className={`p-3 rounded-2xl transition-all duration-300 ${statusFilter === 'Approved' ? 'text-blue-500 bg-blue-50 dark:bg-blue-900/40 shadow-sm' : 'text-slate-400 dark:text-slate-500 bg-slate-50 dark:bg-slate-700/30'}`}>
                             <span className="material-symbols-outlined text-3xl">swap_horiz</span>
                         </div>
-                    </div>
-                    <div className="glass-card dark:!bg-slate-800/80 p-6 ambient-shadow flex items-center justify-between rounded-[24px] border border-white/40 dark:border-white/10">
+                    </button>
+
+                    {/* Pending Approvals Card */}
+                    <button
+                        onClick={() => setStatusFilter('Pending')}
+                        className={`group relative p-6 ambient-shadow flex items-center justify-between rounded-[24px] border transition-all duration-300 hover:scale-[1.02] hover:shadow-2xl active:scale-95 text-left w-full backdrop-blur-xl
+                            ${statusFilter === 'Pending'
+                                ? 'bg-white/90 dark:bg-slate-800 border-amber-500 shadow-lg'
+                                : 'bg-white/60 dark:bg-slate-800/60 border-white/60 dark:border-white/10 hover:bg-white/80 dark:hover:bg-slate-700'}
+                        `}
+                    >
                         <div>
                             <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 mb-1">Pending Approvals</p>
                             <h3 className="text-3xl font-extrabold text-[#1A2B56] dark:text-white">{pendingCount}</h3>
                         </div>
-                        <div className="bg-amber-50 dark:bg-amber-900/30 p-3 rounded-2xl text-amber-500">
+                        <div className={`p-3 rounded-2xl transition-all duration-300 ${statusFilter === 'Pending' ? 'text-amber-500 bg-amber-50 dark:bg-amber-900/40 shadow-sm' : 'text-slate-400 dark:text-slate-500 bg-slate-50 dark:bg-slate-700/30'}`}>
                             <span className="material-symbols-outlined text-3xl">pending_actions</span>
                         </div>
-                    </div>
-                    <div className="glass-card dark:!bg-slate-800/80 p-6 ambient-shadow flex items-center justify-between rounded-[24px] border border-red-200 dark:border-red-900/40 bg-red-50/30">
+                    </button>
+
+                    {/* Overdue Returns Card */}
+                    <button
+                        onClick={() => setStatusFilter('Overdue')}
+                        className={`group relative p-6 ambient-shadow flex items-center justify-between rounded-[24px] border transition-all duration-300 hover:scale-[1.02] hover:shadow-2xl active:scale-95 text-left w-full backdrop-blur-xl
+                            ${statusFilter === 'Overdue'
+                                ? 'bg-white/90 dark:bg-slate-800 border-red-500 shadow-lg'
+                                : 'bg-white/60 dark:bg-slate-800/60 border-white/60 dark:border-white/10 hover:bg-white/80 dark:hover:bg-slate-700'}
+                        `}
+                    >
                         <div>
-                            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-red-500 mb-1">Overdue Returns</p>
-                            <h3 className="text-3xl font-extrabold text-red-600 dark:text-red-400">{overdueCount}</h3>
+                            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 mb-1">Overdue Returns</p>
+                            <h3 className="text-3xl font-extrabold text-[#1A2B56] dark:text-white">{overdueCount}</h3>
                         </div>
-                        <div className="bg-red-100 dark:bg-red-900/50 p-3 rounded-2xl text-red-600">
+                        <div className={`p-3 rounded-2xl transition-all duration-300 ${statusFilter === 'Overdue' ? 'text-red-500 bg-red-50 dark:bg-red-900/40 shadow-sm' : 'text-slate-400 dark:text-slate-500 bg-slate-50 dark:bg-slate-700/30'}`}>
                             <span className="material-symbols-outlined text-3xl">warning</span>
                         </div>
-                    </div>
+                        {overdueCount > 0 && (
+                            <span className="absolute top-3 right-3 flex h-2 w-2">
+                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                                <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
+                            </span>
+                        )}
+                    </button>
                 </div>
 
-                <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
+                <div className="grid grid-cols-1 xl:grid-cols-3 gap-8 items-start">
                     {/* Main Table Area */}
                     <div className="xl:col-span-2 space-y-8">
                         <div className="bg-white/40 dark:bg-slate-800/60 p-8 ambient-shadow rounded-[32px] border border-white/40 dark:border-white/10 backdrop-blur-xl transition-all duration-300">
@@ -162,26 +230,26 @@ const BorrowingManagement: React.FC = () => {
                                             <option value="Returned">Returned</option>
                                             <option value="Rejected">Rejected</option>
                                         </select>
-                                        <span className="material-symbols-outlined absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none text-sm">filter_list</span>
                                     </div>
                                 </div>
                             </div>
 
                             <BorrowingTable
-                                records={filteredRecords}
+                                records={sortedRecords}
                                 onApprove={(id) => handleUpdateStatus(id, 'Approved')}
                                 onReject={(id) => handleUpdateStatus(id, 'Rejected')}
                                 onReturn={(id) => handleUpdateStatus(id, 'Returned')}
                                 onAlert={handleAlert}
+                                onViewDetails={handleViewDetails}
                             />
                         </div>
 
-                        <UpcomingReturnCards records={filteredRecords} />
+                        <UpcomingReturnCards records={borrowRecords} onViewDetails={handleViewDetails} />
                     </div>
 
                     {/* Sidebar Area */}
                     <div className="xl:col-span-1">
-                        <ReturnCalendar />
+                        <ReturnCalendar records={borrowRecords} onViewDetails={handleViewDetailsById} />
                     </div>
                 </div>
             </div>
@@ -190,6 +258,16 @@ const BorrowingManagement: React.FC = () => {
             <NewBorrowModal
                 isOpen={isNewBorrowModalOpen}
                 onClose={() => setIsNewBorrowModalOpen(false)}
+            />
+
+            <BorrowingDetailModal
+                isOpen={isDetailModalOpen}
+                record={selectedRecord}
+                onClose={() => setIsDetailModalOpen(false)}
+                onApprove={(id) => handleUpdateStatus(id, 'Approved')}
+                onReject={(id) => handleUpdateStatus(id, 'Rejected')}
+                onReturn={(id) => handleUpdateStatus(id, 'Returned')}
+                onAlert={handleAlert}
             />
         </div>
     );

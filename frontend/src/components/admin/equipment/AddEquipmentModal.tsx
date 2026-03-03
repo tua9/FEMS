@@ -21,21 +21,27 @@ const AddEquipmentModal: React.FC<AddEquipmentModalProps> = ({ isOpen, onClose, 
     const [quantity, setQuantity] = useState(1);
     const [location, setLocation] = useState('');
     const [description, setDescription] = useState('');
+    const [warranty, setWarranty] = useState('');
+    const [purchaseDate, setPurchaseDate] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     useEffect(() => {
         if (equipment) {
             setName(equipment.name);
             setCategory(equipment.category);
-            setQuantity(equipment.quantity);
+            setQuantity(1); // Default to 1 for edit mode (though it will be hidden)
             setLocation(equipment.location);
             setDescription(equipment.description || '');
+            setWarranty(equipment.warranty || '');
+            setPurchaseDate(equipment.purchaseDate || '');
         } else {
             setName('');
             setCategory('');
             setQuantity(1);
             setLocation('');
             setDescription('');
+            setWarranty('');
+            setPurchaseDate('');
         }
     }, [equipment, isOpen]);
 
@@ -43,22 +49,36 @@ const AddEquipmentModal: React.FC<AddEquipmentModalProps> = ({ isOpen, onClose, 
         e.preventDefault();
         setIsSubmitting(true);
 
-        const assetData: Asset = {
-            id: equipment?.id || generateDeviceId(),
-            name,
-            category: category as any,
-            quantity,
-            location,
-            status: equipment?.status || 'Available',
-            imageUrl: equipment?.imageUrl || 'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?auto=format&fit=crop&q=80&w=1026',
-            description
-        };
-
         try {
             if (isEdit) {
+                const assetData: Asset = {
+                    id: equipment.id,
+                    name,
+                    category: category as any,
+                    location,
+                    status: equipment.status || 'Available',
+                    imageUrl: equipment.imageUrl || 'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?auto=format&fit=crop&q=80&w=1026',
+                    description,
+                    warranty,
+                    purchaseDate
+                };
                 await adminApi.updateEquipment(assetData);
             } else {
-                await adminApi.createEquipment(assetData);
+                // Bulk create individual units
+                for (let i = 0; i < quantity; i++) {
+                    const assetData: Asset = {
+                        id: generateDeviceId(),
+                        name,
+                        category: category as any,
+                        location,
+                        status: 'Available',
+                        imageUrl: 'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?auto=format&fit=crop&q=80&w=1026',
+                        description,
+                        warranty,
+                        purchaseDate
+                    };
+                    await adminApi.createEquipment(assetData);
+                }
             }
             if (onEquipmentUpdated) onEquipmentUpdated();
             onClose();
@@ -127,21 +147,25 @@ const AddEquipmentModal: React.FC<AddEquipmentModalProps> = ({ isOpen, onClose, 
                                     <option value="Peripheral">Peripherals</option>
                                     <option value="Tablet">Tablets</option>
                                     <option value="Network">Network Devices</option>
+                                    <option value="Electronics">Electronics & IoT</option>
+                                    <option value="Other">Other</option>
                                 </select>
                             </div>
 
-                            <div className="space-y-1.5">
-                                <label className="text-xs font-bold text-slate-700 dark:text-slate-300 ml-1">Quantity <span className="text-red-500">*</span></label>
-                                <input
-                                    type="number"
-                                    value={quantity}
-                                    onChange={e => setQuantity(parseInt(e.target.value) || 0)}
-                                    className="w-full bg-white/50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-[#1A2B56] dark:focus:ring-blue-500 outline-none transition-all dark:text-white"
-                                    placeholder="1"
-                                    min={1}
-                                    required
-                                />
-                            </div>
+                            {!isEdit && (
+                                <div className="space-y-1.5">
+                                    <label className="text-xs font-bold text-slate-700 dark:text-slate-300 ml-1">Number of Units <span className="text-red-500">*</span></label>
+                                    <input
+                                        type="number"
+                                        value={quantity}
+                                        onChange={e => setQuantity(parseInt(e.target.value) || 0)}
+                                        className="w-full bg-white/50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-[#1A2B56] dark:focus:ring-blue-500 outline-none transition-all dark:text-white"
+                                        placeholder="1"
+                                        min={1}
+                                        required
+                                    />
+                                </div>
+                            )}
 
                             <div className="space-y-1.5">
                                 <label className="text-xs font-bold text-slate-700 dark:text-slate-300 ml-1">Location / Room <span className="text-red-500">*</span></label>
@@ -152,6 +176,26 @@ const AddEquipmentModal: React.FC<AddEquipmentModalProps> = ({ isOpen, onClose, 
                                     className="w-full bg-white/50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-[#1A2B56] dark:focus:ring-blue-500 outline-none transition-all dark:text-white"
                                     placeholder="e.g. Lab 402"
                                     required
+                                />
+                            </div>
+
+                            <div className="space-y-1.5">
+                                <label className="text-xs font-bold text-slate-700 dark:text-slate-300 ml-1">Purchased On</label>
+                                <input
+                                    type="date"
+                                    value={purchaseDate}
+                                    onChange={e => setPurchaseDate(e.target.value)}
+                                    className="w-full bg-white/50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-[#1A2B56] dark:focus:ring-blue-500 outline-none transition-all dark:text-white"
+                                />
+                            </div>
+
+                            <div className="space-y-1.5">
+                                <label className="text-xs font-bold text-slate-700 dark:text-slate-300 ml-1">Warranty Until</label>
+                                <input
+                                    type="date"
+                                    value={warranty}
+                                    onChange={e => setWarranty(e.target.value)}
+                                    className="w-full bg-white/50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-[#1A2B56] dark:focus:ring-blue-500 outline-none transition-all dark:text-white"
                                 />
                             </div>
                         </div>

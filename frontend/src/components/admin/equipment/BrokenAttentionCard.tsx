@@ -3,11 +3,14 @@ import { Asset } from '../../../types/admin.types';
 
 interface BrokenAttentionCardProps {
     items: Asset[];
+    onViewDetails?: (item: Asset) => void;
+    onUpdateStatus?: (id: string, newStatus: Asset['status']) => void;
+    onViewAll?: () => void;
 }
 
-const BrokenAttentionCard: React.FC<BrokenAttentionCardProps> = ({ items }) => {
+const BrokenAttentionCard: React.FC<BrokenAttentionCardProps> = ({ items, onViewDetails, onUpdateStatus, onViewAll }) => {
     return (
-        <div className="mt-12 glass-card dark:!bg-slate-800/80 p-8 ambient-shadow border-red-200/50 dark:border-red-900/30 rounded-[32px] border bg-white/40 backdrop-blur-[30px]">
+        <div className="mt-12 p-8 ambient-shadow border border-white/40 dark:border-red-900/30 rounded-[32px] bg-white/40 dark:bg-slate-800/80 backdrop-blur-[30px] transition-none">
             <div className="flex items-center justify-between mb-6">
                 <div>
                     <h3 className="text-xl font-extrabold text-[#1A2B56] dark:text-white tracking-tight flex items-center gap-2">
@@ -18,14 +21,18 @@ const BrokenAttentionCard: React.FC<BrokenAttentionCardProps> = ({ items }) => {
                         Assets marked as broken requiring immediate repair or replacement
                     </p>
                 </div>
-                <button className="text-xs font-bold text-[#1A2B56] dark:text-blue-400 underline hover:opacity-70 transition-all">
+                <button
+                    onClick={onViewAll}
+                    className="px-5 py-2.5 rounded-2xl bg-white/30 dark:bg-slate-700/40 border border-white/50 dark:border-slate-600/50 backdrop-blur-md text-xs font-bold text-[#1A2B56] dark:text-blue-300 shadow-sm transition-all duration-300 hover:bg-white/60 dark:hover:bg-slate-700/80 hover:-translate-y-1 hover:shadow-lg active:scale-95 flex items-center gap-2"
+                >
                     View All Issues
+                    <span className="material-symbols-outlined text-[14px]">arrow_forward</span>
                 </button>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {items.map(item => (
-                    <div key={item.id} className="bg-white/80 dark:bg-slate-700/60 p-4 rounded-2xl border border-white dark:border-slate-600 flex gap-4 row-shadow group hover:bg-white dark:hover:bg-slate-700 transition-colors cursor-pointer backdrop-blur-sm">
+                    <div key={item.id} className="bg-white/80 dark:bg-slate-700/60 p-4 rounded-2xl border border-white dark:border-slate-600 flex gap-4 transition-all duration-300 cursor-pointer backdrop-blur-sm hover:-translate-y-1.5 hover:shadow-2xl hover:bg-white dark:hover:bg-slate-700 hover:border-blue-200 dark:hover:border-slate-500 active:scale-95 group">
                         <div className="w-16 h-16 rounded-xl bg-slate-50 dark:bg-slate-800 p-1 flex-shrink-0">
                             <img alt={item.name} className="w-full h-full object-cover rounded-lg" src={item.imageUrl} />
                         </div>
@@ -38,21 +45,44 @@ const BrokenAttentionCard: React.FC<BrokenAttentionCardProps> = ({ items }) => {
                             </div>
                             <p className="text-[10px] text-slate-500 dark:text-slate-400 font-semibold mb-2">ID: {item.id}</p>
 
-                            <div className="flex gap-2">
+                            <div className="flex gap-1.5 flex-wrap">
                                 {item.status === 'Repairing' ? (
-                                    <button className="text-[9px] font-bold px-3 py-1 bg-slate-100 dark:bg-slate-600 text-slate-600 dark:text-slate-300 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-500 transition-all">
-                                        Track Order
-                                    </button>
-                                ) : (
                                     <>
-                                        <button className="text-[9px] font-bold px-3 py-1 bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-lg border border-red-100 dark:border-red-800/50 hover:bg-red-500 hover:text-white dark:hover:bg-red-600 transition-all">
-                                            Report Repair
+                                        <button
+                                            onClick={() => onUpdateStatus?.(item.id, 'Available')}
+                                            className="text-[9px] font-bold px-3 py-1 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 rounded-lg border border-emerald-100 dark:border-emerald-800/50 hover:bg-emerald-500 hover:text-white dark:hover:bg-emerald-600 transition-all flex-grow text-center"
+                                        >
+                                            Complete
                                         </button>
-                                        <button className="text-[9px] font-bold px-3 py-1 bg-slate-100 dark:bg-slate-600 text-slate-600 dark:text-slate-300 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-500 transition-all">
-                                            Details
+                                        <button
+                                            onClick={() => onUpdateStatus?.(item.id, 'Broken')}
+                                            className="text-[9px] font-bold px-2 py-1 bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 transition-all"
+                                            title="Cancel Repair"
+                                        >
+                                            Cancel
+                                        </button>
+                                        <button
+                                            onClick={() => onUpdateStatus?.(item.id, 'Decommissioned')}
+                                            className="text-[9px] font-bold px-2 py-1 bg-red-50 dark:bg-red-900/20 text-red-400 dark:text-red-500 rounded-lg border border-red-100 dark:border-red-900/30 hover:bg-red-500 hover:text-white transition-all"
+                                            title="Mark as Unrepairable"
+                                        >
+                                            Scrap
                                         </button>
                                     </>
+                                ) : (
+                                    <button
+                                        onClick={() => onUpdateStatus?.(item.id, 'Repairing')}
+                                        className="text-[9px] font-bold px-3 py-1 bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-lg border border-red-100 dark:border-red-800/50 hover:bg-red-500 hover:text-white dark:hover:bg-red-600 transition-all flex-grow text-center"
+                                    >
+                                        Start Repair
+                                    </button>
                                 )}
+                                <button
+                                    onClick={() => onViewDetails?.(item)}
+                                    className="text-[9px] font-bold px-3 py-1 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 border border-blue-100 dark:border-blue-800/30 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-800 transition-all"
+                                >
+                                    Details
+                                </button>
                             </div>
                         </div>
                     </div>

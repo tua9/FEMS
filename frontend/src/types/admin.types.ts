@@ -10,13 +10,15 @@ export interface User {
 export interface Asset {
   id: string;
   name: string;
-  category: 'Laptop' | 'Photography' | 'Peripheral' | 'Tablet' | 'Network' | 'Other';
+  category: 'Laptop' | 'Photography' | 'Peripheral' | 'Tablet' | 'Network' | 'Electronics' | 'Other';
   location: string;
-  quantity: number;
-  status: 'Available' | 'In Use' | 'Maintenance' | 'Broken' | 'Repairing' | 'Broken Screen';
+  status: 'Available' | 'In Use' | 'Maintenance' | 'Broken' | 'Repairing' | 'Broken Screen' | 'Decommissioned';
   imageUrl?: string;
   lastInspection?: string;
   description?: string;
+  issueDescription?: string;
+  warranty?: string;
+  purchaseDate?: string;
 }
 
 export interface EquipmentRequest {
@@ -40,7 +42,7 @@ export interface DamageReport {
   reporterAvatar?: string;
   dateReported: string; // YYYY-MM-DD
   priority: 'High Priority' | 'Medium Priority' | 'Low Priority';
-  status: 'Open' | 'In Progress' | 'Resolved';
+  status: 'Pending' | 'In Progress' | 'Resolved';
 }
 
 export interface BorrowRecord {

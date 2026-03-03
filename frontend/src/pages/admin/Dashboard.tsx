@@ -5,10 +5,14 @@ import TopBrokenList from '../../components/admin/dashboard/TopBrokenList';
 import InventoryRequestList from '../../components/admin/dashboard/InventoryRequestList';
 import RecentDamageReports from '../../components/admin/dashboard/RecentDamageReports';
 import { adminApi } from '../../services/api/adminApi';
-import { DashboardMetrics, EquipmentRequest, DamageReport } from '../../types/admin.types';
+import { DashboardMetrics, EquipmentRequest, DamageReport, Asset, BorrowRecord } from '../../types/admin.types';
+import { useNavigate } from 'react-router-dom';
 
 const AdminDashboard: React.FC = () => {
+    const navigate = useNavigate();
     const [metrics, setMetrics] = useState<DashboardMetrics | null>(null);
+    const [equipments, setEquipments] = useState<Asset[]>([]);
+    const [borrowRecords, setBorrowRecords] = useState<BorrowRecord[]>([]);
     const [healthStatus, setHealthStatus] = useState<any>(null);
     const [topBroken, setTopBroken] = useState<any[]>([]);
     const [requests, setRequests] = useState<EquipmentRequest[]>([]);
@@ -23,13 +27,17 @@ const AdminDashboard: React.FC = () => {
                     healthData,
                     topBrokenData,
                     requestsData,
-                    reportsData
+                    reportsData,
+                    equipmentListData,
+                    borrowingListData
                 ] = await Promise.all([
                     adminApi.getDashboardMetrics(),
                     adminApi.getHealthStatus(),
                     adminApi.getTopBrokenEquipment(),
                     adminApi.getInventoryRequests(),
-                    adminApi.getRecentDamageReports()
+                    adminApi.getRecentDamageReports(),
+                    adminApi.getEquipmentList(),
+                    adminApi.getBorrowingList()
                 ]);
 
                 setMetrics(metricsData);
@@ -37,6 +45,8 @@ const AdminDashboard: React.FC = () => {
                 setTopBroken(topBrokenData);
                 setRequests(requestsData);
                 setReports(reportsData);
+                setEquipments(equipmentListData);
+                setBorrowRecords(borrowingListData);
             } catch (error) {
                 console.error("Failed to fetch dashboard data", error);
             } finally {
@@ -55,32 +65,39 @@ const AdminDashboard: React.FC = () => {
         );
     }
 
+    const totalEquipments = equipments.length;
+    const brokenEquipment = equipments.filter(e => e.status === 'Broken' || e.status === 'Repairing').length;
+    const pendingApprovals = borrowRecords.filter(r => r.status === 'Pending').length;
+
     return (
         <div className="max-w-7xl mx-auto px-6 pb-16">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8 mt-6">
                 <StatCard
-                    title="Total Devices"
-                    value={metrics.totalDevices.toLocaleString()}
+                    title="Total Equipments"
+                    value={totalEquipments.toLocaleString()}
                     trendValue={`+${metrics.devicesTrend}%`}
                     trendLabel="from last month"
                     trendDirection="up"
                     iconName="devices"
+                    onClick={() => navigate('/admin/equipment', { state: { status: 'All Status' } })}
                 />
                 <StatCard
-                    title="Broken Devices"
-                    value={metrics.brokenDevices}
+                    title="Broken Equipment"
+                    value={brokenEquipment}
                     trendValue={`${metrics.criticalRepairs}`}
                     trendLabel="critical repairs"
                     trendDirection="down"
                     iconName="build_circle"
+                    onClick={() => navigate('/admin/equipment', { state: { status: 'Broken' } })}
                 />
                 <StatCard
-                    title="Pending Requests"
-                    value={metrics.pendingRequests}
+                    title="Pending Approvals"
+                    value={pendingApprovals}
                     trendValue={`Avg. ${metrics.avgResponseTimeHours}h`}
                     trendLabel="response"
                     trendDirection="neutral"
                     iconName="inventory_2"
+                    onClick={() => navigate('/admin/borrowing', { state: { status: 'Pending' } })}
                 />
             </div>
 

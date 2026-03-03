@@ -1,20 +1,20 @@
 import { DashboardMetrics, EquipmentRequest, DamageReport, Asset } from '../../types/admin.types';
 
 export const mockDashboardMetrics: DashboardMetrics = {
-    totalDevices: 1248,
-    devicesTrend: 12,
-    brokenDevices: 42,
-    criticalRepairs: 8,
-    pendingRequests: 18,
-    avgResponseTimeHours: 4,
-    efficiencyRate: 94,
+    totalDevices: 64,
+    devicesTrend: 8,
+    brokenDevices: 4,
+    criticalRepairs: 2,
+    pendingRequests: 5,
+    avgResponseTimeHours: 3.5,
+    efficiencyRate: 98,
 };
 
 export const mockHealthStatus = {
-    healthy: 80,
-    available: 998,
-    maintenance: 208,
-    broken: 42,
+    healthy: 92,
+    available: 58,
+    maintenance: 2,
+    broken: 4,
 };
 
 export const mockTopBrokenEquipment = [
@@ -71,7 +71,7 @@ export const mockRecentDamageReports: DamageReport[] = [
         reporterAvatar: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAAyDpl-KPOcbkM73lfg-cJByguFPLaTMq-0bDAWLD1LRKU10ZVCc1p3UFwKPQ7JSIcd5McR1xcqkJ3jSezyfiov1HcbVuCm5W37NJsuvZMLU1s8bGeqdtkNyFvNWHxJzTwozLq4T57EwEtdkT-4vfn0eDrVhdniE2u3csPo7PG9d4kRc_eMf-c4MyFqL8camgdKKW0ThCygGOb1fIAg-UOavWhUHrYKrHwhsoz6KkwQePPGjDKifkgxUe6BONvkNly0OPxCv_adS4-',
         dateReported: 'Oct 25, 2024',
         priority: 'High Priority',
-        status: 'Open',
+        status: 'Pending',
     },
     {
         id: 'REP-002',
@@ -93,6 +93,6 @@ export const mockRecentDamageReports: DamageReport[] = [
         reporterAvatar: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDVzPO2HAOwSBaDgWwiCuz2pDt2XR6MarE9abgyU6ahphmtLTzWLPfG-kAqrnlKha30BKkIktXNy3aDbbK9fZRftRg2-TxViirAHozHCS8n-IznB1wV-Li83fXwycgZoGXmcNidRzoKwejA9vZ_y57SW-RhhKyfcdrbXmNRWo4Jgn2xgRWUa9_2mdZiQmyaxl8WjZE3WnSpUO-8IOBLlZB-Gcz_RLgihfXgygKTStPjF0qL429ylTsH9PoFLaHYrFmCOgOYt4zbMxn9',
         dateReported: 'Oct 23, 2024',
         priority: 'Low Priority',
-        status: 'Open',
+        status: 'Pending',
     },
 ];

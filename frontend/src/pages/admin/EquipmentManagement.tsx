@@ -7,24 +7,32 @@ import DeviceDetailsModal from '../../components/admin/equipment/DeviceDetailsMo
 import DeleteConfirmationModal from '../../components/admin/common/DeleteConfirmationModal';
 import { adminApi } from '../../services/api/adminApi';
 import { Asset } from '../../types/admin.types';
+import { useLocation } from 'react-router-dom';
 
 const EquipmentManagement: React.FC = () => {
+    const location = useLocation();
     const [equipments, setEquipments] = useState<Asset[]>([]);
     const [brokenAttention, setBrokenAttention] = useState<Asset[]>([]);
     const [loading, setLoading] = useState(true);
 
-    // Modal states
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
     const [selectedDevice, setSelectedDevice] = useState<Asset | null>(null);
     const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
     const [qrDevice, setQrDevice] = useState<Asset | null>(null);
     const [deviceToDelete, setDeviceToDelete] = useState<Asset | null>(null);
 
-    // Filter & Sort states
     const [searchQuery, setSearchQuery] = useState('');
     const [statusFilter, setStatusFilter] = useState('All Status');
     const [categoryFilter, setCategoryFilter] = useState('All Categories');
     const [sortBy, setSortBy] = useState('Newest');
+    const [currentPage, setCurrentPage] = useState(1);
+    const ITEMS_PER_PAGE = 5;
+
+    useEffect(() => {
+        if (location.state && (location.state as any).status) {
+            setStatusFilter((location.state as any).status);
+        }
+    }, [location.state]);
 
     const fetchEquipmentData = React.useCallback(async () => {
         try {
@@ -45,33 +53,39 @@ const EquipmentManagement: React.FC = () => {
         fetchEquipmentData();
     }, [fetchEquipmentData]);
 
+    // Reset to page 1 when filters change
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [searchQuery, statusFilter, categoryFilter, sortBy]);
+
     const handleOpenDetails = (asset: Asset) => {
         setSelectedDevice(asset);
         setIsDetailModalOpen(true);
     };
 
-    const handleOpenQRCode = (asset: Asset) => {
-        setQrDevice(asset);
-    };
-
-    const handleEditDevice = (asset: Asset) => {
-        handleOpenDetails(asset);
-    };
-
-    const handleDeleteClick = (asset: Asset) => {
-        setDeviceToDelete(asset);
-    };
+    const handleOpenQRCode = (asset: Asset) => setQrDevice(asset);
+    const handleEditDevice = (asset: Asset) => handleOpenDetails(asset);
+    const handleDeleteClick = (asset: Asset) => setDeviceToDelete(asset);
 
     const confirmDelete = () => {
         if (deviceToDelete) {
             setEquipments(prev => prev.filter(e => e.id !== deviceToDelete.id));
             setDeviceToDelete(null);
-            // In a real app, call API here
         }
     };
 
+    const handleUpdateStatus = (id: string, newStatus: Asset['status']) => {
+        setEquipments(prev => prev.map(e => e.id === id ? { ...e, status: newStatus } : e));
+    };
+
+    // Keep brokenAttention in sync with equipments for demo purposes
+    useEffect(() => {
+        const brokenItems = equipments.filter(e => e.status === 'Broken' || e.status === 'Repairing').slice(0, 5);
+        setBrokenAttention(brokenItems);
+    }, [equipments]);
+
     const categories = Array.from(new Set(equipments.map(e => e.category)));
-    const statuses = ['Available', 'In Use', 'Maintenance', 'Broken'];
+    const statuses = ['Available', 'In Use', 'Maintenance', 'Broken', 'Repairing', 'Decommissioned'];
 
     const filteredEquipments = equipments
         .filter(item => {
@@ -79,18 +93,21 @@ const EquipmentManagement: React.FC = () => {
                 item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                 item.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
                 item.category.toLowerCase().includes(searchQuery.toLowerCase());
-
             const matchesStatus = statusFilter === 'All Status' || item.status === statusFilter;
             const matchesCategory = categoryFilter === 'All Categories' || item.category === categoryFilter;
-
             return matchesSearch && matchesStatus && matchesCategory;
         })
         .sort((a, b) => {
             if (sortBy === 'Name') return a.name.localeCompare(b.name);
-            if (sortBy === 'Quantity') return b.quantity - a.quantity;
             if (sortBy === 'Status') return a.status.localeCompare(b.status);
-            return 0; // Default: newest/as is
+            return 0;
         });
+
+    const totalPages = Math.ceil(filteredEquipments.length / ITEMS_PER_PAGE);
+    const paginatedEquipments = filteredEquipments.slice(
+        (currentPage - 1) * ITEMS_PER_PAGE,
+        currentPage * ITEMS_PER_PAGE
+    );
 
     if (loading) {
         return (
@@ -104,7 +121,6 @@ const EquipmentManagement: React.FC = () => {
 
     return (
         <div className="max-w-7xl mx-auto px-6 pb-16 relative z-0">
-            {/* Blurring background when modal is open */}
             <div className={`transition-all duration-300 ${isBlurred ? 'filter blur-sm opacity-50 pointer-events-none' : ''}`}>
                 <div className="mb-8 px-2 flex flex-col md:flex-row md:items-end justify-between gap-6 mt-6">
                     <div>
@@ -127,7 +143,7 @@ const EquipmentManagement: React.FC = () => {
                                 <span className="material-symbols-outlined absolute left-4 text-slate-400">search</span>
                                 <input
                                     className="w-full pl-12 pr-4 py-3 bg-transparent border-none rounded-2xl text-sm font-medium focus:ring-0 transition-all outline-none placeholder:text-slate-400 dark:text-white"
-                                    placeholder="Search equipment by name, ID or category..."
+                                    placeholder="Search equipment..."
                                     type="text"
                                     value={searchQuery}
                                     onChange={e => setSearchQuery(e.target.value)}
@@ -135,49 +151,45 @@ const EquipmentManagement: React.FC = () => {
                             </div>
                         </div>
 
+                        {/* Dropdown Section - Không có icon thủ công */}
                         <div className="flex items-center gap-3">
                             <div className="relative">
                                 <select
                                     value={categoryFilter}
                                     onChange={e => setCategoryFilter(e.target.value)}
-                                    className="appearance-none flex items-center gap-2 px-5 py-2.5 bg-white/70 dark:bg-slate-700 hover:bg-white dark:hover:bg-slate-600 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 border border-white/80 dark:border-slate-500 shadow-sm transition-all pr-10 outline-none cursor-pointer"
+                                    className="min-w-[160px] pl-5 pr-8 py-2.5 bg-white/70 dark:bg-slate-700 hover:bg-white dark:hover:bg-slate-600 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 border border-white/80 dark:border-slate-500 shadow-sm transition-all outline-none cursor-pointer"
                                 >
-                                    <option value="All Categories text-slate-400 font-bold uppercase mb-2">Filters</option>
                                     <option value="All Categories">All Categories</option>
                                     {categories.map(c => <option key={c} value={c}>{c}</option>)}
                                 </select>
-                                <span className="material-symbols-outlined text-sm absolute right-3 top-2.5 pointer-events-none text-slate-400">filter_alt</span>
                             </div>
 
                             <div className="relative">
                                 <select
                                     value={statusFilter}
                                     onChange={e => setStatusFilter(e.target.value)}
-                                    className="appearance-none flex items-center gap-2 px-5 py-2.5 bg-white/70 dark:bg-slate-700 hover:bg-white dark:hover:bg-slate-600 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 border border-white/80 dark:border-slate-500 shadow-sm transition-all pr-10 outline-none cursor-pointer"
+                                    className="min-w-[130px] pl-5 pr-8 py-2.5 bg-white/70 dark:bg-slate-700 hover:bg-white dark:hover:bg-slate-600 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 border border-white/80 dark:border-slate-500 shadow-sm transition-all outline-none cursor-pointer"
                                 >
                                     <option value="All Status">All Status</option>
                                     {statuses.map(s => <option key={s} value={s}>{s}</option>)}
                                 </select>
-                                <span className="material-symbols-outlined text-sm absolute right-3 top-2.5 pointer-events-none text-slate-400">info</span>
                             </div>
 
                             <div className="relative">
                                 <select
                                     value={sortBy}
                                     onChange={e => setSortBy(e.target.value)}
-                                    className="appearance-none flex items-center gap-2 px-5 py-2.5 bg-white/70 dark:bg-slate-700 hover:bg-white dark:hover:bg-slate-600 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 border border-white/80 dark:border-slate-500 shadow-sm transition-all pr-10 outline-none cursor-pointer"
+                                    className="min-w-[140px] pl-5 pr-8 py-2.5 bg-white/70 dark:bg-slate-700 hover:bg-white dark:hover:bg-slate-600 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 border border-white/80 dark:border-slate-500 shadow-sm transition-all outline-none cursor-pointer"
                                 >
                                     <option value="Newest">Sort: Newest</option>
                                     <option value="Name">Sort: Name</option>
-                                    <option value="Quantity">Sort: Quantity</option>
                                     <option value="Status">Sort: Status</option>
                                 </select>
-                                <span className="material-symbols-outlined text-sm absolute right-3 top-2.5 pointer-events-none text-slate-400">sort</span>
                             </div>
 
                             <button
                                 onClick={() => { setSearchQuery(''); setStatusFilter('All Status'); setCategoryFilter('All Categories'); setSortBy('Newest'); }}
-                                className="flex items-center gap-2 px-4 py-2.5 bg-white/70 dark:bg-slate-700 hover:bg-white dark:hover:bg-slate-600 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 border border-white/80 dark:border-slate-500 shadow-sm transition-all"
+                                className="flex items-center justify-center w-10 h-10 bg-white/70 dark:bg-slate-700 hover:bg-white dark:hover:bg-slate-600 rounded-xl border border-white/80 dark:border-slate-500 shadow-sm transition-all text-slate-400 hover:text-red-500"
                             >
                                 <span className="material-symbols-outlined text-lg">filter_alt_off</span>
                             </button>
@@ -185,65 +197,64 @@ const EquipmentManagement: React.FC = () => {
                     </div>
 
                     <EquipmentTable
-                        equipments={filteredEquipments}
+                        equipments={paginatedEquipments}
                         onOpenDetails={handleOpenDetails}
                         onOpenQRCode={handleOpenQRCode}
                         onEdit={handleEditDevice}
                         onDelete={handleDeleteClick}
+                        onReportDamage={(item) => handleUpdateStatus(item.id, 'Broken')}
                     />
 
                     <div className="mt-8 flex items-center justify-between px-2">
-                        <p className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Showing 1-10 of 1,248 assets</p>
+                        <p className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                            Showing {Math.min(filteredEquipments.length, (currentPage - 1) * ITEMS_PER_PAGE + 1)} - {Math.min(filteredEquipments.length, currentPage * ITEMS_PER_PAGE)} of {filteredEquipments.length} assets
+                        </p>
                         <div className="flex items-center gap-2">
-                            <button className="w-10 h-10 flex items-center justify-center rounded-xl bg-white/40 dark:bg-slate-700 border border-white dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-600 transition-all">
+                            <button
+                                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                                disabled={currentPage === 1}
+                                className={`w-10 h-10 flex items-center justify-center rounded-xl bg-white/40 dark:bg-slate-700 border border-white dark:border-slate-600 text-slate-600 dark:text-slate-300 transition-opacity ${currentPage === 1 ? 'opacity-30 cursor-not-allowed' : 'hover:bg-white dark:hover:bg-slate-600'}`}
+                            >
                                 <span className="material-symbols-outlined text-lg">chevron_left</span>
                             </button>
-                            <button className="w-10 h-10 flex items-center justify-center rounded-xl bg-[#1A2B56] text-white shadow-md font-bold text-sm">1</button>
-                            <button className="w-10 h-10 flex items-center justify-center rounded-xl bg-white/40 dark:bg-slate-700 border border-white dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-600 transition-all font-bold text-sm">2</button>
-                            <button className="w-10 h-10 flex items-center justify-center rounded-xl bg-white/40 dark:bg-slate-700 border border-white dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-600 transition-all font-bold text-sm">3</button>
-                            <button className="w-10 h-10 flex items-center justify-center rounded-xl bg-white/40 dark:bg-slate-700 border border-white dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-600 transition-all">
+
+                            {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+                                <button
+                                    key={page}
+                                    onClick={() => setCurrentPage(page)}
+                                    className={`w-10 h-10 flex items-center justify-center rounded-xl font-bold text-sm transition-all ${currentPage === page ? 'bg-[#1A2B56] text-white shadow-md' : 'bg-white/40 dark:bg-slate-700 border border-white dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-600'}`}
+                                >
+                                    {page}
+                                </button>
+                            ))}
+
+                            <button
+                                onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                                disabled={currentPage === totalPages || totalPages === 0}
+                                className={`w-10 h-10 flex items-center justify-center rounded-xl bg-white/40 dark:bg-slate-700 border border-white dark:border-slate-600 text-slate-600 dark:text-slate-300 transition-opacity ${currentPage === totalPages || totalPages === 0 ? 'opacity-30 cursor-not-allowed' : 'hover:bg-white dark:hover:bg-slate-600'}`}
+                            >
                                 <span className="material-symbols-outlined text-lg">chevron_right</span>
                             </button>
                         </div>
                     </div>
                 </div>
 
-                <BrokenAttentionCard items={brokenAttention} />
+                <BrokenAttentionCard
+                    items={brokenAttention}
+                    onViewDetails={handleOpenDetails}
+                    onUpdateStatus={handleUpdateStatus}
+                    onViewAll={() => {
+                        // Scroll to table and set status filter to "Broken" for a quick "View All"
+                        setStatusFilter('Broken');
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                    }}
+                />
             </div>
 
-            {/* Modals */}
-            <AddEquipmentModal
-                isOpen={isAddModalOpen}
-                onClose={() => setIsAddModalOpen(false)}
-                equipment={selectedDevice}
-                onEquipmentUpdated={fetchEquipmentData}
-            />
-
-            <DeviceDetailsModal
-                isOpen={isDetailModalOpen}
-                device={selectedDevice}
-                onClose={() => setIsDetailModalOpen(false)}
-                onEdit={(device) => {
-                    setIsDetailModalOpen(false);
-                    setSelectedDevice(device);
-                    setIsAddModalOpen(true);
-                }}
-            />
-
-            <EquipmentQRCodeModal
-                isOpen={!!qrDevice}
-                equipment={qrDevice}
-                onClose={() => setQrDevice(null)}
-            />
-
-            <DeleteConfirmationModal
-                isOpen={!!deviceToDelete}
-                title="Decommission Equipment"
-                message="Are you sure you want to remove this equipment from the active fleet? This action will archive all associated records."
-                itemName={deviceToDelete?.name}
-                onClose={() => setDeviceToDelete(null)}
-                onConfirm={confirmDelete}
-            />
+            <AddEquipmentModal isOpen={isAddModalOpen} onClose={() => setIsAddModalOpen(false)} equipment={selectedDevice} onEquipmentUpdated={fetchEquipmentData} />
+            <DeviceDetailsModal isOpen={isDetailModalOpen} device={selectedDevice} onClose={() => setIsDetailModalOpen(false)} onEdit={(d) => { setIsDetailModalOpen(false); setSelectedDevice(d); setIsAddModalOpen(true); }} onReportDamage={(d) => handleUpdateStatus(d.id, 'Broken')} />
+            <EquipmentQRCodeModal isOpen={!!qrDevice} equipment={qrDevice} onClose={() => setQrDevice(null)} />
+            <DeleteConfirmationModal isOpen={!!deviceToDelete} title="Decommission Equipment" message="Are you sure you want to remove this equipment?" itemName={deviceToDelete?.name} onClose={() => setDeviceToDelete(null)} onConfirm={confirmDelete} />
         </div>
     );
 };

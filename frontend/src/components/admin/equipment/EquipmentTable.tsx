@@ -7,9 +7,10 @@ interface EquipmentTableProps {
     onOpenQRCode?: (asset: Asset) => void;
     onEdit?: (asset: Asset) => void;
     onDelete?: (asset: Asset) => void;
+    onReportDamage?: (asset: Asset) => void;
 }
 
-const EquipmentTable: React.FC<EquipmentTableProps> = ({ equipments, onOpenDetails, onOpenQRCode, onEdit, onDelete }) => {
+const EquipmentTable: React.FC<EquipmentTableProps> = ({ equipments, onOpenDetails, onOpenQRCode, onEdit, onDelete, onReportDamage }) => {
 
     const getStatusStyle = (status: string) => {
         switch (status) {
@@ -31,7 +32,6 @@ const EquipmentTable: React.FC<EquipmentTableProps> = ({ equipments, onOpenDetai
                         <th className="px-6 pb-2 text-[11px] font-extrabold uppercase tracking-[0.2em] opacity-80">Equipment</th>
                         <th className="px-6 pb-2 text-[11px] font-extrabold uppercase tracking-[0.2em] opacity-80 hidden md:table-cell">Category</th>
                         <th className="px-6 pb-2 text-[11px] font-extrabold uppercase tracking-[0.2em] opacity-80 hidden sm:table-cell">Location</th>
-                        <th className="px-6 pb-2 text-[11px] font-extrabold uppercase tracking-[0.2em] opacity-80">Quantity</th>
                         <th className="px-6 pb-2 text-[11px] font-extrabold uppercase tracking-[0.2em] opacity-80">Status</th>
                         <th className="px-6 pb-2 text-[11px] font-extrabold uppercase tracking-[0.2em] opacity-80 text-right">Actions</th>
                     </tr>
@@ -53,7 +53,6 @@ const EquipmentTable: React.FC<EquipmentTableProps> = ({ equipments, onOpenDetai
                                 </td>
                                 <td className={`p-4 text-sm font-bold text-slate-600 dark:text-slate-300 hidden md:table-cell ${rowBg}`}>{item.category}</td>
                                 <td className={`p-4 text-sm font-bold text-slate-600 dark:text-slate-300 hidden sm:table-cell ${rowBg}`}>{item.location}</td>
-                                <td className={`p-4 text-sm font-bold text-slate-800 dark:text-white ${rowBg}`}>{String(item.quantity).padStart(2, '0')}</td>
                                 <td className={`p-4 ${rowBg}`}>
                                     <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider inline-flex items-center justify-center whitespace-nowrap ${getStatusStyle(item.status)}`}>
                                         {item.status}
@@ -74,10 +73,18 @@ const EquipmentTable: React.FC<EquipmentTableProps> = ({ equipments, onOpenDetai
                                             <span className="material-symbols-outlined text-xl">edit</span>
                                         </button>
                                         <button
+                                            onClick={(e) => { e.stopPropagation(); onReportDamage && onReportDamage(item); }}
+                                            className="p-2 hover:bg-orange-50 dark:hover:bg-orange-900/30 rounded-lg transition-all text-slate-400 hover:text-orange-500"
+                                            title="Report Damage"
+                                        >
+                                            <span className="material-symbols-outlined text-xl">report</span>
+                                        </button>
+                                        <button
                                             onClick={(e) => { e.stopPropagation(); onDelete && onDelete(item); }}
                                             className="p-2 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition-all text-slate-400 hover:text-red-500"
+                                            title="Remove from Inventory"
                                         >
-                                            <span className="material-symbols-outlined text-xl">delete</span>
+                                            <span className="material-symbols-outlined text-xl">delete_forever</span>
                                         </button>
                                     </div>
                                 </td>
@@ -85,7 +92,7 @@ const EquipmentTable: React.FC<EquipmentTableProps> = ({ equipments, onOpenDetai
                         ))
                     ) : (
                         <tr>
-                            <td colSpan={6} className="py-16 text-center bg-white/40 dark:bg-slate-800/40 rounded-3xl border border-dashed border-slate-200 dark:border-slate-700">
+                            <td colSpan={5} className="py-16 text-center bg-white/40 dark:bg-slate-800/40 rounded-3xl border border-dashed border-slate-200 dark:border-slate-700">
                                 <div className="flex flex-col items-center gap-4">
                                     <span className="material-symbols-outlined text-5xl text-slate-300">inventory</span>
                                     <div>
