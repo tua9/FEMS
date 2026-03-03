@@ -13,7 +13,7 @@ export function SearchBar() {
           placeholder="Search devices(e.g, Projector, HDMI...)"
           className="border-border border focus:border-0 focus-visible:ring-1 focus-visible:ring-offset-0"
         />
-        <Button type="submit">Subscribe</Button>
+        <Button type="submit" className="rounded-2xl">Subscribe</Button>
       </div>
     </div>
   );

@@ -1,10 +1,11 @@
-import { Navigate, Outlet } from "react-router-dom";
+import { Navigate, Outlet } from "react-router";
+import { useAuthStore } from "@/stores/useAuthStore";
 
 export default function GuestRoute() {
-  const user = localStorage.getItem("user");
+  const { user } = useAuthStore();
 
   if (user) {
-    return <Navigate to="/" replace />;
+    return <Navigate to="/home" replace />;
   }
 
   return <Outlet />;

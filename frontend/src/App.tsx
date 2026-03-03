@@ -9,9 +9,10 @@ export default function App() {
     <>
       <Toaster richColors />
       <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
-        <div className="container w-[90%] p-1">
+        <div className="w-full ">
           <header className="my-4 mb-6">
-            <NavBar></NavBar>
+
+            <NavBar />
           </header>
           <Outlet /> {/* Nơi render các route con */}
           {/* <Button

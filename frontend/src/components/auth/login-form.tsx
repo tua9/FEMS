@@ -47,11 +47,17 @@ export function LoginForm({
 
   const onSubmit = async (data: SignInFormValues) => {
     const { username, password, role } = data;
-    //goi api
     await signIn(username, password, role);
 
-    // chuyen huong sau khi dang nhap thanh cong
-    navigate("/");
+    // Chỉ navigate nếu login thành công (có user trong store)
+    const loggedInUser = useAuthStore.getState().user;
+    if (!loggedInUser) return;
+
+    if (role === "technician") {
+      navigate("/technician/dashboard");
+    } else {
+      navigate("/home");
+    }
   };
 
   return (
