@@ -1,188 +1,145 @@
-// controllers/authController.js
-import ms from 'ms'
-import {
-  signInService,
-  refreshTokenService,
-  signOutService,
-} from '../services/authService.js'
+import ms from 'ms';
+import { signInService,, signOutService, signUpService } from '../services/authService.js';
+import { googleLoginService } from '../services/googleAuthService.js';
 
-export const signIn = async (req, res) => {
+
+export const signUp = async (req, res) => {
   try {
-    const result = await signInService(req.body)
+    const { username, password, email, displayName, role } = req.body;
 
-    if (!username || !password || !role) {
-      return res
-        .status(400)
-        .json({ message: 'Username, password and role are required!' })
+    // Kiểm tra các trường bắt buộc
+    if (!username || !password || !email || !displayName || !role) {
+      return res.status(400).json({ message: 'All fields are required!' });
     }
 
-    const user = await User.findOne({ username })
-    if (!user) {
-      return res.status(404).json({ message: 'Invalid username' })
-    }
+    // Gọi service đăng ký
+    const result = await signUpService({ username, password, email, displayName, role });
 
-    const isPasswordValid = await bcrypt.compare(password, user.hashedPassword)
-    if (!isPasswordValid) {
-      return res.status(401).json({ message: 'Invalid password' })
-    }
-
-    if (user.role !== role) {
-      return res
-        .status(403)
-        .json({ message: `User does not have the role: ${role}` })
-    }
-
-    // Tao Access Token
-
-    const userInfo = { _id: user._id, username, role }
-
-    const accessToken = await JwtProvider.generateToken(
-      { userInfo },
-      env.ACCESS_TOKEN_SECRET,
-      ACCESS_TOKEN_TTL,
-    )
-
-    // Tao Refresh Token
-    const refreshToken = await JwtProvider.generateToken(
-      { userInfo },
-      env.REFRESH_TOKEN_SECRET,
-      REFRESH_TOKEN_TTL,
-    )
-
-    // tao session
-    await Session.create({
-      userId: user._id,
-      refreshToken,
-      expiresAt: new Date(Date.now() + REFRESH_TOKEN_TTL),
-    })
-
-    // luu vao cookie
-    res.cookie('accessToken', accessToken, {
+    // Lưu token vào cookie
+    res.cookie('accessToken', result.accessToken, {
       httpOnly: true,
       secure: true,
       sameSite: 'none',
       maxAge: ms('14 days'),
-    })
+    });
 
     res.cookie('refreshToken', result.refreshToken, {
       httpOnly: true,
       secure: true,
       sameSite: 'none',
       maxAge: ms('14 days'),
-    })
+    });
+
+    // Trả về thông tin người dùng
+    return res.status(201).json({
+      message: `Sign up successful: User[${result.newUser.displayName}]`,
+      userInfo: result.userInfo,
+      accessToken: result.accessToken,
+      refreshToken: result.refreshToken,
+    });
+  } catch (error) {
+    if (error.message === 'MISSING_FIELDS') return res.status(400).json({ message: 'Missing fields' });
+    if (error.message === 'USER_EXISTS') return res.status(400).json({ message: 'User already exists' });
+
+    console.error('Sign up error:', error);
+    return res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+export const signIn = async (req, res) => {
+  try {
+    const { username, password, role } = req.body;
+    
+    if (!username || !password || !role) {
+      return res.status(400).json({ message: 'Username, password and role are required!' });
+    }
+
+    const result = await signInService(req.body);
+
+    res.cookie('accessToken', result.accessToken, {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'none',
+      maxAge: ms('14 days'),
+    });
+
+    res.cookie('refreshToken', result.refreshToken, {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'none',
+      maxAge: ms('14 days'),
+    });
 
     return res.status(200).json({
       message: `Sign in successful: User[${result.user.displayName}]`,
       userInfo: result.userInfo,
       accessToken: result.accessToken,
       refreshToken: result.refreshToken,
-    })
+    });
   } catch (error) {
-    if (error.message === 'MISSING_FIELDS')
-      return res.status(400).json({ message: 'Missing fields' })
+    if (error.message === 'MISSING_FIELDS') return res.status(400).json({ message: 'Missing fields' });
+    if (error.message === 'INVALID_USERNAME') return res.status(404).json({ message: 'Invalid username' });
+    if (error.message === 'INVALID_PASSWORD') return res.status(401).json({ message: 'Invalid password' });
+    if (error.message === 'INVALID_ROLE') return res.status(403).json({ message: 'Invalid role' });
 
-    if (error.message === 'INVALID_USERNAME')
-      return res.status(404).json({ message: 'Invalid username' })
-
-    if (error.message === 'INVALID_PASSWORD')
-      return res.status(401).json({ message: 'Invalid password' })
-
-    if (error.message === 'INVALID_ROLE')
-      return res.status(403).json({ message: 'Invalid role' })
-
-    console.error('Sign in error:', error)
-    return res.status(500).json({ message: 'Internal server error' })
+    console.error('Sign in error:', error);
+    return res.status(500).json({ message: 'Internal server error' });
   }
-}
-
-export const refreshToken = async (req, res) => {
-  try {
-    const token = req.cookies?.refreshToken
-    const result = await refreshTokenService(token)
-
-    res.cookie('accessToken', result.accessToken, {
-      httpOnly: true,
-      secure: true,
-      sameSite: 'none',
-      maxAge: ms('14 days'),
-    })
-
-    return res.status(200).json({
-      accessToken: result.accessToken,
-    })
-  } catch (error) {
-    if (error.message === 'NO_REFRESH_TOKEN')
-      return res.status(401).json({ message: 'Refresh token required' })
-
-    if (error.message === 'INVALID_SESSION')
-      return res.status(401).json({ message: 'Invalid session' })
-
-    if (
-      error.message === 'TOKEN_EXPIRED' ||
-      error.message === 'TOKEN_EXPIRED_DB'
-    )
-      return res.status(401).json({ message: 'Refresh token expired' })
-
-    if (error.message === 'INVALID_TOKEN')
-      return res.status(401).json({ message: 'Invalid refresh token' })
-
-    console.error('Refresh token error:', error)
-    return res.status(500).json({ message: 'Internal server error' })
-  }
-}
-
-export const signOut = async (req, res) => {
-  try {
-    const refreshToken = req.cookies?.refreshToken
-    await signOutService(refreshToken)
-
-    res.clearCookie('refreshToken')
-    res.clearCookie('accessToken')
-
-    return res.status(204).json({ message: 'Sign out successful' })
-  } catch (error) {
-    console.error('Sign out error:', error)
-    return res.status(500).json({ message: 'Internal server error' })
-  }
-}
+};
 
 export const googleLogin = async (req, res) => {
   try {
-    const { idToken, role } = req.body
+    const { idToken, role } = req.body;
 
-    const result = await googleLoginService({ idToken, role })
+    if (!idToken || !role) {
+      return res.status(400).json({ message: 'ID token and role are required' });
+    }
 
+    // Gọi service đăng nhập Google
+    const result = await googleLoginService(idToken, role);
+
+    // Lưu các token vào cookie
     res.cookie('accessToken', result.accessToken, {
       httpOnly: true,
       secure: true,
       sameSite: 'none',
-      maxAge: ms('14 days'),
-    })
+      maxAge: 15 * 60 * 1000, // 15 phút
+    });
 
     res.cookie('refreshToken', result.refreshToken, {
       httpOnly: true,
       secure: true,
       sameSite: 'none',
-      maxAge: ms('14 days'),
-    })
+      maxAge: 14 * 24 * 60 * 60 * 1000, // 14 ngày
+    });
 
     return res.status(200).json({
-      message: `Google login success: ${result.user.email}`,
-      userInfo: result.userInfo,
+      message: `Google login success: ${result.user.displayName}`,
+      userInfo: {
+        id: result.user._id,
+        email: result.user.email,
+        role: result.user.role,
+      },
       accessToken: result.accessToken,
       refreshToken: result.refreshToken,
-    })
+    });
   } catch (error) {
-    if (error.message === 'INVALID_GOOGLE_TOKEN')
-      return res.status(401).json({ message: 'Invalid Google token' })
-
-    if (error.message === 'EMAIL_NOT_REGISTERED')
-      return res.status(403).json({ message: 'Account not allowed' })
-
-    if (error.message === 'INVALID_ROLE')
-      return res.status(403).json({ message: 'Invalid role' })
-
-    console.error('Google login error:', error)
-    return res.status(500).json({ message: 'Internal server error' })
+    console.error('Google login error:', error);
+    return res.status(500).json({ message: 'Internal server error' });
   }
-}
+};
+
+export const signOut = async (req, res) => {
+  try {
+    const refreshToken = req.cookies?.refreshToken;
+    await signOutService(refreshToken);
+
+    res.clearCookie('refreshToken');
+    res.clearCookie('accessToken');
+
+    return res.status(204).json({ message: 'Sign out successful' });
+  } catch (error) {
+    console.error('Sign out error:', error);
+    return res.status(500).json({ message: 'Internal server error' });
+  }
+};

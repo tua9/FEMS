@@ -29,10 +29,6 @@ app.use('/api/auth', authRoutes)
 app.use('/api/reports', reportRoutes)
 
 // private routes
-<<<<<<< HEAD
-app.use(protectedRoute)
-app.use('/api/users', protectedRoute, userRoutes)
-=======
 app.use('/api/users', protectedRoute, userRoutes)
 app.use('/api/borrow-requests', borrowRequestRouters)
 app.use('/api/equipments', equipmentRouters)
@@ -40,7 +36,6 @@ app.use('/api/equipments', equipmentRouters)
 // admin permission
 app.use('/api/buildings', buildingRouters)
 app.use('/api/rooms', roomRouters)
->>>>>>> dev
 
 connectDB().then(() => {
   app.listen(PORT, () => {
