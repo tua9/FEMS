@@ -1,18 +1,15 @@
 import { Toaster } from "sonner";
-import { NavBar } from "./components/common/NavBar";
 import { Outlet } from "react-router";
 import { ThemeProvider } from "./components/common/theme-provider";
 import Footer from "./components/common/Footer";
+import StudentNavBar from "./components/lecturer/navbar/StudentNavbar";
 
 export default function App() {
   return (
     <>
       <Toaster richColors />
       <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
-        <div className="container w-[90%] p-1">
-          <header className="my-4 mb-6">
-            <NavBar></NavBar>
-          </header>
+        <div className="m-0 w-full">
           <Outlet /> {/* Nơi render các route con */}
           {/* <Button
             onClick={async () => {

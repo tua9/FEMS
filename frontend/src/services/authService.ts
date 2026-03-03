@@ -15,6 +15,7 @@ export const authService = {
     console.log("9999 - ", response.data.userInfo);
 
     localStorage.setItem("user", JSON.stringify(response.data.userInfo));
+    localStorage.setItem("role", JSON.stringify(response.data.userInfo.role));
 
     return response.data;
   },
