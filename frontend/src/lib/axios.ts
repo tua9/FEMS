@@ -34,10 +34,12 @@ api.interceptors.response.use(
       }
     }
 
-    // 401 / 403 → logout luôn
+    // 401 / 403 → logout luôn, nhưng tránh chuyển hướng nếu đang ở trang login
     if (error.response?.status === 401 || error.response?.status === 403) {
-      await authService.signOut();
-      location.href = "/login";
+      if (window.location.pathname !== "/login") {
+        await authService.signOut();
+        window.location.href = "/login";
+      }
     }
 
     return Promise.reject(error);

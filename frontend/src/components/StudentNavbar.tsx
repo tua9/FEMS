@@ -1,12 +1,12 @@
 import React, { useState, useEffect, useRef } from "react";
-import { NavLinks } from "./NavLinks";
+import { NavLinks } from "./lecturer/navbar/NavLinks";
 import { useDarkMode } from "@/hooks/useDarkMode";
-import NotificationIcon from "./NotificationIcon";
-import UserDropdownMenu from "./UserDropdownMenu";
+import NotificationIcon from "./lecturer/navbar/NotificationIcon";
+import UserDropdownMenu from "./lecturer/navbar/UserDropdownMenu";
 
 const links = [
   { name: "Home", path: "/student/dashboard" },
-  { name: "Equipments", path: "/student/equipments" },
+  { name: "Equipments", path: "/student/equipment" },
   { name: "Borrow History", path: "/student/borrow-history" },
   { name: "Report Issue", path: "/student/report-issue" },
 ];
@@ -43,7 +43,7 @@ const StudentNavBar: React.FC = () => {
               F-EMS
             </h1>
             <p className="mt-1 text-[8px] font-black tracking-[0.15em] text-[#1E2B58] uppercase opacity-70 dark:text-slate-400">
-              LECTURER PORTAL
+              STUDENT PORTAL
             </p>
           </div>
         </div>
@@ -71,10 +71,10 @@ const StudentNavBar: React.FC = () => {
           <div ref={dropdownRef} className="flex items-center gap-3">
             <div className="hidden text-right xl:block">
               <p className="text-[11px] leading-none font-extrabold text-[#1E2B58] dark:text-white">
-                Dr. Alex Rivers
+                Alex Chen
               </p>
               <p className="mt-1 text-[8px] font-bold tracking-tighter text-slate-500 uppercase dark:text-slate-400">
-                Senior Lecturer
+                Software Engineering Student
               </p>
             </div>
             <UserDropdownMenu
