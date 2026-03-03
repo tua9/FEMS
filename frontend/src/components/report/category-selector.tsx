@@ -37,10 +37,10 @@ export function CategorySelector() {
               key={category.id}
               onClick={() => setSelected(category.id)}
               className={cn(
-                "flex flex-col items-center gap-2 rounded-xl border-2 px-3 py-4 transition-all",
+                "flex flex-col items-center gap-2 rounded-4xl border-2 px-3 py-4 transition-all",
                 isSelected
                   ? "border-border bg-card border shadow-sm"
-                  : "bg-secondary hover:border-border hover:bg-card border",
+                  : "bg-card text-card-foreground hover:border-border hover:bg-card hover:text-card-foreground border-border border shadow-sm",
               )}
             >
               <Icon

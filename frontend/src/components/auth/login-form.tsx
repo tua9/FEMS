@@ -50,8 +50,14 @@ export function LoginForm({
     //goi api
     await signIn(username, password, role);
 
-    // chuyen huong sau khi dang nhap thanh cong
-    navigate("/");
+    // Chuyển hướng dựa trên role
+    if (role === "student") {
+      navigate("/student/dashboard");
+    } else if (role === "lecturer") {
+      navigate("/lecturer/dashboard");
+    } else {
+      navigate("/");
+    }
   };
 
   return (

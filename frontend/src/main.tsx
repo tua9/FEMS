@@ -8,13 +8,16 @@ import "./styles/index.css";
 
 // Guest & Protected
 import GuestRoute from "./components/auth/GuestRoute.tsx";
+import RoleRedirect from "./components/auth/RoleRedirect.tsx";
+import ProtectedRoute from "./components/auth/ProtectedRoute.tsx";
+import StudentRoute from "./components/auth/StudentRoute.tsx";
 
-// Pages
-import LoginPage from "./pages/LoginPage.tsx";
-import HomePage from "./pages/HomePage.tsx";
-import EquipmentPage from "./pages/EquipmentPage.tsx";
-import BorrowHistory from "./pages/BorrowHistoryPage.tsx";
-import ReportPage from "./pages/ReportPage.tsx";
+// Student Pages
+import LoginPage from "./pages/student/LoginPage.tsx";
+import HomePage from "./pages/student/HomePage.tsx";
+import EquipmentPage from "./pages/student/EquipmentPage.tsx";
+import BorrowHistory from "./pages/student/BorrowHistoryPage.tsx";
+import ReportPage from "./pages/student/ReportPage.tsx";
 
 // Lecturer pages
 import { EquipmentCatalog } from "./pages/lecturer/EquipmentCatalog.tsx";
@@ -41,36 +44,59 @@ createRoot(document.getElementById("root")!).render(
           </Route>
 
           {/* Root "/" → redirect theo role (student / lecturer / chưa login) */}
+          <Route path="/" element={<RoleRedirect />} />
+
           {/* Student routes - yêu cầu role student */}
-          <Route path="/student/dashboard" element={<HomePage />} />
-          <Route path="/student/equipments" element={<EquipmentPage />} />
-          <Route path="/student/borrow-history" element={<BorrowHistory />} />
-          <Route path="/student/report-issue" element={<ReportPage />} />
+          <Route element={<StudentRoute />}>
+            <Route path="/student/dashboard" element={<HomePage />} />
+            <Route path="/student/equipment" element={<EquipmentPage />} />
+            <Route path="/student/borrow-history" element={<BorrowHistory />} />
+            <Route path="/student/report-issue" element={<ReportPage />} />
+            <Route path="/student/profile" element={<LecturerProfile />} />
+            <Route
+              path="/student/change-password"
+              element={<LecturerChangePassword />}
+            />
+          </Route>
 
-          {/* Lecturer routes - yêu cầu role lecturer */}
-          <Route path="/lecturer/dashboard" element={<LecturerDashboard />} />
-          <Route path="/lecturer/equipment" element={<EquipmentCatalog />} />
-          <Route path="/lecturer/history" element={<MyHistory />} />
-          <Route path="/lecturer/room-status" element={<RoomStatusCenter />} />
-          <Route path="/lecturer/approval" element={<ApprovalCenter />} />
-          <Route path="/lecturer/usage-stats" element={<UsageStatsCenter />} />
+          {/* Lecturer / Technician / Admin routes */}
           <Route
-            path="/lecturer/report-issue"
-            element={<ReportIssueCenter />}
-          />
-          <Route path="/lecturer/calendar" element={<AcademicCalendar />} />
-          <Route path="/lecturer/profile" element={<LecturerProfile />} />
-          <Route
-            path="/lecturer/change-password"
-            element={<LecturerChangePassword />}
-          />
-          <Route
-            path="/lecturer/notifications"
-            element={<LecturerNotifications />}
-          />
+            element={
+              <ProtectedRoute
+                allowRoles={["lecturer", "technician", "admin"]}
+              />
+            }
+          >
+            <Route path="/lecturer/dashboard" element={<LecturerDashboard />} />
+            <Route path="/lecturer/equipment" element={<EquipmentCatalog />} />
+            <Route path="/lecturer/history" element={<MyHistory />} />
+            <Route
+              path="/lecturer/room-status"
+              element={<RoomStatusCenter />}
+            />
+            <Route path="/lecturer/approval" element={<ApprovalCenter />} />
+            <Route
+              path="/lecturer/usage-stats"
+              element={<UsageStatsCenter />}
+            />
+            <Route
+              path="/lecturer/report-issue"
+              element={<ReportIssueCenter />}
+            />
+            <Route path="/lecturer/calendar" element={<AcademicCalendar />} />
+            <Route path="/lecturer/profile" element={<LecturerProfile />} />
+            <Route
+              path="/lecturer/change-password"
+              element={<LecturerChangePassword />}
+            />
+            <Route
+              path="/lecturer/notifications"
+              element={<LecturerNotifications />}
+            />
+          </Route>
 
-          {/* 404 - catch all */}
-          <Route path="*" element={<div>404 - Trang không tồn tại</div>} />
+          {/* 404 / Catch-all - redirect to login or dashboard based on role */}
+          <Route path="*" element={<RoleRedirect />} />
         </Route>
       </Routes>
     </BrowserRouter>

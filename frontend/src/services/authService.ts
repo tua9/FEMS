@@ -15,7 +15,7 @@ export const authService = {
     console.log("9999 - ", response.data.userInfo);
 
     localStorage.setItem("user", JSON.stringify(response.data.userInfo));
-    localStorage.setItem("role", JSON.stringify(response.data.userInfo.role));
+    localStorage.setItem("role", response.data.userInfo.role);
 
     return response.data;
   },
@@ -23,6 +23,7 @@ export const authService = {
   signOut: async () => {
     await api.delete("/auth/signout");
     localStorage.removeItem("user");
+    localStorage.removeItem("role");
     return;
   },
 
