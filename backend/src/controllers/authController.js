@@ -10,7 +10,54 @@ export const signIn = async (req, res) => {
   try {
     const result = await signInService(req.body)
 
-    res.cookie('accessToken', result.accessToken, {
+    if (!username || !password || !role) {
+      return res
+        .status(400)
+        .json({ message: 'Username, password and role are required!' })
+    }
+
+    const user = await User.findOne({ username })
+    if (!user) {
+      return res.status(404).json({ message: 'Invalid username' })
+    }
+
+    const isPasswordValid = await bcrypt.compare(password, user.hashedPassword)
+    if (!isPasswordValid) {
+      return res.status(401).json({ message: 'Invalid password' })
+    }
+
+    if (user.role !== role) {
+      return res
+        .status(403)
+        .json({ message: `User does not have the role: ${role}` })
+    }
+
+    // Tao Access Token
+
+    const userInfo = { _id: user._id, username, role }
+
+    const accessToken = await JwtProvider.generateToken(
+      { userInfo },
+      env.ACCESS_TOKEN_SECRET,
+      ACCESS_TOKEN_TTL,
+    )
+
+    // Tao Refresh Token
+    const refreshToken = await JwtProvider.generateToken(
+      { userInfo },
+      env.REFRESH_TOKEN_SECRET,
+      REFRESH_TOKEN_TTL,
+    )
+
+    // tao session
+    await Session.create({
+      userId: user._id,
+      refreshToken,
+      expiresAt: new Date(Date.now() + REFRESH_TOKEN_TTL),
+    })
+
+    // luu vao cookie
+    res.cookie('accessToken', accessToken, {
       httpOnly: true,
       secure: true,
       sameSite: 'none',

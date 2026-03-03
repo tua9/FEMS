@@ -44,5 +44,11 @@ const userSchema = new mongoose.Schema(
   { timestamps: true },
 )
 
+// Default sort by newest first
+userSchema.pre('find', function (next) {
+  this.sort({ createdAt: -1 })
+  next()
+})
+
 const User = mongoose.model('User', userSchema)
 export default User
