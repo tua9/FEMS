@@ -1,5 +1,5 @@
+import { Armchair, ChevronLeft, ChevronRight, Computer, Droplets, Eye, Lightbulb, Wind, Zap } from 'lucide-react';
 import React from 'react';
-import { Eye, ChevronLeft, ChevronRight, Zap, Computer, Wind, Armchair, Lightbulb, Droplets } from 'lucide-react';
 import { StatusBadge } from '../shared/StatusBadge';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -74,7 +74,7 @@ export const ReportHistoryTable: React.FC<ReportHistoryTableProps> = ({
             <div className="overflow-x-auto hide-scrollbar">
                 <table className="w-full border-collapse min-w-[1000px]">
                     <thead>
-                        <tr className="border-b border-black/5 dark:border-white/5">
+                        <tr className="thead-tint">
                             {['Report ID', 'Date Reported', 'Category', 'Location', 'Severity', 'Status', 'Actions'].map((h, i) => (
                                 <th key={h} className={`px-[2rem] py-[1.5rem] text-[0.625rem] font-black uppercase tracking-[0.2em] text-[#1E2B58]/50 dark:text-slate-400 ${i === 4 || i === 5 ? 'text-center' : i === 6 ? 'text-right' : 'text-left'}`}>
                                     {h}

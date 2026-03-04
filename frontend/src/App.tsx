@@ -1,6 +1,6 @@
 import { useEffect } from "react";
-import { Toaster } from "sonner";
 import { Outlet } from "react-router";
+import { Toaster } from "sonner";
 import { ThemeProvider } from "./components/common/theme-provider";
 import { useAuthStore } from "./stores/useAuthStore";
 

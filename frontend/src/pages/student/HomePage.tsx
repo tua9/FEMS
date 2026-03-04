@@ -1,14 +1,14 @@
-import React from "react";
-import { useNavigate, Link } from "react-router-dom";
 import {
-  Package,
-  History,
-  AlertCircle,
-  TrendingUp,
-  Clock,
-  ChevronRight,
-  MoreVertical,
+    AlertCircle,
+    ChevronRight,
+    Clock,
+    History,
+    MoreVertical,
+    Package,
+    TrendingUp,
 } from "lucide-react";
+import React from "react";
+import { Link, useNavigate } from "react-router-dom";
 
 // ── Stat card config ────────────────────────────────────────────────────────
 const STAT_CARDS = [
@@ -18,6 +18,9 @@ const STAT_CARDS = [
     value: "3",
     icon: Package,
     color: "bg-blue-500",
+    iconShadow: "shadow-blue-500/40",
+    dot: "bg-blue-400",
+    glow: "glow-blue",
     route: "/student/borrow-history",
   },
   {
@@ -26,6 +29,9 @@ const STAT_CARDS = [
     value: "24",
     icon: History,
     color: "bg-purple-500",
+    iconShadow: "shadow-purple-500/40",
+    dot: "bg-purple-400",
+    glow: "glow-purple",
     route: "/student/borrow-history",
   },
   {
@@ -34,6 +40,9 @@ const STAT_CARDS = [
     value: "1",
     icon: AlertCircle,
     color: "bg-orange-500",
+    iconShadow: "shadow-orange-500/40",
+    dot: "bg-orange-400",
+    glow: "glow-orange",
     route: "/student/report",
   },
   {
@@ -42,6 +51,9 @@ const STAT_CARDS = [
     value: "92%",
     icon: TrendingUp,
     color: "bg-emerald-500",
+    iconShadow: "shadow-emerald-500/40",
+    dot: "bg-emerald-400",
+    glow: "glow-emerald",
     route: "#",
   },
 ];
@@ -111,10 +123,13 @@ const HomePage: React.FC = () => {
               <Link
                 key={card.id}
                 to={card.route}
-                className="glass-card group flex flex-col gap-4 rounded-4xl p-6 transition-all hover:translate-y-[-4px] hover:shadow-2xl"
+                className="glass-card group relative flex flex-col gap-4 rounded-4xl p-6 transition-all hover:translate-y-[-4px] hover:shadow-2xl"
               >
+                {/* Glow status dot – top right */}
+                <div className={`absolute top-5 right-5 h-2 w-2 rounded-full ${card.dot} ${card.glow}`} />
+
                 <div
-                  className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl ${card.color} text-white shadow-lg`}
+                  className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl ${card.color} text-white shadow-xl ${card.iconShadow}`}
                 >
                   <Icon className="h-6 w-6" />
                 </div>
@@ -180,7 +195,7 @@ const HomePage: React.FC = () => {
                 {UPCOMING_ITEMS.map((item) => (
                   <div
                     key={item.id}
-                    className="rounded-[2rem] border border-[#1E2B58]/5 bg-white/20 p-5 dark:border-white/5 dark:bg-white/5"
+                    className="rounded-[2rem] border border-white/60 bg-white/40 p-5 shadow-sm dark:border-white/8 dark:bg-white/5"
                   >
                     <div className="mb-3 flex items-center justify-between">
                       <span className="flex items-center gap-2 rounded-full bg-[#1E2B58] px-3 py-1 text-[10px] font-bold text-white">
@@ -196,7 +211,7 @@ const HomePage: React.FC = () => {
                     </p>
                   </div>
                 ))}
-                <button className="mt-4 w-full rounded-2xl border border-dashed border-[#1E2B58]/20 p-4 text-sm font-bold text-[#1E2B58]/40 transition hover:bg-[#1E2B58]/5 dark:border-white/20 dark:text-white/40 dark:hover:bg-white/5">
+                <button className="glass-btn mt-4 w-full rounded-2xl p-4 text-sm font-bold text-[#1E2B58]/50 transition dark:text-white/40">
                   View All Deadlines
                 </button>
               </div>

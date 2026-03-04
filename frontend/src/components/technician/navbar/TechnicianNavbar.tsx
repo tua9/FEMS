@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useDarkMode } from '@/hooks/useDarkMode';
 import NotificationDropdown from './NotificationDropdown';
+import { useAuthStore } from '@/stores/useAuthStore';
 
 const NAV_ITEMS = [
   { path: '/technician/dashboard', label: 'Home' },
@@ -16,13 +17,13 @@ const TechnicianNavbar: React.FC = () => {
   const navigate = useNavigate();
   const [mobileOpen, setMobileOpen] = useState(false);
   const { isDark, toggle } = useDarkMode();
+  const { signOut, user } = useAuthStore();
 
   const isActive = (path: string) => location.pathname === path;
 
-  const handleLogout = () => {
-    localStorage.removeItem('userRole');
-    localStorage.removeItem('token');
-    navigate('/login');
+  const handleLogout = async () => {
+    await signOut();
+    navigate('/login', { replace: true });
   };
 
   return (
@@ -92,12 +93,16 @@ const TechnicianNavbar: React.FC = () => {
           {/* User */}
           <div className="flex items-center gap-3 pl-1">
             <div className="text-right hidden sm:block">
-              <p className="text-[11px] font-extrabold text-slate-900 dark:text-white leading-none">Marcus Thorne</p>
-              <p className="text-[9px] text-slate-500 dark:text-slate-400 font-semibold">Senior Tech</p>
+              <p className="text-[11px] font-extrabold text-slate-900 dark:text-white leading-none">
+                {user?.name ?? 'Technician'}
+              </p>
+              <p className="text-[9px] text-slate-500 dark:text-slate-400 font-semibold capitalize">
+                {user?.role ?? 'technician'}
+              </p>
             </div>
-            <button onClick={handleLogout} className="relative">
+            <button onClick={handleLogout} className="relative" title="Logout">
               <img
-                src="https://lh3.googleusercontent.com/aida-public/AB6AXuCGFNwLU9EfhxGexiaMimmAb95aoYyejy0f0ZdHLub3EAjZ8EgpsK3xk_leqeHmzxqy1L5ImFtgOW72yD-vAi6yNMwNFFX6UgQPBfoJW_b5JcGoomzRcrCh_y2xtl4qrVk7hpZARPei5RgcCLZXxXjRKkL90LBJfGtAi2UYf7xbtW5vRq6-S6pIxWBjZiBvoqnpWKRUqG0iJkKbPEUALJzxLCw8-gC6saLMjkvCg8RFm-ZWEh8kU7z8fwC-HhTIO-Bv6Ihi99Qxf4M"
+                src={user?.avatar ?? `https://ui-avatars.com/api/?name=${encodeURIComponent(user?.name ?? 'T')}&background=232F58&color=fff`}
                 alt="User Profile"
                 className="w-9 h-9 rounded-full object-cover border-2 border-white dark:border-slate-700 shadow-sm"
               />

@@ -8,6 +8,7 @@ import "./styles/index.css";
 // Layouts
 import LecturerLayout from "./layouts/LecturerLayout.tsx";
 import StudentLayout from "./layouts/StudentLayout.tsx";
+import TechnicianLayout from "./layouts/TechnicianLayout.tsx";
 
 // Auth guards
 import GuestRoute from "./components/auth/GuestRoute.tsx";
@@ -36,6 +37,16 @@ import { MyHistory } from "./pages/lecturer/MyHistory.tsx";
 import { ReportIssueCenter } from "./pages/lecturer/ReportIssueCenter.tsx";
 import { RoomStatusCenter } from "./pages/lecturer/RoomStatusCenter.tsx";
 import { UsageStatsCenter } from "./pages/lecturer/UsageStatsCenter.tsx";
+
+// Technician pages
+import TechnicianDashboard from "./pages/technician/Dashboard.tsx";
+import TechnicianEquipment from "./pages/technician/EquipmentInventory.tsx";
+import TechnicianHandover from "./pages/technician/HandoverManagement.tsx";
+import TechnicianReports from "./pages/technician/PerformanceInsights.tsx";
+import TechnicianProfile from "./pages/technician/Profile.tsx";
+import TechnicianTaskDetails from "./pages/technician/TaskDetails.tsx";
+import TechnicianTaskList from "./pages/technician/TaskList.tsx";
+import TechnicianNotifications from "./pages/technician/TechnicianNotifications.tsx";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
@@ -66,39 +77,17 @@ createRoot(document.getElementById("root")!).render(
             </Route>
           </Route>
 
-          {/* Lecturer / Technician / Admin routes – dùng LecturerLayout */}
-          <Route
-            element={
-              <ProtectedRoute allowRoles={["lecturer", "technician", "admin"]} />
-            }
-          >
+          {/* Lecturer / Admin routes */}
+          <Route element={<ProtectedRoute allowRoles={["lecturer", "admin"]} />}>
             <Route element={<LecturerLayout />}>
-              <Route
-                path="/lecturer/dashboard"
-                element={<LecturerDashboard />}
-              />
-              <Route
-                path="/lecturer/equipment"
-                element={<EquipmentCatalog />}
-              />
+              <Route path="/lecturer/dashboard" element={<LecturerDashboard />} />
+              <Route path="/lecturer/equipment" element={<EquipmentCatalog />} />
               <Route path="/lecturer/history" element={<MyHistory />} />
-              <Route
-                path="/lecturer/room-status"
-                element={<RoomStatusCenter />}
-              />
+              <Route path="/lecturer/room-status" element={<RoomStatusCenter />} />
               <Route path="/lecturer/approval" element={<ApprovalCenter />} />
-              <Route
-                path="/lecturer/usage-stats"
-                element={<UsageStatsCenter />}
-              />
-              <Route
-                path="/lecturer/report-issue"
-                element={<ReportIssueCenter />}
-              />
-              <Route
-                path="/lecturer/calendar"
-                element={<AcademicCalendar />}
-              />
+              <Route path="/lecturer/usage-stats" element={<UsageStatsCenter />} />
+              <Route path="/lecturer/report-issue" element={<ReportIssueCenter />} />
+              <Route path="/lecturer/calendar" element={<AcademicCalendar />} />
               <Route path="/lecturer/profile" element={<LecturerProfile />} />
               <Route
                 path="/lecturer/change-password"
@@ -107,6 +96,23 @@ createRoot(document.getElementById("root")!).render(
               <Route
                 path="/lecturer/notifications"
                 element={<LecturerNotifications />}
+              />
+            </Route>
+          </Route>
+
+          {/* Technician routes */}
+          <Route element={<ProtectedRoute allowRoles={["technician"]} />}>
+            <Route element={<TechnicianLayout />}>
+              <Route path="/technician/dashboard" element={<TechnicianDashboard />} />
+              <Route path="/technician/tasks" element={<TechnicianTaskList />} />
+              <Route path="/technician/tasks/:id" element={<TechnicianTaskDetails />} />
+              <Route path="/technician/equipment" element={<TechnicianEquipment />} />
+              <Route path="/technician/handover" element={<TechnicianHandover />} />
+              <Route path="/technician/reports" element={<TechnicianReports />} />
+              <Route path="/technician/profile" element={<TechnicianProfile />} />
+              <Route
+                path="/technician/notifications"
+                element={<TechnicianNotifications />}
               />
             </Route>
           </Route>

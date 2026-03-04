@@ -10,6 +10,8 @@ const STAT_CARDS = [
     icon: "laptop_mac",
     route: "/lecturer/equipment",
     hint: "View Equipment",
+    dot: "bg-blue-400",
+    glow: "glow-blue",
   },
   {
     label: "Pending Requests",
@@ -17,6 +19,8 @@ const STAT_CARDS = [
     icon: "pending_actions",
     route: "/lecturer/approval",
     hint: "Review Requests",
+    dot: "bg-amber-400",
+    glow: "glow-amber",
   },
   {
     label: "Reports Sent",
@@ -24,6 +28,8 @@ const STAT_CARDS = [
     icon: "assignment_turned_in",
     route: "/lecturer/history",
     hint: "View History",
+    dot: "bg-emerald-400",
+    glow: "glow-emerald",
   },
   {
     label: "Assigned Rooms",
@@ -31,6 +37,8 @@ const STAT_CARDS = [
     icon: "meeting_room",
     route: "/lecturer/room-status",
     hint: "View Rooms",
+    dot: "bg-violet-400",
+    glow: "glow-violet",
   },
 ];
 
@@ -85,9 +93,12 @@ const LecturerDashboard: React.FC = () => {
             <button
               key={stat.label}
               onClick={() => navigate(stat.route)}
-              className="glass-card group flex w-full cursor-pointer items-center gap-5 rounded-[32px] p-6 text-left transition-all duration-200 hover:scale-[1.02] hover:shadow-xl"
+              className="glass-card group relative flex w-full cursor-pointer items-center gap-5 rounded-[32px] p-6 text-left transition-all duration-200 hover:scale-[1.02] hover:shadow-xl"
               title={stat.hint}
             >
+              {/* Glow status dot */}
+              <div className={`absolute top-5 right-5 h-2 w-2 rounded-full ${stat.dot} ${stat.glow}`} />
+
               <div className="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-2xl bg-[#1E2B58]/[0.08] text-[#1E2B58] transition-colors group-hover:bg-[#1E2B58]/[0.14] dark:bg-[#4f75ff]/[0.15] dark:text-[#4f75ff] dark:group-hover:bg-[#4f75ff]/[0.25]">
                 <span className="material-symbols-rounded text-3xl">
                   {stat.icon}
@@ -225,7 +236,7 @@ const LecturerDashboard: React.FC = () => {
                     <button
                       key={session.id}
                       onClick={() => navigate("/lecturer/calendar")}
-                      className={`group w-full rounded-2xl border border-white/60 bg-white/40 p-4 text-left transition-all hover:border-[#1E2B58]/30 hover:bg-white/60 hover:shadow-md dark:border-white/10 dark:bg-white/5 dark:hover:bg-white/10 ${
+                      className={`glass-btn group w-full rounded-2xl p-4 text-left transition-all hover:shadow-md ${
                         isLast ? "opacity-60" : ""
                       }`}
                     >
@@ -257,7 +268,7 @@ const LecturerDashboard: React.FC = () => {
               <div className="mt-6 grid grid-cols-2 gap-3">
                 <button
                   onClick={() => navigate("/lecturer/report-issue")}
-                  className="flex items-center justify-center gap-1.5 rounded-2xl border border-[#1E2B58]/15 py-3 text-[10px] font-black tracking-wider text-[#1E2B58] uppercase transition-all hover:bg-[#1E2B58]/5 dark:border-white/10 dark:text-white dark:hover:bg-white/5"
+                  className="glass-btn flex items-center justify-center gap-1.5 rounded-2xl py-3 text-[10px] font-black tracking-wider text-[#1E2B58] uppercase dark:text-white"
                 >
                   <span className="material-symbols-rounded text-sm">
                     report
@@ -266,7 +277,7 @@ const LecturerDashboard: React.FC = () => {
                 </button>
                 <button
                   onClick={() => navigate("/lecturer/equipment")}
-                  className="flex items-center justify-center gap-1.5 rounded-2xl border border-[#1E2B58]/15 py-3 text-[10px] font-black tracking-wider text-[#1E2B58] uppercase transition-all hover:bg-[#1E2B58]/5 dark:border-white/10 dark:text-white dark:hover:bg-white/5"
+                  className="glass-btn flex items-center justify-center gap-1.5 rounded-2xl py-3 text-[10px] font-black tracking-wider text-[#1E2B58] uppercase dark:text-white"
                 >
                   <span className="material-symbols-rounded text-sm">
                     laptop_mac
