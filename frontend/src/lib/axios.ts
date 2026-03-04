@@ -2,7 +2,7 @@ import { authService } from "@/services/authService";
 import axios from "axios";
 
 const api = axios.create({
-  baseURL: "http://localhost:5001/api",
+  baseURL: import.meta.env.VITE_API_URL ?? "http://localhost:5001/api",
   withCredentials: true,
   headers: {
     "Cache-Control": "no-cache",
@@ -21,8 +21,6 @@ api.interceptors.response.use(
       originalRequest._retry = true;
 
       try {
-        console.log("🔄 Refreshing token...");
-
         await authService.refreshToken();
         // BE sẽ set cookie mới
 

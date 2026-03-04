@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { CheckCircle2, X, ArrowRight, ClipboardList } from 'lucide-react';
 
-import LecturerNavbar from '../../components/lecturer/navbar/LecturerNavbar';
 import { ReportHeader } from '../../components/lecturer/report/ReportHeader';
 import { QuickScanReport, QRResult } from '../../components/lecturer/report/QuickScanReport';
 import { ReportManualForm, ReportFormData, IssueCategory } from '../../components/lecturer/report/ReportManualForm';
@@ -103,9 +102,7 @@ export const ReportIssueCenter: React.FC = () => {
     // ─────────────────────────────────────────────────────────────────────────
 
     return (
-        <div className="min-h-screen w-full flex flex-col bg-[#e0eafc] dark:bg-[#0f172a] text-[#1E2B58] dark:text-white transition-colors duration-300">
-            <LecturerNavbar />
-
+        <div className="w-full">
             <main className="pt-32 md:pt-36 pb-10 px-4 sm:px-6 w-full max-w-[90vw] xl:max-w-4xl mx-auto flex-1 flex flex-col overflow-hidden">
                 <div className="w-full">
                     <ReportHeader />
@@ -136,17 +133,6 @@ export const ReportIssueCenter: React.FC = () => {
                     <RecentReports newReport={newReportEntry} />
                 </div>
             </main>
-
-            <footer className="mt-8 py-8 md:py-16 flex flex-col items-center justify-center gap-4 md:gap-6 opacity-40 shrink-0 border-t border-[#1E2B58]/10 dark:border-white/10 w-full px-4 text-center">
-                <div className="flex flex-wrap items-center justify-center gap-6 md:gap-10 text-[#1E2B58] dark:text-white">
-                    <span className="material-symbols-outlined text-xl md:text-2xl">school</span>
-                    <span className="material-symbols-outlined text-xl md:text-2xl">verified_user</span>
-                    <span className="material-symbols-outlined text-xl md:text-2xl">build</span>
-                </div>
-                <p className="text-[0.625rem] md:text-xs font-black uppercase tracking-[0.2em] md:tracking-[0.4em] text-[#1E2B58] dark:text-white max-w-full truncate whitespace-normal">
-                    Facility & Equipment Management System — F-EMS 2024
-                </p>
-            </footer>
 
             {/* ── Success Modal ─────────────────────────────────────────────── */}
             {showSuccess && submittedReport && (

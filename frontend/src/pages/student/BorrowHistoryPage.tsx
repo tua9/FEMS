@@ -10,23 +10,21 @@ import {
   ArrowRight,
 } from "lucide-react";
 
-import { HistoryHeader } from "@/components/lecturer/history/HistoryHeader";
-import { HistoryTabs } from "@/components/lecturer/history/HistoryTabs";
-import { HistoryFilterBar } from "@/components/lecturer/history/HistoryFilterBar";
-
 import {
+  HistoryHeader,
+  HistoryTabs,
+  HistoryFilterBar,
   ReportHistoryTable,
-  type ReportHistoryItem,
   ALL_REPORT_HISTORY,
-  type ReportSeverity,
-} from "@/components/lecturer/history/ReportHistoryTable";
-
-import {
   BorrowHistoryTable,
-  type BorrowHistoryItem,
   ALL_BORROW_HISTORY,
-  type BorrowStatus,
-} from "@/components/lecturer/history/BorrowHistoryTable";
+} from "@/components/shared/history";
+import type {
+  ReportHistoryItem,
+  ReportSeverity,
+  BorrowHistoryItem,
+  BorrowStatus,
+} from "@/components/shared/history";
 
 type Tab = "report" | "borrow";
 

@@ -23,19 +23,11 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   signIn: async (username: string, password: string, role: string) => {
     try {
       set({ loading: true });
-      // API call
-      const { accessToken } = await authService.signIn(
-        username,
-        password,
-        role,
-      );
-
+      const { accessToken } = await authService.signIn(username, password, role);
       get().setAccessToken(accessToken);
-
       toast.success("Login successful!");
       await get().fetchUserProfile();
-    } catch (error) {
-      console.log("Error: " + error);
+    } catch {
       toast.error("Login failed. Please try again.");
     } finally {
       set({ loading: false });
@@ -47,8 +39,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       get().clearState();
       await authService.signOut();
       toast.success("Logged out successfully!");
-    } catch (error) {
-      console.log("Error signing out:", error);
+    } catch {
       toast.error("Logout failed. Please try again.");
     } finally {
       set({ loading: false });
@@ -63,23 +54,19 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       set({ loading: true });
       const fetched = await authService.fetchUserProfile();
       set({ user: fetched });
-    } catch (error) {
-      console.log("Error fetching user profile:", error);
+    } catch {
+      // Silently fail — refreshToken will handle auth errors globally
     } finally {
       set({ loading: false });
     }
   },
 
   refreshToken: async () => {
-    console.log("🔄️refresh token");
-
     try {
       set({ loading: true });
       const { accessToken, user, fetchUserProfile, setAccessToken } = get();
 
       if (accessToken) return;
-      console.log("⛳ AccessToken: ", accessToken);
-      console.log(get().accessToken);
 
       const newAccessToken = await authService.refreshToken();
       setAccessToken(newAccessToken);
@@ -87,8 +74,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       if (!user) {
         await fetchUserProfile();
       }
-    } catch (error) {
-      console.log("Error refreshing token:", error);
+    } catch {
       get().clearState();
       toast.error("Session expired. Please log in again.");
     } finally {

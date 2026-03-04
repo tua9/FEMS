@@ -1,6 +1,5 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import LecturerNavbar from "../../components/lecturer/navbar/LecturerNavbar";
 import { ACTIVITIES, UPCOMING_CLASSES } from "./constants";
 
 // ── Stat card config – each card routes to the most relevant page ──────────
@@ -66,9 +65,7 @@ const LecturerDashboard: React.FC = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="flex min-h-screen w-full flex-col bg-[#e0eafc] text-slate-800 transition-colors duration-300 dark:bg-[#0f172a] dark:text-slate-200">
-      <LecturerNavbar />
-
+    <div className="w-full">
       <main className="mx-auto w-full max-w-[1400px] px-6 pt-36 pb-20">
         {/* ── Header ── */}
         <header className="mb-12">
@@ -292,19 +289,6 @@ const LecturerDashboard: React.FC = () => {
         </div>
       </main>
 
-      {/* ── Footer ── */}
-      <footer className="mt-auto flex flex-col items-center justify-center gap-6 py-16 opacity-40">
-        <div className="flex items-center gap-10">
-          <span className="material-symbols-rounded text-2xl">school</span>
-          <span className="material-symbols-rounded text-2xl">security</span>
-          <span className="material-symbols-rounded text-2xl">
-            construction
-          </span>
-        </div>
-        <p className="text-center text-[10px] font-black tracking-[0.4em] text-[#1E2B58] uppercase dark:text-white">
-          Facility &amp; Equipment Management System — F-EMS 2024
-        </p>
-      </footer>
     </div>
   );
 };

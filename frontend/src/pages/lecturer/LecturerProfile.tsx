@@ -11,9 +11,7 @@ import {
   BookOpen,
   Pencil,
 } from "lucide-react";
-import LecturerNavbar from "../../components/lecturer/navbar/LecturerNavbar";
 import { useAuthStore } from "../../stores/useAuthStore";
-import StudentNavBar from "../../components/StudentNavbar";
 
 // ─── Mock lecturer data ────────────────────────────────────────────────────────
 const LECTURER = {
@@ -59,9 +57,7 @@ const LecturerProfile: React.FC = () => {
   const isStudent = role === "student";
 
   return (
-    <div className="flex min-h-screen w-full flex-col bg-[#e0eafc] text-slate-800 transition-colors duration-300 dark:bg-[#0f172a] dark:text-slate-200">
-      {isStudent ? <StudentNavBar /> : <LecturerNavbar />}
-
+    <div className="w-full">
       <main className="mx-auto flex w-full max-w-[90vw] flex-1 flex-col px-4 pt-32 pb-10 sm:px-6 md:pt-36 xl:max-w-5xl">
         {/* Back */}
         <button

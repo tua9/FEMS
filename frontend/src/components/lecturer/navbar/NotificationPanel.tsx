@@ -1,6 +1,7 @@
+import { useAuthStore } from '@/stores/useAuthStore';
+import { Bell, CheckCheck, X } from 'lucide-react';
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { X, Bell, CheckCheck } from 'lucide-react';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -118,11 +119,13 @@ const NotificationPanel: React.FC<NotificationPanelProps> = ({
     onMarkAllRead,
 }) => {
     const navigate = useNavigate();
+    const { user } = useAuthStore();
     const unreadCount = notifications.filter(n => !n.read).length;
 
     const handleViewAll = () => {
         onClose();
-        navigate('/lecturer/notifications');
+        const role = user?.role ?? 'student';
+        navigate(`/${role}/notifications`);
     };
 
     return (

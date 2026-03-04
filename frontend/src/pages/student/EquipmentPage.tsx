@@ -13,15 +13,17 @@ import {
   FileText,
 } from "lucide-react";
 
-import { EquipmentFilter } from "@/components/lecturer/equipment/EquipmentFilter";
-import { EquipmentCategories } from "@/components/lecturer/equipment/EquipmentCategories";
 import {
+  EquipmentFilter,
+  EquipmentCategories,
   EquipmentGrid,
-  type EquipmentItem,
-  type EquipmentType,
-  type LocationKey,
-} from "@/components/lecturer/equipment/EquipmentGrid";
-import { BorrowedEquipmentGrid } from "@/components/lecturer/equipment/BorrowedEquipmentGrid";
+  BorrowedEquipmentGrid,
+} from "@/components/shared/equipment";
+import type {
+  EquipmentItem,
+  EquipmentType,
+  LocationKey,
+} from "@/components/shared/equipment";
 
 // ─── Static Equipment Data ────────────────────────────────────────────────────
 
@@ -272,23 +274,6 @@ const EquipmentPage: React.FC = () => {
           </div>
         )}
       </main>
-
-      <footer className="mt-8 flex w-full shrink-0 flex-col items-center justify-center gap-4 border-t border-[#1E2B58]/10 px-4 py-8 text-center opacity-40 md:gap-6 md:py-16 dark:border-white/10">
-        <div className="flex flex-wrap items-center justify-center gap-6 text-[#1E2B58] md:gap-10 dark:text-white">
-          <span className="material-symbols-outlined text-xl md:text-2xl">
-            school
-          </span>
-          <span className="material-symbols-outlined text-xl md:text-2xl">
-            verified_user
-          </span>
-          <span className="material-symbols-outlined text-xl md:text-2xl">
-            build
-          </span>
-        </div>
-        <p className="text-[0.625rem] font-black tracking-[0.2em] text-[#1E2B58] uppercase md:text-xs md:tracking-[0.4em] dark:text-white">
-          Facility & Equipment Management System — F-EMS 2024
-        </p>
-      </footer>
 
       {borrowingItem && (
         <div

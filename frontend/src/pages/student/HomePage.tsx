@@ -205,19 +205,6 @@ const HomePage: React.FC = () => {
         </div>
       </main>
 
-      {/* ── Footer ── */}
-      <footer className="mt-auto flex flex-col items-center justify-center gap-6 py-16 opacity-40">
-        <div className="flex items-center gap-10">
-          <span className="material-symbols-rounded text-2xl">school</span>
-          <span className="material-symbols-rounded text-2xl">security</span>
-          <span className="material-symbols-rounded text-2xl">
-            construction
-          </span>
-        </div>
-        <p className="text-center text-[10px] font-black tracking-[0.4em] text-[#1E2B58] uppercase dark:text-white">
-          Facility & Equipment Management System — F-EMS 2024
-        </p>
-      </footer>
     </div>
   );
 };

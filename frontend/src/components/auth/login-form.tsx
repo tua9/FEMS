@@ -12,7 +12,6 @@ import { z } from "zod";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useAuthStore } from "@/stores/useAuthStore";
-import { useNavigate } from "react-router";
 import {
   NativeSelect,
   NativeSelectOption,
@@ -34,7 +33,7 @@ export function LoginForm({
     handleSubmit,
     register,
     control,
-    formState: { isSubmitting },
+    formState: { isSubmitting, errors },
   } = useForm<SignInFormValues>({
     resolver: zodResolver(signInSchema),
     defaultValues: {
@@ -43,21 +42,10 @@ export function LoginForm({
   });
 
   const { signIn } = useAuthStore();
-  const navigate = useNavigate();
 
+  // Sau khi signIn, Zustand cập nhật user → GuestRoute detect user → redirect "/" → RoleRedirect lo tiếp
   const onSubmit = async (data: SignInFormValues) => {
-    const { username, password, role } = data;
-    //goi api
-    await signIn(username, password, role);
-
-    // Chuyển hướng dựa trên role
-    if (role === "student") {
-      navigate("/student/dashboard");
-    } else if (role === "lecturer") {
-      navigate("/lecturer/dashboard");
-    } else {
-      navigate("/");
-    }
+    await signIn(data.username, data.password, data.role);
   };
 
   return (
@@ -97,11 +85,9 @@ export function LoginForm({
                     </NativeSelect>
                   )}
                 />
-                {/* {errors.role && (
-                  <p className="mt-1 text-sm text-red-500">
-                    {errors.role.message}
-                  </p>
-                )} */}
+                {errors.role && (
+                  <p className="mt-1 text-sm text-red-500">{errors.role.message}</p>
+                )}
               </Field>
               <Field>
                 <FieldLabel htmlFor="username">Username</FieldLabel>
@@ -111,13 +97,10 @@ export function LoginForm({
                   autoComplete="username"
                   placeholder="Enter your username or email"
                   {...register("username")}
-                  required
                 />
-                {/* {errors.username && (
-                  <p className="mt-1 text-sm text-red-500">
-                    {errors.username.message}
-                  </p>
-                )} */}
+                {errors.username && (
+                  <p className="mt-1 text-sm text-red-500">{errors.username.message}</p>
+                )}
               </Field>
               <Field>
                 <div className="flex items-center justify-between">
@@ -132,16 +115,13 @@ export function LoginForm({
                 <Input
                   id="password"
                   type="password"
-                  autoComplete="password"
+                  autoComplete="current-password"
                   placeholder="Enter your password"
                   {...register("password")}
-                  required
                 />
-                {/* {errors.password && (
-                  <p className="mt-1 text-sm text-red-500">
-                    {errors.password.message}
-                  </p>
-                )} */}
+                {errors.password && (
+                  <p className="mt-1 text-sm text-red-500">{errors.password.message}</p>
+                )}
               </Field>
               <Field>
                 <Button

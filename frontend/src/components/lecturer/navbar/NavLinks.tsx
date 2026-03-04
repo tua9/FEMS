@@ -1,10 +1,15 @@
 import { Link, useLocation } from "react-router-dom";
 
-export const NavLinks = ({
-  links,
-}: {
-  links: { name: string; path: string }[];
-}) => {
+interface NavLinkItem {
+  name: string;
+  path: string;
+}
+
+interface NavLinksProps {
+  links: NavLinkItem[];
+}
+
+export const NavLinks = ({ links }: NavLinksProps) => {
   const location = useLocation();
 
   return (
@@ -13,8 +18,9 @@ export const NavLinks = ({
         const isActive = location.pathname.includes(link.path);
         return (
           <Link
-            key={link.name}
+            key={link.path}
             to={link.path}
+            aria-current={isActive ? "page" : undefined}
             className={`shrink-0 rounded-full px-3 py-2 text-[0.6875rem] font-bold whitespace-nowrap transition-colors ${
               isActive
                 ? "active-pill-premium px-5 text-[#1E2B58] dark:text-white"
