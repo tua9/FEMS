@@ -2,137 +2,172 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
-/* ─── Glassmorphism & UI classes ─────────────────────────────────────── */
+/* ─── Base Styles ────────────────────────────────────────────────────────── */
 body {
     font-family: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
 }
 
-/* ─── Radix UI scroll-lock fix ───────────────────────────────────────────
-   Radix (Select/Dialog/Popover) adds `overflow:hidden + padding-right` to
-   <body> when a dropdown opens, shifting all content and making the
-   backdrop-filter navbar look like it moved.
-   We already force `overflow-y: scroll` on <html> (App.css), so the
-   scrollbar never disappears — Radix's padding compensation is unnecessary
-   and actively causes the layout shift we want to prevent.
- ──────────────────────────────────────────────────────────────────────── */
+/* ─── Radix Scroll Lock Fix ─────────────────────────────────────────────── */
 body[data-scroll-locked] {
     padding-right: 0 !important;
     margin-right: 0 !important;
 }
 
-/* Extreme glass – used by navbar */
-.extreme-glass {
+/* ─── Design System Utilities ───────────────────────────────────────────── */
+
+@utility extreme-glass {
     background: rgba(255, 255, 255, 0.25);
     backdrop-filter: blur(40px);
     -webkit-backdrop-filter: blur(40px);
     border: 1px solid rgba(255, 255, 255, 0.4);
+
+    @variant dark {
+        background: rgba(15, 23, 42, 0.4);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+    }
 }
 
-.dark .extreme-glass {
-    background: rgba(15, 23, 42, 0.4);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-}
-
-/* Glass nav – alias for extreme-glass used by old components */
-.glass-nav {
-    background: rgba(255, 255, 255, 0.25);
-    backdrop-filter: blur(40px);
-    -webkit-backdrop-filter: blur(40px);
-    border: 1px solid rgba(255, 255, 255, 0.4);
-}
-
-.dark .glass-nav {
-    background: rgba(15, 23, 42, 0.4);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-}
-
-/* Active pill – used by nav link items */
-.active-pill-premium {
-    background: rgba(255, 255, 255, 0.4);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.8);
-    box-shadow: inset 0 0 12px rgba(255, 255, 255, 0.5), 0 4px 12px rgba(30, 43, 88, 0.08);
-}
-
-.dark .active-pill-premium {
-    background: rgba(255, 255, 255, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    box-shadow: inset 0 0 10px rgba(255, 255, 255, 0.05);
-}
-
-/* Glass card – stat cards, panels */
-.glass-card {
+@utility glass-card {
     background: rgba(255, 255, 255, 0.6);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
     border: 1px solid rgba(255, 255, 255, 0.7);
     box-shadow: 0 10px 30px -10px rgba(30, 43, 88, 0.08);
+
+    @variant dark {
+        background: rgba(30, 41, 59, 0.4);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+    }
 }
 
-.dark .glass-card {
-    background: rgba(30, 41, 59, 0.4);
-    border: 1px solid rgba(255, 255, 255, 0.05);
+@utility active-pill-premium {
+    background: rgba(255, 255, 255, 0.4);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.8);
+    box-shadow: inset 0 0 12px rgba(255, 255, 255, 0.5), 0 4px 12px rgba(30, 43, 88, 0.08);
+
+    @variant dark {
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        box-shadow: inset 0 0 10px rgba(255, 255, 255, 0.05);
+    }
 }
 
-/* Glass main – modal/form containers */
+@utility btn-navy {
+    background: linear-gradient(135deg, #1E2B58 0%, #2d3f7a 100%);
+    color: white;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+
+    &:hover {
+        background: linear-gradient(135deg, #162042 0%, #1E2B58 100%);
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(30, 43, 88, 0.25);
+    }
+
+    &:active {
+        transform: translateY(0);
+    }
+}
+
+@utility hide-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+
+    &::-webkit-scrollbar {
+        display: none;
+    }
+}
+
+@utility student-page-header {
+    margin-top: 1rem;
+    margin-bottom: 2.5rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+
+    &>h2 {
+        margin-bottom: 0.5rem;
+        background: linear-gradient(to right, #1E2B58, #3a4c88);
+        background-clip: text;
+        -webkit-background-clip: text;
+        font-size: 2.25rem;
+        line-height: 1;
+        font-weight: 700;
+        letter-spacing: -0.025em;
+        color: transparent;
+
+        @media (min-width: 640px) {
+            font-size: 3rem;
+        }
+
+        @media (min-width: 768px) {
+            font-size: 4rem;
+        }
+
+        @variant dark {
+            background: linear-gradient(to right, #ffffff, #cbd5e1);
+            background-clip: text;
+            -webkit-background-clip: text;
+        }
+    }
+
+    &>p {
+        font-size: 1rem;
+        color: #64748b;
+
+        @media (min-width: 640px) {
+            font-size: 1.125rem;
+        }
+
+        @variant dark {
+            color: #94a3b8;
+        }
+    }
+}
+
+@utility student-layout {
+    display: flex;
+    min-height: 100vh;
+    width: 100%;
+    flex-direction: column;
+    background-color: #E0EAFC;
+    color: #1E2B58;
+    transition-property: color, background-color;
+    transition-duration: 300ms;
+
+    @variant dark {
+        background-color: #0A0F1C;
+        color: #ffffff;
+    }
+}
+
+/* Legacy aliases for backward compatibility */
+.glass-nav {
+    @apply extreme-glass;
+}
+
 .glass-main {
-    background: rgba(255, 255, 255, 0.6);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border: 1px solid rgba(255, 255, 255, 0.7);
+    @apply glass-card;
     box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
 }
 
-.dark .glass-main {
-    background: rgba(30, 41, 59, 0.5);
-    border: 1px solid rgba(255, 255, 255, 0.07);
-}
-
-/* Navy gradient button */
 .navy-gradient-btn {
-    background: linear-gradient(135deg, #1E2B58 0%, #2d3f7a 100%);
-    color: white;
-    transition: all 0.2s;
+    @apply btn-navy;
 }
 
-.navy-gradient-btn:hover {
-    background: linear-gradient(135deg, #162042 0%, #1E2B58 100%);
-}
-
-/* Alias used in OTP / login pages */
 .btn-navy-gradient {
-    background: linear-gradient(135deg, #1E2B58 0%, #2d3f7a 100%);
-    color: white;
+    @apply btn-navy;
+    opacity: 1;
     transition: opacity 0.2s;
-}
 
-.btn-navy-gradient:hover {
-    opacity: 0.9;
-}
-
-/* Hide scrollbar */
-.hide-scrollbar::-webkit-scrollbar {
-    display: none;
-}
-
-.hide-scrollbar {
-    -ms-overflow-style: none;
-    scrollbar-width: none;
-}
-
-/* Calendar glass container */
-.calendar-glass-container {
-    background: rgba(255, 255, 255, 0.5);
-    backdrop-filter: blur(40px);
-    -webkit-backdrop-filter: blur(40px);
-    border: 1px solid rgba(255, 255, 255, 0.8);
-    box-shadow: 0 20px 50px -12px rgba(30, 43, 88, 0.12);
-}
-
-.dark .calendar-glass-container {
-    background: rgba(15, 23, 42, 0.45);
-    border: 1px solid rgba(255, 255, 255, 0.07);
+    &:hover {
+        opacity: 0.9;
+    }
 }
 
 /* Calendar day cell */
@@ -140,29 +175,21 @@ body[data-scroll-locked] {
     background: rgba(255, 255, 255, 0.2);
     border: 1px solid rgba(255, 255, 255, 0.4);
     transition: all 0.2s ease;
+
+    &:hover {
+        background: rgba(255, 255, 255, 0.4);
+    }
+
+    @variant dark {
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+
+        &:hover {
+            background: rgba(255, 255, 255, 0.07);
+        }
+    }
 }
 
-.day-cell:hover {
-    background: rgba(255, 255, 255, 0.4);
-}
-
-.dark .day-cell {
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid rgba(255, 255, 255, 0.06);
-}
-
-.dark .day-cell:hover {
-    background: rgba(255, 255, 255, 0.07);
-}
-
-/* Teaching / event slot */
-.teaching-slot {
-    background: #1E2B58;
-    color: white;
-    box-shadow: 0 4px 10px rgba(30, 43, 88, 0.2);
-}
-
-/* ─── Dropdown / panel open animations ──────────────────────────────────── */
 @keyframes fadeInDown {
     from {
         opacity: 0;
@@ -200,9 +227,13 @@ body[data-scroll-locked] {
 @custom-variant dark (&:is(.dark *));
 
 :root {
+    /* custom */
+    --navi: #1E2B58;
+    --navi-foreground: #fff;
+    /*  */
     --background: #e0eafc;
     --foreground: oklch(0.1450 0 0);
-    --card: oklch(1 0 0);
+    --card: oklch(100% 0.00011 271.152 / 0.601);
     --card-foreground: oklch(0.1450 0 0);
     --popover: oklch(1 0 0);
     --popover-foreground: oklch(0.1450 0 0);
@@ -216,7 +247,7 @@ body[data-scroll-locked] {
     --accent-foreground: oklch(0.2050 0 0);
     --destructive: oklch(0.5770 0.2450 27.3250);
     --destructive-foreground: oklch(1 0 0);
-    --border: oklch(0.9220 0 0);
+    --border: oklch(100% 0.00011 271.152);
     --input: oklch(0.9220 0 0);
     --ring: oklch(0.7080 0 0);
     --chart-1: oklch(0.8100 0.1000 252);
@@ -255,6 +286,10 @@ body[data-scroll-locked] {
 }
 
 .dark {
+    /* custom */
+    --navi: #1E2B58;
+    --navi-foreground: #fff;
+    /*  */
     --background: oklch(0.1450 0 0);
     --foreground: oklch(0.9850 0 0);
     --card: oklch(0.2050 0 0);
@@ -308,6 +343,10 @@ body[data-scroll-locked] {
 }
 
 @theme inline {
+    /* custom  */
+    --color-navi: var(--navi);
+    --color-navi-foreground: var(--navi-foreground);
+    /*  */
     --color-background: var(--background);
     --color-foreground: var(--foreground);
     --color-card: var(--card);

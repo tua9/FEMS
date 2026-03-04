@@ -1,34 +1,28 @@
-// src/components/auth/RoleRedirect.tsx
 import { useNavigate } from "react-router-dom";
 import { useEffect } from "react";
+import { useAuthStore } from "../../stores/useAuthStore";
 
 const RoleRedirect = () => {
   const navigate = useNavigate();
-  const role = localStorage.getItem("role");
+  const { user } = useAuthStore();
+  const role = user?.role;
 
   useEffect(() => {
-    // Tránh redirect loop bằng cách kiểm tra path hiện tại (tùy chọn)
-    const currentPath = window.location.pathname;
-
     if (!role) {
-      if (currentPath !== "/login") {
-        navigate("/login", { replace: true });
-      }
+      navigate("/login", { replace: true });
       return;
     }
 
-    if (role === "student" && !currentPath.startsWith("/student")) {
+    if (role === "student") {
       navigate("/student/dashboard", { replace: true });
-    } else if (role === "lecturer" && !currentPath.startsWith("/lecturer")) {
+    } else if (["lecturer", "technician", "admin"].includes(role)) {
       navigate("/lecturer/dashboard", { replace: true });
     } else {
-      // Role không hợp lệ → về login
       navigate("/login", { replace: true });
     }
   }, [role, navigate]);
 
-  // Có thể hiển thị loading nếu cần
-  return null; // hoặc <div>Đang chuyển hướng...</div>
+  return null;
 };
 
 export default RoleRedirect;

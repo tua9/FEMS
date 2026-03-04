@@ -14,19 +14,16 @@ const LogoutItem: React.FC<LogoutItemProps> = ({ onClose }) => {
   const handleLogout = async () => {
     try {
       await signOut();
-      localStorage.removeItem("userRole");
-      localStorage.removeItem("token");
-      localStorage.removeItem("userId");
       sessionStorage.clear();
       onClose();
-      navigate("/login");
+      navigate("/login", { replace: true });
     } catch (err) {
       console.log("logout error: ", err);
     }
   };
 
   return (
-    <div className="border-t border-[#1E2B58]/[0.06] p-2 dark:border-white/10">
+    <div className="border-t border-[#1E2B58]/6 p-2 dark:border-white/10">
       <button
         type="button"
         onClick={handleLogout}
