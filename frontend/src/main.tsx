@@ -12,12 +12,12 @@ import RoleRedirect from "./components/auth/RoleRedirect.tsx";
 import ProtectedRoute from "./components/auth/ProtectedRoute.tsx";
 import StudentRoute from "./components/auth/StudentRoute.tsx";
 
-// Pages
-import LoginPage from "./pages/LoginPage.tsx";
-import HomePage from "./pages/HomePage.tsx";
-import EquipmentPage from "./pages/EquipmentPage.tsx";
-import BorrowHistory from "./pages/BorrowHistoryPage.tsx";
-import ReportPage from "./pages/ReportPage.tsx";
+// Student Pages
+import LoginPage from "./pages/student/LoginPage.tsx";
+import HomePage from "./pages/student/HomePage.tsx";
+import EquipmentPage from "./pages/student/EquipmentPage.tsx";
+import BorrowHistory from "./pages/student/BorrowHistoryPage.tsx";
+import ReportPage from "./pages/student/ReportPage.tsx";
 
 // Lecturer pages
 import { EquipmentCatalog } from "./pages/lecturer/EquipmentCatalog.tsx";
