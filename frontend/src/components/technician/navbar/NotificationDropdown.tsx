@@ -4,10 +4,10 @@ import { MOCK_NOTIFICATIONS, Notification, NotifType } from '@/data/technician/m
 
 // ── icon colour per type ────────────────────────────────────────────────────
 const TYPE_STYLE: Record<NotifType, { bg: string; text: string }> = {
-  ticket:   { bg: 'bg-blue-100/80 dark:bg-blue-900/40',   text: 'text-[#1A2B56] dark:text-blue-300' },
+  ticket: { bg: 'bg-blue-100/80 dark:bg-blue-900/40', text: 'text-[#1A2B56] dark:text-blue-300' },
   assigned: { bg: 'bg-indigo-100/80 dark:bg-indigo-900/40', text: 'text-indigo-600 dark:text-indigo-300' },
   resolved: { bg: 'bg-emerald-100/80 dark:bg-emerald-900/40', text: 'text-emerald-600 dark:text-emerald-300' },
-  alert:    { bg: 'bg-rose-100/80 dark:bg-rose-900/40',   text: 'text-rose-500 dark:text-rose-300' },
+  alert: { bg: 'bg-rose-100/80 dark:bg-rose-900/40', text: 'text-rose-500 dark:text-rose-300' },
   handover: { bg: 'bg-amber-100/80 dark:bg-amber-900/40', text: 'text-amber-600 dark:text-amber-300' },
 };
 
@@ -16,8 +16,8 @@ interface Props {
 }
 
 const NotificationDropdown: React.FC<Props> = ({ isDark }) => {
-  const [open, setOpen]     = useState(false);
-  const [items, setItems]   = useState<Notification[]>(MOCK_NOTIFICATIONS);
+  const [open, setOpen] = useState(false);
+  const [items, setItems] = useState<Notification[]>(MOCK_NOTIFICATIONS);
   const ref = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
 
@@ -33,7 +33,7 @@ const NotificationDropdown: React.FC<Props> = ({ isDark }) => {
   }, []);
 
   const markAllRead = () => setItems((prev) => prev.map((n) => ({ ...n, read: true })));
-  const markRead    = (id: string) => setItems((prev) => prev.map((n) => n.id === id ? { ...n, read: true } : n));
+  const markRead = (id: string) => setItems((prev) => prev.map((n) => n.id === id ? { ...n, read: true } : n));
 
   return (
     <div className="relative" ref={ref}>
@@ -139,20 +139,18 @@ const NotificationDropdown: React.FC<Props> = ({ isDark }) => {
                     {/* Text */}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-start justify-between gap-1">
-                        <p className={`text-xs font-extrabold leading-tight truncate ${
-                          notif.read
+                        <p className={`text-xs font-extrabold leading-tight truncate ${notif.read
                             ? 'text-slate-500 dark:text-slate-400'
                             : 'text-[#1A2B56] dark:text-white'
-                        }`}>
+                          }`}>
                           {notif.title}
                         </p>
                         {!notif.read && (
                           <span className="w-1.5 h-1.5 bg-rose-500 rounded-full flex-shrink-0 mt-1" />
                         )}
                       </div>
-                      <p className={`text-[10px] mt-0.5 leading-snug line-clamp-2 ${
-                        notif.read ? 'text-slate-400 dark:text-slate-500' : 'text-slate-600 dark:text-slate-300'
-                      }`}>
+                      <p className={`text-[10px] mt-0.5 leading-snug line-clamp-2 ${notif.read ? 'text-slate-400 dark:text-slate-500' : 'text-slate-600 dark:text-slate-300'
+                        }`}>
                         {notif.body}
                       </p>
                       <p className="text-[9px] font-bold text-slate-400 dark:text-slate-500 mt-1 uppercase tracking-wider">

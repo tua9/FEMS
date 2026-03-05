@@ -63,13 +63,13 @@ const StatsOverview: React.FC = () => {
           {loading ? (
             <div className="h-14 w-20 bg-white/30 rounded-xl animate-pulse mb-2"></div>
           ) : (
-            <p className="text-5xl font-extrabold text-[#1A2B56] dark:text-white tracking-tighter">
+            <p className="text-5xl font-bold text-[#1A2B56] dark:text-white tracking-tighter">
               {String(stat.value).padStart(2, '0')}
             </p>
           )}
 
           {/* Label */}
-          <p className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mt-2">
+          <p className="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-widest mt-2">
             {stat.label}
           </p>
         </div>
