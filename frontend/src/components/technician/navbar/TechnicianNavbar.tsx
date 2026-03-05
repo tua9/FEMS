@@ -5,10 +5,10 @@ import NotificationDropdown from './NotificationDropdown';
 
 const NAV_ITEMS = [
   { path: '/technician/dashboard', label: 'Home' },
-  { path: '/technician/tasks',     label: 'Tickets' },
+  { path: '/technician/tasks', label: 'Tickets' },
   { path: '/technician/equipment', label: 'Equipment' },
-  { path: '/technician/handover',  label: 'Handover' },
-  { path: '/technician/reports',   label: 'Reports' },
+  { path: '/technician/handover', label: 'Handover' },
+  { path: '/technician/reports', label: 'Reports' },
 ];
 
 const TechnicianNavbar: React.FC = () => {
@@ -26,7 +26,7 @@ const TechnicianNavbar: React.FC = () => {
   };
 
   return (
-    <header className="fixed top-6 left-1/2 -translate-x-1/2 w-[95%] max-w-7xl z-50">
+    <header className="fixed top-3 left-1/2 -translate-x-1/2 w-[95%] max-w-7xl z-50">
       {/* Main pill */}
       <nav
         className="rounded-full px-4 py-2 flex items-center justify-between shadow-2xl"
@@ -40,12 +40,12 @@ const TechnicianNavbar: React.FC = () => {
         {/* Logo */}
         <div className="flex items-center gap-3 pl-2">
           <Link to="/technician/dashboard" className="flex items-center gap-3">
-            <div className="w-9 h-9 bg-[#232F58] rounded-full flex items-center justify-center text-white shadow-lg flex-shrink-0">
+            <div className="w-9 h-9 bg-[#1E2B58] rounded-full flex items-center justify-center text-white shadow-lg flex-shrink-0">
               <span className="material-symbols-outlined text-xl">engineering</span>
             </div>
-            <div className="hidden md:block">
-              <p className="text-[11px] font-extrabold text-[#232F58] dark:text-white leading-tight tracking-tight">F-EMS</p>
-              <p className="text-[8px] text-slate-500 dark:text-slate-400 font-bold tracking-[0.05em] uppercase">Technician Portal</p>
+            <div className="hidden md:flex flex-col justify-center">
+              <p className="text-[12px] font-extrabold text-[#1E2B58] dark:text-white leading-none tracking-tight">F-EMS</p>
+              <p className="text-[8px] text-slate-500 dark:text-slate-400 font-medium tracking-[0.1em] uppercase leading-none mt-1">Technician Portal</p>
             </div>
           </Link>
         </div>
@@ -62,11 +62,10 @@ const TechnicianNavbar: React.FC = () => {
             <Link
               key={item.path}
               to={item.path}
-              className={`px-5 py-2 rounded-full text-sm font-semibold transition-all ${
-                isActive(item.path)
-                  ? 'bg-white dark:bg-slate-700 text-[#232F58] dark:text-white font-bold shadow-[0_4px_10px_rgba(35,47,88,0.15)]'
-                  : 'text-slate-600 dark:text-slate-300 hover:text-[#232F58] dark:hover:text-white hover:bg-white/50 dark:hover:bg-white/10'
-              }`}
+              className={`px-5 py-2 rounded-full text-sm font-medium transition-all ${isActive(item.path)
+                ? 'bg-white dark:bg-slate-700 text-[#232F58] dark:text-white font-semibold shadow-[0_4px_10px_rgba(35,47,88,0.15)]'
+                : 'text-slate-600 dark:text-slate-300 hover:text-[#232F58] dark:hover:text-white hover:bg-white/50 dark:hover:bg-white/10'
+                }`}
             >
               {item.label}
             </Link>
@@ -92,8 +91,8 @@ const TechnicianNavbar: React.FC = () => {
           {/* User */}
           <div className="flex items-center gap-3 pl-1">
             <div className="text-right hidden sm:block">
-              <p className="text-[11px] font-extrabold text-slate-900 dark:text-white leading-none">Marcus Thorne</p>
-              <p className="text-[9px] text-slate-500 dark:text-slate-400 font-semibold">Senior Tech</p>
+              <p className="text-[11px] font-bold text-slate-900 dark:text-white leading-none">Marcus Thorne</p>
+              <p className="text-[9px] text-slate-500 dark:text-slate-400 font-medium">Senior Tech</p>
             </div>
             <button onClick={handleLogout} className="relative">
               <img
@@ -131,11 +130,10 @@ const TechnicianNavbar: React.FC = () => {
               key={item.path}
               to={item.path}
               onClick={() => setMobileOpen(false)}
-              className={`block px-5 py-3 rounded-2xl text-sm font-bold transition-all ${
-                isActive(item.path)
-                  ? 'bg-[#232F58] text-white'
-                  : 'text-slate-600 dark:text-slate-300 hover:bg-white/60 dark:hover:bg-white/10'
-              }`}
+              className={`block px-5 py-3 rounded-2xl text-sm font-bold transition-all ${isActive(item.path)
+                ? 'bg-[#232F58] text-white'
+                : 'text-slate-600 dark:text-slate-300 hover:bg-white/60 dark:hover:bg-white/10'
+                }`}
             >
               {item.label}
             </Link>

@@ -3,6 +3,7 @@ import UserTable from '../../components/admin/users/UserTable';
 import AddUserModal from '../../components/admin/users/AddUserModal';
 import UserDetailModal from '../../components/admin/users/UserDetailModal';
 import DeleteConfirmationModal from '../../components/admin/common/DeleteConfirmationModal';
+import ActionConfirmationModal from '../../components/admin/common/ActionConfirmationModal';
 import { adminApi } from '../../services/api/adminApi';
 import { User } from '../../types/admin.types';
 
@@ -15,17 +16,59 @@ const UserManagement: React.FC = () => {
     const [selectedUser, setSelectedUser] = useState<User | null>(null);
     const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
     const [userToDelete, setUserToDelete] = useState<User | null>(null);
+    const [userToToggle, setUserToToggle] = useState<User | null>(null);
 
-    // Filter states
+    // Filter and Pagination states
     const [searchQuery, setSearchQuery] = useState('');
     const [roleFilter, setRoleFilter] = useState('All');
+    const [statusFilter, setStatusFilter] = useState<'All' | 'Active' | 'Inactive'>('All');
+    const [currentPage, setCurrentPage] = useState(1);
+    const ITEMS_PER_PAGE = 5;
     const [isExporting, setIsExporting] = useState(false);
     const fileInputRef = React.useRef<HTMLInputElement>(null);
 
     const fetchUserData = React.useCallback(async () => {
         try {
-            const usersData = await adminApi.getUsersList();
-            setUsers([...usersData]); // Force new reference for re-calculation
+            // Generating mock data as requested
+            const mockUsers: User[] = [
+                // Super Admin
+                { id: 'USER-0001', name: 'Dr. Alex Rivers', email: 'alex.rivers@fems.edu.vn', role: 'Super Admin' as const, status: 'Active', phone: '0901234567', department: 'Management' },
+
+                // 2 Technicians
+                ...Array.from({ length: 2 }).map((_, i) => ({
+                    id: `TECH-${(i + 1).toString().padStart(4, '0')}`,
+                    name: `Technician ${i + 1}`,
+                    email: `tech${i + 1}@fems.edu.vn`,
+                    role: 'Technician' as const,
+                    status: 'Active' as const,
+                    phone: `09123456${i.toString().padStart(2, '0')}`,
+                    department: 'Technical'
+                })),
+
+                // 10 Lecturers
+                ...Array.from({ length: 10 }).map((_, i) => ({
+                    id: `LECT-${(i + 1).toString().padStart(4, '0')}`,
+                    name: `Lecturer ${i + 1}`,
+                    email: `lecturer${i + 1}@fems.edu.vn`,
+                    role: 'Lecturer' as const,
+                    status: 'Active' as const,
+                    phone: `09223456${i.toString().padStart(2, '0')}`,
+                    department: 'Academic'
+                })),
+
+                // 30 Students
+                ...Array.from({ length: 30 }).map((_, i) => ({
+                    id: `STUD-${(i + 1).toString().padStart(4, '0')}`,
+                    name: `Student ${i + 1}`,
+                    email: `student${i + 1}@fems.edu.vn`,
+                    role: 'Student' as const,
+                    status: (i % 5 === 0) ? 'Inactive' as const : 'Active' as const,
+                    phone: `09323456${i.toString().padStart(2, '0')}`,
+                    department: 'Engineering'
+                }))
+            ];
+
+            setUsers(mockUsers);
         } catch (error) {
             console.error("Failed to fetch user data", error);
         } finally {
@@ -54,6 +97,21 @@ const UserManagement: React.FC = () => {
         if (userToDelete) {
             setUsers(prev => prev.filter(u => u.id !== userToDelete.id));
             setUserToDelete(null);
+            // In a real app, call API here
+        }
+    };
+
+    const handleToggleStatus = (user: User) => {
+        setUserToToggle(user);
+    };
+
+    const confirmToggleStatus = () => {
+        if (userToToggle) {
+            const newStatus = userToToggle.status === 'Active' ? 'Inactive' : 'Active';
+            setUsers(prev => prev.map(u =>
+                u.id === userToToggle.id ? { ...u, status: newStatus as any } : u
+            ));
+            setUserToToggle(null);
             // In a real app, call API here
         }
     };
@@ -90,8 +148,20 @@ const UserManagement: React.FC = () => {
             user.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
             user.id.toLowerCase().includes(searchQuery.toLowerCase());
         const matchesRole = roleFilter === 'All' || user.role === roleFilter;
-        return matchesSearch && matchesRole;
+        const matchesStatus = statusFilter === 'All' || user.status === statusFilter;
+        return matchesSearch && matchesRole && matchesStatus;
     });
+
+    // Reset page when filters change
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [searchQuery, roleFilter, statusFilter]);
+
+    const totalPages = Math.ceil(filteredUsers.length / ITEMS_PER_PAGE);
+    const currentUsers = filteredUsers.slice(
+        (currentPage - 1) * ITEMS_PER_PAGE,
+        currentPage * ITEMS_PER_PAGE
+    );
 
     if (loading) {
         return (
@@ -104,7 +174,7 @@ const UserManagement: React.FC = () => {
     const activeUsers = users.filter(u => u.status === 'Active').length;
     const inactiveUsers = users.filter(u => u.status === 'Inactive').length;
 
-    const isBlurred = isAddModalOpen || isDetailModalOpen || !!userToDelete;
+    const isBlurred = isAddModalOpen || isDetailModalOpen || !!userToDelete || !!userToToggle;
 
     return (
         <div className="max-w-7xl mx-auto px-6 pb-16 relative">
@@ -113,7 +183,7 @@ const UserManagement: React.FC = () => {
                 <div className="mb-8 px-2 flex flex-col md:flex-row md:items-end justify-between gap-6 mt-6">
                     <div>
                         <h2 className="text-3xl font-extrabold text-[#1A2B56] dark:text-white tracking-tight">System Users</h2>
-                        <p className="text-slate-700 dark:text-slate-300 mt-1 font-semibold">Manage staff, students and administrative accounts.</p>
+                        <p className="text-slate-700 dark:text-slate-300 mt-1 font-medium">Manage staff, students and administrative accounts.</p>
                     </div>
                     <div className="flex items-center gap-3">
                         <input
@@ -133,7 +203,7 @@ const UserManagement: React.FC = () => {
                         <button
                             onClick={handleExportData}
                             disabled={isExporting}
-                            className="flex items-center gap-2 px-5 py-3 bg-white hover:bg-slate-50 dark:bg-slate-800 dark:hover:bg-slate-700 text-emerald-600 dark:text-emerald-400 rounded-2xl font-bold text-sm shadow-md transition-all border border-slate-200 dark:border-slate-700 disabled:opacity-50"
+                            className="flex items-center gap-2 px-5 py-3 bg-white hover:bg-slate-50 dark:bg-slate-800 dark:hover:bg-slate-700 text-[#1A2B56] dark:text-slate-200 rounded-2xl font-bold text-sm shadow-md transition-all border border-slate-200 dark:border-slate-700 disabled:opacity-50"
                         >
                             <span className="material-symbols-outlined text-lg">{isExporting ? 'hourglass_top' : 'download'}</span>
                             {isExporting ? 'Exporting...' : 'Export CSV'}
@@ -150,44 +220,75 @@ const UserManagement: React.FC = () => {
 
                 {/* KPI Cards */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-                    <div className="glass-card dark:!bg-slate-800/80 p-5 ambient-shadow rounded-2xl border border-white/40 dark:border-white/10 flex items-center justify-between">
+                    {/* Total Users Card */}
+                    <button
+                        onClick={() => { setRoleFilter('All'); setStatusFilter('All'); }}
+                        className={`glass-card dark:!bg-slate-800/80 p-5 ambient-shadow rounded-2xl border transition-all duration-300 flex items-center justify-between hover:scale-[1.02] active:scale-95 text-left
+                            ${roleFilter === 'All' && statusFilter === 'All'
+                                ? 'border-blue-500 ring-2 ring-blue-500/20 shadow-lg bg-blue-50/10'
+                                : 'border-white/40 dark:border-white/10'}`}
+                    >
                         <div>
-                            <p className="text-[10px] font-bold uppercase text-slate-500 mb-1">Total Users</p>
-                            <h3 className="text-2xl font-extrabold text-[#1A2B56] dark:text-white">{users.length}</h3>
+                            <p className="text-[10px] font-medium uppercase tracking-[0.2em] text-slate-500 mb-1">Total Users</p>
+                            <h3 className="text-3xl font-bold text-[#1A2B56] dark:text-white tracking-tight">{users.length}</h3>
                         </div>
-                        <div className="w-10 h-10 rounded-full bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center text-blue-500">
+                        <div className="w-10 h-10 rounded-full flex items-center justify-center bg-slate-50 dark:bg-slate-700/30 text-slate-400 dark:text-slate-500 transition-all duration-300">
                             <span className="material-symbols-outlined">manage_accounts</span>
                         </div>
-                    </div>
-                    <div className="glass-card dark:!bg-slate-800/80 p-5 ambient-shadow rounded-2xl border border-white/40 dark:border-white/10 flex items-center justify-between">
+                    </button>
+
+                    {/* Active Users Card */}
+                    <button
+                        onClick={() => { setRoleFilter('All'); setStatusFilter('Active'); }}
+                        className={`glass-card dark:!bg-slate-800/80 p-5 ambient-shadow rounded-2xl border transition-all duration-300 flex items-center justify-between hover:scale-[1.02] active:scale-95 text-left
+                            ${statusFilter === 'Active'
+                                ? 'border-emerald-500 ring-2 ring-emerald-500/20 shadow-lg bg-emerald-50/10'
+                                : 'border-white/40 dark:border-white/10'}`}
+                    >
                         <div>
-                            <p className="text-[10px] font-bold uppercase text-slate-500 mb-1">Active</p>
-                            <h3 className="text-2xl font-extrabold text-emerald-600 dark:text-emerald-400">{activeUsers}</h3>
+                            <p className="text-[10px] font-medium uppercase tracking-[0.2em] text-emerald-500 mb-1">Active</p>
+                            <h3 className="text-3xl font-bold text-emerald-600 dark:text-emerald-400 tracking-tight">{activeUsers}</h3>
                         </div>
-                        <div className="w-10 h-10 rounded-full bg-emerald-50 dark:bg-emerald-900/30 flex items-center justify-center text-emerald-500">
+                        <div className="w-10 h-10 rounded-full flex items-center justify-center bg-emerald-50 dark:bg-emerald-900/30 text-emerald-500 transition-all duration-300">
                             <span className="material-symbols-outlined">check_circle</span>
                         </div>
-                    </div>
-                    <div className="glass-card dark:!bg-slate-800/80 p-5 ambient-shadow rounded-2xl border border-white/40 dark:border-white/10 flex items-center justify-between">
+                    </button>
+
+                    {/* Technicians Card */}
+                    <button
+                        onClick={() => { setRoleFilter('Technician'); setStatusFilter('All'); }}
+                        className={`glass-card dark:!bg-slate-800/80 p-5 ambient-shadow rounded-2xl border transition-all duration-300 flex items-center justify-between hover:scale-[1.02] active:scale-95 text-left
+                            ${roleFilter === 'Technician'
+                                ? 'border-amber-500 ring-2 ring-amber-500/20 shadow-lg bg-amber-50/10'
+                                : 'border-white/40 dark:border-white/10'}`}
+                    >
                         <div>
-                            <p className="text-[10px] font-bold uppercase text-slate-500 mb-1">Technicians</p>
-                            <h3 className="text-2xl font-extrabold text-[#1A2B56] dark:text-white">
+                            <p className="text-[10px] font-medium uppercase tracking-[0.2em] text-slate-500 mb-1">Technicians</p>
+                            <h3 className="text-3xl font-bold text-[#1A2B56] dark:text-white tracking-tight">
                                 {users.filter(u => u.role === 'Technician').length}
                             </h3>
                         </div>
-                        <div className="w-10 h-10 rounded-full bg-amber-50 dark:bg-amber-900/30 flex items-center justify-center text-amber-500">
+                        <div className="w-10 h-10 rounded-full flex items-center justify-center bg-slate-50 dark:bg-slate-700/30 text-slate-400 dark:text-slate-500 transition-all duration-300">
                             <span className="material-symbols-outlined">engineering</span>
                         </div>
-                    </div>
-                    <div className="glass-card dark:!bg-slate-800/80 p-5 ambient-shadow rounded-2xl border border-red-200 dark:border-red-900/40 bg-red-50/50 flex items-center justify-between">
+                    </button>
+
+                    {/* Inactive Users Card */}
+                    <button
+                        onClick={() => { setRoleFilter('All'); setStatusFilter('Inactive'); }}
+                        className={`glass-card dark:!bg-slate-800/80 p-5 ambient-shadow rounded-2xl border transition-all duration-300 flex items-center justify-between hover:scale-[1.02] active:scale-95 text-left
+                            ${statusFilter === 'Inactive'
+                                ? 'border-red-500 ring-2 ring-red-500/20 shadow-lg bg-red-50/10'
+                                : 'border-red-200 dark:border-red-900/40 bg-red-50/50'}`}
+                    >
                         <div>
-                            <p className="text-[10px] font-bold uppercase text-red-500 mb-1">Inactive</p>
-                            <h3 className="text-2xl font-extrabold text-red-600 dark:text-red-400">{inactiveUsers}</h3>
+                            <p className="text-[10px] font-medium uppercase tracking-[0.2em] text-red-500 mb-1">Inactive</p>
+                            <h3 className="text-3xl font-bold text-red-600 dark:text-red-400 tracking-tight">{inactiveUsers}</h3>
                         </div>
                         <div className="w-10 h-10 rounded-full bg-red-100 dark:bg-red-900/50 flex items-center justify-center text-red-500">
                             <span className="material-symbols-outlined">person_off</span>
                         </div>
-                    </div>
+                    </button>
                 </div>
 
                 <div className="bg-white/40 dark:bg-slate-800/60 p-8 ambient-shadow rounded-[32px] border border-white/40 dark:border-white/10 backdrop-blur-xl transition-all duration-300">
@@ -196,7 +297,7 @@ const UserManagement: React.FC = () => {
                             <div className="relative flex items-center">
                                 <span className="material-symbols-outlined absolute left-4 text-slate-400">search</span>
                                 <input
-                                    className="w-full pl-12 pr-4 py-3 bg-transparent border-none rounded-2xl text-sm font-medium focus:ring-0 transition-all outline-none placeholder:text-slate-400 dark:text-white"
+                                    className="w-full pl-12 pr-4 py-3 bg-transparent border-none rounded-2xl text-xs font-medium focus:ring-0 transition-all outline-none placeholder:text-slate-400 dark:text-white"
                                     placeholder="Search user by name, email or ID..."
                                     type="text"
                                     value={searchQuery}
@@ -222,7 +323,7 @@ const UserManagement: React.FC = () => {
                                 <span className="material-symbols-outlined text-sm absolute right-3 top-2.5 pointer-events-none text-slate-400">expand_more</span>
                             </div>
                             <button
-                                onClick={() => { setSearchQuery(''); setRoleFilter('All'); }}
+                                onClick={() => { setSearchQuery(''); setRoleFilter('All'); setStatusFilter('All'); }}
                                 className="flex items-center gap-2 px-5 py-2.5 bg-white/70 dark:bg-slate-700 hover:bg-white dark:hover:bg-slate-600 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 border border-white/80 dark:border-slate-500 shadow-sm transition-all"
                             >
                                 <span className="material-symbols-outlined text-lg">filter_alt_off</span>
@@ -231,11 +332,53 @@ const UserManagement: React.FC = () => {
                     </div>
 
                     <UserTable
-                        users={filteredUsers}
+                        users={currentUsers}
                         onOpenDetails={handleOpenDetails}
                         onEdit={handleEditUser}
                         onDelete={handleDeleteClick}
+                        onToggleStatus={handleToggleStatus}
                     />
+
+                    {/* Pagination Controls */}
+                    {totalPages > 1 && (
+                        <div className="flex items-center justify-between mt-8 pt-6 border-t border-slate-100 dark:border-slate-700/50">
+                            <p className="text-xs font-bold text-slate-500 dark:text-slate-400">
+                                Showing <span className="text-[#1A2B56] dark:text-white">{(currentPage - 1) * ITEMS_PER_PAGE + 1}</span> to <span className="text-[#1A2B56] dark:text-white">{Math.min(currentPage * ITEMS_PER_PAGE, filteredUsers.length)}</span> of <span className="text-[#1A2B56] dark:text-white">{filteredUsers.length}</span> users
+                            </p>
+                            <div className="flex items-center gap-2">
+                                <button
+                                    onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                                    disabled={currentPage === 1}
+                                    className="p-2 flex items-center justify-center rounded-xl bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm"
+                                >
+                                    <span className="material-symbols-outlined text-sm">chevron_left</span>
+                                </button>
+
+                                <div className="flex items-center gap-1.5 mx-2">
+                                    {Array.from({ length: totalPages }).map((_, i) => (
+                                        <button
+                                            key={i + 1}
+                                            onClick={() => setCurrentPage(i + 1)}
+                                            className={`w-8 h-8 flex items-center justify-center rounded-xl text-xs font-bold transition-all shadow-sm
+                                                ${currentPage === i + 1
+                                                    ? 'bg-[#1A2B56] text-white'
+                                                    : 'bg-white dark:bg-slate-700 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-600'}`}
+                                        >
+                                            {i + 1}
+                                        </button>
+                                    ))}
+                                </div>
+
+                                <button
+                                    onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                                    disabled={currentPage === totalPages}
+                                    className="p-2 flex items-center justify-center rounded-xl bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm"
+                                >
+                                    <span className="material-symbols-outlined text-sm">chevron_right</span>
+                                </button>
+                            </div>
+                        </div>
+                    )}
                 </div>
             </div>
 
@@ -266,6 +409,21 @@ const UserManagement: React.FC = () => {
                 itemName={userToDelete?.name}
                 onClose={() => setUserToDelete(null)}
                 onConfirm={confirmDelete}
+            />
+
+            <ActionConfirmationModal
+                isOpen={!!userToToggle}
+                title={userToToggle?.status === 'Active' ? "Deactivate User Account" : "Activate User Account"}
+                message={userToToggle?.status === 'Active'
+                    ? "Are you sure you want to deactivate this account? The user will no longer be able to sign in."
+                    : "Are you sure you want to reactivate this account? The user will regain access to the system."}
+                itemName={userToToggle?.name}
+                confirmText={userToToggle?.status === 'Active' ? "Deactivate" : "Activate"}
+                confirmColor={userToToggle?.status === 'Active' ? "bg-amber-500 hover:bg-amber-600" : "bg-emerald-500 hover:bg-emerald-600"}
+                icon={userToToggle?.status === 'Active' ? "person_off" : "check_circle"}
+                iconColor={userToToggle?.status === 'Active' ? "text-amber-500" : "text-emerald-500"}
+                onClose={() => setUserToToggle(null)}
+                onConfirm={confirmToggleStatus}
             />
         </div>
     );

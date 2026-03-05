@@ -6,9 +6,10 @@ interface UserTableProps {
     onOpenDetails?: (user: User) => void;
     onEdit?: (user: User) => void;
     onDelete?: (user: User) => void;
+    onToggleStatus?: (user: User) => void;
 }
 
-const UserTable: React.FC<UserTableProps> = ({ users, onOpenDetails, onEdit, onDelete }) => {
+const UserTable: React.FC<UserTableProps> = ({ users, onOpenDetails, onEdit, onDelete, onToggleStatus }) => {
 
     const getStatusStyle = (status: string) => {
         switch (status) {
@@ -33,11 +34,11 @@ const UserTable: React.FC<UserTableProps> = ({ users, onOpenDetails, onEdit, onD
                 </colgroup>
                 <thead>
                     <tr className="text-slate-800 dark:text-slate-300">
-                        <th className="px-4 pb-2 text-[10px] font-extrabold uppercase tracking-[0.15em] opacity-80">User</th>
-                        <th className="px-4 pb-2 text-[10px] font-extrabold uppercase tracking-[0.15em] opacity-80">ID</th>
-                        <th className="px-4 pb-2 text-[10px] font-extrabold uppercase tracking-[0.15em] opacity-80">Role</th>
-                        <th className="px-4 pb-2 text-[10px] font-extrabold uppercase tracking-[0.15em] opacity-80">Status</th>
-                        <th className="px-4 pb-2 text-[10px] font-extrabold uppercase tracking-[0.15em] opacity-80 text-right">Actions</th>
+                        <th className="px-4 pb-2 text-[10px] font-semibold uppercase tracking-[0.15em] opacity-80">User</th>
+                        <th className="px-4 pb-2 text-[10px] font-semibold uppercase tracking-[0.15em] opacity-80">ID</th>
+                        <th className="px-4 pb-2 text-[10px] font-semibold uppercase tracking-[0.15em] opacity-80">Role</th>
+                        <th className="px-4 pb-2 text-[10px] font-semibold uppercase tracking-[0.15em] opacity-80">Status</th>
+                        <th className="px-4 pb-2 text-[10px] font-semibold uppercase tracking-[0.15em] opacity-80 text-right">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -63,11 +64,11 @@ const UserTable: React.FC<UserTableProps> = ({ users, onOpenDetails, onEdit, onD
 
                                 {/* ID */}
                                 <td className={`p-3 ${rowBg}`}>
-                                    <span className="text-xs font-bold text-slate-600 dark:text-slate-300">{user.id}</span>
+                                    <span className="text-xs font-medium text-slate-400 dark:text-slate-500 tracking-wide">{user.id}</span>
                                 </td>
 
                                 {/* Role: plain text */}
-                                <td className={`p-3 text-sm font-semibold text-slate-700 dark:text-slate-300 ${rowBg}`}>
+                                <td className={`p-3 text-sm font-medium text-slate-500 dark:text-slate-400 ${rowBg}`}>
                                     {user.role}
                                 </td>
 
@@ -80,23 +81,24 @@ const UserTable: React.FC<UserTableProps> = ({ users, onOpenDetails, onEdit, onD
 
                                 {/* Actions */}
                                 <td className={`p-3 rounded-r-xl text-right ${rowBg}`} onClick={e => e.stopPropagation()}>
-                                    <div className="flex items-center justify-end gap-1.5 text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <div className="flex items-center justify-end gap-1.5 text-slate-400 transition-opacity">
                                         <button
                                             onClick={() => onEdit && onEdit(user)}
-                                            className="p-1.5 hover:bg-white/80 dark:hover:bg-slate-600 rounded-lg transition-all text-slate-400 hover:text-[#1A2B56] dark:hover:text-blue-400"
+                                            className="p-1.5 hover:bg-white/80 dark:hover:bg-slate-600 rounded-lg transition-all text-slate-400 hover:text-[#1A2B56] dark:hover:text-blue-400 inline-flex items-center justify-center"
                                         >
-                                            <span className="material-symbols-outlined text-lg">tune</span>
+                                            <span className="material-symbols-outlined text-[10px]">tune</span>
                                         </button>
                                         <button
-                                            className={`p-1.5 rounded-lg transition-all ${user.status !== 'Inactive' ? 'hover:bg-amber-50 dark:hover:bg-amber-900/30 text-slate-400 hover:text-amber-500' : 'hover:bg-emerald-50 dark:hover:bg-emerald-900/30 text-slate-400 hover:text-emerald-500'}`}
+                                            onClick={() => onToggleStatus && onToggleStatus(user)}
+                                            className={`p-1.5 rounded-lg transition-all inline-flex items-center justify-center ${user.status !== 'Inactive' ? 'hover:bg-amber-50 dark:hover:bg-amber-900/30 text-slate-400 hover:text-amber-500' : 'hover:bg-emerald-50 dark:hover:bg-emerald-900/30 text-slate-400 hover:text-emerald-500'}`}
                                         >
-                                            <span className="material-symbols-outlined text-lg">{user.status !== 'Inactive' ? 'person_off' : 'check_circle'}</span>
+                                            <span className="material-symbols-outlined text-[10px]">{user.status !== 'Inactive' ? 'person_off' : 'check_circle'}</span>
                                         </button>
                                         <button
                                             onClick={() => onDelete && onDelete(user)}
-                                            className="p-1.5 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition-all text-slate-400 hover:text-red-500"
+                                            className="p-1.5 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition-all text-slate-400 hover:text-red-500 inline-flex items-center justify-center"
                                         >
-                                            <span className="material-symbols-outlined text-lg">delete</span>
+                                            <span className="material-symbols-outlined text-[10px]">delete</span>
                                         </button>
                                     </div>
                                 </td>

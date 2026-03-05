@@ -42,8 +42,8 @@ const Navbar: React.FC = () => {
   }, [isDropdownOpen]);
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 px-4 sm:px-6 py-3 sm:py-4">
-      <nav className="max-w-7xl mx-auto glass-nav rounded-full px-4 sm:px-6 lg:px-8 py-2.5 sm:py-3 flex items-center justify-between">
+    <header className="fixed top-3 left-1/2 -translate-x-1/2 w-[95%] max-w-7xl z-50 transition-all duration-300">
+      <nav className="max-w-7xl mx-auto glass-nav rounded-full px-4 sm:px-6 lg:px-8 py-2.5 sm:py-3.5 flex items-center justify-between shadow-xl border border-white/30">
         <NavbarBrand />
         <NavbarNavLinks links={navLinks} currentPath={location.pathname} />
         <div ref={dropdownRef}>

@@ -115,7 +115,7 @@ const BorrowingManagement: React.FC = () => {
                 <div className="mb-8 px-2 flex flex-col md:flex-row md:items-end justify-between gap-6 mt-6">
                     <div>
                         <h2 className="text-3xl font-extrabold text-[#1A2B56] dark:text-white tracking-tight">Borrowing & Circulation</h2>
-                        <p className="text-slate-700 dark:text-slate-300 mt-1 font-semibold">Manage equipment loans, approvals, and upcoming returns.</p>
+                        <p className="text-slate-700 dark:text-slate-300 mt-1 font-medium">Manage equipment loans, approvals, and upcoming returns.</p>
                     </div>
                     <button
                         onClick={() => setIsNewBorrowModalOpen(true)}
@@ -130,54 +130,42 @@ const BorrowingManagement: React.FC = () => {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
                     {/* Active Loans Card */}
                     <button
-                        onClick={() => setStatusFilter('Approved')}
-                        className={`group relative p-6 ambient-shadow flex items-center justify-between rounded-[24px] border transition-all duration-300 hover:scale-[1.02] hover:shadow-2xl active:scale-95 text-left w-full backdrop-blur-xl
-                            ${statusFilter === 'Approved'
-                                ? 'bg-white/90 dark:bg-slate-800 border-blue-500 shadow-lg'
-                                : 'bg-white/60 dark:bg-slate-800/60 border-white/60 dark:border-white/10 hover:bg-white/80 dark:hover:bg-slate-700'}
-                        `}
+                        onClick={() => setStatusFilter(statusFilter === 'Approved' ? 'All' : 'Approved')}
+                        className="group relative p-6 ambient-shadow flex items-center justify-between rounded-[24px] border transition-all duration-300 hover:scale-[1.02] active:scale-95 text-left w-full backdrop-blur-xl bg-white/60 dark:bg-slate-800/60 border-white/60 dark:border-white/10"
                     >
                         <div>
-                            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 mb-1">Active Loans</p>
-                            <h3 className="text-3xl font-extrabold text-[#1A2B56] dark:text-white">{activeLoansCount}</h3>
+                            <p className="text-[10px] font-medium uppercase tracking-[0.2em] text-slate-500 mb-1">Active Loans</p>
+                            <h3 className="text-3xl font-bold text-[#1A2B56] dark:text-white tracking-tight">{activeLoansCount}</h3>
                         </div>
-                        <div className={`p-3 rounded-2xl transition-all duration-300 ${statusFilter === 'Approved' ? 'text-blue-500 bg-blue-50 dark:bg-blue-900/40 shadow-sm' : 'text-slate-400 dark:text-slate-500 bg-slate-50 dark:bg-slate-700/30'}`}>
+                        <div className={`p-3 rounded-2xl transition-all duration-300 ${statusFilter === 'Approved' ? 'text-blue-500 bg-blue-50 dark:bg-blue-900/40' : 'text-slate-400 dark:text-slate-500 bg-slate-50 dark:bg-slate-700/30 group-hover:text-blue-500 group-hover:bg-blue-50 dark:group-hover:bg-blue-900/40'}`}>
                             <span className="material-symbols-outlined text-3xl">swap_horiz</span>
                         </div>
                     </button>
 
                     {/* Pending Approvals Card */}
                     <button
-                        onClick={() => setStatusFilter('Pending')}
-                        className={`group relative p-6 ambient-shadow flex items-center justify-between rounded-[24px] border transition-all duration-300 hover:scale-[1.02] hover:shadow-2xl active:scale-95 text-left w-full backdrop-blur-xl
-                            ${statusFilter === 'Pending'
-                                ? 'bg-white/90 dark:bg-slate-800 border-amber-500 shadow-lg'
-                                : 'bg-white/60 dark:bg-slate-800/60 border-white/60 dark:border-white/10 hover:bg-white/80 dark:hover:bg-slate-700'}
-                        `}
+                        onClick={() => setStatusFilter(statusFilter === 'Pending' ? 'All' : 'Pending')}
+                        className="group relative p-6 ambient-shadow flex items-center justify-between rounded-[24px] border transition-all duration-300 hover:scale-[1.02] active:scale-95 text-left w-full backdrop-blur-xl bg-white/60 dark:bg-slate-800/60 border-white/60 dark:border-white/10"
                     >
                         <div>
-                            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 mb-1">Pending Approvals</p>
-                            <h3 className="text-3xl font-extrabold text-[#1A2B56] dark:text-white">{pendingCount}</h3>
+                            <p className="text-[10px] font-medium uppercase tracking-[0.2em] text-slate-500 mb-1">Pending Approvals</p>
+                            <h3 className="text-3xl font-bold text-[#1A2B56] dark:text-white tracking-tight">{pendingCount}</h3>
                         </div>
-                        <div className={`p-3 rounded-2xl transition-all duration-300 ${statusFilter === 'Pending' ? 'text-amber-500 bg-amber-50 dark:bg-amber-900/40 shadow-sm' : 'text-slate-400 dark:text-slate-500 bg-slate-50 dark:bg-slate-700/30'}`}>
+                        <div className={`p-3 rounded-2xl transition-all duration-300 ${statusFilter === 'Pending' ? 'text-amber-500 bg-amber-50 dark:bg-amber-900/40' : 'text-slate-400 dark:text-slate-500 bg-slate-50 dark:bg-slate-700/30 group-hover:text-amber-500 group-hover:bg-amber-50 dark:group-hover:bg-amber-900/40'}`}>
                             <span className="material-symbols-outlined text-3xl">pending_actions</span>
                         </div>
                     </button>
 
                     {/* Overdue Returns Card */}
                     <button
-                        onClick={() => setStatusFilter('Overdue')}
-                        className={`group relative p-6 ambient-shadow flex items-center justify-between rounded-[24px] border transition-all duration-300 hover:scale-[1.02] hover:shadow-2xl active:scale-95 text-left w-full backdrop-blur-xl
-                            ${statusFilter === 'Overdue'
-                                ? 'bg-white/90 dark:bg-slate-800 border-red-500 shadow-lg'
-                                : 'bg-white/60 dark:bg-slate-800/60 border-white/60 dark:border-white/10 hover:bg-white/80 dark:hover:bg-slate-700'}
-                        `}
+                        onClick={() => setStatusFilter(statusFilter === 'Overdue' ? 'All' : 'Overdue')}
+                        className="group relative p-6 ambient-shadow flex items-center justify-between rounded-[24px] border transition-all duration-300 hover:scale-[1.02] active:scale-95 text-left w-full backdrop-blur-xl bg-white/60 dark:bg-slate-800/60 border-white/60 dark:border-white/10"
                     >
                         <div>
-                            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 mb-1">Overdue Returns</p>
-                            <h3 className="text-3xl font-extrabold text-[#1A2B56] dark:text-white">{overdueCount}</h3>
+                            <p className="text-[10px] font-medium uppercase tracking-[0.2em] text-slate-500 mb-1">Overdue Returns</p>
+                            <h3 className="text-3xl font-bold text-[#1A2B56] dark:text-white tracking-tight">{overdueCount}</h3>
                         </div>
-                        <div className={`p-3 rounded-2xl transition-all duration-300 ${statusFilter === 'Overdue' ? 'text-red-500 bg-red-50 dark:bg-red-900/40 shadow-sm' : 'text-slate-400 dark:text-slate-500 bg-slate-50 dark:bg-slate-700/30'}`}>
+                        <div className={`p-3 rounded-2xl transition-all duration-300 ${statusFilter === 'Overdue' ? 'text-red-500 bg-red-50 dark:bg-red-900/40' : 'text-slate-400 dark:text-slate-500 bg-slate-50 dark:bg-slate-700/30 group-hover:text-red-500 group-hover:bg-red-50 dark:group-hover:bg-red-900/40'}`}>
                             <span className="material-symbols-outlined text-3xl">warning</span>
                         </div>
                         {overdueCount > 0 && (
@@ -221,7 +209,7 @@ const BorrowingManagement: React.FC = () => {
                                         <select
                                             value={statusFilter}
                                             onChange={(e) => setStatusFilter(e.target.value as any)}
-                                            className="appearance-none pl-3 pr-8 py-2.5 bg-white/70 dark:bg-slate-700 hover:bg-white dark:hover:bg-slate-600 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 border border-white/80 dark:border-slate-500 shadow-sm transition-all outline-none cursor-pointer"
+                                            className="appearance-none pl-3 pr-10 py-2.5 bg-white/70 dark:bg-slate-700 hover:bg-white dark:hover:bg-slate-600 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 border border-white/80 dark:border-slate-500 shadow-sm transition-all outline-none cursor-pointer"
                                         >
                                             <option value="All">All Status</option>
                                             <option value="Pending">Pending</option>
@@ -230,6 +218,7 @@ const BorrowingManagement: React.FC = () => {
                                             <option value="Returned">Returned</option>
                                             <option value="Rejected">Rejected</option>
                                         </select>
+                                        <span className="material-symbols-outlined text-sm absolute right-3 top-2.5 pointer-events-none text-slate-400">expand_more</span>
                                     </div>
                                 </div>
                             </div>

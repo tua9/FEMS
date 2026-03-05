@@ -125,11 +125,11 @@ const EquipmentManagement: React.FC = () => {
                 <div className="mb-8 px-2 flex flex-col md:flex-row md:items-end justify-between gap-6 mt-6">
                     <div>
                         <h2 className="text-3xl font-extrabold text-[#1A2B56] dark:text-white tracking-tight">Equipment Management</h2>
-                        <p className="text-slate-700 dark:text-slate-300 mt-1 font-semibold">Track, manage and audit university assets and hardware.</p>
+                        <p className="text-slate-700 dark:text-slate-300 mt-1 font-medium">Track, manage and audit university assets and hardware.</p>
                     </div>
                     <button
                         onClick={() => { setSelectedDevice(null); setIsAddModalOpen(true); }}
-                        className="flex items-center gap-2 px-6 py-3 bg-[#1A2B56] text-white rounded-2xl font-bold text-sm shadow-[0_10px_20px_rgba(26,43,86,0.3)] hover:opacity-90 transition-all border border-white/10"
+                        className="flex items-center gap-2 px-6 py-3 bg-[#1A2B56] text-white rounded-2xl font-semibold text-sm shadow-[0_10px_20px_rgba(26,43,86,0.3)] hover:opacity-90 transition-all border border-white/10"
                     >
                         <span className="material-symbols-outlined text-lg">add</span>
                         Add Equipment
@@ -142,7 +142,7 @@ const EquipmentManagement: React.FC = () => {
                             <div className="relative flex items-center">
                                 <span className="material-symbols-outlined absolute left-4 text-slate-400">search</span>
                                 <input
-                                    className="w-full pl-12 pr-4 py-3 bg-transparent border-none rounded-2xl text-sm font-medium focus:ring-0 transition-all outline-none placeholder:text-slate-400 dark:text-white"
+                                    className="w-full pl-12 pr-4 py-3 bg-transparent border-none rounded-2xl text-xs font-medium focus:ring-0 transition-all outline-none placeholder:text-slate-400 dark:text-white"
                                     placeholder="Search equipment..."
                                     type="text"
                                     value={searchQuery}
@@ -157,7 +157,7 @@ const EquipmentManagement: React.FC = () => {
                                 <select
                                     value={categoryFilter}
                                     onChange={e => setCategoryFilter(e.target.value)}
-                                    className="min-w-[160px] pl-5 pr-8 py-2.5 bg-white/70 dark:bg-slate-700 hover:bg-white dark:hover:bg-slate-600 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 border border-white/80 dark:border-slate-500 shadow-sm transition-all outline-none cursor-pointer"
+                                    className="min-w-[160px] pl-5 pr-10 py-2.5 bg-white/70 dark:bg-slate-700 hover:bg-white dark:hover:bg-slate-600 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 border border-white/80 dark:border-slate-500 shadow-sm transition-all focus:ring-0 outline-none cursor-pointer appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20fill%3D%27none%27%20viewBox%3D%270%200%2020%2020%27%3E%3Cpath%20stroke%3D%27%236b7280%27%20stroke-linecap%3D%27round%27%20stroke-linejoin%3D%27round%27%20stroke-width%3D%271.5%27%20d%3D%27m6%208%204%204%204-4%27%2F%3E%3C%2Fsvg%3E')] bg-[length:18px_18px] bg-no-repeat bg-[right_10px_center]"
                                 >
                                     <option value="All Categories">All Categories</option>
                                     {categories.map(c => <option key={c} value={c}>{c}</option>)}
@@ -168,7 +168,7 @@ const EquipmentManagement: React.FC = () => {
                                 <select
                                     value={statusFilter}
                                     onChange={e => setStatusFilter(e.target.value)}
-                                    className="min-w-[130px] pl-5 pr-8 py-2.5 bg-white/70 dark:bg-slate-700 hover:bg-white dark:hover:bg-slate-600 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 border border-white/80 dark:border-slate-500 shadow-sm transition-all outline-none cursor-pointer"
+                                    className="min-w-[130px] pl-5 pr-10 py-2.5 bg-white/70 dark:bg-slate-700 hover:bg-white dark:hover:bg-slate-600 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 border border-white/80 dark:border-slate-500 shadow-sm transition-all focus:ring-0 outline-none cursor-pointer appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20fill%3D%27none%27%20viewBox%3D%270%200%2020%2020%27%3E%3Cpath%20stroke%3D%27%236b7280%27%20stroke-linecap%3D%27round%27%20stroke-linejoin%3D%27round%27%20stroke-width%3D%271.5%27%20d%3D%27m6%208%204%204%204-4%27%2F%3E%3C%2Fsvg%3E')] bg-[length:18px_18px] bg-no-repeat bg-[right_10px_center]"
                                 >
                                     <option value="All Status">All Status</option>
                                     {statuses.map(s => <option key={s} value={s}>{s}</option>)}
@@ -179,7 +179,7 @@ const EquipmentManagement: React.FC = () => {
                                 <select
                                     value={sortBy}
                                     onChange={e => setSortBy(e.target.value)}
-                                    className="min-w-[140px] pl-5 pr-8 py-2.5 bg-white/70 dark:bg-slate-700 hover:bg-white dark:hover:bg-slate-600 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 border border-white/80 dark:border-slate-500 shadow-sm transition-all outline-none cursor-pointer"
+                                    className="min-w-[140px] pl-5 pr-10 py-2.5 bg-white/70 dark:bg-slate-700 hover:bg-white dark:hover:bg-slate-600 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 border border-white/80 dark:border-slate-500 shadow-sm transition-all focus:ring-0 outline-none cursor-pointer appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20fill%3D%27none%27%20viewBox%3D%270%200%2020%2020%27%3E%3Cpath%20stroke%3D%27%236b7280%27%20stroke-linecap%3D%27round%27%20stroke-linejoin%3D%27round%27%20stroke-width%3D%271.5%27%20d%3D%27m6%208%204%204%204-4%27%2F%3E%3C%2Fsvg%3E')] bg-[length:18px_18px] bg-no-repeat bg-[right_10px_center]"
                                 >
                                     <option value="Newest">Sort: Newest</option>
                                     <option value="Name">Sort: Name</option>
@@ -206,7 +206,7 @@ const EquipmentManagement: React.FC = () => {
                     />
 
                     <div className="mt-8 flex items-center justify-between px-2">
-                        <p className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                        <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                             Showing {Math.min(filteredEquipments.length, (currentPage - 1) * ITEMS_PER_PAGE + 1)} - {Math.min(filteredEquipments.length, currentPage * ITEMS_PER_PAGE)} of {filteredEquipments.length} assets
                         </p>
                         <div className="flex items-center gap-2">
@@ -222,7 +222,7 @@ const EquipmentManagement: React.FC = () => {
                                 <button
                                     key={page}
                                     onClick={() => setCurrentPage(page)}
-                                    className={`w-10 h-10 flex items-center justify-center rounded-xl font-bold text-sm transition-all ${currentPage === page ? 'bg-[#1A2B56] text-white shadow-md' : 'bg-white/40 dark:bg-slate-700 border border-white dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-600'}`}
+                                    className={`w-10 h-10 flex items-center justify-center rounded-xl font-semibold text-sm transition-all ${currentPage === page ? 'bg-[#1A2B56] text-white shadow-md' : 'bg-white/40 dark:bg-slate-700 border border-white dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-600'}`}
                                 >
                                     {page}
                                 </button>

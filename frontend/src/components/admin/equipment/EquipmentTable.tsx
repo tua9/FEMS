@@ -29,11 +29,11 @@ const EquipmentTable: React.FC<EquipmentTableProps> = ({ equipments, onOpenDetai
             <table className="w-full text-left border-separate border-spacing-y-4 min-w-[900px]">
                 <thead>
                     <tr className="text-slate-800 dark:text-slate-300">
-                        <th className="px-6 pb-2 text-[11px] font-extrabold uppercase tracking-[0.2em] opacity-80">Equipment</th>
-                        <th className="px-6 pb-2 text-[11px] font-extrabold uppercase tracking-[0.2em] opacity-80 hidden md:table-cell">Category</th>
-                        <th className="px-6 pb-2 text-[11px] font-extrabold uppercase tracking-[0.2em] opacity-80 hidden sm:table-cell">Location</th>
-                        <th className="px-6 pb-2 text-[11px] font-extrabold uppercase tracking-[0.2em] opacity-80">Status</th>
-                        <th className="px-6 pb-2 text-[11px] font-extrabold uppercase tracking-[0.2em] opacity-80 text-right">Actions</th>
+                        <th className="px-6 pb-2 text-[11px] font-semibold uppercase tracking-[0.2em] opacity-80">Equipment</th>
+                        <th className="px-6 pb-2 text-[11px] font-semibold uppercase tracking-[0.2em] opacity-80 hidden md:table-cell">Category</th>
+                        <th className="px-6 pb-2 text-[11px] font-semibold uppercase tracking-[0.2em] opacity-80 hidden sm:table-cell">Location</th>
+                        <th className="px-6 pb-2 text-[11px] font-semibold uppercase tracking-[0.2em] opacity-80">Status</th>
+                        <th className="px-6 pb-2 text-[11px] font-semibold uppercase tracking-[0.2em] opacity-80 text-right">Actions</th>
                     </tr>
                 </thead>
                 <tbody className="space-y-4">
@@ -46,15 +46,15 @@ const EquipmentTable: React.FC<EquipmentTableProps> = ({ equipments, onOpenDetai
                                             <img alt={item.name} className="w-full h-full object-cover rounded-lg" src={item.imageUrl || 'https://via.placeholder.com/150'} />
                                         </div>
                                         <div>
-                                            <p className="text-sm font-bold text-slate-800 dark:text-white">{item.name}</p>
-                                            <p className="text-[10px] text-slate-500 dark:text-slate-400 font-semibold">ID: {item.id}</p>
+                                            <p className="text-sm font-semibold text-slate-800 dark:text-white">{item.name}</p>
+                                            <p className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">ID: {item.id}</p>
                                         </div>
                                     </div>
                                 </td>
-                                <td className={`p-4 text-sm font-bold text-slate-600 dark:text-slate-300 hidden md:table-cell ${rowBg}`}>{item.category}</td>
-                                <td className={`p-4 text-sm font-bold text-slate-600 dark:text-slate-300 hidden sm:table-cell ${rowBg}`}>{item.location}</td>
+                                <td className={`p-4 text-sm font-medium text-slate-600 dark:text-slate-300 hidden md:table-cell ${rowBg}`}>{item.category}</td>
+                                <td className={`p-4 text-sm font-medium text-slate-600 dark:text-slate-300 hidden sm:table-cell ${rowBg}`}>{item.location}</td>
                                 <td className={`p-4 ${rowBg}`}>
-                                    <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider inline-flex items-center justify-center whitespace-nowrap ${getStatusStyle(item.status)}`}>
+                                    <span className={`px-3 py-1 rounded-full text-[10px] font-semibold uppercase tracking-wider inline-flex items-center justify-center whitespace-nowrap ${getStatusStyle(item.status)}`}>
                                         {item.status}
                                     </span>
                                 </td>

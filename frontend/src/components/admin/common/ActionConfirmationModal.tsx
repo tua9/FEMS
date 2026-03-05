@@ -1,22 +1,30 @@
 import React from 'react';
 import { createPortal } from 'react-dom';
 
-interface DeleteConfirmationModalProps {
+interface ActionConfirmationModalProps {
     isOpen: boolean;
     title: string;
     message: string;
     onClose: () => void;
     onConfirm: () => void;
     itemName?: string;
+    confirmText?: string;
+    confirmColor?: string;
+    icon?: string;
+    iconColor?: string;
 }
 
-const DeleteConfirmationModal: React.FC<DeleteConfirmationModalProps> = ({
+const ActionConfirmationModal: React.FC<ActionConfirmationModalProps> = ({
     isOpen,
     title,
     message,
     onClose,
     onConfirm,
-    itemName
+    itemName,
+    confirmText = "Confirm",
+    confirmColor = "bg-[#1A2B56]",
+    icon = "help",
+    iconColor = "text-blue-500"
 }) => {
     if (!isOpen) return null;
 
@@ -31,9 +39,9 @@ const DeleteConfirmationModal: React.FC<DeleteConfirmationModalProps> = ({
             {/* Modal Content */}
             <div className="relative w-full max-w-md bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl rounded-[32px] border border-white/50 dark:border-white/10 shadow-2xl overflow-hidden p-8 flex flex-col items-center text-center">
 
-                {/* Warning Icon */}
-                <div className="w-16 h-16 rounded-2xl bg-red-50 dark:bg-red-900/20 flex items-center justify-center text-red-500 mb-6">
-                    <span className="material-symbols-outlined text-3xl">delete_forever</span>
+                {/* Icon */}
+                <div className={`w-16 h-16 rounded-2xl ${iconColor.replace('text-', 'bg-').replace('500', '50/20')} flex items-center justify-center ${iconColor} mb-6`}>
+                    <span className="material-symbols-outlined text-3xl">{icon}</span>
                 </div>
 
                 <h3 className="text-xl font-extrabold text-[#1A2B56] dark:text-white mb-2">{title}</h3>
@@ -58,10 +66,9 @@ const DeleteConfirmationModal: React.FC<DeleteConfirmationModalProps> = ({
                             onConfirm();
                             onClose();
                         }}
-                        className="flex-1 px-6 py-3 rounded-2xl font-bold text-sm bg-red-500 hover:bg-red-600 text-white shadow-lg shadow-red-500/20 transition-all flex items-center justify-center gap-2"
+                        className={`flex-1 px-6 py-3 rounded-2xl font-bold text-sm ${confirmColor} hover:opacity-90 text-white shadow-lg transition-all flex items-center justify-center gap-2`}
                     >
-                        <span className="material-symbols-outlined text-lg">delete</span>
-                        Confirm Delete
+                        {confirmText}
                     </button>
                 </div>
             </div>
@@ -70,4 +77,4 @@ const DeleteConfirmationModal: React.FC<DeleteConfirmationModalProps> = ({
     );
 };
 
-export default DeleteConfirmationModal;
+export default ActionConfirmationModal;

@@ -52,9 +52,9 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   if (isAdminPage) CurrentFooter = AdminFooter;
 
   return (
-    <div className={`min-h-screen flex flex-col ${isTechnicianPage || isAdminPage ? 'bg-[#E0EAFC] dark:bg-[#0f172a]' : ''}`}>
+    <div className={`min-h-screen flex flex-col ${!isAuthPage ? 'bg-[#E0EAFC] dark:bg-[#0f172a]' : ''}`}>
       {!isAuthPage && <CurrentNavbar />}
-      <main className="flex-grow relative w-full flex flex-col">
+      <main className={`flex-grow relative w-full flex flex-col ${!isAuthPage ? (isAdminPage || isTechnicianPage ? 'pt-24' : 'pt-20') : ''}`}>
         {children}
       </main>
       {!isAuthPage && <CurrentFooter />}

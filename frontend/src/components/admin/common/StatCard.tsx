@@ -44,11 +44,11 @@ const StatCard: React.FC<StatCardProps> = ({
     const CardContent = (
         <>
             <div>
-                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 mb-1">{title}</p>
-                <h3 className="text-3xl font-extrabold text-[#1A2B56] dark:text-white tracking-tight">{value}</h3>
+                <p className="text-[10px] font-medium uppercase tracking-[0.2em] text-slate-500 mb-1">{title}</p>
+                <h3 className="text-3xl font-bold text-[#1A2B56] dark:text-white tracking-tight">{value}</h3>
 
                 {(trendValue || trendLabel) && (
-                    <p className={`text-xs font-bold mt-2 flex items-center gap-1 ${trendColorClass}`}>
+                    <p className={`text-xs font-semibold mt-2 flex items-center gap-1 ${trendColorClass}`}>
                         {trendIcon && <span className="material-symbols-outlined text-sm">{trendIcon}</span>}
                         {trendValue && <span>{trendValue}</span>}
                         {trendLabel && <span>{trendLabel}</span>}

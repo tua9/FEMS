@@ -5,6 +5,9 @@ export interface User {
   role: 'Lecturer' | 'Student' | 'Manager' | 'Technician' | 'Super Admin';
   status: 'Active' | 'Inactive' | 'Pending';
   avatar?: string;
+  phone?: string;
+  department?: string;
+  assignedTasks?: number; // Current workload for technicians
 }
 
 export interface Asset {
@@ -42,7 +45,9 @@ export interface DamageReport {
   reporterAvatar?: string;
   dateReported: string; // YYYY-MM-DD
   priority: 'High Priority' | 'Medium Priority' | 'Low Priority';
-  status: 'Pending' | 'In Progress' | 'Resolved';
+  status: 'Pending' | 'Approved' | 'In Progress' | 'Resolved' | 'Rejected';
+  technicianId?: string;
+  technicianName?: string;
 }
 
 export interface BorrowRecord {

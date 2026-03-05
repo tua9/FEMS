@@ -7,11 +7,12 @@ interface ReturnCalendarProps {
 }
 
 const DAYS_SHORT = ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'];
-const SYSTEM_TODAY = new Date(2026, 2, 3); // March 3, 2026 - Keeping for consistency with mock data
+const SYSTEM_TODAY = new Date();
 
 const ReturnCalendar: React.FC<ReturnCalendarProps> = ({ records = [], onViewDetails }) => {
-    const [viewDate, setViewDate] = useState(new Date(2026, 2, 1));
-    const [selectedDay, setSelectedDay] = useState<number | null>(3);
+    const today = new Date();
+    const [viewDate, setViewDate] = useState(new Date(today.getFullYear(), today.getMonth(), 1));
+    const [selectedDay, setSelectedDay] = useState<number | null>(today.getDate());
 
     const monthNames = [
         "January", "February", "March", "April", "May", "June",

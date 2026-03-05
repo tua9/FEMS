@@ -18,9 +18,9 @@ const NavbarNavLinks: React.FC<NavbarNavLinksProps> = ({ links, currentPath }) =
                 <li key={link.path}>
                     <Link
                         to={link.path}
-                        className={`pb-1 transition-colors duration-200 ${currentPath === link.path
-                                ? 'text-[var(--navy-deep)] dark:text-blue-400 border-b-2 border-[var(--navy-deep)] dark:border-blue-400 font-semibold'
-                                : 'text-slate-600 hover:text-[var(--navy-deep)] dark:text-slate-300 dark:hover:text-blue-400'
+                        className={`px-4 py-1.5 transition-all duration-300 rounded-2xl ${currentPath === link.path
+                            ? 'bg-white/60 dark:bg-slate-700/60 backdrop-blur-md shadow-sm border border-white/80 dark:border-slate-600 text-[#1A2B56] dark:text-white font-bold'
+                            : 'text-slate-600 hover:text-[#1A2B56] dark:text-slate-300 dark:hover:text-white hover:bg-white/30'
                             }`}
                     >
                         {link.name}

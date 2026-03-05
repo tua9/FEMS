@@ -27,11 +27,11 @@ const RecentDamageReports: React.FC<RecentDamageReportsProps> = ({ reports }) =>
                 <table className="w-full text-left border-separate border-spacing-y-4">
                     <thead>
                         <tr>
-                            <th className="px-4 pb-2 text-[10px] font-black uppercase tracking-[0.2em] text-slate-600 dark:text-slate-400">Equipment Name</th>
-                            <th className="px-4 pb-2 text-[10px] font-black uppercase tracking-[0.2em] text-slate-600 dark:text-slate-400 hidden md:table-cell">Issue Description</th>
-                            <th className="px-4 pb-2 text-[10px] font-black uppercase tracking-[0.2em] text-slate-600 dark:text-slate-400">Reported By</th>
-                            <th className="px-4 pb-2 text-[10px] font-black uppercase tracking-[0.2em] text-slate-600 dark:text-slate-400 hidden sm:table-cell">Date Reported</th>
-                            <th className="px-4 pb-2 text-[10px] font-black uppercase tracking-[0.2em] text-slate-600 dark:text-slate-400 text-right">Priority</th>
+                            <th className="px-4 pb-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-600 dark:text-slate-400">Equipment Name</th>
+                            <th className="px-4 pb-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-600 dark:text-slate-400 hidden md:table-cell">Issue Description</th>
+                            <th className="px-4 pb-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-600 dark:text-slate-400">Reported By</th>
+                            <th className="px-4 pb-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-600 dark:text-slate-400 hidden sm:table-cell">Date Reported</th>
+                            <th className="px-4 pb-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-600 dark:text-slate-400 text-right">Priority</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -43,7 +43,7 @@ const RecentDamageReports: React.FC<RecentDamageReportsProps> = ({ reports }) =>
                                     {report.reporterAvatar ? (
                                         <img alt="Avatar" className="w-7 h-7 rounded-full shadow-sm object-cover" src={report.reporterAvatar} />
                                     ) : (
-                                        <div className="w-7 h-7 rounded-full bg-[#1A2B56] text-white flex items-center justify-center font-bold text-[10px]">
+                                        <div className="w-7 h-7 rounded-full bg-[#1A2B56] text-white flex items-center justify-center font-semibold text-[10px]">
                                             {report.reportedBy.charAt(0)}
                                         </div>
                                     )}
