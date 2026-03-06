@@ -22,10 +22,10 @@ const EQUIPMENT_TYPES = [
 const PRIORITIES: TicketPriority[] = ['Urgent', 'High', 'Medium', 'Low'];
 
 const DATE_RANGES = [
-  { label: 'Last 7 days',  days: 7  },
+  { label: 'Last 7 days', days: 7 },
   { label: 'Last 30 days', days: 30 },
   { label: 'Last 90 days', days: 90 },
-  { label: 'All time',     days: 0  },
+  { label: 'All time', days: 0 },
 ] as const;
 
 interface Filters {
@@ -38,8 +38,8 @@ const DEFAULT_FILTERS: Filters = { priorities: [], equipmentTypes: [], dateRange
 
 function countActiveFilters(f: Filters) {
   return (f.priorities.length > 0 ? 1 : 0) +
-         (f.equipmentTypes.length > 0 ? 1 : 0) +
-         (f.dateRangeDays > 0 ? 1 : 0);
+    (f.equipmentTypes.length > 0 ? 1 : 0) +
+    (f.dateRangeDays > 0 ? 1 : 0);
 }
 
 // ── Export Log helper ─────────────────────────────────────────────────────────
@@ -76,11 +76,11 @@ const ITEMS_PER_PAGE = 4;
 
 // search placeholder by tab
 const SEARCH_PLACEHOLDER: Record<TicketStatus, string> = {
-  Pending:      'Search tickets...',
-  Approved:     'Search approved tickets...',
-  'In Progress':'Search ongoing tasks...',
-  Rejected:     'Search rejected tickets...',
-  Completed:    'Search completed tickets...',
+  Pending: 'Search tickets...',
+  Approved: 'Search approved tickets...',
+  'In Progress': 'Search ongoing tasks...',
+  Rejected: 'Search rejected tickets...',
+  Completed: 'Search completed tickets...',
 };
 
 const TicketCenter: React.FC = () => {
@@ -231,7 +231,7 @@ const TicketCenter: React.FC = () => {
               value={searchQuery}
               onChange={(e) => handleSearch(e.target.value)}
               placeholder={SEARCH_PLACEHOLDER[activeStatus]}
-              className="w-full pl-12 pr-4 py-3 bg-white/80 dark:bg-slate-800/80 dark:text-white border-none rounded-2xl text-sm focus:ring-2 focus:ring-[#232F58] shadow-sm placeholder-slate-400 outline-none"
+              className="w-full pl-12 pr-4 py-3 tech-pill dark:text-white border-none rounded-2xl text-sm focus:ring-2 focus:ring-[#232F58] shadow-sm placeholder-slate-400 dark:placeholder-slate-500 outline-none"
             />
           </div>
           {/* Export */}
@@ -246,7 +246,7 @@ const TicketCenter: React.FC = () => {
       </section>
 
       {/* ── Main card ── */}
-      <section className="glass-card rounded-3xl overflow-hidden flex flex-col border border-white/50 dark:border-white/5 min-h-[600px]">
+      <section className="tech-card rounded-3xl overflow-hidden flex flex-col border min-h-[600px]">
         {/* Tabs */}
         <div className="p-8 border-b border-white/30 dark:border-white/5 flex flex-wrap items-center gap-4">
           {TABS.map(({ label, status }) => {
@@ -255,23 +255,17 @@ const TicketCenter: React.FC = () => {
               <button
                 key={status}
                 onClick={() => handleTabChange(status)}
-                className={`px-5 py-2.5 rounded-full text-sm font-semibold transition-all flex items-center gap-2 ${
-                  isActive
-                    ? 'bg-white dark:bg-slate-700 text-[#232F58] dark:text-white font-bold shadow-[0_4px_12px_rgba(35,47,88,0.1)]'
-                    : 'text-slate-600 dark:text-slate-300 hover:bg-white/40 dark:hover:bg-white/10'
-                }`}
-                style={
-                  !isActive
-                    ? { background: 'rgba(255,255,255,0.5)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.3)' }
-                    : undefined
-                }
+                className={`px-5 py-2.5 rounded-full text-sm font-semibold transition-all flex items-center gap-2 ${isActive
+                    ? 'tech-pill bg-white dark:bg-[#1a3160] text-[#232F58] dark:text-white font-bold shadow-[0_4px_12px_rgba(35,47,88,0.1)]'
+                    : 'tech-pill text-slate-600 dark:text-slate-300 hover:dark:bg-white/10'
+                  }`}
+
               >
                 {label}
-                <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold ${
-                  isActive
+                <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold ${isActive
                     ? 'bg-[#232F58]/10 dark:bg-white/10 text-[#232F58] dark:text-white'
                     : 'bg-slate-200/60 dark:bg-white/10 text-slate-500 dark:text-slate-400'
-                }`}>
+                  }`}>
                   {tabCounts[status]}
                 </span>
               </button>
@@ -283,14 +277,11 @@ const TicketCenter: React.FC = () => {
           <div className="relative" ref={filterRef}>
             <button
               onClick={() => setShowFilterPanel((v) => !v)}
-              className={`px-4 py-2.5 rounded-xl text-xs font-bold flex items-center gap-2 transition-all ${
-                activeFilterCount > 0
+              className={`px-4 py-2.5 rounded-xl text-xs font-bold flex items-center gap-2 transition-all ${activeFilterCount > 0
                   ? 'bg-[#232F58] text-white shadow-md'
-                  : 'text-slate-600 dark:text-slate-300'
-              }`}
-              style={activeFilterCount === 0
-                ? { background: 'rgba(255,255,255,0.5)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.3)' }
-                : undefined}
+                  : 'tech-pill text-slate-600 dark:text-slate-300'
+                }`}
+
             >
               <span className="material-symbols-outlined text-sm">filter_list</span>
               More Filters
@@ -304,16 +295,11 @@ const TicketCenter: React.FC = () => {
             {/* Filter panel dropdown */}
             {showFilterPanel && (
               <div
-                className="absolute right-0 top-full mt-2 w-72 rounded-2xl shadow-2xl z-50 p-5 space-y-5"
-                style={{
-                  background: 'rgba(255,255,255,0.95)',
-                  backdropFilter: 'blur(20px)',
-                  border: '1px solid rgba(255,255,255,0.5)',
-                }}
+                className="absolute right-0 top-full mt-2 w-72 tech-dropdown rounded-2xl shadow-2xl z-50 p-5 space-y-5"
               >
                 {/* Header */}
                 <div className="flex items-center justify-between">
-                  <span className="text-sm font-extrabold text-[#232F58]">Filters</span>
+                  <span className="text-sm font-extrabold text-[#232F58] dark:text-white">Filters</span>
                   {activeFilterCount > 0 && (
                     <button
                       onClick={resetFilters}
@@ -333,9 +319,9 @@ const TicketCenter: React.FC = () => {
                       const active = filters.priorities.includes(p);
                       const colorMap: Record<TicketPriority, string> = {
                         Urgent: active ? 'bg-rose-600 text-white border-rose-600' : 'border-rose-200 text-rose-500 hover:bg-rose-50',
-                        High:   active ? 'bg-rose-500 text-white border-rose-500' : 'border-rose-200 text-rose-400 hover:bg-rose-50',
+                        High: active ? 'bg-rose-500 text-white border-rose-500' : 'border-rose-200 text-rose-400 hover:bg-rose-50',
                         Medium: active ? 'bg-amber-500 text-white border-amber-500' : 'border-amber-200 text-amber-500 hover:bg-amber-50',
-                        Low:    active ? 'bg-emerald-500 text-white border-emerald-500' : 'border-emerald-200 text-emerald-500 hover:bg-emerald-50',
+                        Low: active ? 'bg-emerald-500 text-white border-emerald-500' : 'border-emerald-200 text-emerald-500 hover:bg-emerald-50',
                       };
                       return (
                         <button
@@ -360,15 +346,13 @@ const TicketCenter: React.FC = () => {
                         <button
                           key={et}
                           onClick={() => toggleEquipmentType(et)}
-                          className={`flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-left transition-all ${
-                            active
+                          className={`flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-left transition-all ${active
                               ? 'bg-[#232F58] text-white'
-                              : 'text-slate-600 hover:bg-slate-100'
-                          }`}
+                              : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/10'
+                            }`}
                         >
-                          <span className={`w-4 h-4 rounded flex items-center justify-center border flex-shrink-0 ${
-                            active ? 'bg-white/20 border-white/30' : 'border-slate-300'
-                          }`}>
+                          <span className={`w-4 h-4 rounded flex items-center justify-center border flex-shrink-0 ${active ? 'bg-white/20 border-white/30' : 'border-slate-300'
+                            }`}>
                             {active && <span className="material-symbols-outlined text-[12px]">check</span>}
                           </span>
                           {et}
@@ -388,13 +372,11 @@ const TicketCenter: React.FC = () => {
                         <button
                           key={r.days}
                           onClick={() => setDateRange(r.days)}
-                          className={`flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-left transition-all ${
-                            active ? 'bg-[#232F58] text-white' : 'text-slate-600 hover:bg-slate-100'
-                          }`}
+                          className={`flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-left transition-all ${active ? 'bg-[#232F58] text-white' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/10'
+                            }`}
                         >
-                          <span className={`w-4 h-4 rounded-full flex-shrink-0 border-2 ${
-                            active ? 'bg-white border-white/50' : 'border-slate-300'
-                          }`} />
+                          <span className={`w-4 h-4 rounded-full flex-shrink-0 border-2 ${active ? 'bg-white border-white/50' : 'border-slate-300'
+                            }`} />
                           {r.label}
                         </button>
                       );
@@ -431,7 +413,7 @@ const TicketCenter: React.FC = () => {
             <button
               onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
               disabled={safePage === 1}
-              className="w-10 h-10 rounded-xl flex items-center justify-center bg-white/50 dark:bg-white/10 shadow-sm disabled:opacity-50 hover:bg-white dark:hover:bg-white/20 transition-all"
+              className="w-10 h-10 rounded-xl flex items-center justify-center tech-pill dark:text-white shadow-sm disabled:opacity-50 transition-all"
             >
               <span className="material-symbols-outlined text-lg">chevron_left</span>
             </button>
@@ -442,11 +424,10 @@ const TicketCenter: React.FC = () => {
                 <button
                   key={page}
                   onClick={() => setCurrentPage(page)}
-                  className={`w-10 h-10 rounded-xl flex items-center justify-center text-sm font-bold transition-all shadow-sm ${
-                    safePage === page
+                  className={`w-10 h-10 rounded-xl flex items-center justify-center text-sm font-bold transition-all shadow-sm ${safePage === page
                       ? 'bg-[#232F58] text-white shadow-md'
-                      : 'bg-white/50 dark:bg-white/10 text-slate-700 dark:text-slate-300 hover:bg-white dark:hover:bg-white/20'
-                  }`}
+                      : 'tech-pill text-slate-700 dark:text-slate-300'
+                    }`}
                 >
                   {page}
                 </button>
@@ -455,7 +436,7 @@ const TicketCenter: React.FC = () => {
             <button
               onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
               disabled={safePage === totalPages}
-              className="w-10 h-10 rounded-xl flex items-center justify-center bg-white/50 dark:bg-white/10 shadow-sm disabled:opacity-50 hover:bg-white dark:hover:bg-white/20 transition-all"
+              className="w-10 h-10 rounded-xl flex items-center justify-center tech-pill dark:text-white shadow-sm disabled:opacity-50 transition-all"
             >
               <span className="material-symbols-outlined text-lg">chevron_right</span>
             </button>

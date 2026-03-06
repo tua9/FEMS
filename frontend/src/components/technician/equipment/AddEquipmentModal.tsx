@@ -325,3 +325,4 @@ const AddEquipmentModal: React.FC<Props> = ({ onClose, onAdd }) => {
 };
 
 export default AddEquipmentModal;
+

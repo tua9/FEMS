@@ -1,6 +1,6 @@
 import { technicianApi } from '@/services/api/technicianApi';
 import { MOCK_TASKS } from '@/data/technician/mockTasks';
-import { Task } from '@/types/technician.types';
+import type { Task } from '@/types/technician.types';
 import { useEffect, useState } from 'react';
 
 export const useTasks = (filters?: { status?: string; priority?: string }) => {

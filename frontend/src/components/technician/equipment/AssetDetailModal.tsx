@@ -160,3 +160,4 @@ const AssetDetailModal: React.FC<Props> = ({ asset, onClose, onEdit }) => {
 };
 
 export default AssetDetailModal;
+

@@ -4,7 +4,7 @@ import { mockUsersList } from '../../data/admin/mockAdminUsers';
 import { mockBorrowingList } from '../../data/admin/mockAdminBorrowing';
 import { mockDamageReportsList } from '../../data/admin/mockAdminReports';
 
-import { User, Asset, BorrowRecord } from '../../types/admin.types';
+import type { AdminUser, Asset, BorrowRecord } from '../../types/admin.types';
 
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
@@ -75,7 +75,7 @@ export const adminApi = {
         }
         throw new Error("User not found");
     },
-    updateUser: async (user: User) => {
+    updateUser: async (user: AdminUser) => {
         await delay(800);
         const userIndex = mockUsersList.findIndex(u => u.id === user.id);
         if (userIndex > -1) {

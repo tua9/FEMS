@@ -175,3 +175,5 @@ const HandoverDetailModal: React.FC<Props> = ({ record, onClose }) => (
 );
 
 export default HandoverDetailModal;
+
+

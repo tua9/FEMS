@@ -6,8 +6,13 @@ const UserInfoHeader: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuthStore();
 
-  const profilePath =
-    user?.role === "student" ? "/student/profile" : "/lecturer/profile";
+  const PROFILE_PATH: Record<string, string> = {
+    student:    "/student/profile",
+    lecturer:   "/lecturer/profile",
+    admin:      "/admin/profile",
+    technician: "/technician/profile",
+  };
+  const profilePath = PROFILE_PATH[user?.role ?? ""] ?? "/lecturer/profile";
 
   return (
     <button

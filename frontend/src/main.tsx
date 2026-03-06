@@ -135,6 +135,10 @@ createRoot(document.getElementById("root")!).render(
               <Route path="/technician/reports" element={<TechnicianReports />} />
               <Route path="/technician/profile" element={<TechnicianProfile />} />
               <Route
+                path="/technician/change-password"
+                element={<LecturerChangePassword />}
+              />
+              <Route
                 path="/technician/notifications"
                 element={<TechnicianNotifications />}
               />

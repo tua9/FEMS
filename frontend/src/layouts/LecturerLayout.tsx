@@ -9,7 +9,7 @@ export default function LecturerLayout() {
       <main className="flex flex-1 flex-col">
         <Outlet />
       </main>
-      <Footer />
+      <Footer role="lecturer" />
     </div>
   );
 }

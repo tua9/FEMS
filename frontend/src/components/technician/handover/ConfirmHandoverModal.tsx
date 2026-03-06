@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FulfillmentRequest } from '@/data/technician/mockHandover';
+import type { FulfillmentRequest } from '@/data/technician/mockHandover';
 
 type Phase = 'confirm' | 'success';
 
@@ -39,19 +39,14 @@ const ConfirmHandoverModal: React.FC<Props> = ({ req, onClose, onConfirm }) => {
       onClick={(e) => { if (e.target === e.currentTarget && phase !== 'success') onClose(); }}
     >
       <div
-        className="w-full max-w-md rounded-3xl shadow-2xl overflow-hidden"
-        style={{
-          background: 'rgba(255,255,255,0.98)',
-          border: '1px solid rgba(255,255,255,0.5)',
-        }}
+        className="w-full max-w-md tech-dropdown rounded-3xl shadow-2xl overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
         {/* ── Colour bar ── */}
-        <div className={`h-1.5 w-full transition-all duration-500 ${
-          phase === 'success'
-            ? 'bg-gradient-to-r from-emerald-400 via-emerald-500 to-emerald-400'
-            : 'bg-gradient-to-r from-[#1A2B56] via-blue-500 to-[#1A2B56]'
-        }`} />
+        <div className={`h-1.5 w-full transition-all duration-500 ${phase === 'success'
+          ? 'bg-gradient-to-r from-emerald-400 via-emerald-500 to-emerald-400'
+          : 'bg-gradient-to-r from-[#1A2B56] via-blue-500 to-[#1A2B56]'
+          }`} />
 
         {/* ───── CONFIRM PHASE ───── */}
         {phase === 'confirm' && (
@@ -64,28 +59,28 @@ const ConfirmHandoverModal: React.FC<Props> = ({ req, onClose, onConfirm }) => {
                 </span>
               </div>
               <div>
-                <h3 className="text-lg font-extrabold text-[#1A2B56]">Confirm Physical Handover</h3>
+                <h3 className="text-lg font-extrabold text-[#1A2B56] dark:text-white">Confirm Physical Handover</h3>
                 <p className="text-[11px] text-slate-400 font-medium mt-0.5">Reference: {req.id}</p>
               </div>
             </div>
 
             {/* Recipient card */}
-            <div className="bg-slate-50 rounded-2xl p-4 mb-4 border border-slate-100">
+            <div className="bg-slate-50 dark:bg-white/5 rounded-2xl p-4 mb-4 border border-slate-100 dark:border-white/10">
               <p className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest mb-3">Recipient</p>
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-full bg-[#1A2B56]/10 flex items-center justify-center text-[#1A2B56] font-extrabold text-sm border-2 border-white shadow-sm flex-shrink-0">
                   {initials}
                 </div>
                 <div>
-                  <p className="font-bold text-slate-900 text-sm">{req.recipient.name}</p>
-                  <p className="text-[11px] text-slate-500">{req.recipient.department} · {req.recipient.designation}</p>
-                  <p className="text-[11px] text-slate-400">ID: {req.recipient.userId}</p>
+                  <p className="font-bold text-slate-900 dark:text-white text-sm">{req.recipient.name}</p>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400">{req.recipient.department} · {req.recipient.designation}</p>
+                  <p className="text-[11px] text-slate-400 dark:text-slate-500">ID: {req.recipient.userId}</p>
                 </div>
               </div>
             </div>
 
             {/* Items */}
-            <div className="bg-slate-50 rounded-2xl p-4 mb-6 border border-slate-100">
+            <div className="bg-slate-50 dark:bg-white/5 rounded-2xl p-4 mb-6 border border-slate-100 dark:border-white/10">
               <p className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest mb-3">
                 Items to Hand Over ({req.items.length})
               </p>
@@ -121,7 +116,7 @@ const ConfirmHandoverModal: React.FC<Props> = ({ req, onClose, onConfirm }) => {
             <div className="flex gap-3">
               <button
                 onClick={onClose}
-                className="flex-1 py-3 rounded-2xl border border-slate-200 text-sm font-bold text-slate-600 hover:bg-slate-50 transition-colors"
+                className="flex-1 py-3 rounded-2xl border border-slate-200 dark:border-white/10 text-sm font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/5 transition-colors"
               >
                 Cancel
               </button>
@@ -196,3 +191,5 @@ const ConfirmHandoverModal: React.FC<Props> = ({ req, onClose, onConfirm }) => {
 };
 
 export default ConfirmHandoverModal;
+
+

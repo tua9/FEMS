@@ -21,3 +21,4 @@ const EquipmentSidebar: React.FC<Props> = ({
 );
 
 export default EquipmentSidebar;
+

@@ -15,9 +15,11 @@ interface AppNavbarProps {
   portalLabel: string;
   /** Navigation links for this role */
   links: NavLink[];
+  /** Material Symbols icon name for the brand logo. Defaults to 'school' */
+  brandIcon?: string;
 }
 
-const AppNavbar: React.FC<AppNavbarProps> = ({ portalLabel, links }) => {
+const AppNavbar: React.FC<AppNavbarProps> = ({ portalLabel, links, brandIcon = 'school' }) => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const { isDark, toggle } = useDarkMode();
@@ -42,7 +44,7 @@ const AppNavbar: React.FC<AppNavbarProps> = ({ portalLabel, links }) => {
         {/* ── Brand ── */}
         <div className="flex min-w-[160px] items-center gap-3">
           <div className="flex h-10 w-10 items-center justify-center rounded-full border-2 border-white/20 bg-[#1E2B58] text-white shadow-lg">
-            <span className="material-symbols-rounded text-xl">school</span>
+            <span className="material-symbols-rounded text-xl">{brandIcon}</span>
           </div>
           <div>
             <h1 className="text-base leading-none font-extrabold tracking-tight text-[#1E2B58] dark:text-white">

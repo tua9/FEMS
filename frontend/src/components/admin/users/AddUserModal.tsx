@@ -1,50 +1,50 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { User } from '../../../types/admin.types';
+import { AdminUser } from '../../../types/admin.types';
 
 interface AddUserModalProps {
     isOpen: boolean;
     onClose: () => void;
-    user?: User | null;
+    AdminUser?: AdminUser | null;
     onUserUpdated?: () => void;
 }
 
 import { adminApi } from '../../../services/api/adminApi';
 
-const generateUserId = () => `USER-${Math.floor(1000 + Math.random() * 9000)}`;
+const generateUserId = () => `AdminUser-${Math.floor(1000 + Math.random() * 9000)}`;
 
-const AddUserModal: React.FC<AddUserModalProps> = ({ isOpen, onClose, user, onUserUpdated }) => {
-    const isEdit = !!user;
-    const [userId, setUserId] = useState(user?.id || generateUserId());
-    const [name, setName] = useState(user?.name || '');
-    const [email, setEmail] = useState(user?.email || '');
-    const [role, setRole] = useState(user?.role || 'Student');
+const AddUserModal: React.FC<AddUserModalProps> = ({ isOpen, onClose, AdminUser, onUserUpdated }) => {
+    const isEdit = !!AdminUser;
+    const [userId, setUserId] = useState(AdminUser?.id || generateUserId());
+    const [name, setName] = useState(AdminUser?.name || '');
+    const [email, setEmail] = useState(AdminUser?.email || '');
+    const [role, setRole] = useState(AdminUser?.role || 'Student');
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     useEffect(() => {
-        if (user) {
-            setUserId(user.id);
-            setName(user.name);
-            setEmail(user.email);
-            setRole(user.role);
+        if (AdminUser) {
+            setUserId(AdminUser.id);
+            setName(AdminUser.name);
+            setEmail(AdminUser.email);
+            setRole(AdminUser.role);
         } else {
             setUserId(generateUserId());
             setName('');
             setEmail('');
             setRole('Student');
         }
-    }, [user, isOpen]);
+    }, [AdminUser, isOpen]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        const userData: User = {
+        const userData: AdminUser = {
             id: userId,
             name,
             email,
             role: role as any,
-            status: user?.status || 'Active',
-            avatar: user?.avatar
+            status: AdminUser?.status || 'Active',
+            avatar: AdminUser?.avatar
         };
 
         setIsSubmitting(true);
@@ -59,7 +59,7 @@ const AddUserModal: React.FC<AddUserModalProps> = ({ isOpen, onClose, user, onUs
             if (onUserUpdated) onUserUpdated();
             onClose();
         } catch (error) {
-            console.error("Failed to save user", error);
+            console.error("Failed to save AdminUser", error);
             alert("Failed to save changes. Please try again.");
         } finally {
             setIsSubmitting(false);
@@ -78,7 +78,7 @@ const AddUserModal: React.FC<AddUserModalProps> = ({ isOpen, onClose, user, onUs
                 <div className="flex items-center justify-between p-6 border-b border-slate-200/50 dark:border-slate-700/50">
                     <div>
                         <h3 className="text-xl font-extrabold text-[#1A2B56] dark:text-white">
-                            {isEdit ? 'Edit User Profile' : 'Add New User'}
+                            {isEdit ? 'Edit AdminUser Profile' : 'Add New AdminUser'}
                         </h3>
                         <p className="text-xs text-slate-500 font-semibold mt-1">
                             {isEdit ? 'Update account information and permissions.' : 'Create a new account and assign roles.'}
@@ -95,9 +95,9 @@ const AddUserModal: React.FC<AddUserModalProps> = ({ isOpen, onClose, user, onUs
                 {/* Body */}
                 <div className="p-6 overflow-y-auto custom-scrollbar">
                     <form id="userForm" onSubmit={handleSubmit} className="space-y-5">
-                        {/* User ID */}
+                        {/* AdminUser ID */}
                         <div className="space-y-1.5">
-                            <label className="text-xs font-bold text-slate-700 dark:text-slate-300 ml-1">User ID <span className="text-red-500">*</span></label>
+                            <label className="text-xs font-bold text-slate-700 dark:text-slate-300 ml-1">AdminUser ID <span className="text-red-500">*</span></label>
                             <div className="flex gap-2">
                                 <div className="relative flex-1">
                                     <span className="material-symbols-outlined absolute left-4 top-3 text-slate-400 text-[18px]">badge</span>
@@ -107,7 +107,7 @@ const AddUserModal: React.FC<AddUserModalProps> = ({ isOpen, onClose, user, onUs
                                         onChange={e => setUserId(e.target.value)}
                                         readOnly={isEdit}
                                         className={`w-full pl-11 pr-4 bg-white/50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl py-3 text-sm font-bold text-[#1A2B56] dark:text-blue-300 focus:ring-2 focus:ring-[#1A2B56] dark:focus:ring-blue-500 outline-none transition-all tracking-wider ${isEdit ? 'opacity-60 cursor-not-allowed' : ''}`}
-                                        placeholder="USER-0000"
+                                        placeholder="AdminUser-0000"
                                     />
                                 </div>
                                 {!isEdit && (
@@ -210,7 +210,7 @@ const AddUserModal: React.FC<AddUserModalProps> = ({ isOpen, onClose, user, onUs
                         className={`px-8 py-2.5 rounded-xl font-bold text-sm bg-[#1A2B56] hover:bg-[#2A3B66] text-white shadow-lg transition-colors flex items-center gap-2 ${isSubmitting ? 'animate-pulse' : ''}`}
                     >
                         <span className="material-symbols-outlined text-sm">{isSubmitting ? 'hourglass_top' : (isEdit ? 'save' : 'person_add')}</span>
-                        {isSubmitting ? 'Saving...' : (isEdit ? 'Update User' : 'Create User')}
+                        {isSubmitting ? 'Saving...' : (isEdit ? 'Update AdminUser' : 'Create AdminUser')}
                     </button>
                 </div>
             </div>

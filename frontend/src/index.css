@@ -40,6 +40,47 @@ body[data-scroll-locked] {
     }
 }
 
+/* ─── Technician portal — solid dark card (matches Dashboard style) ────── */
+@utility tech-card {
+    background: rgba(255, 255, 255, 0.55);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.6);
+    box-shadow: 0 4px 24px -4px rgba(30, 43, 88, 0.10);
+
+    @variant dark {
+        background: rgba(13, 27, 51, 0.85);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        box-shadow: 0 4px 24px -4px rgba(0, 0, 0, 0.4);
+    }
+}
+
+/* ─── Technician pill/tab button — inactive state ─────────────────────── */
+@utility tech-pill {
+    background: rgba(255, 255, 255, 0.55);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.5);
+
+    @variant dark {
+        background: rgba(255, 255, 255, 0.06);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+}
+
+/* ─── Technician filter panel dropdown ───────────────────────────────── */
+@utility tech-dropdown {
+    background: rgba(255, 255, 255, 0.97);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.5);
+
+    @variant dark {
+        background: rgba(15, 28, 55, 0.98);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+}
+
 @utility active-pill-premium {
     background: rgba(255, 255, 255, 0.5);
     backdrop-filter: blur(12px);

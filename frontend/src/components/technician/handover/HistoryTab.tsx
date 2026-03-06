@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import {
   MOCK_HISTORY,
-  HistoryRecord,
+  type HistoryRecord,
   getEventStyle,
 } from '@/data/technician/mockHandover';
 import HandoverPagination from './HandoverPagination';
-import HandoverDetailModal, { HandoverDetailRecord } from './HandoverDetailModal';
+import HandoverDetailModal, { type HandoverDetailRecord } from './HandoverDetailModal';
 
 // ── Convert HistoryRecord → HandoverDetailRecord ──────────────────────────────
 function toDetailRecord(rec: HistoryRecord): HandoverDetailRecord {
@@ -15,22 +15,22 @@ function toDetailRecord(rec: HistoryRecord): HandoverDetailRecord {
     title: rec.logId,
     badge: { label: rec.eventType, className: ev.pill },
     person: {
-      name:        rec.recipient.name,
-      sub:         rec.recipient.role,
-      initials:    rec.recipient.initials,
-      avatarBg:    rec.recipient.avatarBg,
+      name: rec.recipient.name,
+      sub: rec.recipient.role,
+      initials: rec.recipient.initials,
+      avatarBg: rec.recipient.avatarBg,
       avatarColor: rec.recipient.avatarColor,
-      email:       rec.recipient.email,
+      email: rec.recipient.email,
     },
     meta: [
-      { label: 'Equipment',  value: rec.equipment.name,   icon: rec.equipment.icon },
-      { label: 'Date',       value: rec.date,             icon: 'calendar_today'   },
-      { label: 'Time',       value: rec.time,             icon: 'schedule'         },
-      { label: 'Condition',  value: rec.condition,        icon: 'health_and_safety' },
+      { label: 'Equipment', value: rec.equipment.name, icon: rec.equipment.icon },
+      { label: 'Date', value: rec.date, icon: 'calendar_today' },
+      { label: 'Time', value: rec.time, icon: 'schedule' },
+      { label: 'Condition', value: rec.condition, icon: 'health_and_safety' },
     ],
-    items:    rec.items,
+    items: rec.items,
     timeline: rec.timeline,
-    notes:    rec.notes,
+    notes: rec.notes,
   };
 }
 
@@ -41,7 +41,7 @@ const HistoryRow: React.FC<{ record: HistoryRecord; onDetails: () => void }> = (
   const ev = getEventStyle(record.eventType);
 
   return (
-    <tr className="hover:bg-slate-50/30 transition-colors">
+    <tr className="hover:bg-white/5 dark:hover:bg-white/5 transition-colors border-b border-slate-100 dark:border-white/5 last:border-0">
       {/* Event type */}
       <td className="px-6 py-5">
         <span
@@ -52,7 +52,7 @@ const HistoryRow: React.FC<{ record: HistoryRecord; onDetails: () => void }> = (
         </span>
       </td>
       {/* Log ID */}
-      <td className="px-6 py-5 font-mono text-xs font-bold text-slate-500">{record.logId}</td>
+      <td className="px-6 py-5 font-mono text-xs font-bold text-slate-500 dark:text-slate-400">{record.logId}</td>
       {/* Recipient */}
       <td className="px-6 py-5">
         <div className="flex items-center gap-3">
@@ -62,8 +62,8 @@ const HistoryRow: React.FC<{ record: HistoryRecord; onDetails: () => void }> = (
             {record.recipient.initials}
           </div>
           <div>
-            <p className="text-xs font-bold text-slate-900">{record.recipient.name}</p>
-            <p className="text-[9px] text-slate-500 uppercase">{record.recipient.role}</p>
+            <p className="text-xs font-bold text-slate-900 dark:text-white">{record.recipient.name}</p>
+            <p className="text-[9px] text-slate-500 dark:text-slate-400 uppercase">{record.recipient.role}</p>
           </div>
         </div>
       </td>
@@ -71,13 +71,13 @@ const HistoryRow: React.FC<{ record: HistoryRecord; onDetails: () => void }> = (
       <td className="px-6 py-5">
         <div className="flex items-center gap-2">
           <span className="material-symbols-outlined text-slate-400 text-lg">{record.equipment.icon}</span>
-          <span className="text-xs font-semibold text-slate-700">{record.equipment.name}</span>
+          <span className="text-xs font-semibold text-slate-700 dark:text-slate-200">{record.equipment.name}</span>
         </div>
       </td>
       {/* Date & Time */}
       <td className="px-6 py-5">
-        <p className="text-xs font-semibold text-slate-900">{record.date}</p>
-        <p className="text-[9px] text-slate-500 uppercase">{record.time}</p>
+        <p className="text-xs font-semibold text-slate-900 dark:text-white">{record.date}</p>
+        <p className="text-[9px] text-slate-500 dark:text-slate-400 uppercase">{record.time}</p>
       </td>
       {/* Condition */}
       <td className="px-6 py-5">
@@ -89,10 +89,10 @@ const HistoryRow: React.FC<{ record: HistoryRecord; onDetails: () => void }> = (
       <td className="px-6 py-5">
         <button
           onClick={onDetails}
-          className="p-2 hover:bg-slate-200 rounded-lg transition-colors"
+          className="p-2 hover:bg-white/10 dark:hover:bg-white/10 rounded-lg transition-colors"
           title="View Details"
         >
-          <span className="material-symbols-outlined text-slate-400">visibility</span>
+          <span className="material-symbols-outlined text-slate-400 dark:text-slate-300">visibility</span>
         </button>
       </td>
     </tr>
@@ -125,10 +125,7 @@ const HistoryTab: React.FC = () => {
   return (
     <div>
       {/* Filter bar */}
-      <div
-        className="mb-6 border border-white/50 rounded-3xl p-6 shadow-xl"
-        style={{ background: 'rgba(255,255,255,0.4)', backdropFilter: 'blur(24px)' }}
-      >
+      <div className="tech-card rounded-3xl mb-6 p-6">
         <div className="flex flex-wrap items-center gap-4">
           {/* Search */}
           <div className="flex-1 min-w-[240px] relative">
@@ -136,7 +133,7 @@ const HistoryTab: React.FC = () => {
               value={search}
               onChange={(e) => handleSearch(e.target.value)}
               placeholder="Search by ID, Recipient or Item..."
-              className="w-full pl-12 pr-4 py-3 bg-white/60 border border-slate-200 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-[#1A2B56]/30 placeholder-slate-400"
+              className="w-full pl-12 pr-4 py-3 tech-pill dark:text-white border border-white/30 dark:border-white/10 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-[#1A2B56]/30 placeholder-slate-400 dark:placeholder-slate-500"
             />
             <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">
               search
@@ -148,7 +145,7 @@ const HistoryTab: React.FC = () => {
             <select
               value={typeFilter}
               onChange={(e) => handleType(e.target.value)}
-              className="w-full appearance-none pl-4 pr-10 py-3 bg-white/60 border border-slate-200 rounded-2xl text-sm font-semibold text-slate-600 focus:ring-2 focus:ring-[#1A2B56]/30 outline-none"
+              className="w-full appearance-none pl-4 pr-10 py-3 tech-pill dark:text-white border border-white/30 dark:border-white/10 rounded-2xl text-sm font-semibold text-slate-600 focus:ring-2 focus:ring-[#1A2B56]/30 outline-none"
             >
               <option>All Types</option>
               <option>Handover</option>
@@ -161,10 +158,10 @@ const HistoryTab: React.FC = () => {
           </div>
 
           {/* Date range */}
-          <div className="flex items-center bg-white/60 border border-slate-200 rounded-2xl overflow-hidden">
-            <input type="date" className="bg-transparent border-none text-xs font-semibold px-4 py-3 focus:ring-0 focus:outline-none" />
-            <span className="text-slate-400 font-bold px-1">to</span>
-            <input type="date" className="bg-transparent border-none text-xs font-semibold px-4 py-3 focus:ring-0 focus:outline-none" />
+          <div className="flex items-center tech-pill border border-white/30 dark:border-white/10 rounded-2xl overflow-hidden">
+            <input type="date" className="bg-transparent border-none text-xs font-semibold text-slate-600 dark:text-slate-200 px-4 py-3 focus:ring-0 focus:outline-none" />
+            <span className="text-slate-400 font-bold px-1">—</span>
+            <input type="date" className="bg-transparent border-none text-xs font-semibold text-slate-600 dark:text-slate-200 px-4 py-3 focus:ring-0 focus:outline-none" />
           </div>
 
           {/* Filter button */}
@@ -175,25 +172,22 @@ const HistoryTab: React.FC = () => {
       </div>
 
       {/* Table */}
-      <div
-        className="rounded-3xl border border-white/50 shadow-2xl overflow-hidden"
-        style={{ background: 'rgba(255,255,255,0.7)', backdropFilter: 'blur(24px)' }}
-      >
+      <div className="tech-card rounded-3xl overflow-hidden">
         <div className="overflow-x-auto custom-scrollbar">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="bg-slate-50/50">
+              <tr className="bg-white/5 dark:bg-white/5 border-b border-slate-100 dark:border-white/10">
                 {['Event Type', 'Log ID', 'Recipient', 'Equipment', 'Date & Time', 'Final Condition', 'Action'].map((h) => (
                   <th
                     key={h}
-                    className="px-6 py-5 text-[10px] font-bold text-slate-400 uppercase tracking-widest border-b border-slate-100"
+                    className="px-6 py-5 text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-widest"
                   >
                     {h}
                   </th>
                 ))}
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+            <tbody>
               {paged.length > 0 ? (
                 paged.map((r) => (
                   <HistoryRow

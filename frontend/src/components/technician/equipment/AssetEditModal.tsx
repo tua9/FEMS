@@ -282,3 +282,4 @@ const AssetEditModal: React.FC<Props> = ({ asset, onClose, onSave }) => {
 };
 
 export default AssetEditModal;
+

@@ -15,8 +15,8 @@ function buildPath(values: number[], maxVal: number): string {
   let d = `M${pts[0].x},${pts[0].y}`;
   for (let i = 1; i < pts.length; i++) {
     const prev = pts[i - 1];
-    const cur  = pts[i];
-    const cpx  = (prev.x + cur.x) / 2;
+    const cur = pts[i];
+    const cpx = (prev.x + cur.x) / 2;
     d += ` C${cpx},${prev.y} ${cpx},${cur.y} ${cur.x},${cur.y}`;
   }
   return d;
@@ -30,29 +30,29 @@ const TicketTrendChart: React.FC<Props> = ({ dateRangeDays }) => {
   const areaPath = `${reportedPath} L1000,200 L0,200 Z`;
 
   return (
-    <div className="lg:col-span-2 bg-white/60 glass-card p-8 rounded-3xl border border-white/50 shadow-sm">
+    <div className="lg:col-span-2 tech-card p-8 rounded-3xl border border-white/50 shadow-sm">
       {/* Header */}
       <div className="flex justify-between items-center mb-8">
         <div>
-          <h3 className="text-lg font-bold text-[#232F58]">Ticket Trends</h3>
+          <h3 className="text-lg font-bold text-[#232F58] dark:text-white">Ticket Trends</h3>
           <p className="text-xs text-slate-500 font-medium">
             {dateRangeDays === 7
               ? 'Daily ticket volume over the last 7 days'
               : dateRangeDays === 30
-              ? 'Daily ticket volume over the last 30 days'
-              : dateRangeDays === 90
-              ? 'Monthly ticket volume over the last 90 days'
-              : 'Quarterly ticket volume — all time'}
+                ? 'Daily ticket volume over the last 30 days'
+                : dateRangeDays === 90
+                  ? 'Monthly ticket volume over the last 90 days'
+                  : 'Quarterly ticket volume — all time'}
           </p>
         </div>
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-blue-500" />
-            <span className="text-[10px] font-bold text-slate-500 uppercase">Reported</span>
+            <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase">Reported</span>
           </div>
           <div className="flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-blue-200" />
-            <span className="text-[10px] font-bold text-slate-500 uppercase">Resolved</span>
+            <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase">Resolved</span>
           </div>
         </div>
       </div>
@@ -62,7 +62,7 @@ const TicketTrendChart: React.FC<Props> = ({ dateRangeDays }) => {
         {/* Y-axis guide lines */}
         <div className="absolute inset-0 flex flex-col justify-between pointer-events-none">
           {[...Array(5)].map((_, i) => (
-            <div key={i} className="border-t border-slate-100 w-full" />
+            <div key={i} className="border-t border-slate-100 dark:border-white/5 w-full" />
           ))}
         </div>
 
@@ -84,7 +84,7 @@ const TicketTrendChart: React.FC<Props> = ({ dateRangeDays }) => {
             const yres = 200 - (p.resolved / maxVal) * 180;
             return (
               <g key={i}>
-                <circle cx={x} cy={yr}  r="6" fill="#3b82f6" />
+                <circle cx={x} cy={yr} r="6" fill="#3b82f6" />
                 <circle cx={x} cy={yres} r="5" fill="#93c5fd" />
               </g>
             );
@@ -101,3 +101,5 @@ const TicketTrendChart: React.FC<Props> = ({ dateRangeDays }) => {
 };
 
 export default TicketTrendChart;
+
+

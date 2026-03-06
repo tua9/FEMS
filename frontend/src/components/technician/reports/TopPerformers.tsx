@@ -29,8 +29,8 @@ const PerformerRow: React.FC<{ performer: Performer }> = ({ performer: p }) => (
       </div>
 
       <div>
-        <p className="text-sm font-bold text-slate-900">{p.name}</p>
-        <p className="text-[10px] text-slate-500 font-medium">{p.resolveRate}</p>
+        <p className="text-sm font-bold text-slate-900 dark:text-white">{p.name}</p>
+        <p className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">{p.resolveRate}</p>
       </div>
     </div>
 
@@ -48,8 +48,8 @@ const TopPerformers: React.FC<Props> = ({ dateRangeDays }) => {
 
   return (
     <>
-      <div className="bg-white/60 glass-card p-8 rounded-3xl border border-white/50 shadow-sm">
-        <h3 className="text-lg font-bold text-[#232F58] mb-6">Top Performers</h3>
+      <div className="tech-card p-8 rounded-3xl border border-white/20 dark:border-white/6 shadow-sm">
+        <h3 className="text-lg font-bold text-[#232F58] dark:text-white mb-6">Top Performers</h3>
 
         <div className="space-y-6">
           {performers.map((p) => (
@@ -58,7 +58,7 @@ const TopPerformers: React.FC<Props> = ({ dateRangeDays }) => {
 
           <button
             onClick={() => setShowLeaderboard(true)}
-            className="w-full py-3 mt-4 rounded-2xl bg-slate-50 text-[10px] font-extrabold text-slate-500 uppercase tracking-widest hover:bg-slate-100 hover:text-[#232F58] transition-all flex items-center justify-center gap-2"
+            className="w-full py-3 mt-4 rounded-2xl bg-slate-50 dark:bg-white/5 text-[10px] font-extrabold text-slate-500 dark:text-slate-300 uppercase tracking-widest hover:bg-slate-100 dark:hover:bg-white/10 hover:text-[#232F58] dark:hover:text-white transition-all flex items-center justify-center gap-2"
           >
             <span className="material-symbols-outlined text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>
               emoji_events
@@ -79,3 +79,5 @@ const TopPerformers: React.FC<Props> = ({ dateRangeDays }) => {
 };
 
 export default TopPerformers;
+
+

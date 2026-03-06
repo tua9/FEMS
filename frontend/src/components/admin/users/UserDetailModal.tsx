@@ -1,36 +1,36 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { User } from '../../../types/admin.types';
+import { AdminUser } from '../../../types/admin.types';
 import { adminApi } from '../../../services/api/adminApi';
 
 interface UserDetailModalProps {
     isOpen: boolean;
-    user: User | null;
+    AdminUser: AdminUser | null;
     onClose: () => void;
-    onEdit?: (user: User) => void;
+    onEdit?: (AdminUser: AdminUser) => void;
     onUpdate?: () => void;
 }
 
-const UserDetailModal: React.FC<UserDetailModalProps> = ({ isOpen, user, onClose, onEdit, onUpdate }) => {
-    const [status, setStatus] = useState<string>(user?.status || 'Active');
+const UserDetailModal: React.FC<UserDetailModalProps> = ({ isOpen, AdminUser, onClose, onEdit, onUpdate }) => {
+    const [status, setStatus] = useState<string>(AdminUser?.status || 'Active');
     const [isResetting, setIsResetting] = useState(false);
     const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
 
     useEffect(() => {
-        if (user) {
-            setStatus(user.status);
+        if (AdminUser) {
+            setStatus(AdminUser.status);
         }
-    }, [user, isOpen]);
+    }, [AdminUser, isOpen]);
 
-    if (!isOpen || !user) return null;
+    if (!isOpen || !AdminUser) return null;
 
     const handleResetPassword = async () => {
-        if (!window.confirm(`Are you sure you want to reset the password for ${user.name}?`)) return;
+        if (!window.confirm(`Are you sure you want to reset the password for ${AdminUser.name}?`)) return;
 
         setIsResetting(true);
         try {
-            await adminApi.resetPassword(user.id);
-            alert(`A password reset link has been sent to ${user.email}`);
+            await adminApi.resetPassword(AdminUser.id);
+            alert(`A password reset link has been sent to ${AdminUser.email}`);
         } catch (error) {
             console.error("Reset password failed", error);
             alert("Failed to reset password. Please try again.");
@@ -43,16 +43,16 @@ const UserDetailModal: React.FC<UserDetailModalProps> = ({ isOpen, user, onClose
         const newStatus = status === 'Active' ? 'Inactive' : 'Active';
         const action = status === 'Active' ? 'deactivate' : 'activate';
 
-        if (!window.confirm(`Are you sure you want to ${action} user ${user.name}?`)) return;
+        if (!window.confirm(`Are you sure you want to ${action} AdminUser ${AdminUser.name}?`)) return;
 
         setIsUpdatingStatus(true);
         try {
-            await adminApi.updateUserStatus(user.id, newStatus);
+            await adminApi.updateUserStatus(AdminUser.id, newStatus);
             setStatus(newStatus);
             if (onUpdate) onUpdate();
         } catch (error) {
             console.error("Status update failed", error);
-            alert(`Failed to ${action} user. Please try again.`);
+            alert(`Failed to ${action} AdminUser. Please try again.`);
         } finally {
             setIsUpdatingStatus(false);
         }
@@ -92,22 +92,22 @@ const UserDetailModal: React.FC<UserDetailModalProps> = ({ isOpen, user, onClose
 
                     <div className="relative pt-16 pb-8 px-12 flex items-center gap-8 z-10">
                         <div className="relative group">
-                            {user.avatar ? (
-                                <img src={user.avatar} alt={user.name} className="w-28 h-28 rounded-3xl border-4 border-white dark:border-slate-800 object-cover shadow-2xl transition-transform duration-500 group-hover:scale-105" />
+                            {AdminUser.avatar ? (
+                                <img src={AdminUser.avatar} alt={AdminUser.name} className="w-28 h-28 rounded-3xl border-4 border-white dark:border-slate-800 object-cover shadow-2xl transition-transform duration-500 group-hover:scale-105" />
                             ) : (
                                 <div className="w-28 h-28 rounded-3xl border-4 border-white dark:border-slate-800 bg-blue-100 dark:bg-blue-900/40 text-[#1A2B56] dark:text-blue-400 flex items-center justify-center text-4xl font-black shadow-xl">
-                                    {user.name.charAt(0)}
+                                    {AdminUser.name.charAt(0)}
                                 </div>
                             )}
                             <div className="absolute bottom-2 -right-1 w-6 h-6 rounded-full bg-emerald-500 border-4 border-white dark:border-slate-800 shadow-sm animate-pulse"></div>
                         </div>
                         <div>
-                            <h3 className="text-4xl font-black text-[#1A2B56] dark:text-white tracking-tight mb-2 uppercase">{user.name}</h3>
+                            <h3 className="text-4xl font-black text-[#1A2B56] dark:text-white tracking-tight mb-2 uppercase">{AdminUser.name}</h3>
                             <div className="flex items-center gap-3">
                                 <span className="px-4 py-1.5 rounded-2xl bg-[#1A2B56] dark:bg-blue-900/40 text-white dark:text-blue-400 text-[10px] font-black uppercase tracking-widest shadow-lg shadow-blue-900/20 border border-transparent">
-                                    {user.role}
+                                    {AdminUser.role}
                                 </span>
-                                <span className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">ID: {user.id}</span>
+                                <span className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">ID: {AdminUser.id}</span>
                             </div>
                         </div>
                     </div>
@@ -129,7 +129,7 @@ const UserDetailModal: React.FC<UserDetailModalProps> = ({ isOpen, user, onClose
                                         <span className="material-symbols-outlined text-sm">mail</span>
                                         <p className="text-[10px] font-bold uppercase">Email Address</p>
                                     </div>
-                                    <p className="text-sm font-black text-slate-800 dark:text-slate-200 truncate">{user.email}</p>
+                                    <p className="text-sm font-black text-slate-800 dark:text-slate-200 truncate">{AdminUser.email}</p>
                                 </div>
                                 <div className="p-6 rounded-3xl bg-white/40 dark:bg-slate-900/30 border-2 border-white dark:border-slate-700 shadow-sm group hover:border-emerald-100 dark:hover:border-emerald-900/30 transition-colors">
                                     <div className="flex items-center gap-2 mb-2 text-slate-400">
@@ -172,7 +172,7 @@ const UserDetailModal: React.FC<UserDetailModalProps> = ({ isOpen, user, onClose
                             <h5 className="text-[9px] font-black uppercase tracking-[0.3em] text-blue-200/40 mb-5">Security & Access</h5>
                             <div className="space-y-2.5 relative z-10">
                                 <button
-                                    onClick={() => onEdit && onEdit(user)}
+                                    onClick={() => onEdit && onEdit(AdminUser)}
                                     className="w-full h-[44px] flex items-center justify-center gap-2.5 bg-white/10 hover:bg-white/20 rounded-[20px] transition-all border-2 border-white/10 font-black text-[9px] uppercase tracking-[0.15em] group/btn shadow-sm whitespace-nowrap"
                                 >
                                     <span className="material-symbols-outlined text-[16px] opacity-70 group-hover/btn:opacity-100 transition-opacity">edit_note</span>
