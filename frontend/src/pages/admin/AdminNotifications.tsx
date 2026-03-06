@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import CustomDropdown from '@/components/shared/CustomDropdown';
 import { MOCK_ADMIN_NOTIFICATIONS } from '@/data/admin/mockAdminNotifications';
 import { NotifType } from '@/data/technician/mockNotifications';
 
@@ -105,16 +106,17 @@ const AdminNotifications: React.FC = () => {
                     ))}
                 </div>
 
-                <div className="flex items-center gap-2 px-2">
-                    <select
+                <div className="flex items-center">
+                    <CustomDropdown
                         value={filterRead}
-                        onChange={(e) => setFilterRead(e.target.value as any)}
-                        className="bg-transparent border-none text-xs font-bold text-slate-600 dark:text-slate-400 outline-none cursor-pointer focus:ring-0"
-                    >
-                        <option value="all">Status: All</option>
-                        <option value="unread">Unread Only</option>
-                        <option value="read">Read Only</option>
-                    </select>
+                        options={[
+                            { value: 'all',    label: 'Status: All'  },
+                            { value: 'unread', label: 'Unread Only'  },
+                            { value: 'read',   label: 'Read Only'    },
+                        ]}
+                        onChange={v => setFilterRead(v as any)}
+                        align="right"
+                    />
                 </div>
             </div>
 

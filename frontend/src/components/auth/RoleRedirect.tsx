@@ -6,7 +6,7 @@ const ROLE_HOME: Record<string, string> = {
   student:    "/student/dashboard",
   lecturer:   "/lecturer/dashboard",
   technician: "/technician/dashboard",
-  admin:      "/lecturer/dashboard",
+  admin:      "/admin/dashboard",
 };
 
 const RoleRedirect = () => {

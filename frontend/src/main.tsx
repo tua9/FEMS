@@ -6,6 +6,7 @@ import App from "./App.tsx";
 import "./styles/index.css";
 
 // Layouts
+import AdminLayout from "./layouts/AdminLayout.tsx";
 import LecturerLayout from "./layouts/LecturerLayout.tsx";
 import StudentLayout from "./layouts/StudentLayout.tsx";
 import TechnicianLayout from "./layouts/TechnicianLayout.tsx";
@@ -37,6 +38,14 @@ import { MyHistory } from "./pages/lecturer/MyHistory.tsx";
 import { ReportIssueCenter } from "./pages/lecturer/ReportIssueCenter.tsx";
 import { RoomStatusCenter } from "./pages/lecturer/RoomStatusCenter.tsx";
 import { UsageStatsCenter } from "./pages/lecturer/UsageStatsCenter.tsx";
+
+// Admin pages
+import AdminNotifications from "./pages/admin/AdminNotifications.tsx";
+import AdminBorrowing from "./pages/admin/BorrowingManagement.tsx";
+import AdminReports from "./pages/admin/DamageReports.tsx";
+import AdminDashboard from "./pages/admin/Dashboard.tsx";
+import AdminEquipment from "./pages/admin/EquipmentManagement.tsx";
+import AdminUsers from "./pages/admin/UserManagement.tsx";
 
 // Technician pages
 import TechnicianDashboard from "./pages/technician/Dashboard.tsx";
@@ -77,8 +86,8 @@ createRoot(document.getElementById("root")!).render(
             </Route>
           </Route>
 
-          {/* Lecturer / Admin routes */}
-          <Route element={<ProtectedRoute allowRoles={["lecturer", "admin"]} />}>
+          {/* Lecturer routes */}
+          <Route element={<ProtectedRoute allowRoles={["lecturer"]} />}>
             <Route element={<LecturerLayout />}>
               <Route path="/lecturer/dashboard" element={<LecturerDashboard />} />
               <Route path="/lecturer/equipment" element={<EquipmentCatalog />} />
@@ -97,6 +106,21 @@ createRoot(document.getElementById("root")!).render(
                 path="/lecturer/notifications"
                 element={<LecturerNotifications />}
               />
+            </Route>
+          </Route>
+
+          {/* Admin routes */}
+          <Route element={<ProtectedRoute allowRoles={["admin"]} />}>
+            <Route element={<AdminLayout />}>
+              <Route path="/admin/dashboard" element={<AdminDashboard />} />
+              <Route path="/admin/equipment" element={<AdminEquipment />} />
+              <Route path="/admin/borrowing" element={<AdminBorrowing />} />
+              <Route path="/admin/users" element={<AdminUsers />} />
+              <Route path="/admin/reports" element={<AdminReports />} />
+              <Route path="/admin/notifications" element={<AdminNotifications />} />
+              {/* Reuse shared profile/password pages */}
+              <Route path="/admin/profile" element={<LecturerProfile />} />
+              <Route path="/admin/change-password" element={<LecturerChangePassword />} />
             </Route>
           </Route>
 

@@ -246,15 +246,7 @@ const TicketCenter: React.FC = () => {
       </section>
 
       {/* ── Main card ── */}
-      <section
-        className="rounded-3xl overflow-hidden flex flex-col border border-white/50 dark:border-white/5 shadow-sm"
-        style={{
-          background: 'rgba(255,255,255,0.7)',
-          backdropFilter: 'blur(16px)',
-          WebkitBackdropFilter: 'blur(16px)',
-          minHeight: 600,
-        }}
-      >
+      <section className="glass-card rounded-3xl overflow-hidden flex flex-col border border-white/50 dark:border-white/5 min-h-[600px]">
         {/* Tabs */}
         <div className="p-8 border-b border-white/30 dark:border-white/5 flex flex-wrap items-center gap-4">
           {TABS.map(({ label, status }) => {

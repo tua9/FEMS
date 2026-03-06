@@ -1,33 +1,27 @@
+import {
+    ArrowLeft,
+    BadgeCheck,
+    BookOpen,
+    Building2,
+    Calendar,
+    Mail,
+    MapPin,
+    Pencil,
+    Phone,
+} from "lucide-react";
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import {
-  ArrowLeft,
-  Mail,
-  Phone,
-  MapPin,
-  Calendar,
-  BadgeCheck,
-  Building2,
-  BookOpen,
-  Pencil,
-} from "lucide-react";
 import { useAuthStore } from "../../stores/useAuthStore";
 
-// ─── Mock lecturer data ────────────────────────────────────────────────────────
-const LECTURER = {
-  name: "Dr. Alex Rivers",
-  employeeId: "LEC-2019-0042",
-  email: "alex.rivers@university.edu.vn",
-  phone: "+84 901 234 567",
-  department: "Computer Science",
-  faculty: "Engineering & Technology",
-  campus: "Da Nang",
-  dob: "March 10, 1985",
-  citizenshipId: "048198500042",
-  avatar:
-    "https://lh3.googleusercontent.com/aida-public/AB6AXuBzXuttG3iy6AOmS--FZFw64NpKFCoLUVOzqJ7BfgkAvr3mQ-26f6OTnJxbQLGIKix0NHo8wv8i2cdNaP1JhYr2GWNx2_Ut-AmXECWfKkn8opPTw2-HDc0UaDYEQR1xyn6F8z1HSyj6Op6CkzX8lfGuo48WunE-d4W0bqD3aXKmIzwgDeue06pjKryGyY8x0T4KCUGj2VQGLrPbNKHV3DlrZQpfbzH9rEzIsTX0PtsbQxU8KL-9xXoEaRac9zf7ww_qHSOwYRrya3jg",
-  status: "Active Lecturer",
-  title: "Senior Lecturer",
+// ─── Mock fallback data (used when real data is unavailable) ──────────────────
+const FALLBACK = {
+  employeeId: "—",
+  phone: "—",
+  department: "—",
+  faculty: "—",
+  campus: "—",
+  dob: "—",
+  citizenshipId: "—",
 };
 
 // ─── InfoField ────────────────────────────────────────────────────────────────
@@ -49,12 +43,65 @@ const InfoField: React.FC<InfoFieldProps> = ({ label, value, icon }) => (
   </div>
 );
 
+// ─── Role-aware helpers ───────────────────────────────────────────────────────
+const ROLE_PREFIX: Record<string, string> = {
+  student:  "/student",
+  lecturer: "/lecturer",
+  admin:    "/admin",
+};
+
+const ROLE_LABEL: Record<string, string> = {
+  student:  "Student Profile",
+  lecturer: "Lecturer Profile",
+  admin:    "Admin Profile",
+};
+
+const ROLE_STATUS: Record<string, string> = {
+  student:  "Active Student",
+  lecturer: "Active Lecturer",
+  admin:    "Active Admin",
+};
+
+const ROLE_TITLE_ICON: Record<string, string> = {
+  student:  "school",
+  lecturer: "school",
+  admin:    "shield_person",
+};
+
+const ROLE_TITLE_LABEL: Record<string, string> = {
+  student:  "Student",
+  lecturer: "Senior Lecturer",
+  admin:    "Super Admin",
+};
+
+// Quick stats per role
+const ROLE_STATS: Record<string, { label: string; value: string; icon: string }[]> = {
+  student:  [
+    { label: "Borrows",  value: "24", icon: "inventory_2"  },
+    { label: "Reports",  value: "7",  icon: "build_circle" },
+  ],
+  lecturer: [
+    { label: "Borrows",  value: "24", icon: "inventory_2"  },
+    { label: "Reports",  value: "7",  icon: "build_circle" },
+  ],
+  admin: [
+    { label: "Users",      value: "52", icon: "group"    },
+    { label: "Equipment",  value: "64", icon: "devices"  },
+  ],
+};
+
 // ─── LecturerProfile ──────────────────────────────────────────────────────────
 const LecturerProfile: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuthStore();
-  const role = user?.role || "student";
-  const isStudent = role === "student";
+  const role = user?.role ?? "student";
+  const prefix = ROLE_PREFIX[role] ?? "/student";
+
+  // Resolve display values from real user data with fallback
+  const displayName = user?.displayName ?? user?.username ?? "—";
+  const email       = user?.email ?? "—";
+  const avatarUrl   = user?.avatarUrl
+    ?? `https://ui-avatars.com/api/?name=${encodeURIComponent(displayName)}&background=1E2B58&color=fff&size=200`;
 
   return (
     <div className="w-full">
@@ -62,9 +109,7 @@ const LecturerProfile: React.FC = () => {
         {/* Back */}
         <button
           type="button"
-          onClick={() =>
-            navigate(isStudent ? "/student/dashboard" : "/lecturer/dashboard")
-          }
+          onClick={() => navigate(`${prefix}/dashboard`)}
           className="group mb-8 flex items-center gap-2 text-[0.8125rem] font-bold text-[#1E2B58]/60 transition-colors hover:text-[#1E2B58] dark:text-white/50 dark:hover:text-white"
         >
           <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-0.5" />
@@ -74,7 +119,7 @@ const LecturerProfile: React.FC = () => {
         {/* Page title */}
         <div className="mb-8">
           <h1 className="text-[2.25rem] leading-none font-extrabold tracking-tight text-[#1E2B58] md:text-[2.75rem] dark:text-white">
-            {isStudent ? "Student Profile" : "Lecturer Profile"}
+            {ROLE_LABEL[role] ?? "My Profile"}
           </h1>
           <p className="mt-2 text-sm font-medium text-[#1E2B58]/55 dark:text-white/50">
             Manage your personal information and account security.
@@ -89,8 +134,8 @@ const LecturerProfile: React.FC = () => {
             <div className="relative mb-6">
               <div className="h-44 w-44 overflow-hidden rounded-[1.75rem] shadow-2xl ring-4 shadow-[#1E2B58]/15 ring-white/60 dark:ring-slate-700">
                 <img
-                  alt={LECTURER.name}
-                  src={LECTURER.avatar}
+                  alt={displayName}
+                  src={avatarUrl}
                   className="h-full w-full object-cover"
                 />
               </div>
@@ -106,37 +151,34 @@ const LecturerProfile: React.FC = () => {
 
             {/* Name */}
             <h2 className="text-xl leading-tight font-extrabold text-[#1E2B58] dark:text-white">
-              {LECTURER.name}
+              {displayName}
             </h2>
             <p className="mt-1 text-[0.8125rem] font-bold text-[#1E2B58]/50 dark:text-white/50">
-              {LECTURER.employeeId}
+              {user?._id ? `ID: ${user._id.slice(-8).toUpperCase()}` : FALLBACK.employeeId}
             </p>
             <p className="mt-0.5 text-[0.75rem] font-semibold text-[#1E2B58]/40 dark:text-white/40">
-              {LECTURER.department}
+              {FALLBACK.department}
             </p>
 
             {/* Status badge */}
             <div className="mt-6 flex items-center gap-2 rounded-full bg-emerald-500/10 px-4 py-2 text-[0.6875rem] font-black tracking-widest text-emerald-600 uppercase dark:bg-emerald-500/15 dark:text-emerald-400">
               <span className="h-2 w-2 animate-pulse rounded-full bg-emerald-500" />
-              {isStudent ? "Active Student" : LECTURER.status}
+              {ROLE_STATUS[role] ?? "Active"}
             </div>
 
             {/* Title tag */}
             <div className="mt-3 flex items-center gap-1.5 rounded-xl bg-[#1E2B58]/[0.06] px-3 py-1.5 dark:bg-white/10">
               <span className="material-symbols-rounded text-[14px] text-[#1E2B58] dark:text-blue-400">
-                school
+                {ROLE_TITLE_ICON[role] ?? "school"}
               </span>
               <span className="text-[0.625rem] font-black tracking-[0.12em] text-[#1E2B58]/60 uppercase dark:text-blue-400">
-                {isStudent ? "Student" : LECTURER.title}
+                {ROLE_TITLE_LABEL[role] ?? role}
               </span>
             </div>
 
             {/* Quick stats */}
             <div className="mt-8 grid w-full grid-cols-2 gap-2">
-              {[
-                { label: "Borrows", value: "24", icon: "inventory_2" },
-                { label: "Reports", value: "7", icon: "build_circle" },
-              ].map((s) => (
+              {(ROLE_STATS[role] ?? ROLE_STATS.student).map((s) => (
                 <div
                   key={s.label}
                   className="glass-card !rounded-xl p-3 text-center"
@@ -160,42 +202,42 @@ const LecturerProfile: React.FC = () => {
             <div className="grid grid-cols-1 gap-x-10 gap-y-7 md:grid-cols-2">
               <InfoField
                 label="Email Address"
-                value={LECTURER.email}
+                value={email}
                 icon={<Mail className="h-3.5 w-3.5" />}
               />
               <InfoField
                 label="Department"
-                value={LECTURER.department}
+                value={FALLBACK.department}
                 icon={<BookOpen className="h-3.5 w-3.5" />}
               />
               <InfoField
                 label="Phone Number"
-                value={LECTURER.phone}
+                value={FALLBACK.phone}
                 icon={<Phone className="h-3.5 w-3.5" />}
               />
               <InfoField
                 label="Campus"
-                value={LECTURER.campus}
+                value={FALLBACK.campus}
                 icon={<MapPin className="h-3.5 w-3.5" />}
               />
               <InfoField
                 label="Date of Birth"
-                value={LECTURER.dob}
+                value={FALLBACK.dob}
                 icon={<Calendar className="h-3.5 w-3.5" />}
               />
               <InfoField
                 label="Faculty"
-                value={LECTURER.faculty}
+                value={FALLBACK.faculty}
                 icon={<Building2 className="h-3.5 w-3.5" />}
               />
               <InfoField
                 label="Citizenship ID"
-                value={LECTURER.citizenshipId}
+                value={FALLBACK.citizenshipId}
                 icon={<BadgeCheck className="h-3.5 w-3.5" />}
               />
               <InfoField
-                label={isStudent ? "Student ID" : "Employee ID"}
-                value={LECTURER.employeeId}
+                label={role === "student" ? "Student ID" : role === "admin" ? "Admin ID" : "Employee ID"}
+                value={user?._id ? user._id.slice(-8).toUpperCase() : FALLBACK.employeeId}
                 icon={<BadgeCheck className="h-3.5 w-3.5" />}
               />
             </div>
@@ -204,13 +246,7 @@ const LecturerProfile: React.FC = () => {
             <div className="mt-10 flex flex-col gap-3 sm:flex-row">
               <button
                 type="button"
-                onClick={() =>
-                  navigate(
-                    isStudent
-                      ? "/student/change-password"
-                      : "/lecturer/change-password",
-                  )
-                }
+                onClick={() => navigate(`${prefix}/change-password`)}
                 className="flex items-center justify-center gap-2.5 rounded-2xl bg-[#1E2B58] px-8 py-3.5 text-[0.875rem] font-extrabold text-white shadow-lg shadow-[#1E2B58]/20 transition-all hover:scale-[1.02] hover:bg-[#1E2B58]/90 active:scale-95"
               >
                 <span className="material-symbols-rounded text-[18px]">

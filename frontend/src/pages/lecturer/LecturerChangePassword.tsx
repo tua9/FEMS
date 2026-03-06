@@ -1,13 +1,13 @@
+import {
+    AlertCircle,
+    ArrowLeft,
+    CheckCircle2,
+    Eye,
+    EyeOff,
+    ShieldCheck,
+} from "lucide-react";
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import {
-  ArrowLeft,
-  Eye,
-  EyeOff,
-  ShieldCheck,
-  AlertCircle,
-  CheckCircle2,
-} from "lucide-react";
 import { useAuthStore } from "../../stores/useAuthStore";
 
 // ─── Password strength helper ─────────────────────────────────────────────────
@@ -100,16 +100,21 @@ const PasswordInput: React.FC<PasswordInputProps> = ({
   );
 };
 
+// ─── Role-aware path helper ───────────────────────────────────────────────────
+const ROLE_PREFIX: Record<string, string> = {
+  student:  "/student",
+  lecturer: "/lecturer",
+  admin:    "/admin",
+};
+
 // ─── LecturerChangePassword ───────────────────────────────────────────────────
 const LecturerChangePassword: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuthStore();
   const role = user?.role || "student";
-  const isStudent = role === "student";
-  const profilePath = isStudent ? "/student/profile" : "/lecturer/profile";
-  const dashboardPath = isStudent
-    ? "/student/dashboard"
-    : "/lecturer/dashboard";
+  const prefix = ROLE_PREFIX[role] ?? "/student";
+  const profilePath   = `${prefix}/profile`;
+  const dashboardPath = `${prefix}/dashboard`;
 
   const [current, setCurrent] = useState("");
   const [next, setNext] = useState("");

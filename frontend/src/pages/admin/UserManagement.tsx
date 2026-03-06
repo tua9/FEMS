@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import CustomDropdown from '../../components/shared/CustomDropdown';
 import UserTable from '../../components/admin/users/UserTable';
 import AddUserModal from '../../components/admin/users/AddUserModal';
 import UserDetailModal from '../../components/admin/users/UserDetailModal';
@@ -306,27 +307,29 @@ const UserManagement: React.FC = () => {
                             </div>
                         </div>
 
-                        <div className="flex items-center gap-3">
-                            <div className="relative">
-                                <select
-                                    value={roleFilter}
-                                    onChange={e => setRoleFilter(e.target.value)}
-                                    className="appearance-none flex items-center gap-2 px-5 py-2.5 bg-white/70 dark:bg-slate-700 hover:bg-white dark:hover:bg-slate-600 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 border border-white/80 dark:border-slate-500 shadow-sm transition-all pr-10 outline-none cursor-pointer"
-                                >
-                                    <option value="All">Role: All</option>
-                                    <option value="Student">Student</option>
-                                    <option value="Lecturer">Lecturer</option>
-                                    <option value="Technician">Technician</option>
-                                    <option value="Manager">Manager</option>
-                                    <option value="Super Admin">Super Admin</option>
-                                </select>
-                                <span className="material-symbols-outlined text-sm absolute right-3 top-2.5 pointer-events-none text-slate-400">expand_more</span>
-                            </div>
+                        <div className="glass-card !rounded-[1.5rem] flex items-center gap-0 p-1">
+                            <CustomDropdown
+                                value={roleFilter}
+                                options={[
+                                    { value: 'All',        label: 'Role: All'   },
+                                    { value: 'Student',    label: 'Student'     },
+                                    { value: 'Lecturer',   label: 'Lecturer'    },
+                                    { value: 'Technician', label: 'Technician'  },
+                                    { value: 'Manager',    label: 'Manager'     },
+                                    { value: 'Super Admin',label: 'Super Admin' },
+                                ]}
+                                onChange={setRoleFilter}
+                                align="right"
+                            />
+
+                            <div className="h-5 w-px bg-[#1E2B58]/10 dark:bg-white/10 mx-1" />
+
                             <button
                                 onClick={() => { setSearchQuery(''); setRoleFilter('All'); setStatusFilter('All'); }}
-                                className="flex items-center gap-2 px-5 py-2.5 bg-white/70 dark:bg-slate-700 hover:bg-white dark:hover:bg-slate-600 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 border border-white/80 dark:border-slate-500 shadow-sm transition-all"
+                                className="flex items-center justify-center w-9 h-9 rounded-xl text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all"
+                                title="Reset filters"
                             >
-                                <span className="material-symbols-outlined text-lg">filter_alt_off</span>
+                                <span className="material-symbols-outlined text-[18px]">filter_alt_off</span>
                             </button>
                         </div>
                     </div>

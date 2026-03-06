@@ -4,9 +4,11 @@ import { EquipmentRequest } from '../../../types/admin.types';
 interface InventoryRequestListProps {
     requests: EquipmentRequest[];
     efficiencyRate: number;
+    onViewAll?: () => void;
+    onItemClick?: (request: EquipmentRequest) => void;
 }
 
-const InventoryRequestList: React.FC<InventoryRequestListProps> = ({ requests, efficiencyRate }) => {
+const InventoryRequestList: React.FC<InventoryRequestListProps> = ({ requests, efficiencyRate, onViewAll, onItemClick }) => {
     // Helper to pick a color based on priority
     const getPriorityColor = (priority: string) => {
         switch (priority.toLowerCase()) {
@@ -21,11 +23,16 @@ const InventoryRequestList: React.FC<InventoryRequestListProps> = ({ requests, e
         <div className="bg-white/40 dark:bg-slate-800/60 p-8 ambient-shadow flex flex-col h-full rounded-[32px] border border-white/40 dark:border-white/10 backdrop-blur-xl transition-all duration-300">
             <div className="flex items-center justify-between mb-8">
                 <h4 className="font-extrabold text-[#1A2B56] dark:text-white text-lg">Inventory Requests</h4>
-                <a className="text-xs font-bold text-[#1A2B56] dark:text-blue-400 hover:underline cursor-pointer">View All</a>
+                <button
+                    onClick={onViewAll}
+                    className="text-xs font-bold text-[#1A2B56] dark:text-blue-400 hover:underline transition-opacity hover:opacity-70"
+                >
+                    View All
+                </button>
             </div>
             <div className="flex-1 space-y-5">
                 {requests.map(request => (
-                    <div key={request.id} className="flex items-start gap-4 p-3 hover:bg-white/30 dark:hover:bg-slate-700/50 rounded-2xl transition-all cursor-pointer">
+                    <div key={request.id} onClick={() => onItemClick?.(request)} className="flex items-start gap-4 p-3 hover:bg-white/30 dark:hover:bg-slate-700/50 rounded-2xl transition-all cursor-pointer">
                         {request.requesterAvatar ? (
                             <img alt="Avatar" className="w-10 h-10 rounded-full border border-white dark:border-slate-600 object-cover" src={request.requesterAvatar} />
                         ) : (

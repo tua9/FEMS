@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import CustomDropdown from '../../components/shared/CustomDropdown';
 import DamageReportTable from '../../components/admin/reports/DamageReportTable';
 import ResolutionStats from '../../components/admin/reports/ResolutionStats';
 import DamageReportDetailModal from '../../components/admin/reports/DamageReportDetailModal';
@@ -9,6 +10,7 @@ import { DamageReport, User } from '../../types/admin.types';
 const DamageReports: React.FC = () => {
     const [reports, setReports] = useState<DamageReport[]>([]);
     const [loading, setLoading] = useState(true);
+    const [isExporting, setIsExporting] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
     const [statusFilter, setStatusFilter] = useState<'All' | 'Pending' | 'Approved' | 'In Progress' | 'Resolved' | 'Rejected'>('All');
     const [priorityFilter, setPriorityFilter] = useState<'All' | 'High Priority' | 'Medium Priority' | 'Low Priority'>('All');
@@ -119,6 +121,52 @@ const DamageReports: React.FC = () => {
     const resolvedReports = reports.filter(r => r.status === 'Resolved').length;
     const criticalReports = reports.filter(r => r.priority === 'High Priority' && r.status !== 'Resolved').length;
 
+    // ─── Export CSV ───────────────────────────────────────────────────────────────
+    const handleExportData = () => {
+        setIsExporting(true);
+
+        // Export the currently filtered list (or all if no filter active)
+        const dataToExport = filteredReports.length > 0 ? filteredReports : reports;
+
+        const headers = [
+            'Report ID',
+            'Equipment Name',
+            'Issue Description',
+            'Reported By',
+            'Date Reported',
+            'Status',
+            'Priority',
+            'Assigned Technician',
+        ];
+
+        const escape = (val: string) => `"${(val ?? '').replace(/"/g, '""')}"`;
+
+        const rows = dataToExport.map(r => [
+            escape(r.id),
+            escape(r.equipmentName),
+            escape(r.issueDescription),
+            escape(r.reportedBy),
+            escape(r.dateReported),
+            escape(r.status),
+            escape(r.priority),
+            escape(r.technicianName ?? '—'),
+        ].join(','));
+
+        const csvContent = [headers.join(','), ...rows].join('\n');
+        const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        const timestamp = new Date().toISOString().slice(0, 10);
+        link.href = url;
+        link.download = `FEMS_DamageReports_${timestamp}.csv`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+
+        setTimeout(() => setIsExporting(false), 800);
+    };
+
     return (
         <div className="max-w-7xl mx-auto px-6 pb-16 relative">
             <div className="mb-8 px-2 flex flex-col md:flex-row md:items-end justify-between gap-6 mt-6">
@@ -126,9 +174,15 @@ const DamageReports: React.FC = () => {
                     <h2 className="text-3xl font-extrabold text-[#1A2B56] dark:text-white tracking-tight">Damage Reports & Issues</h2>
                     <p className="text-slate-700 dark:text-slate-300 mt-1 font-medium">Track equipment issues, track maintenance and assign technicians.</p>
                 </div>
-                <button className="flex items-center gap-2 px-6 py-3 bg-white hover:bg-slate-50 dark:bg-slate-800 dark:hover:bg-slate-700 text-[#1A2B56] dark:text-white rounded-2xl font-bold text-sm shadow-md transition-all border border-slate-200 dark:border-slate-600">
-                    <span className="material-symbols-outlined text-lg">download</span>
-                    Export Data
+                <button
+                    onClick={handleExportData}
+                    disabled={isExporting || reports.length === 0}
+                    className="flex items-center gap-2 px-6 py-3 bg-white hover:bg-slate-50 dark:bg-slate-800 dark:hover:bg-slate-700 text-[#1A2B56] dark:text-white rounded-2xl font-bold text-sm shadow-md transition-all border border-slate-200 dark:border-slate-600 disabled:opacity-50 disabled:cursor-not-allowed active:scale-95"
+                >
+                    <span className={`material-symbols-outlined text-lg ${isExporting ? 'animate-bounce' : ''}`}>
+                        {isExporting ? 'hourglass_top' : 'download'}
+                    </span>
+                    {isExporting ? 'Exporting...' : 'Export Data'}
                 </button>
             </div>
 
@@ -201,29 +255,44 @@ const DamageReports: React.FC = () => {
                                         />
                                     </div>
                                 </div>
-                                <div className="flex items-center gap-2 flex-shrink-0">
-                                    <select
+                                <div className="glass-card !rounded-[1.5rem] flex items-center gap-0 p-1 flex-shrink-0">
+                                    <CustomDropdown
                                         value={statusFilter}
-                                        onChange={(e) => setStatusFilter(e.target.value as any)}
-                                        className="pl-4 pr-10 py-2.5 bg-white/70 dark:bg-slate-700 hover:bg-white dark:hover:bg-slate-600 rounded-2xl text-xs font-bold text-[#1A2B56] dark:text-blue-200 border border-white/80 dark:border-slate-500 shadow-sm transition-all focus:ring-0 outline-none cursor-pointer appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20fill%3D%27none%27%20viewBox%3D%270%200%2020%2020%27%3E%3Cpath%20stroke%3D%27%236b7280%27%20stroke-linecap%3D%27round%27%20stroke-linejoin%3D%27round%27%20stroke-width%3D%271.5%27%20d%3D%27m6%208%204%204%204-4%27%2F%3E%3C%2Fsvg%3E')] bg-[length:18px_18px] bg-no-repeat bg-[right_10px_center] flex-shrink-0 min-w-[130px]"
-                                    >
-                                        <option value="All">All Status</option>
-                                        <option value="Pending">Pending</option>
-                                        <option value="Approved">Approved</option>
-                                        <option value="In Progress">In Progress</option>
-                                        <option value="Resolved">Resolved</option>
-                                        <option value="Rejected">Rejected</option>
-                                    </select>
-                                    <select
+                                        options={[
+                                            { value: 'All',         label: 'All Status'  },
+                                            { value: 'Pending',     label: 'Pending'     },
+                                            { value: 'Approved',    label: 'Approved'    },
+                                            { value: 'In Progress', label: 'In Progress' },
+                                            { value: 'Resolved',    label: 'Resolved'    },
+                                            { value: 'Rejected',    label: 'Rejected'    },
+                                        ]}
+                                        onChange={v => setStatusFilter(v as any)}
+                                        align="right"
+                                    />
+
+                                    <div className="h-5 w-px bg-[#1E2B58]/10 dark:bg-white/10 mx-1" />
+
+                                    <CustomDropdown
                                         value={priorityFilter}
-                                        onChange={(e) => setPriorityFilter(e.target.value as any)}
-                                        className="pl-4 pr-10 py-2.5 bg-white/70 dark:bg-slate-700 hover:bg-white dark:hover:bg-slate-600 rounded-2xl text-xs font-bold text-[#1A2B56] dark:text-blue-200 border border-white/80 dark:border-slate-500 shadow-sm transition-all focus:ring-0 outline-none cursor-pointer appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20fill%3D%27none%27%20viewBox%3D%270%200%2020%2020%27%3E%3Cpath%20stroke%3D%27%236b7280%27%20stroke-linecap%3D%27round%27%20stroke-linejoin%3D%27round%27%20stroke-width%3D%271.5%27%20d%3D%27m6%208%204%204%204-4%27%2F%3E%3C%2Fsvg%3E')] bg-[length:18px_18px] bg-no-repeat bg-[right_10px_center] flex-shrink-0 min-w-[130px]"
+                                        options={[
+                                            { value: 'All',              label: 'All Priority' },
+                                            { value: 'High Priority',    label: 'High'         },
+                                            { value: 'Medium Priority',  label: 'Medium'       },
+                                            { value: 'Low Priority',     label: 'Low'          },
+                                        ]}
+                                        onChange={v => setPriorityFilter(v as any)}
+                                        align="right"
+                                    />
+
+                                    <div className="h-5 w-px bg-[#1E2B58]/10 dark:bg-white/10 mx-1" />
+
+                                    <button
+                                        onClick={() => { setStatusFilter('All'); setPriorityFilter('All'); setSearchQuery(''); }}
+                                        className="flex items-center justify-center w-9 h-9 rounded-xl text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all"
+                                        title="Reset filters"
                                     >
-                                        <option value="All">All Priority</option>
-                                        <option value="High Priority">High</option>
-                                        <option value="Medium Priority">Medium</option>
-                                        <option value="Low Priority">Low</option>
-                                    </select>
+                                        <span className="material-symbols-outlined text-[18px]">filter_alt_off</span>
+                                    </button>
                                 </div>
                             </div>
                         </div>

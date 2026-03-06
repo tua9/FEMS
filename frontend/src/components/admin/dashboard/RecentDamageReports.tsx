@@ -3,9 +3,11 @@ import { DamageReport } from '../../../types/admin.types';
 
 interface RecentDamageReportsProps {
     reports: DamageReport[];
+    onViewAll?: () => void;
+    onRowClick?: (report: DamageReport) => void;
 }
 
-const RecentDamageReports: React.FC<RecentDamageReportsProps> = ({ reports }) => {
+const RecentDamageReports: React.FC<RecentDamageReportsProps> = ({ reports, onViewAll, onRowClick }) => {
     const getPriorityBadgeColor = (priority: string) => {
         if (priority.includes('High')) return 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400';
         if (priority.includes('Medium')) return 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400';
@@ -19,7 +21,10 @@ const RecentDamageReports: React.FC<RecentDamageReportsProps> = ({ reports }) =>
                     <h4 className="font-extrabold text-[#1A2B56] dark:text-white text-lg">User Damage Reports</h4>
                     <p className="text-xs text-slate-500 dark:text-slate-400 font-semibold mt-1">Detailed breakdown of equipment issues reported by university staff.</p>
                 </div>
-                <button className="px-6 py-2 bg-white dark:bg-slate-700 hover:bg-white/90 dark:hover:bg-slate-600 shadow-md border border-white/40 dark:border-slate-500/30 rounded-2xl transition-all text-sm font-bold text-[#1A2B56] dark:text-white">
+                <button
+                    onClick={onViewAll}
+                    className="px-6 py-2 bg-white dark:bg-slate-700 hover:bg-white/90 dark:hover:bg-slate-600 shadow-md border border-white/40 dark:border-slate-500/30 rounded-2xl transition-all text-sm font-bold text-[#1A2B56] dark:text-white active:scale-95"
+                >
                     View All Reports
                 </button>
             </div>
@@ -36,7 +41,7 @@ const RecentDamageReports: React.FC<RecentDamageReportsProps> = ({ reports }) =>
                     </thead>
                     <tbody>
                         {reports.map((report) => (
-                            <tr key={report.id} className="bg-white/10 dark:bg-slate-700/20 hover:bg-white/30 dark:hover:bg-slate-700/40 transition-all rounded-2xl group cursor-pointer backdrop-blur-sm">
+                            <tr key={report.id} onClick={() => onRowClick?.(report)} className="bg-white/10 dark:bg-slate-700/20 hover:bg-white/30 dark:hover:bg-slate-700/40 transition-all rounded-2xl group cursor-pointer backdrop-blur-sm">
                                 <td className="p-4 rounded-l-2xl text-sm font-bold text-slate-800 dark:text-white">{report.equipmentName}</td>
                                 <td className="p-4 text-sm font-semibold text-slate-600 dark:text-slate-400 max-w-xs truncate hidden md:table-cell">{report.issueDescription}</td>
                                 <td className="p-4 flex items-center gap-3">

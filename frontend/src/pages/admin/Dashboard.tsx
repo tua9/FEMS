@@ -119,11 +119,17 @@ const AdminDashboard: React.FC = () => {
                     <InventoryRequestList
                         requests={requests}
                         efficiencyRate={metrics.efficiencyRate}
+                        onViewAll={() => navigate('/admin/borrowing')}
+                        onItemClick={() => navigate('/admin/borrowing')}
                     />
                 </div>
             </div>
 
-            <RecentDamageReports reports={reports} />
+            <RecentDamageReports
+                reports={reports}
+                onViewAll={() => navigate('/admin/reports')}
+                onRowClick={() => navigate('/admin/reports')}
+            />
         </div>
     );
 };

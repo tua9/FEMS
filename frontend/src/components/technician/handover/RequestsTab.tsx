@@ -361,10 +361,7 @@ const RequestsTab: React.FC = () => {
 
   return (
     <>
-      <div
-        className="rounded-3xl border border-white/50 shadow-2xl overflow-hidden"
-        style={{ background: 'rgba(255,255,255,0.7)', backdropFilter: 'blur(24px)' }}
-      >
+      <div className="glass-card rounded-3xl border border-white/50 dark:border-white/10 shadow-2xl overflow-hidden">
         {/* ── Header ── */}
         <div className="px-6 pt-6 pb-4 border-b border-slate-200/50">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -374,8 +371,8 @@ const RequestsTab: React.FC = () => {
                 <span className="material-symbols-outlined">pending_actions</span>
               </div>
               <div>
-                <h2 className="text-xl font-bold text-[#1A2B56]">Borrow Requests Queue</h2>
-                <p className="text-xs text-slate-400 font-medium mt-0.5">
+                <h2 className="text-xl font-bold text-[#1A2B56] dark:text-white">Borrow Requests Queue</h2>
+                <p className="text-xs text-slate-400 dark:text-slate-400 font-medium mt-0.5">
                   {filtered.length} request{filtered.length !== 1 ? 's' : ''} · {pendingCount} pending review
                 </p>
               </div>

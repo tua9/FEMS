@@ -1,5 +1,5 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { Search, Calendar, ChevronDown, ListFilter, Filter, X, Download } from 'lucide-react';
+import { Calendar, ChevronDown, Download, Filter, ListFilter, Search, X } from 'lucide-react';
+import React, { useEffect, useRef, useState } from 'react';
 
 const DATE_OPTIONS = ['Last 7 Days', 'Last 30 Days', 'Last 3 Months', 'Last Year', 'All Time'];
 
@@ -57,7 +57,7 @@ export const HistoryFilterBar: React.FC<HistoryFilterBarProps> = ({
     };
 
     return (
-        <div className="flex flex-col xl:flex-row items-stretch xl:items-center bg-white/50 dark:bg-slate-800/40 border border-[#1E2B58]/5 dark:border-white/10 rounded-[1.5rem] xl:rounded-full pl-[1.5rem] xl:pl-[2rem] pr-[0.5rem] py-[0.5rem] gap-[1rem] mb-[2rem] shadow-[0_8px_32px_0_rgba(30,43,88,0.03)] backdrop-blur-md">
+        <div className="relative z-20 flex flex-col xl:flex-row items-stretch xl:items-center bg-white/50 dark:bg-slate-800/40 border border-[#1E2B58]/5 dark:border-white/10 rounded-[1.5rem] xl:rounded-full pl-[1.5rem] xl:pl-[2rem] pr-[0.5rem] py-[0.5rem] gap-[1rem] mb-[2rem] shadow-[0_8px_32px_0_rgba(30,43,88,0.03)] backdrop-blur-md">
 
             {/* Search */}
             <div className="flex-1 flex items-center gap-[0.75rem] py-[0.5rem] xl:py-0 border-b xl:border-b-0 border-slate-200 dark:border-slate-700">
@@ -92,7 +92,7 @@ export const HistoryFilterBar: React.FC<HistoryFilterBarProps> = ({
                         <ChevronDown className={`w-[1rem] h-[1rem] text-slate-400 transition-transform duration-200 ${dateOpen ? 'rotate-180' : ''}`} />
                     </button>
                     {dateOpen && (
-                        <div className="absolute top-full left-0 mt-2 bg-white dark:bg-slate-800 border border-[#1E2B58]/10 dark:border-white/10 rounded-[1rem] shadow-xl shadow-[#1E2B58]/10 z-30 overflow-hidden min-w-[10rem]">
+                        <div className="absolute top-full left-0 mt-2 bg-white dark:bg-slate-800 border border-[#1E2B58]/10 dark:border-white/10 rounded-[1rem] shadow-xl shadow-[#1E2B58]/10 z-40 overflow-hidden min-w-[10rem]">
                             {DATE_OPTIONS.map(opt => (
                                 <button
                                     key={opt}
@@ -124,7 +124,7 @@ export const HistoryFilterBar: React.FC<HistoryFilterBarProps> = ({
                         <ChevronDown className={`w-[1rem] h-[1rem] text-slate-400 transition-transform duration-200 ${statusOpen ? 'rotate-180' : ''}`} />
                     </button>
                     {statusOpen && (
-                        <div className="absolute top-full left-0 mt-2 bg-white dark:bg-slate-800 border border-[#1E2B58]/10 dark:border-white/10 rounded-[1rem] shadow-xl shadow-[#1E2B58]/10 z-30 overflow-hidden min-w-[9rem]">
+                        <div className="absolute top-full left-0 mt-2 bg-white dark:bg-slate-800 border border-[#1E2B58]/10 dark:border-white/10 rounded-[1rem] shadow-xl shadow-[#1E2B58]/10 z-40 overflow-hidden min-w-[9rem]">
                             {filterOptions.map(opt => (
                                 <button
                                     key={opt}

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import CustomDropdown from '../../shared/CustomDropdown';
 import { BorrowRecord } from '../../../types/admin.types';
 
 interface ReturnCalendarProps {
@@ -64,13 +65,13 @@ const ReturnCalendar: React.FC<ReturnCalendarProps> = ({ records = [], onViewDet
         setSelectedDay(null);
     };
 
-    const handleMonthChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-        setViewDate(new Date(currentYear, parseInt(e.target.value), 1));
+    const handleMonthChange = (v: string) => {
+        setViewDate(new Date(currentYear, parseInt(v), 1));
         setSelectedDay(null);
     };
 
-    const handleYearChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-        setViewDate(new Date(parseInt(e.target.value), currentMonth, 1));
+    const handleYearChange = (v: string) => {
+        setViewDate(new Date(parseInt(v), currentMonth, 1));
         setSelectedDay(null);
     };
 
@@ -91,26 +92,20 @@ const ReturnCalendar: React.FC<ReturnCalendarProps> = ({ records = [], onViewDet
                         <span className="material-symbols-outlined text-[#1A2B56] dark:text-blue-400">calendar_month</span>
                         Return Schedule
                     </h3>
-                    <div className="flex items-center gap-2 mt-1.5">
-                        <select
-                            value={currentMonth}
+                    <div className="glass-card !rounded-[1.25rem] flex items-center mt-1.5">
+                        <CustomDropdown
+                            value={String(currentMonth)}
+                            options={monthNames.map((name, idx) => ({ value: String(idx), label: name }))}
                             onChange={handleMonthChange}
-                            className="bg-white hover:bg-slate-50 dark:bg-slate-700/50 dark:hover:bg-slate-700 pl-3 pr-8 py-1 rounded-lg text-xs font-bold text-slate-800 dark:text-white cursor-pointer transition-all border border-slate-200 dark:border-slate-600 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/50 outline-none shadow-sm"
-                        >
-                            {monthNames.map((name, idx) => (
-                                <option key={name} value={idx} className="bg-white dark:bg-slate-800 text-slate-800 dark:text-white">{name}</option>
-                            ))}
-                        </select>
-
-                        <select
-                            value={currentYear}
+                            align="left"
+                        />
+                        <div className="h-4 w-px bg-[#1E2B58]/10 dark:bg-white/10" />
+                        <CustomDropdown
+                            value={String(currentYear)}
+                            options={[2024, 2025, 2026, 2027].map(y => ({ value: String(y), label: String(y) }))}
                             onChange={handleYearChange}
-                            className="bg-white hover:bg-slate-50 dark:bg-slate-700/50 dark:hover:bg-slate-700 pl-3 pr-8 py-1 rounded-lg text-xs font-bold text-slate-800 dark:text-white cursor-pointer transition-all border border-slate-200 dark:border-slate-600 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/50 outline-none shadow-sm"
-                        >
-                            {[2024, 2025, 2026, 2027].map(y => (
-                                <option key={y} value={y} className="bg-white dark:bg-slate-800 text-slate-800 dark:text-white">{y}</option>
-                            ))}
-                        </select>
+                            align="left"
+                        />
                     </div>
                 </div>
                 <div className="flex gap-2">

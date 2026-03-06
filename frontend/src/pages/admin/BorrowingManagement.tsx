@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import CustomDropdown from '../../components/shared/CustomDropdown';
 import BorrowingTable from '../../components/admin/borrowing/BorrowingTable';
 import UpcomingReturnCards from '../../components/admin/borrowing/UpcomingReturnCards';
 import ReturnCalendar from '../../components/admin/borrowing/ReturnCalendar';
@@ -205,20 +206,20 @@ const BorrowingManagement: React.FC = () => {
                                             )}
                                         </div>
                                     </div>
-                                    <div className="relative">
-                                        <select
-                                            value={statusFilter}
-                                            onChange={(e) => setStatusFilter(e.target.value as any)}
-                                            className="appearance-none pl-3 pr-10 py-2.5 bg-white/70 dark:bg-slate-700 hover:bg-white dark:hover:bg-slate-600 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 border border-white/80 dark:border-slate-500 shadow-sm transition-all outline-none cursor-pointer"
-                                        >
-                                            <option value="All">All Status</option>
-                                            <option value="Pending">Pending</option>
-                                            <option value="Approved">Approved</option>
-                                            <option value="Overdue">Overdue</option>
-                                            <option value="Returned">Returned</option>
-                                            <option value="Rejected">Rejected</option>
-                                        </select>
-                                        <span className="material-symbols-outlined text-sm absolute right-3 top-2.5 pointer-events-none text-slate-400">expand_more</span>
+                                    <div className="glass-card !rounded-[1.25rem] flex items-center">
+                                        <CustomDropdown
+                                            value={statusFilter as string}
+                                            options={[
+                                                { value: 'All',      label: 'All Status' },
+                                                { value: 'Pending',  label: 'Pending'    },
+                                                { value: 'Approved', label: 'Approved'   },
+                                                { value: 'Overdue',  label: 'Overdue'    },
+                                                { value: 'Returned', label: 'Returned'   },
+                                                { value: 'Rejected', label: 'Rejected'   },
+                                            ]}
+                                            onChange={v => setStatusFilter(v as any)}
+                                            align="right"
+                                        />
                                     </div>
                                 </div>
                             </div>

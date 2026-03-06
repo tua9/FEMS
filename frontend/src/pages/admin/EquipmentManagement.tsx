@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import CustomDropdown from '../../components/shared/CustomDropdown';
 import EquipmentTable from '../../components/admin/equipment/EquipmentTable';
 import BrokenAttentionCard from '../../components/admin/equipment/BrokenAttentionCard';
 import AddEquipmentModal from '../../components/admin/equipment/AddEquipmentModal';
@@ -151,47 +152,51 @@ const EquipmentManagement: React.FC = () => {
                             </div>
                         </div>
 
-                        {/* Dropdown Section - Không có icon thủ công */}
-                        <div className="flex items-center gap-3">
-                            <div className="relative">
-                                <select
-                                    value={categoryFilter}
-                                    onChange={e => setCategoryFilter(e.target.value)}
-                                    className="min-w-[160px] pl-5 pr-10 py-2.5 bg-white/70 dark:bg-slate-700 hover:bg-white dark:hover:bg-slate-600 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 border border-white/80 dark:border-slate-500 shadow-sm transition-all focus:ring-0 outline-none cursor-pointer appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20fill%3D%27none%27%20viewBox%3D%270%200%2020%2020%27%3E%3Cpath%20stroke%3D%27%236b7280%27%20stroke-linecap%3D%27round%27%20stroke-linejoin%3D%27round%27%20stroke-width%3D%271.5%27%20d%3D%27m6%208%204%204%204-4%27%2F%3E%3C%2Fsvg%3E')] bg-[length:18px_18px] bg-no-repeat bg-[right_10px_center]"
-                                >
-                                    <option value="All Categories">All Categories</option>
-                                    {categories.map(c => <option key={c} value={c}>{c}</option>)}
-                                </select>
-                            </div>
+                        {/* Dropdown Section */}
+                        <div className="glass-card !rounded-[1.5rem] flex items-center gap-0 p-1">
+                            <CustomDropdown
+                                value={categoryFilter}
+                                options={[
+                                    { value: 'All Categories', label: 'All Categories' },
+                                    ...categories.map(c => ({ value: c, label: c })),
+                                ]}
+                                onChange={setCategoryFilter}
+                                align="left"
+                            />
 
-                            <div className="relative">
-                                <select
-                                    value={statusFilter}
-                                    onChange={e => setStatusFilter(e.target.value)}
-                                    className="min-w-[130px] pl-5 pr-10 py-2.5 bg-white/70 dark:bg-slate-700 hover:bg-white dark:hover:bg-slate-600 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 border border-white/80 dark:border-slate-500 shadow-sm transition-all focus:ring-0 outline-none cursor-pointer appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20fill%3D%27none%27%20viewBox%3D%270%200%2020%2020%27%3E%3Cpath%20stroke%3D%27%236b7280%27%20stroke-linecap%3D%27round%27%20stroke-linejoin%3D%27round%27%20stroke-width%3D%271.5%27%20d%3D%27m6%208%204%204%204-4%27%2F%3E%3C%2Fsvg%3E')] bg-[length:18px_18px] bg-no-repeat bg-[right_10px_center]"
-                                >
-                                    <option value="All Status">All Status</option>
-                                    {statuses.map(s => <option key={s} value={s}>{s}</option>)}
-                                </select>
-                            </div>
+                            <div className="h-5 w-px bg-[#1E2B58]/10 dark:bg-white/10 mx-1" />
 
-                            <div className="relative">
-                                <select
-                                    value={sortBy}
-                                    onChange={e => setSortBy(e.target.value)}
-                                    className="min-w-[140px] pl-5 pr-10 py-2.5 bg-white/70 dark:bg-slate-700 hover:bg-white dark:hover:bg-slate-600 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 border border-white/80 dark:border-slate-500 shadow-sm transition-all focus:ring-0 outline-none cursor-pointer appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20fill%3D%27none%27%20viewBox%3D%270%200%2020%2020%27%3E%3Cpath%20stroke%3D%27%236b7280%27%20stroke-linecap%3D%27round%27%20stroke-linejoin%3D%27round%27%20stroke-width%3D%271.5%27%20d%3D%27m6%208%204%204%204-4%27%2F%3E%3C%2Fsvg%3E')] bg-[length:18px_18px] bg-no-repeat bg-[right_10px_center]"
-                                >
-                                    <option value="Newest">Sort: Newest</option>
-                                    <option value="Name">Sort: Name</option>
-                                    <option value="Status">Sort: Status</option>
-                                </select>
-                            </div>
+                            <CustomDropdown
+                                value={statusFilter}
+                                options={[
+                                    { value: 'All Status', label: 'All Status' },
+                                    ...statuses.map(s => ({ value: s, label: s })),
+                                ]}
+                                onChange={setStatusFilter}
+                                align="left"
+                            />
+
+                            <div className="h-5 w-px bg-[#1E2B58]/10 dark:bg-white/10 mx-1" />
+
+                            <CustomDropdown
+                                value={sortBy}
+                                options={[
+                                    { value: 'Newest', label: 'Sort: Newest' },
+                                    { value: 'Name',   label: 'Sort: Name'   },
+                                    { value: 'Status', label: 'Sort: Status' },
+                                ]}
+                                onChange={setSortBy}
+                                align="right"
+                            />
+
+                            <div className="h-5 w-px bg-[#1E2B58]/10 dark:bg-white/10 mx-1" />
 
                             <button
                                 onClick={() => { setSearchQuery(''); setStatusFilter('All Status'); setCategoryFilter('All Categories'); setSortBy('Newest'); }}
-                                className="flex items-center justify-center w-10 h-10 bg-white/70 dark:bg-slate-700 hover:bg-white dark:hover:bg-slate-600 rounded-xl border border-white/80 dark:border-slate-500 shadow-sm transition-all text-slate-400 hover:text-red-500"
+                                className="flex items-center justify-center w-9 h-9 rounded-xl text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all"
+                                title="Reset filters"
                             >
-                                <span className="material-symbols-outlined text-lg">filter_alt_off</span>
+                                <span className="material-symbols-outlined text-[18px]">filter_alt_off</span>
                             </button>
                         </div>
                     </div>
