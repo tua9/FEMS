@@ -1,4 +1,4 @@
-import { cn } from "@/lib/utils";
+﻿import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -47,8 +47,10 @@ export function LoginForm({
 
   const onSubmit = async (data: SignInFormValues) => {
     const { username, password, role } = data;
+    //goi api
     await signIn(username, password, role);
 
+    // Chuyß╗ân h╞░ß╗¢ng dß╗▒a tr├¬n role
     if (role === "student") {
       navigate("/student/dashboard");
     } else if (role === "lecturer") {
@@ -95,6 +97,11 @@ export function LoginForm({
                     </NativeSelect>
                   )}
                 />
+                {/* {errors.role && (
+                  <p className="mt-1 text-sm text-red-500">
+                    {errors.role.message}
+                  </p>
+                )} */}
               </Field>
               <Field>
                 <FieldLabel htmlFor="username">Username</FieldLabel>
@@ -106,6 +113,11 @@ export function LoginForm({
                   {...register("username")}
                   required
                 />
+                {/* {errors.username && (
+                  <p className="mt-1 text-sm text-red-500">
+                    {errors.username.message}
+                  </p>
+                )} */}
               </Field>
               <Field>
                 <div className="flex items-center justify-between">
@@ -125,6 +137,11 @@ export function LoginForm({
                   {...register("password")}
                   required
                 />
+                {/* {errors.password && (
+                  <p className="mt-1 text-sm text-red-500">
+                    {errors.password.message}
+                  </p>
+                )} */}
               </Field>
               <Field>
                 <Button
@@ -134,7 +151,7 @@ export function LoginForm({
                   className="bg-primary/10 w-full"
                 >
                   {isSubmitting
-                    ? "Đang đăng nhập..."
+                    ? "─Éang ─æ─âng nhß║¡p..."
                     : "Login with FPT Account"}
                   {!isSubmitting && (
                     <span className="material-symbols-outlined ml-2 text-lg">
