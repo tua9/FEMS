@@ -1,5 +1,5 @@
+import { AlertTriangle, Cable, ChevronLeft, ChevronRight, Eye, Laptop, Mic, Microchip, Projector, Router } from 'lucide-react';
 import React from 'react';
-import { Eye, ChevronLeft, ChevronRight, Laptop, Cable, Router, Projector, Microchip, Mic, AlertTriangle } from 'lucide-react';
 import { StatusBadge } from '../shared/StatusBadge';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -61,7 +61,7 @@ export const BorrowHistoryTable: React.FC<BorrowHistoryTableProps> = ({
             <div className="overflow-x-auto hide-scrollbar">
                 <table className="w-full border-collapse min-w-[1000px]">
                     <thead>
-                        <tr className="border-b border-black/5 dark:border-white/5">
+                        <tr className="thead-tint">
                             {['Request ID', 'Course / Class', 'Equipment', 'Borrow Period', 'Return Date', 'Status', 'Actions'].map((h, i) => (
                                 <th key={h} className={`px-[2rem] py-[1.5rem] text-[0.625rem] font-black uppercase tracking-[0.2em] text-[#1E2B58]/50 dark:text-slate-400 ${i === 5 ? 'text-center' : i === 6 ? 'text-right' : 'text-left'}`}>
                                     {h}

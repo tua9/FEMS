@@ -1,16 +1,14 @@
+import {
+    AlertCircle,
+    ArrowLeft,
+    CheckCircle2,
+    Eye,
+    EyeOff,
+    ShieldCheck,
+} from "lucide-react";
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import {
-  ArrowLeft,
-  Eye,
-  EyeOff,
-  ShieldCheck,
-  AlertCircle,
-  CheckCircle2,
-} from "lucide-react";
-import LecturerNavbar from "../../components/lecturer/navbar/LecturerNavbar";
 import { useAuthStore } from "../../stores/useAuthStore";
-import StudentNavBar from "../../components/StudentNavbar";
 
 // ─── Password strength helper ─────────────────────────────────────────────────
 function getStrength(pw: string): {
@@ -102,16 +100,21 @@ const PasswordInput: React.FC<PasswordInputProps> = ({
   );
 };
 
+// ─── Role-aware path helper ───────────────────────────────────────────────────
+const ROLE_PREFIX: Record<string, string> = {
+  student:  "/student",
+  lecturer: "/lecturer",
+  admin:    "/admin",
+};
+
 // ─── LecturerChangePassword ───────────────────────────────────────────────────
 const LecturerChangePassword: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuthStore();
   const role = user?.role || "student";
-  const isStudent = role === "student";
-  const profilePath = isStudent ? "/student/profile" : "/lecturer/profile";
-  const dashboardPath = isStudent
-    ? "/student/dashboard"
-    : "/lecturer/dashboard";
+  const prefix = ROLE_PREFIX[role] ?? "/student";
+  const profilePath   = `${prefix}/profile`;
+  const dashboardPath = `${prefix}/dashboard`;
 
   const [current, setCurrent] = useState("");
   const [next, setNext] = useState("");
@@ -151,8 +154,7 @@ const LecturerChangePassword: React.FC = () => {
 
   if (success) {
     return (
-      <div className="flex min-h-screen w-full flex-col bg-[#e0eafc] text-slate-800 transition-colors duration-300 dark:bg-[#0f172a] dark:text-slate-200">
-        {isStudent ? <StudentNavBar /> : <LecturerNavbar />}
+      <div className="w-full">
         <main className="mx-auto flex w-full max-w-[90vw] flex-1 flex-col justify-center px-4 pt-32 pb-10 sm:px-6 md:pt-36 xl:max-w-lg">
           <div className="extreme-glass rounded-[2rem] p-12 text-center shadow-2xl shadow-[#1E2B58]/8">
             <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-[1.5rem] bg-emerald-500/10 dark:bg-emerald-500/15">
@@ -188,9 +190,7 @@ const LecturerChangePassword: React.FC = () => {
   }
 
   return (
-    <div className="flex min-h-screen w-full flex-col bg-[#e0eafc] text-slate-800 transition-colors duration-300 dark:bg-[#0f172a] dark:text-slate-200">
-      {isStudent ? <StudentNavBar /> : <LecturerNavbar />}
-
+    <div className="w-full">
       <main className="mx-auto flex w-full max-w-[90vw] flex-1 flex-col px-4 pt-32 pb-10 sm:px-6 md:pt-36 xl:max-w-xl">
         {/* Back */}
         <button

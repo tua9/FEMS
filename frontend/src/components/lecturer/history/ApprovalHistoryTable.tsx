@@ -1,5 +1,5 @@
+import { CheckCircle2, ChevronLeft, ChevronRight, Eye, XCircle } from 'lucide-react';
 import React from 'react';
-import { Eye, ChevronLeft, ChevronRight, CheckCircle2, XCircle } from 'lucide-react';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -64,7 +64,7 @@ export const ApprovalHistoryTable: React.FC<ApprovalHistoryTableProps> = ({
             <div className="overflow-x-auto hide-scrollbar">
                 <table className="w-full border-collapse min-w-[900px]">
                     <thead>
-                        <tr className="border-b border-black/5 dark:border-white/5">
+                        <tr className="thead-tint">
                             {['Request ID', 'Student', 'Equipment', 'Requested', 'Decided', 'Decision', 'Actions'].map((h, i) => (
                                 <th key={h} className={`px-[2rem] py-[1.5rem] text-[0.625rem] font-black uppercase tracking-[0.2em] text-[#1E2B58]/50 dark:text-slate-400 ${i === 5 ? 'text-center' : i === 6 ? 'text-right' : 'text-left'}`}>
                                     {h}

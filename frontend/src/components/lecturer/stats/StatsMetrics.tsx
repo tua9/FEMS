@@ -1,5 +1,5 @@
-import React from 'react';
 import { ArrowUpRight } from 'lucide-react';
+import React from 'react';
 
 export interface MetricItem {
     icon: React.ElementType;
@@ -33,9 +33,18 @@ export const StatsMetrics: React.FC<StatsMetricsProps> = ({ metrics, onNavigate 
                                 : 'cursor-default hover:bg-white/80 dark:hover:bg-slate-800/60'
                         }`}
                     >
+                        {/* Glow status dot – top right */}
+                        <div className={`absolute top-4 right-4 h-2 w-2 rounded-full ${
+                            item.trendPositive === false
+                                ? 'bg-rose-400 glow-rose'
+                                : item.trend
+                                ? 'bg-emerald-400 glow-emerald'
+                                : 'bg-blue-400 glow-blue'
+                        }`} />
+
                         {/* Arrow indicator for navigable cards */}
                         {isClickable && (
-                            <span className="absolute top-4 right-4 opacity-0 group-hover:opacity-60 transition-opacity">
+                            <span className="absolute top-4 right-8 opacity-0 group-hover:opacity-60 transition-opacity">
                                 <ArrowUpRight className="w-4 h-4 text-[#1E2B58] dark:text-white" />
                             </span>
                         )}

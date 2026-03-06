@@ -1,9 +1,8 @@
-import React, { useState, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
-import LecturerNavbar from '@/components/lecturer/navbar/LecturerNavbar';
-import { RoomFilter } from '@/components/lecturer/room-status/RoomFilter';
 import { RoomCard } from '@/components/lecturer/room-status/RoomCard';
-import { Building, Shield, Cpu, ArrowLeft } from 'lucide-react';
+import { RoomFilter } from '@/components/lecturer/room-status/RoomFilter';
+import { ArrowLeft, Building } from 'lucide-react';
+import React, { useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -289,9 +288,7 @@ export const RoomStatusCenter: React.FC = () => {
     // ── Render ────────────────────────────────────────────────────────────────
 
     return (
-        <div className="min-h-screen w-full flex flex-col bg-[#e0eafc] dark:bg-[#0f172a] text-slate-800 dark:text-slate-200 transition-colors duration-300">
-            <LecturerNavbar />
-
+        <div className="w-full">
             <main className="pt-32 md:pt-36 pb-10 px-4 sm:px-6 w-full max-w-[90vw] xl:max-w-7xl mx-auto flex-1 flex flex-col overflow-hidden">
                 <div className="w-full">
                     {/* Back button + Header */}
@@ -369,16 +366,6 @@ export const RoomStatusCenter: React.FC = () => {
                 </div>
             </main>
 
-            <footer className="mt-8 py-8 md:py-16 flex flex-col items-center justify-center gap-4 md:gap-6 opacity-40 shrink-0 border-t border-[#1E2B58]/10 dark:border-white/10 w-full px-4 text-center">
-                <div className="flex flex-wrap items-center justify-center gap-6 md:gap-10">
-                    <Building className="w-5 h-5 md:w-6 md:h-6" />
-                    <Shield className="w-5 h-5 md:w-6 md:h-6" />
-                    <Cpu className="w-5 h-5 md:w-6 md:h-6" />
-                </div>
-                <p className="text-[0.625rem] md:text-xs font-black uppercase tracking-[0.2em] md:tracking-[0.4em] text-[#1E2B58] dark:text-white max-w-full truncate whitespace-normal">
-                    Unified Device Status Hub — Premium Portal v2.0
-                </p>
-            </footer>
         </div>
     );
 };

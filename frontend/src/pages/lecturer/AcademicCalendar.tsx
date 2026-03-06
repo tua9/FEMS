@@ -8,7 +8,6 @@ import {
 } from 'lucide-react';
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import LecturerNavbar from '../../components/lecturer/navbar/LecturerNavbar';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 type ViewMode = 'day' | 'week' | 'month';
@@ -577,9 +576,7 @@ export const AcademicCalendar: React.FC = () => {
 
     // ─────────────────────────────────────────────────────────────────────────
     return (
-        <div className="min-h-screen w-full flex flex-col bg-[#e0eafc] dark:bg-[#0f172a] text-slate-800 dark:text-slate-200 transition-colors duration-300">
-            <LecturerNavbar />
-
+        <div className="w-full">
             <main className="pt-32 md:pt-36 pb-10 px-4 sm:px-6 w-full max-w-[1400px] mx-auto flex-1 flex flex-col">
 
                 {/* ── Header ── */}

@@ -2,24 +2,21 @@ import { useNavigate } from "react-router-dom";
 import { useEffect } from "react";
 import { useAuthStore } from "../../stores/useAuthStore";
 
+const ROLE_HOME: Record<string, string> = {
+  student:    "/student/dashboard",
+  lecturer:   "/lecturer/dashboard",
+  technician: "/technician/dashboard",
+  admin:      "/admin/dashboard",
+};
+
 const RoleRedirect = () => {
   const navigate = useNavigate();
   const { user } = useAuthStore();
   const role = user?.role;
 
   useEffect(() => {
-    if (!role) {
-      navigate("/login", { replace: true });
-      return;
-    }
-
-    if (role === "student") {
-      navigate("/student/dashboard", { replace: true });
-    } else if (["lecturer", "technician", "admin"].includes(role)) {
-      navigate("/lecturer/dashboard", { replace: true });
-    } else {
-      navigate("/login", { replace: true });
-    }
+    const target = role ? (ROLE_HOME[role] ?? "/login") : "/login";
+    navigate(target, { replace: true });
   }, [role, navigate]);
 
   return null;

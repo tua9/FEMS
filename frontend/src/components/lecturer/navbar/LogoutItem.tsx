@@ -1,7 +1,7 @@
+import { useAuthStore } from "@/stores/useAuthStore";
+import { LogOut } from "lucide-react";
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import { LogOut } from "lucide-react";
-import { useAuthStore } from "@/stores/useAuthStore";
 
 interface LogoutItemProps {
   onClose: () => void;
@@ -12,14 +12,9 @@ const LogoutItem: React.FC<LogoutItemProps> = ({ onClose }) => {
   const { signOut } = useAuthStore();
 
   const handleLogout = async () => {
-    try {
-      await signOut();
-      sessionStorage.clear();
-      onClose();
-      navigate("/login", { replace: true });
-    } catch (err) {
-      console.log("logout error: ", err);
-    }
+    onClose();
+    await signOut();
+    navigate("/login", { replace: true });
   };
 
   return (

@@ -13,7 +13,6 @@ import {
   FileText,
 } from "lucide-react";
 
-import LecturerNavbar from "../../components/lecturer/navbar/LecturerNavbar";
 import { EquipmentFilter } from "../../components/lecturer/equipment/EquipmentFilter";
 import { EquipmentCategories } from "../../components/lecturer/equipment/EquipmentCategories";
 import {
@@ -360,9 +359,7 @@ export const EquipmentCatalog: React.FC = () => {
   // ─────────────────────────────────────────────────────────────────────────
 
   return (
-    <div className="flex min-h-screen w-full flex-col bg-[#E0EAFC] text-[#1E2B58] transition-colors duration-300 dark:bg-[#0A0F1C] dark:text-white">
-      <LecturerNavbar />
-
+    <div className="w-full">
       <main className="mx-auto flex w-full max-w-[90vw] flex-1 flex-col px-4 pt-32 pb-10 sm:px-6 md:pt-36 xl:max-w-7xl">
         {/* Header */}
         <section className="mb-[2.5rem] md:mb-[3.5rem]">
@@ -414,24 +411,6 @@ export const EquipmentCatalog: React.FC = () => {
         {/* Pagination */}
         {renderPageButtons()}
       </main>
-
-      {/* Footer */}
-      <footer className="mt-8 flex w-full shrink-0 flex-col items-center justify-center gap-4 border-t border-[#1E2B58]/10 px-4 py-8 text-center opacity-40 md:gap-6 md:py-16 dark:border-white/10">
-        <div className="flex flex-wrap items-center justify-center gap-6 text-[#1E2B58] md:gap-10 dark:text-white">
-          <span className="material-symbols-outlined text-xl md:text-2xl">
-            school
-          </span>
-          <span className="material-symbols-outlined text-xl md:text-2xl">
-            verified_user
-          </span>
-          <span className="material-symbols-outlined text-xl md:text-2xl">
-            build
-          </span>
-        </div>
-        <p className="max-w-full truncate text-[0.625rem] font-black tracking-[0.2em] whitespace-normal text-[#1E2B58] uppercase md:text-xs md:tracking-[0.4em] dark:text-white">
-          Facility & Equipment Management System — F-EMS 2024
-        </p>
-      </footer>
 
       {/* ── Borrow Request Modal ───────────────────────────────────────── */}
       {borrowingItem && (

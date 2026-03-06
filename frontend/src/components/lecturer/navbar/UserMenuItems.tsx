@@ -1,12 +1,22 @@
-import React from "react";
-import { useNavigate, useLocation } from "react-router-dom";
 import { useAuthStore } from "@/stores/useAuthStore";
+import React from "react";
+import { useLocation, useNavigate } from "react-router-dom";
+
+interface MenuItem {
+  to: string;
+  icon: string;
+  label: string;
+  description: string;
+  iconBg: string;
+  iconColor: string;
+  activeBg: string;
+}
 
 interface UserMenuItemsProps {
   onClose: () => void;
 }
 
-const getMenuItems = (role: string) => {
+const getMenuItems = (role: string): MenuItem[] => {
   const prefix = role === "student" ? "/student" : "/lecturer";
   return [
     {
@@ -66,7 +76,7 @@ const UserMenuItems: React.FC<UserMenuItemsProps> = ({ onClose }) => {
 
   return (
     <div className="px-2 py-1.5">
-      {menuItems.map((item: any) => {
+      {menuItems.map((item: MenuItem) => {
         const isActive = location.pathname === item.to;
         return (
           <button

@@ -1,5 +1,5 @@
+import { CheckCircle2, ChevronLeft, ChevronRight, Clock, XCircle } from 'lucide-react';
 import React from 'react';
-import { ChevronLeft, ChevronRight, CheckCircle2, XCircle, Clock } from 'lucide-react';
 
 // ─── Shared Types (exported so ApprovalCenter can use them) ──────────────────
 
@@ -85,7 +85,7 @@ export const ApprovalTable: React.FC<ApprovalTableProps> = ({
                 ) : (
                     <table className="w-full border-collapse min-w-[800px]">
                         <thead>
-                            <tr className="border-b border-black/5 dark:border-white/5">
+                            <tr className="thead-tint">
                                 <th className="px-[2rem] py-[1.5rem] text-left text-[0.625rem] font-black uppercase tracking-[0.2em] text-[#1E2B58]/50 dark:text-slate-400">Student Info</th>
                                 <th className="px-[2rem] py-[1.5rem] text-left text-[0.625rem] font-black uppercase tracking-[0.2em] text-[#1E2B58]/50 dark:text-slate-400">Equipment / Facility</th>
                                 <th className="px-[2rem] py-[1.5rem] text-left text-[0.625rem] font-black uppercase tracking-[0.2em] text-[#1E2B58]/50 dark:text-slate-400">Period</th>

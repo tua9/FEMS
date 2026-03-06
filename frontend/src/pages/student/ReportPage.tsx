@@ -2,20 +2,18 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { CheckCircle2, X, ArrowRight, ClipboardList } from "lucide-react";
 
-import { ReportHeader } from "@/components/lecturer/report/ReportHeader";
 import {
+  ReportHeader,
   QuickScanReport,
-  type QRResult,
-} from "@/components/lecturer/report/QuickScanReport";
-import {
   ReportManualForm,
-  type ReportFormData,
-  type IssueCategory,
-} from "@/components/lecturer/report/ReportManualForm";
-import {
   RecentReports,
-  type ReportEntry,
-} from "@/components/lecturer/report/RecentReports";
+} from "@/components/shared/report";
+import type {
+  QRResult,
+  ReportFormData,
+  IssueCategory,
+  ReportEntry,
+} from "@/components/shared/report";
 
 interface SubmittedReport {
   id: string;
