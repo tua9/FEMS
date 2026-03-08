@@ -71,3 +71,16 @@ export interface DashboardMetrics {
   avgResponseTimeHours: number;
   efficiencyRate: number;
 }
+
+export interface HealthStatus {
+  healthy: number;
+  available: number;
+  maintenance: number;
+  broken: number;
+}
+
+export interface TopBrokenItem {
+  name: string;
+  count: number;
+  percentage: number;
+}

@@ -27,8 +27,10 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       get().setAccessToken(accessToken);
       toast.success("Login successful!");
       await get().fetchUserProfile();
-    } catch {
-      toast.error("Login failed. Please try again.");
+    } catch (error) {
+      // Re-throw so the calling form can catch it and show inline errors.
+      // Do NOT call toast.error here — the form handles its own error display.
+      throw error;
     } finally {
       set({ loading: false });
     }

@@ -5,16 +5,17 @@ import TopBrokenList from '../../components/admin/dashboard/TopBrokenList';
 import InventoryRequestList from '../../components/admin/dashboard/InventoryRequestList';
 import RecentDamageReports from '../../components/admin/dashboard/RecentDamageReports';
 import { adminApi } from '../../services/api/adminApi';
-import { DashboardMetrics, EquipmentRequest, DamageReport, Asset, BorrowRecord } from '../../types/admin.types';
+import type { DashboardMetrics, EquipmentRequest, DamageReport, Asset, BorrowRecord, HealthStatus, TopBrokenItem } from '../../types/admin.types';
 import { useNavigate } from 'react-router-dom';
+import { PageShell, AnimatedSection, AnimatedList, AnimatedListItem } from '@/components/motion';
 
 const AdminDashboard: React.FC = () => {
     const navigate = useNavigate();
     const [metrics, setMetrics] = useState<DashboardMetrics | null>(null);
     const [equipments, setEquipments] = useState<Asset[]>([]);
     const [borrowRecords, setBorrowRecords] = useState<BorrowRecord[]>([]);
-    const [healthStatus, setHealthStatus] = useState<any>(null);
-    const [topBroken, setTopBroken] = useState<any[]>([]);
+    const [healthStatus, setHealthStatus] = useState<HealthStatus | null>(null);
+    const [topBroken, setTopBroken] = useState<TopBrokenItem[]>([]);
     const [requests, setRequests] = useState<EquipmentRequest[]>([]);
     const [reports, setReports] = useState<DamageReport[]>([]);
     const [loading, setLoading] = useState(true);
@@ -60,7 +61,7 @@ const AdminDashboard: React.FC = () => {
     if (loading || !metrics || !healthStatus) {
         return (
             <div className="flex items-center justify-center min-h-[60vh]">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#1A2B56] dark:border-blue-400"></div>
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#1A2B56] dark:border-blue-400" />
             </div>
         );
     }
@@ -70,39 +71,52 @@ const AdminDashboard: React.FC = () => {
     const pendingApprovals = borrowRecords.filter(r => r.status === 'Pending').length;
 
     return (
-        <div className="max-w-7xl mx-auto px-6 pb-16">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8 mt-6">
-                <StatCard
-                    title="Total Equipments"
-                    value={totalEquipments.toLocaleString()}
-                    trendValue={`+${metrics.devicesTrend}%`}
-                    trendLabel="from last month"
-                    trendDirection="up"
-                    iconName="devices"
-                    onClick={() => navigate('/admin/equipment', { state: { status: 'All Status' } })}
-                />
-                <StatCard
-                    title="Broken Equipment"
-                    value={brokenEquipment}
-                    trendValue={`${metrics.criticalRepairs}`}
-                    trendLabel="critical repairs"
-                    trendDirection="down"
-                    iconName="build_circle"
-                    onClick={() => navigate('/admin/equipment', { state: { status: 'Broken' } })}
-                />
-                <StatCard
-                    title="Pending Approvals"
-                    value={pendingApprovals}
-                    trendValue={`Avg. ${metrics.avgResponseTimeHours}h`}
-                    trendLabel="response"
-                    trendDirection="neutral"
-                    iconName="inventory_2"
-                    onClick={() => navigate('/admin/borrowing', { state: { status: 'Pending' } })}
-                />
-            </div>
+        <PageShell
+            title="Admin Dashboard"
+            subtitle="Overview of equipment, borrowings and damage reports"
+            topPadding="pt-0"
+            className="px-6 pb-16"
+        >
+            {/* ── Stat Cards ── */}
+            <AnimatedList className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <AnimatedListItem>
+                    <StatCard
+                        title="Total Equipments"
+                        value={totalEquipments.toLocaleString()}
+                        trendValue={`+${metrics.devicesTrend}%`}
+                        trendLabel="from last month"
+                        trendDirection="up"
+                        iconName="devices"
+                        onClick={() => navigate('/admin/equipment', { state: { status: 'All Status' } })}
+                    />
+                </AnimatedListItem>
+                <AnimatedListItem>
+                    <StatCard
+                        title="Broken Equipment"
+                        value={brokenEquipment}
+                        trendValue={`${metrics.criticalRepairs}`}
+                        trendLabel="critical repairs"
+                        trendDirection="down"
+                        iconName="build_circle"
+                        onClick={() => navigate('/admin/equipment', { state: { status: 'Broken' } })}
+                    />
+                </AnimatedListItem>
+                <AnimatedListItem>
+                    <StatCard
+                        title="Pending Approvals"
+                        value={pendingApprovals}
+                        trendValue={`Avg. ${metrics.avgResponseTimeHours}h`}
+                        trendLabel="response"
+                        trendDirection="neutral"
+                        iconName="inventory_2"
+                        onClick={() => navigate('/admin/borrowing', { state: { status: 'Pending' } })}
+                    />
+                </AnimatedListItem>
+            </AnimatedList>
 
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 mb-8">
-                <div className="lg:col-span-8 bg-white/40 dark:bg-slate-800/60 p-8 ambient-shadow rounded-[32px] border border-white/40 dark:border-white/10 backdrop-blur-xl transition-all duration-300">
+            {/* ── Analytics ── */}
+            <AnimatedSection variant="fade" delay={0.1} className="grid grid-cols-1 lg:grid-cols-12 gap-8 mb-8">
+                <div className="lg:col-span-8 bg-white/40 dark:bg-slate-800/60 p-8 ambient-shadow rounded-4xl border border-white/40 dark:border-white/10 backdrop-blur-xl transition-all duration-300">
                     <h4 className="font-extrabold text-[#1A2B56] dark:text-white text-lg mb-8">Equipment Performance Analytics</h4>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
                         <DeviceHealthChart
@@ -114,7 +128,6 @@ const AdminDashboard: React.FC = () => {
                         <TopBrokenList items={topBroken} />
                     </div>
                 </div>
-
                 <div className="lg:col-span-4 h-full">
                     <InventoryRequestList
                         requests={requests}
@@ -123,14 +136,17 @@ const AdminDashboard: React.FC = () => {
                         onItemClick={() => navigate('/admin/borrowing')}
                     />
                 </div>
-            </div>
+            </AnimatedSection>
 
-            <RecentDamageReports
-                reports={reports}
-                onViewAll={() => navigate('/admin/reports')}
-                onRowClick={() => navigate('/admin/reports')}
-            />
-        </div>
+            {/* ── Damage Reports ── */}
+            <AnimatedSection variant="slide-up" delay={0.15}>
+                <RecentDamageReports
+                    reports={reports}
+                    onViewAll={() => navigate('/admin/reports')}
+                    onRowClick={() => navigate('/admin/reports')}
+                />
+            </AnimatedSection>
+        </PageShell>
     );
 };
 

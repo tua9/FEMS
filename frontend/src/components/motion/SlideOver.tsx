@@ -1,6 +1,20 @@
+/**
+ * SlideOver — Ngăn kéo slide-in từ trái/phải với backdrop overlay.
+ *
+ * Cách dùng:
+ *   const [open, setOpen] = useState(false);
+ *
+ *   <SlideOver isOpen={open} onClose={() => setOpen(false)} side="right">
+ *     <div className="p-6">
+ *       <h2>Panel Title</h2>
+ *     </div>
+ *   </SlideOver>
+ */
+
 import React from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import clsx from "clsx";
+import { slideRightVariants, slideLeftVariants, overlayVariants } from "./variants";
 
 export type SlideOverSide = "left" | "right";
 
@@ -10,6 +24,8 @@ interface SlideOverProps {
   side?: SlideOverSide;
   className?: string;
   children: React.ReactNode;
+  /** Chiều rộng panel, mặc định max-w-md */
+  width?: string;
 }
 
 /**
@@ -22,32 +38,40 @@ export const SlideOver: React.FC<SlideOverProps> = ({
   side = "right",
   className,
   children,
+  width = "max-w-md",
 }) => {
+  const slideVariants = side === "right" ? slideRightVariants : slideLeftVariants;
+
   return (
     <AnimatePresence>
       {isOpen && (
         <>
-          {/* Overlay */}
+          {/* ── Backdrop overlay ── */}
           <motion.div
+            variants={overlayVariants}
+            initial="initial"
+            animate="enter"
+            exit="exit"
             className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.25 }}
             onClick={onClose}
           />
 
-          {/* Panel */}
+          {/* ── Panel ── */}
           <motion.aside
+            variants={slideVariants}
+            initial="initial"
+            animate="enter"
+            exit="exit"
             className={clsx(
-              "fixed z-50 top-0 h-full w-full max-w-md bg-white/95 dark:bg-slate-900/95 border-l border-slate-200/70 dark:border-slate-700/80 shadow-2xl flex flex-col",
-              side === "right" ? "right-0" : "left-0",
+              "fixed top-0 z-50 h-full w-full bg-white/95 shadow-2xl",
+              "flex flex-col border-slate-200/70",
+              "dark:bg-slate-900/95 dark:border-slate-700/80",
+              side === "right"
+                ? "right-0 border-l rounded-l-2xl"
+                : "left-0 border-r rounded-r-2xl",
+              width,
               className,
             )}
-            initial={{ x: side === "right" ? 480 : -480 }}
-            animate={{ x: 0 }}
-            exit={{ x: side === "right" ? 480 : -480 }}
-            transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
           >
             {children}
           </motion.aside>

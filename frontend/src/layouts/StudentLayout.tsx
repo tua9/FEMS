@@ -1,13 +1,13 @@
 import Footer from "@/components/common/Footer";
 import StudentNavBar from "@/components/StudentNavbar";
-import { Outlet } from "react-router";
+import { RouteTransitionWrapper } from "@/components/motion";
 
 export default function StudentLayout() {
   return (
-    <div className="flex min-h-screen w-full flex-col">
+    <div className="student-layout">
       <StudentNavBar />
-      <main className="flex flex-1 flex-col">
-        <Outlet />
+      <main className="flex flex-1 flex-col pt-28">
+        <RouteTransitionWrapper />
       </main>
       <Footer role="student" />
     </div>

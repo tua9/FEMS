@@ -21,6 +21,7 @@ import BorrowHistory from "./pages/student/BorrowHistoryPage.tsx";
 import EquipmentPage from "./pages/student/EquipmentPage.tsx";
 import HomePage from "./pages/student/HomePage.tsx";
 import LoginPage from "./pages/student/LoginPage.tsx";
+import ForgotPasswordPage from "./pages/student/ForgotPasswordPage.tsx";
 import ReportPage from "./pages/student/ReportPage.tsx";
 
 // Shared pages
@@ -65,6 +66,7 @@ createRoot(document.getElementById("root")!).render(
           {/* Public routes – chỉ cho guest (chưa login) */}
           <Route element={<GuestRoute />}>
             <Route path="/login" element={<LoginPage />} />
+            <Route path="/forgot-password" element={<ForgotPasswordPage />} />
           </Route>
 
           {/* Root "/" → redirect theo role */}
