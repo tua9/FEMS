@@ -23,7 +23,11 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   signIn: async (username: string, password: string, role: string) => {
     try {
       set({ loading: true });
-      const { accessToken } = await authService.signIn(username, password, role);
+      const { accessToken } = await authService.signIn(
+        username,
+        password,
+        role,
+      );
       get().setAccessToken(accessToken);
       toast.success("Login successful!");
       await get().fetchUserProfile();
@@ -78,7 +82,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       }
     } catch {
       get().clearState();
-      toast.error("Session expired. Please log in again.");
     } finally {
       set({ loading: false });
     }
