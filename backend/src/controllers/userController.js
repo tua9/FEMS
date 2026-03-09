@@ -1,10 +1,33 @@
-export const getUserProfile = async (req, res) => {
-  console.log('Call: userController.js -> getUserProfile()')
-  const user = req.user
-  try {
-    return res.status(200).json({ user })
-  } catch (error) {
-    console.error('Error during authentication: ', error)
-    res.status(500).json({ message: 'Internal server error' })
-  }
-}
+import { StatusCodes } from 'http-status-codes'
+import { userService } from '../services/userService.js'
+import { asyncHandler } from '../middlewares/asyncHandler.js'
+
+export const createUser = asyncHandler(async (req, res) => {
+  const result = await userService.createUser(req.body)
+  res.status(StatusCodes.CREATED).json(result)
+})
+
+export const getAllUsers = asyncHandler(async (req, res) => {
+  const result = await userService.getAllUsers()
+  res.status(StatusCodes.OK).json(result)
+})
+
+export const getUserById = asyncHandler(async (req, res) => {
+  const result = await userService.getUserById(req.params.id)
+  res.status(StatusCodes.OK).json(result)
+})
+
+export const updateUser = asyncHandler(async (req, res) => {
+  const result = await userService.updateUser(req.params.id, req.body)
+  res.status(StatusCodes.OK).json(result)
+})
+
+export const deleteUser = asyncHandler(async (req, res) => {
+  const result = await userService.deleteUser(req.params.id)
+  res.status(StatusCodes.OK).json(result)
+})
+
+export const getUserProfile = asyncHandler(async (req, res) => {
+  const result = await userService.getUserProfile(req.user._id)
+  res.status(StatusCodes.OK).json(result)
+})

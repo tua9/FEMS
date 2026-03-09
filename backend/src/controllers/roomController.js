@@ -1,38 +1,29 @@
-import Room from '../models/Room.js'
+import { StatusCodes } from 'http-status-codes'
+import { roomService } from '../services/roomService.js'
+import { asyncHandler } from '../middlewares/asyncHandler.js'
 
-export const createRoom = async (req, res) => {
-  try {
-    const { name, type, status, building_id } = req.body
+export const createRoom = asyncHandler(async (req, res) => {
+  console.log('🚪 create room')
+  const result = await roomService.createRoom(req.body)
+  res.status(StatusCodes.CREATED).json(result)
+})
 
-    if (!name) {
-      return res.status(400).json({
-        message: 'Name is required',
-      })
-    }
+export const getAllRooms = asyncHandler(async (req, res) => {
+  const result = await roomService.getAllRooms()
+  res.status(StatusCodes.OK).json(result)
+})
 
-    const isExistRoom = await Room.findOne({ name })
+export const getRoomById = asyncHandler(async (req, res) => {
+  const result = await roomService.getRoomById(req.params.id)
+  res.status(StatusCodes.OK).json(result)
+})
 
-    if (isExistRoom) {
-      return res.status(409).json({
-        message: 'Room already exists',
-      })
-    }
+export const updateRoom = asyncHandler(async (req, res) => {
+  const result = await roomService.updateRoom(req.params.id, req.body)
+  res.status(StatusCodes.OK).json(result)
+})
 
-    const newRoom = await Room.create({
-      name,
-      type,
-      status,
-      building_id,
-    })
-
-    return res.status(201).json({
-      message: 'Create room success',
-      room_id: newRoom._id,
-    })
-  } catch (err) {
-    return res.status(500).json({
-      message: 'Server error',
-      error: err.message,
-    })
-  }
-}
+export const deleteRoom = asyncHandler(async (req, res) => {
+  const result = await roomService.deleteRoom(req.params.id)
+  res.status(StatusCodes.OK).json(result)
+})

@@ -1,34 +1,34 @@
-import Equipment from '../models/Equipment.js'
+import { StatusCodes } from 'http-status-codes'
+import { equipmentService } from '../services/equipmentService.js'
+import { asyncHandler } from '../middlewares/asyncHandler.js'
 
-export const createEquipment = async (req, res) => {
+export const createEquipment = asyncHandler(async (req, res) => {
   console.log('💻 create equipment')
+  const result = await equipmentService.createEquipment(req.body)
+  res.status(StatusCodes.CREATED).json(result)
+})
 
-  try {
-    const { name, category, available, status, room_id, qr_code } = req.body
+export const getAllEquipment = asyncHandler(async (req, res) => {
+  const result = await equipmentService.getAllEquipment()
+  res.status(StatusCodes.OK).json(result)
+})
 
-    if (!name) {
-      return res.status(400).json({
-        message: 'Name is require',
-      })
-    }
+export const getEquipmentById = asyncHandler(async (req, res) => {
+  const result = await equipmentService.getEquipmentById(req.params.id)
+  res.status(StatusCodes.OK).json(result)
+})
 
-    const newEquipment = await Equipment.create({
-      name,
-      category,
-      available,
-      status,
-      room_id,
-      qr_code,
-    })
+export const updateEquipment = asyncHandler(async (req, res) => {
+  const result = await equipmentService.updateEquipment(req.params.id, req.body)
+  res.status(StatusCodes.OK).json(result)
+})
 
-    return res.status(201).json({
-      message: 'Create equipment success',
-      equipment_id: newEquipment._id,
-    })
-  } catch (err) {
-    return res.status(500).json({
-      message: 'Server error',
-      error: err.message,
-    })
-  }
-}
+export const deleteEquipment = asyncHandler(async (req, res) => {
+  const result = await equipmentService.deleteEquipment(req.params.id)
+  res.status(StatusCodes.OK).json(result)
+})
+
+export const getEquipmentByQrCode = asyncHandler(async (req, res) => {
+  const result = await equipmentService.getEquipmentByQrCode(req.params.qrCode)
+  res.status(StatusCodes.OK).json(result)
+})
