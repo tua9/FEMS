@@ -1,35 +1,29 @@
-import Building from '../models/Building.js'
+import { StatusCodes } from 'http-status-codes'
+import { buildingService } from '../services/buildingService.js'
+import { asyncHandler } from '../middlewares/asyncHandler.js'
 
-export const createBuilding = async (req, res) => {
+export const createBuilding = asyncHandler(async (req, res) => {
   console.log('🏢 create building')
-  try {
-    const { name, status } = req.body
+  const result = await buildingService.createBuilding(req.body)
+  res.status(StatusCodes.CREATED).json(result)
+})
 
-    if (!name || name.trim() === '') {
-      return res.status(400).json({ message: 'Name is required' })
-    }
+export const getAllBuildings = asyncHandler(async (req, res) => {
+  const result = await buildingService.getAllBuildings()
+  res.status(StatusCodes.OK).json(result)
+})
 
-    const isExistBuilding = await Building.findOne({ name })
+export const getBuildingById = asyncHandler(async (req, res) => {
+  const result = await buildingService.getBuildingById(req.params.id)
+  res.status(StatusCodes.OK).json(result)
+})
 
-    if (isExistBuilding) {
-      return res.status(409).json({
-        message: 'Building already exists',
-      })
-    }
+export const updateBuilding = asyncHandler(async (req, res) => {
+  const result = await buildingService.updateBuilding(req.params.id, req.body)
+  res.status(StatusCodes.OK).json(result)
+})
 
-    const newBuilding = await Building.create({
-      name: name.trim(),
-      status,
-    })
-
-    return res.status(201).json({
-      message: 'Create building success',
-      building_id: newBuilding._id,
-    })
-  } catch (err) {
-    return res.status(500).json({
-      message: 'Server error',
-      error: err.message,
-    })
-  }
-}
+export const deleteBuilding = asyncHandler(async (req, res) => {
+  const result = await buildingService.deleteBuilding(req.params.id)
+  res.status(StatusCodes.OK).json(result)
+})

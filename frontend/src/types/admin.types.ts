@@ -1,4 +1,4 @@
-export interface User {
+export interface AdminUser {
   id: string;
   name: string;
   email: string;
@@ -70,4 +70,17 @@ export interface DashboardMetrics {
   pendingRequests: number;
   avgResponseTimeHours: number;
   efficiencyRate: number;
+}
+
+export interface HealthStatus {
+  healthy: number;
+  available: number;
+  maintenance: number;
+  broken: number;
+}
+
+export interface TopBrokenItem {
+  name: string;
+  count: number;
+  percentage: number;
 }

@@ -11,31 +11,30 @@ interface Props { dateRangeDays: DateRangeDays }
 
 // ── Single table row ──────────────────────────────────────────────────────────
 const FacilityRow: React.FC<{ row: FacilityRowData; isLast: boolean }> = ({ row, isLast }) => {
-  const crit  = getCriticalityStyle(row.criticality);
+  const crit = getCriticalityStyle(row.criticality);
   const trend = getTrendIcon(row.trend);
 
   return (
     <tr
-      className={`hover:bg-white/30 transition-colors ${
-        !isLast ? 'border-b border-white/10' : ''
-      }`}
+      className={`hover:bg-white/30 transition-colors ${!isLast ? 'border-b border-white/10' : ''
+        }`}
     >
       {/* Asset type */}
       <td className="px-8 py-6">
-        <div className="font-bold text-slate-900">{row.assetType}</div>
-        <div className="text-[10px] text-slate-500 uppercase font-bold">{row.unitLabel}</div>
+        <div className="font-bold text-slate-900 dark:text-white">{row.assetType}</div>
+        <div className="text-[10px] text-slate-500 dark:text-slate-400 uppercase font-bold">{row.unitLabel}</div>
       </td>
 
       {/* Operational status progress bar */}
       <td className="px-8 py-6">
         <div className="flex items-center gap-2">
-          <div className="flex-1 h-1.5 w-48 bg-slate-100 rounded-full overflow-hidden">
+          <div className="flex-1 h-1.5 w-48 bg-slate-100 dark:bg-white/10 rounded-full overflow-hidden">
             <div
               className={`h-full ${row.barColor} rounded-full transition-all duration-500`}
               style={{ width: `${row.operationalPct}%` }}
             />
           </div>
-          <span className="text-xs font-bold text-slate-600">{row.operationalPct}%</span>
+          <span className="text-xs font-bold text-slate-600 dark:text-slate-300">{row.operationalPct}%</span>
         </div>
       </td>
 
@@ -47,7 +46,7 @@ const FacilityRow: React.FC<{ row: FacilityRowData; isLast: boolean }> = ({ row,
       </td>
 
       {/* MTBF */}
-      <td className="px-8 py-6 font-semibold text-slate-600">{row.mtbf}</td>
+      <td className="px-8 py-6 font-semibold text-slate-600 dark:text-slate-300">{row.mtbf}</td>
 
       {/* Trend icon */}
       <td className="px-8 py-6 text-right">
@@ -62,11 +61,11 @@ const FacilityHealthTable: React.FC<Props> = ({ dateRangeDays }) => {
   const rows = getFacilityRows(dateRangeDays);
 
   return (
-    <section className="bg-white/60 glass-card rounded-3xl border border-white/50 shadow-sm overflow-hidden">
+    <section className="tech-card rounded-3xl border border-white/20 dark:border-white/6 shadow-sm overflow-hidden">
       {/* Header */}
       <div className="p-8 border-b border-white/30 flex justify-between items-center">
-        <h3 className="text-lg font-bold text-[#232F58] flex items-center gap-2">
-          <span className="material-symbols-outlined text-[#232F58]">analytics</span>
+        <h3 className="text-lg font-bold text-[#232F58] dark:text-white flex items-center gap-2">
+          <span className="material-symbols-outlined text-[#232F58] dark:text-blue-400">analytics</span>
           Facility Health Overview
         </h3>
       </div>
@@ -99,3 +98,5 @@ const FacilityHealthTable: React.FC<Props> = ({ dateRangeDays }) => {
 };
 
 export default FacilityHealthTable;
+
+

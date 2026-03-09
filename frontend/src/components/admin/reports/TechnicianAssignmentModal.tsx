@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
-import { User } from '../../../types/admin.types';
+import { AdminUser } from '../../../types/admin.types';
 
 interface TechnicianAssignmentModalProps {
     isOpen: boolean;
-    technicians: User[];
+    technicians: AdminUser[];
     onClose: () => void;
-    onAssign: (technician: User) => void;
+    onAssign: (technician: AdminUser) => void;
     equipmentName: string;
 }
 

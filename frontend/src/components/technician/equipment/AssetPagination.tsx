@@ -58,3 +58,4 @@ const AssetPagination: React.FC<Props> = ({
 );
 
 export default AssetPagination;
+

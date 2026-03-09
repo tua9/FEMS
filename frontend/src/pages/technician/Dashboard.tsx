@@ -3,43 +3,38 @@ import StatsOverview from '../../components/technician/dashboard/StatsOverview';
 import TaskQueue from '../../components/technician/dashboard/TaskQueue';
 import TicketPipeline from '../../components/technician/dashboard/TicketPipeline';
 import React from 'react';
+import { PageShell, AnimatedSection, AnimatedList, AnimatedListItem } from '@/components/motion';
 
 const Dashboard: React.FC = () => {
-
   return (
-    <main className="pt-32 pb-16 px-6 max-w-7xl mx-auto space-y-10">
-      {/* Page Header */}
-      <section className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-        <div className="space-y-1">
-          <h1 className="text-4xl font-extrabold text-[#1A2B56] dark:text-white tracking-tight">
-            System Status
-          </h1>
-          <p className="text-slate-500 dark:text-slate-400 font-medium text-sm">
-            Real-time facility maintenance and ticket management
-          </p>
-        </div>
-      </section>
-
+    <PageShell
+      title="System Status"
+      subtitle="Real-time facility maintenance and ticket management"
+      topPadding="pt-32"
+      className="pb-16 px-6"
+    >
       {/* Stats Cards */}
-      <section>
-        <StatsOverview />
-      </section>
+      <AnimatedList className="mb-10">
+        <AnimatedListItem>
+          <StatsOverview />
+        </AnimatedListItem>
+      </AnimatedList>
 
       {/* Ticket Pipeline + Device Health */}
-      <section className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+      <AnimatedSection variant="fade" delay={0.1} className="grid grid-cols-1 lg:grid-cols-5 gap-6 mb-10">
         <div className="lg:col-span-3">
           <TicketPipeline />
         </div>
         <div className="lg:col-span-2">
           <DeviceHealth />
         </div>
-      </section>
+      </AnimatedSection>
 
       {/* Active Work Orders */}
-      <section>
+      <AnimatedSection variant="slide-up" delay={0.15}>
         <TaskQueue />
-      </section>
-    </main>
+      </AnimatedSection>
+    </PageShell>
   );
 };
 

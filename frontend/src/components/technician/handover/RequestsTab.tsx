@@ -50,24 +50,24 @@ function toDetailRecord(req: RequestRecord): HandoverDetailRecord {
       label: req.status,
       className:
         req.status === 'Approved' ? 'bg-emerald-100 text-emerald-700'
-        : req.status === 'Rejected' ? 'bg-red-100 text-red-700'
-        : 'bg-yellow-100 text-yellow-700',
+          : req.status === 'Rejected' ? 'bg-red-100 text-red-700'
+            : 'bg-yellow-100 text-yellow-700',
     },
     person: {
       name: req.borrower.name,
-      sub:  `${req.borrower.department ?? 'Unknown Dept'} · ID: ${req.borrower.userId}`,
+      sub: `${req.borrower.department ?? 'Unknown Dept'} · ID: ${req.borrower.userId}`,
       initials: initials(req.borrower.name),
       avatarBg: 'bg-blue-100',
       avatarColor: 'text-blue-700',
       email: req.borrower.email,
     },
     meta: [
-      { label: 'Equipment', value: req.equipment.name,     icon: 'devices'        },
-      { label: 'Location',  value: req.equipment.location, icon: 'location_on'    },
-      { label: 'Duration',  value: req.duration,           icon: 'calendar_today' },
-      { label: 'Purpose',   value: req.purpose,            icon: 'info'           },
+      { label: 'Equipment', value: req.equipment.name, icon: 'devices' },
+      { label: 'Location', value: req.equipment.location, icon: 'location_on' },
+      { label: 'Duration', value: req.duration, icon: 'calendar_today' },
+      { label: 'Purpose', value: req.purpose, icon: 'info' },
     ],
-    items:    req.items,
+    items: req.items,
     timeline: req.timeline,
   };
 }
@@ -95,8 +95,7 @@ const ActionModal: React.FC<ActionModalProps> = ({ request, action, onConfirm, o
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
       <div
-        className="w-full max-w-md rounded-3xl shadow-2xl overflow-hidden"
-        style={{ background: 'rgba(255,255,255,0.97)', border: '1px solid rgba(255,255,255,0.5)' }}
+        className="w-full max-w-md tech-dropdown rounded-3xl shadow-2xl overflow-hidden"
       >
         {/* Icon strip */}
         <div className={`h-2 w-full ${isApprove ? 'bg-emerald-500' : 'bg-red-500'}`} />
@@ -111,7 +110,7 @@ const ActionModal: React.FC<ActionModalProps> = ({ request, action, onConfirm, o
               </span>
             </div>
             <div>
-              <h3 className="text-lg font-extrabold text-[#1A2B56]">
+              <h3 className="text-lg font-extrabold text-[#1A2B56] dark:text-white">
                 {isApprove ? 'Approve Request' : 'Reject Request'}
               </h3>
               <p className="text-xs text-slate-400 font-medium mt-0.5">{request.id}</p>
@@ -119,7 +118,7 @@ const ActionModal: React.FC<ActionModalProps> = ({ request, action, onConfirm, o
           </div>
 
           {/* Info card */}
-          <div className="bg-slate-50 rounded-2xl p-4 space-y-2 mb-6">
+          <div className="bg-slate-50 dark:bg-white/5 rounded-2xl p-4 space-y-2 mb-6">
             <div className="flex justify-between text-xs">
               <span className="text-slate-400 font-semibold">Borrower</span>
               <span className="font-bold text-slate-700">{request.borrower.name}</span>
@@ -144,7 +143,7 @@ const ActionModal: React.FC<ActionModalProps> = ({ request, action, onConfirm, o
           <div className="flex gap-3">
             <button
               onClick={onClose}
-              className="flex-1 py-3 rounded-2xl border border-slate-200 text-sm font-bold text-slate-600 hover:bg-slate-50 transition-colors"
+              className="flex-1 py-3 rounded-2xl border border-slate-200 dark:border-white/10 text-sm font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/5 transition-colors"
             >
               Cancel
             </button>
@@ -165,7 +164,7 @@ const ActionModal: React.FC<ActionModalProps> = ({ request, action, onConfirm, o
 // ── Status pill ───────────────────────────────────────────────────────────────
 const StatusPill: React.FC<{ status: ReqStatus }> = ({ status }) => {
   const map: Record<ReqStatus, string> = {
-    Pending:  'bg-amber-50 text-amber-600 border border-amber-200',
+    Pending: 'bg-amber-50 text-amber-600 border border-amber-200',
     Approved: 'bg-emerald-50 text-emerald-600 border border-emerald-200',
     Rejected: 'bg-red-50 text-red-500 border border-red-200',
   };
@@ -185,7 +184,7 @@ interface RowProps {
   onReject: () => void;
 }
 const RequestRow: React.FC<RowProps> = ({ req, onDetails, onApprove, onReject }) => (
-  <tr className="hover:bg-blue-50/20 transition-colors group border-b border-slate-100/80 last:border-0">
+  <tr className="hover:bg-blue-50/10 dark:hover:bg-white/5 transition-colors group border-b border-slate-100/80 dark:border-white/5 last:border-0">
     {/* Request ID */}
     <td className="px-5 py-5 w-36">
       <div className="space-y-1">
@@ -205,7 +204,7 @@ const RequestRow: React.FC<RowProps> = ({ req, onDetails, onApprove, onReject })
           </div>
         )}
         <div className="min-w-0">
-          <p className="text-sm font-bold text-slate-900 truncate">{req.borrower.name}</p>
+          <p className="text-sm font-bold text-slate-900 dark:text-white truncate">{req.borrower.name}</p>
           <p className="text-[10px] text-slate-400 font-semibold">ID: {req.borrower.userId}</p>
         </div>
       </div>
@@ -213,7 +212,7 @@ const RequestRow: React.FC<RowProps> = ({ req, onDetails, onApprove, onReject })
 
     {/* Equipment */}
     <td className="px-5 py-5 w-48">
-      <p className="text-sm font-semibold text-slate-800 truncate max-w-[170px]">{req.equipment.name}</p>
+      <p className="text-sm font-semibold text-slate-800 dark:text-slate-100 truncate max-w-[170px]">{req.equipment.name}</p>
       <p className="text-[10px] text-slate-400 mt-0.5 truncate max-w-[170px]">{req.equipment.location}</p>
     </td>
 
@@ -235,7 +234,7 @@ const RequestRow: React.FC<RowProps> = ({ req, onDetails, onApprove, onReject })
       <div className="flex items-center justify-end gap-2">
         <button
           onClick={onDetails}
-          className="px-3.5 py-2 rounded-xl bg-slate-100 text-slate-600 hover:bg-slate-200 text-xs font-bold transition-all flex items-center gap-1.5 whitespace-nowrap"
+          className="px-3.5 py-2 rounded-xl tech-pill dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-white/10 text-xs font-bold transition-all flex items-center gap-1.5 whitespace-nowrap"
         >
           <span className="material-symbols-outlined text-[13px]">visibility</span>
           Details
@@ -279,14 +278,14 @@ const RequestsTab: React.FC = () => {
   const [requests, setRequests] = useState<RequestRecord[]>(
     MOCK_BORROW_REQUESTS.map((r) => ({ ...r, status: 'Pending' as ReqStatus }))
   );
-  const [search, setSearch]           = useState('');
+  const [search, setSearch] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
-  const [detail, setDetail]           = useState<HandoverDetailRecord | null>(null);
+  const [detail, setDetail] = useState<HandoverDetailRecord | null>(null);
 
   // Filter state
-  const [filters, setFilters]         = useState<Filters>(DEFAULT_FILTERS);
-  const [showFilter, setShowFilter]   = useState(false);
-  const filterRef                     = useRef<HTMLDivElement>(null);
+  const [filters, setFilters] = useState<Filters>(DEFAULT_FILTERS);
+  const [showFilter, setShowFilter] = useState(false);
+  const filterRef = useRef<HTMLDivElement>(null);
 
   // Action modal state
   type ActionState = { req: RequestRecord; action: 'Approve' | 'Reject' } | null;
@@ -339,9 +338,9 @@ const RequestsTab: React.FC = () => {
   });
 
   const pendingCount = requests.filter((r) => r.status === 'Pending').length;
-  const totalPages   = Math.max(1, Math.ceil(filtered.length / ITEMS_PER_PAGE));
-  const safePage     = Math.min(currentPage, totalPages);
-  const paged        = filtered.slice((safePage - 1) * ITEMS_PER_PAGE, safePage * ITEMS_PER_PAGE);
+  const totalPages = Math.max(1, Math.ceil(filtered.length / ITEMS_PER_PAGE));
+  const safePage = Math.min(currentPage, totalPages);
+  const paged = filtered.slice((safePage - 1) * ITEMS_PER_PAGE, safePage * ITEMS_PER_PAGE);
 
   const handleSearch = (v: string) => { setSearch(v); setCurrentPage(1); };
 
@@ -361,7 +360,7 @@ const RequestsTab: React.FC = () => {
 
   return (
     <>
-      <div className="glass-card rounded-3xl border border-white/50 dark:border-white/10 shadow-2xl overflow-hidden">
+      <div className="tech-card rounded-3xl border border-white/50 dark:border-white/10 shadow-2xl overflow-hidden">
         {/* ── Header ── */}
         <div className="px-6 pt-6 pb-4 border-b border-slate-200/50">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -391,7 +390,7 @@ const RequestsTab: React.FC = () => {
                   value={search}
                   onChange={(e) => handleSearch(e.target.value)}
                   placeholder="Search requests..."
-                  className="pl-10 pr-4 py-2.5 bg-white/80 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#1A2B56]/20 placeholder:text-slate-400 w-56"
+                  className="pl-10 pr-4 py-2.5 tech-pill dark:text-white border border-slate-200 dark:border-white/10 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#1A2B56]/20 placeholder:text-slate-400 dark:placeholder:text-slate-500 w-56"
                 />
                 <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-lg">search</span>
                 {search && (
@@ -408,11 +407,10 @@ const RequestsTab: React.FC = () => {
               <div className="relative" ref={filterRef}>
                 <button
                   onClick={() => setShowFilter((v) => !v)}
-                  className={`h-10 px-3.5 rounded-xl border text-sm font-bold flex items-center gap-2 transition-all ${
-                    activeFilterCount > 0
+                  className={`h-10 px-3.5 rounded-xl border text-sm font-bold flex items-center gap-2 transition-all ${activeFilterCount > 0
                       ? 'bg-[#1A2B56] text-white border-[#1A2B56] shadow-md'
                       : 'border-slate-200 bg-white/80 text-slate-600 hover:bg-white hover:border-slate-300'
-                  }`}
+                    }`}
                 >
                   <span className="material-symbols-outlined text-lg">tune</span>
                   <span className="text-xs font-bold">Filter</span>
@@ -426,19 +424,13 @@ const RequestsTab: React.FC = () => {
                 {/* ── Filter panel ── */}
                 {showFilter && (
                   <div
-                    className="absolute right-0 top-full mt-2 w-72 rounded-2xl shadow-2xl z-50"
-                    style={{
-                      background: 'rgba(255,255,255,0.98)',
-                      border: '1px solid rgba(226,232,240,0.8)',
-                      backdropFilter: 'blur(20px)',
-                      boxShadow: '0 20px 60px rgba(26,43,86,0.15)',
-                    }}
+                    className="absolute right-0 top-full mt-2 w-72 tech-dropdown rounded-2xl shadow-2xl z-50"
                   >
                     {/* Panel header */}
                     <div className="flex items-center justify-between px-5 pt-5 pb-3 border-b border-slate-100">
                       <div className="flex items-center gap-2">
                         <span className="material-symbols-outlined text-[#1A2B56] text-lg">tune</span>
-                        <span className="text-sm font-extrabold text-[#1A2B56]">Filters</span>
+                        <span className="text-sm font-extrabold text-[#1A2B56] dark:text-white">Filters</span>
                         {activeFilterCount > 0 && (
                           <span className="bg-[#1A2B56] text-white text-[9px] font-extrabold px-1.5 py-0.5 rounded-full">
                             {activeFilterCount}
@@ -467,9 +459,9 @@ const RequestsTab: React.FC = () => {
                             {STATUS_OPTIONS.map((s) => {
                               const on = filters.statuses.includes(s);
                               const colorMap: Record<ReqStatus, string> = {
-                                Pending:  on ? 'bg-amber-500 text-white border-amber-500'   : 'border-amber-200 text-amber-600 hover:bg-amber-50',
+                                Pending: on ? 'bg-amber-500 text-white border-amber-500' : 'border-amber-200 text-amber-600 hover:bg-amber-50',
                                 Approved: on ? 'bg-emerald-500 text-white border-emerald-500' : 'border-emerald-200 text-emerald-600 hover:bg-emerald-50',
-                                Rejected: on ? 'bg-red-500 text-white border-red-500'       : 'border-red-200 text-red-500 hover:bg-red-50',
+                                Rejected: on ? 'bg-red-500 text-white border-red-500' : 'border-red-200 text-red-500 hover:bg-red-50',
                               };
                               return (
                                 <button
@@ -477,9 +469,8 @@ const RequestsTab: React.FC = () => {
                                   onClick={() => { toggle('statuses', s); setCurrentPage(1); }}
                                   className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold border transition-all ${colorMap[s]}`}
                                 >
-                                  <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${
-                                    s === 'Pending' ? 'bg-amber-400' : s === 'Approved' ? 'bg-emerald-400' : 'bg-red-400'
-                                  } ${on ? 'opacity-0' : ''}`} />
+                                  <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${s === 'Pending' ? 'bg-amber-400' : s === 'Approved' ? 'bg-emerald-400' : 'bg-red-400'
+                                    } ${on ? 'opacity-0' : ''}`} />
                                   {s}
                                   {on && <span className="material-symbols-outlined text-[11px]">check</span>}
                                 </button>
@@ -501,14 +492,12 @@ const RequestsTab: React.FC = () => {
                                 <button
                                   key={d}
                                   onClick={() => { toggle('departments', d); setCurrentPage(1); }}
-                                  className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold text-left transition-all ${
-                                    on ? 'bg-[#1A2B56] text-white' : 'text-slate-600 hover:bg-slate-50'
-                                  }`}
+                                  className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold text-left transition-all ${on ? 'bg-[#1A2B56] text-white' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/10'
+                                    }`}
                                 >
                                   {/* Checkbox */}
-                                  <span className={`w-4 h-4 rounded-md flex items-center justify-center flex-shrink-0 border-2 transition-all ${
-                                    on ? 'bg-white/25 border-white/40' : 'border-slate-300 bg-white'
-                                  }`}>
+                                  <span className={`w-4 h-4 rounded-md flex items-center justify-center flex-shrink-0 border-2 transition-all ${on ? 'bg-white/25 border-white/40' : 'border-slate-300 bg-white'
+                                    }`}>
                                     {on && <span className="material-symbols-outlined text-[11px]">check</span>}
                                   </span>
                                   <span className="truncate">{d}</span>
@@ -531,11 +520,10 @@ const RequestsTab: React.FC = () => {
                                 <button
                                   key={dur}
                                   onClick={() => { toggle('durations', dur); setCurrentPage(1); }}
-                                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold border transition-all ${
-                                    on
+                                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold border transition-all ${on
                                       ? 'bg-[#1A2B56] text-white border-[#1A2B56]'
                                       : 'border-slate-200 text-slate-600 hover:bg-slate-50 hover:border-slate-300'
-                                  }`}
+                                    }`}
                                 >
                                   <span className="material-symbols-outlined text-[12px]">schedule</span>
                                   {dur}
@@ -548,7 +536,7 @@ const RequestsTab: React.FC = () => {
                     </div>
 
                     {/* Panel footer */}
-                    <div className="px-5 py-4 border-t border-slate-100 flex items-center justify-between bg-slate-50/50 rounded-b-2xl">
+                    <div className="px-5 py-4 border-t border-slate-100 dark:border-white/10 flex items-center justify-between bg-slate-50/50 dark:bg-white/5 rounded-b-2xl">
                       <span className="text-[11px] text-slate-400 font-medium">
                         {filtered.length} result{filtered.length !== 1 ? 's' : ''} found
                       </span>
@@ -594,18 +582,18 @@ const RequestsTab: React.FC = () => {
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="bg-slate-50/80 border-b border-slate-200/60">
+              <tr className="bg-slate-50/80 dark:bg-white/5 border-b border-slate-200/60 dark:border-white/10">
                 {[
-                  { label: 'Request ID',  cls: 'w-36'  },
-                  { label: 'Borrower',    cls: 'w-52'  },
-                  { label: 'Equipment',   cls: 'w-48'  },
-                  { label: 'Duration',    cls: 'w-28'  },
-                  { label: 'Purpose',     cls: ''      },
-                  { label: 'Actions',     cls: 'w-52 text-right' },
+                  { label: 'Request ID', cls: 'w-36' },
+                  { label: 'Borrower', cls: 'w-52' },
+                  { label: 'Equipment', cls: 'w-48' },
+                  { label: 'Duration', cls: 'w-28' },
+                  { label: 'Purpose', cls: '' },
+                  { label: 'Actions', cls: 'w-52 text-right' },
                 ].map(({ label, cls }) => (
                   <th
                     key={label}
-                    className={`px-5 py-4 text-[11px] font-extrabold text-[#1A2B56] uppercase tracking-[0.12em] ${cls}`}
+                    className={`px-5 py-4 text-[11px] font-extrabold text-[#1A2B56] dark:text-slate-300 uppercase tracking-[0.12em] ${cls}`}
                   >
                     {label}
                   </th>
@@ -660,3 +648,5 @@ const RequestsTab: React.FC = () => {
 };
 
 export default RequestsTab;
+
+

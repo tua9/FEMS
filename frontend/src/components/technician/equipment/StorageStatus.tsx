@@ -25,3 +25,4 @@ const StorageStatus: React.FC<Props> = ({ percentage }) => (
 );
 
 export default StorageStatus;
+

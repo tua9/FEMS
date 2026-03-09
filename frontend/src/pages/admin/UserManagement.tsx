@@ -6,18 +6,18 @@ import UserDetailModal from '../../components/admin/users/UserDetailModal';
 import DeleteConfirmationModal from '../../components/admin/common/DeleteConfirmationModal';
 import ActionConfirmationModal from '../../components/admin/common/ActionConfirmationModal';
 import { adminApi } from '../../services/api/adminApi';
-import { User } from '../../types/admin.types';
+import { AdminUser } from '../../types/admin.types';
 
 const UserManagement: React.FC = () => {
-    const [users, setUsers] = useState<User[]>([]);
+    const [users, setUsers] = useState<AdminUser[]>([]);
     const [loading, setLoading] = useState(true);
 
     // Modal states
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-    const [selectedUser, setSelectedUser] = useState<User | null>(null);
+    const [selectedUser, setSelectedUser] = useState<AdminUser | null>(null);
     const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
-    const [userToDelete, setUserToDelete] = useState<User | null>(null);
-    const [userToToggle, setUserToToggle] = useState<User | null>(null);
+    const [userToDelete, setUserToDelete] = useState<AdminUser | null>(null);
+    const [userToToggle, setUserToToggle] = useState<AdminUser | null>(null);
 
     // Filter and Pagination states
     const [searchQuery, setSearchQuery] = useState('');
@@ -31,9 +31,9 @@ const UserManagement: React.FC = () => {
     const fetchUserData = React.useCallback(async () => {
         try {
             // Generating mock data as requested
-            const mockUsers: User[] = [
+            const mockUsers: AdminUser[] = [
                 // Super Admin
-                { id: 'USER-0001', name: 'Dr. Alex Rivers', email: 'alex.rivers@fems.edu.vn', role: 'Super Admin' as const, status: 'Active', phone: '0901234567', department: 'Management' },
+                { id: 'AdminUser-0001', name: 'Dr. Alex Rivers', email: 'alex.rivers@fems.edu.vn', role: 'Super Admin' as const, status: 'Active', phone: '0901234567', department: 'Management' },
 
                 // 2 Technicians
                 ...Array.from({ length: 2 }).map((_, i) => ({
@@ -71,7 +71,7 @@ const UserManagement: React.FC = () => {
 
             setUsers(mockUsers);
         } catch (error) {
-            console.error("Failed to fetch user data", error);
+            console.error("Failed to fetch AdminUser data", error);
         } finally {
             setLoading(false);
         }
@@ -81,17 +81,17 @@ const UserManagement: React.FC = () => {
         fetchUserData();
     }, [fetchUserData]);
 
-    const handleOpenDetails = (user: User) => {
-        setSelectedUser(user);
+    const handleOpenDetails = (AdminUser: AdminUser) => {
+        setSelectedUser(AdminUser);
         setIsDetailModalOpen(true);
     };
 
-    const handleEditUser = (user: User) => {
-        handleOpenDetails(user);
+    const handleEditUser = (AdminUser: AdminUser) => {
+        handleOpenDetails(AdminUser);
     };
 
-    const handleDeleteClick = (user: User) => {
-        setUserToDelete(user);
+    const handleDeleteClick = (AdminUser: AdminUser) => {
+        setUserToDelete(AdminUser);
     };
 
     const confirmDelete = () => {
@@ -102,8 +102,8 @@ const UserManagement: React.FC = () => {
         }
     };
 
-    const handleToggleStatus = (user: User) => {
-        setUserToToggle(user);
+    const handleToggleStatus = (AdminUser: AdminUser) => {
+        setUserToToggle(AdminUser);
     };
 
     const confirmToggleStatus = () => {
@@ -144,12 +144,12 @@ const UserManagement: React.FC = () => {
         }
     };
 
-    const filteredUsers = users.filter(user => {
-        const matchesSearch = user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            user.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            user.id.toLowerCase().includes(searchQuery.toLowerCase());
-        const matchesRole = roleFilter === 'All' || user.role === roleFilter;
-        const matchesStatus = statusFilter === 'All' || user.status === statusFilter;
+    const filteredUsers = users.filter(AdminUser => {
+        const matchesSearch = AdminUser.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            AdminUser.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            AdminUser.id.toLowerCase().includes(searchQuery.toLowerCase());
+        const matchesRole = roleFilter === 'All' || AdminUser.role === roleFilter;
+        const matchesStatus = statusFilter === 'All' || AdminUser.status === statusFilter;
         return matchesSearch && matchesRole && matchesStatus;
     });
 
@@ -214,7 +214,7 @@ const UserManagement: React.FC = () => {
                             className="flex items-center gap-2 px-6 py-3 bg-[#1A2B56] text-white rounded-2xl font-bold text-sm shadow-[0_10px_20px_rgba(26,43,86,0.3)] hover:opacity-90 transition-all border border-white/10"
                         >
                             <span className="material-symbols-outlined text-lg">person_add</span>
-                            Add User
+                            Add AdminUser
                         </button>
                     </div>
                 </div>
@@ -299,7 +299,7 @@ const UserManagement: React.FC = () => {
                                 <span className="material-symbols-outlined absolute left-4 text-slate-400">search</span>
                                 <input
                                     className="w-full pl-12 pr-4 py-3 bg-transparent border-none rounded-2xl text-xs font-medium focus:ring-0 transition-all outline-none placeholder:text-slate-400 dark:text-white"
-                                    placeholder="Search user by name, email or ID..."
+                                    placeholder="Search AdminUser by name, email or ID..."
                                     type="text"
                                     value={searchQuery}
                                     onChange={e => setSearchQuery(e.target.value)}
@@ -311,12 +311,12 @@ const UserManagement: React.FC = () => {
                             <CustomDropdown
                                 value={roleFilter}
                                 options={[
-                                    { value: 'All',        label: 'Role: All'   },
-                                    { value: 'Student',    label: 'Student'     },
-                                    { value: 'Lecturer',   label: 'Lecturer'    },
-                                    { value: 'Technician', label: 'Technician'  },
-                                    { value: 'Manager',    label: 'Manager'     },
-                                    { value: 'Super Admin',label: 'Super Admin' },
+                                    { value: 'All', label: 'Role: All' },
+                                    { value: 'Student', label: 'Student' },
+                                    { value: 'Lecturer', label: 'Lecturer' },
+                                    { value: 'Technician', label: 'Technician' },
+                                    { value: 'Manager', label: 'Manager' },
+                                    { value: 'Super Admin', label: 'Super Admin' },
                                 ]}
                                 onChange={setRoleFilter}
                                 align="right"
@@ -389,17 +389,17 @@ const UserManagement: React.FC = () => {
             <AddUserModal
                 isOpen={isAddModalOpen}
                 onClose={() => setIsAddModalOpen(false)}
-                user={selectedUser}
+                AdminUser={selectedUser}
                 onUserUpdated={fetchUserData}
             />
 
             <UserDetailModal
                 isOpen={isDetailModalOpen}
-                user={selectedUser}
+                AdminUser={selectedUser}
                 onClose={() => setIsDetailModalOpen(false)}
-                onEdit={(user) => {
+                onEdit={(AdminUser) => {
                     setIsDetailModalOpen(false);
-                    setSelectedUser(user);
+                    setSelectedUser(AdminUser);
                     setIsAddModalOpen(true);
                 }}
                 onUpdate={fetchUserData}
@@ -407,8 +407,8 @@ const UserManagement: React.FC = () => {
 
             <DeleteConfirmationModal
                 isOpen={!!userToDelete}
-                title="Remove User Account"
-                message="Are you sure you want to remove this user from the system? This action cannot be undone."
+                title="Remove AdminUser Account"
+                message="Are you sure you want to remove this AdminUser from the system? This action cannot be undone."
                 itemName={userToDelete?.name}
                 onClose={() => setUserToDelete(null)}
                 onConfirm={confirmDelete}
@@ -416,10 +416,10 @@ const UserManagement: React.FC = () => {
 
             <ActionConfirmationModal
                 isOpen={!!userToToggle}
-                title={userToToggle?.status === 'Active' ? "Deactivate User Account" : "Activate User Account"}
+                title={userToToggle?.status === 'Active' ? "Deactivate AdminUser Account" : "Activate AdminUser Account"}
                 message={userToToggle?.status === 'Active'
-                    ? "Are you sure you want to deactivate this account? The user will no longer be able to sign in."
-                    : "Are you sure you want to reactivate this account? The user will regain access to the system."}
+                    ? "Are you sure you want to deactivate this account? The AdminUser will no longer be able to sign in."
+                    : "Are you sure you want to reactivate this account? The AdminUser will regain access to the system."}
                 itemName={userToToggle?.name}
                 confirmText={userToToggle?.status === 'Active' ? "Deactivate" : "Activate"}
                 confirmColor={userToToggle?.status === 'Active' ? "bg-amber-500 hover:bg-amber-600" : "bg-emerald-500 hover:bg-emerald-600"}

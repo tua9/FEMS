@@ -27,3 +27,4 @@ const AssetGrid: React.FC<Props> = ({ assets, onAssetClick }) => {
 };
 
 export default AssetGrid;
+

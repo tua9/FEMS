@@ -5,7 +5,7 @@ import ResolutionStats from '../../components/admin/reports/ResolutionStats';
 import DamageReportDetailModal from '../../components/admin/reports/DamageReportDetailModal';
 import TechnicianAssignmentModal from '../../components/admin/reports/TechnicianAssignmentModal';
 import { adminApi } from '../../services/api/adminApi';
-import { DamageReport, User } from '../../types/admin.types';
+import { DamageReport, AdminUser } from '../../types/admin.types';
 
 const DamageReports: React.FC = () => {
     const [reports, setReports] = useState<DamageReport[]>([]);
@@ -18,7 +18,7 @@ const DamageReports: React.FC = () => {
     const [selectedReport, setSelectedReport] = useState<DamageReport | null>(null);
     const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
     const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
-    const [technicians, setTechnicians] = useState<User[]>([]);
+    const [technicians, setTechnicians] = useState<AdminUser[]>([]);
     const reportsPerPage = 5;
 
     useEffect(() => {
@@ -73,7 +73,7 @@ const DamageReports: React.FC = () => {
         setIsAssignModalOpen(true);
     };
 
-    const handleConfirmAssign = (technician: User) => {
+    const handleConfirmAssign = (technician: AdminUser) => {
         if (!selectedReport) return;
 
         setReports(prev => prev.map(r =>

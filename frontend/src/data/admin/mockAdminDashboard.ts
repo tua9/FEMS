@@ -1,4 +1,4 @@
-import { DashboardMetrics, EquipmentRequest, DamageReport, Asset } from '../../types/admin.types';
+import type { DashboardMetrics, EquipmentRequest, DamageReport, HealthStatus, TopBrokenItem } from '../../types/admin.types';
 
 export const mockDashboardMetrics: DashboardMetrics = {
     totalDevices: 64,
@@ -10,14 +10,14 @@ export const mockDashboardMetrics: DashboardMetrics = {
     efficiencyRate: 98,
 };
 
-export const mockHealthStatus = {
+export const mockHealthStatus: HealthStatus = {
     healthy: 92,
     available: 58,
     maintenance: 2,
     broken: 4,
 };
 
-export const mockTopBrokenEquipment = [
+export const mockTopBrokenEquipment: TopBrokenItem[] = [
     { name: 'Projector Pro-X1', count: 12, percentage: 85 },
     { name: 'Workstation #42', count: 8, percentage: 60 },
     { name: 'Lab Microscopes', count: 7, percentage: 52 },

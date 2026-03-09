@@ -10,7 +10,7 @@ const ReportStatCards: React.FC<Props> = ({ dateRangeDays }) => {
       {cards.map((card) => (
         <div
           key={card.label}
-          className="bg-white/60 glass-card p-6 rounded-3xl border border-white/50 shadow-sm"
+          className="tech-card p-6 rounded-3xl border border-white/50 shadow-sm"
         >
           {/* Icon row */}
           <div className="flex items-center justify-between mb-4">
@@ -25,8 +25,8 @@ const ReportStatCards: React.FC<Props> = ({ dateRangeDays }) => {
             <span className={`text-xs font-bold ${card.changeColor}`}>{card.changeLabel}</span>
           </div>
 
-          <p className="text-3xl font-extrabold text-[#232F58]">{card.value}</p>
-          <p className="text-sm font-semibold text-slate-500">{card.label}</p>
+          <p className="text-3xl font-extrabold text-[#232F58] dark:text-white">{card.value}</p>
+          <p className="text-sm font-semibold text-slate-500 dark:text-slate-400">{card.label}</p>
         </div>
       ))}
     </section>
@@ -34,3 +34,5 @@ const ReportStatCards: React.FC<Props> = ({ dateRangeDays }) => {
 };
 
 export default ReportStatCards;
+
+

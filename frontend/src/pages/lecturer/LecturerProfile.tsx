@@ -45,48 +45,57 @@ const InfoField: React.FC<InfoFieldProps> = ({ label, value, icon }) => (
 
 // ─── Role-aware helpers ───────────────────────────────────────────────────────
 const ROLE_PREFIX: Record<string, string> = {
-  student:  "/student",
-  lecturer: "/lecturer",
-  admin:    "/admin",
+  student:    "/student",
+  lecturer:   "/lecturer",
+  admin:      "/admin",
+  technician: "/technician",
 };
 
 const ROLE_LABEL: Record<string, string> = {
-  student:  "Student Profile",
-  lecturer: "Lecturer Profile",
-  admin:    "Admin Profile",
+  student:    "Student Profile",
+  lecturer:   "Lecturer Profile",
+  admin:      "Admin Profile",
+  technician: "Technician Profile",
 };
 
 const ROLE_STATUS: Record<string, string> = {
-  student:  "Active Student",
-  lecturer: "Active Lecturer",
-  admin:    "Active Admin",
+  student:    "Active Student",
+  lecturer:   "Active Lecturer",
+  admin:      "Active Admin",
+  technician: "Active Technician",
 };
 
 const ROLE_TITLE_ICON: Record<string, string> = {
-  student:  "school",
-  lecturer: "school",
-  admin:    "shield_person",
+  student:    "school",
+  lecturer:   "school",
+  admin:      "shield_person",
+  technician: "engineering",
 };
 
 const ROLE_TITLE_LABEL: Record<string, string> = {
-  student:  "Student",
-  lecturer: "Senior Lecturer",
-  admin:    "Super Admin",
+  student:    "Student",
+  lecturer:   "Senior Lecturer",
+  admin:      "Super Admin",
+  technician: "Technician",
 };
 
 // Quick stats per role
 const ROLE_STATS: Record<string, { label: string; value: string; icon: string }[]> = {
-  student:  [
-    { label: "Borrows",  value: "24", icon: "inventory_2"  },
-    { label: "Reports",  value: "7",  icon: "build_circle" },
+  student: [
+    { label: "Borrows", value: "24", icon: "inventory_2"  },
+    { label: "Reports", value: "7",  icon: "build_circle" },
   ],
   lecturer: [
-    { label: "Borrows",  value: "24", icon: "inventory_2"  },
-    { label: "Reports",  value: "7",  icon: "build_circle" },
+    { label: "Borrows", value: "24", icon: "inventory_2"  },
+    { label: "Reports", value: "7",  icon: "build_circle" },
   ],
   admin: [
-    { label: "Users",      value: "52", icon: "group"    },
-    { label: "Equipment",  value: "64", icon: "devices"  },
+    { label: "Users",     value: "52", icon: "group"   },
+    { label: "Equipment", value: "64", icon: "devices" },
+  ],
+  technician: [
+    { label: "Tasks Done", value: "145", icon: "task_alt"        },
+    { label: "Active",     value: "8",   icon: "pending_actions" },
   ],
 };
 
@@ -236,7 +245,12 @@ const LecturerProfile: React.FC = () => {
                 icon={<BadgeCheck className="h-3.5 w-3.5" />}
               />
               <InfoField
-                label={role === "student" ? "Student ID" : role === "admin" ? "Admin ID" : "Employee ID"}
+                label={
+                role === "student"    ? "Student ID"    :
+                role === "admin"      ? "Admin ID"      :
+                role === "technician" ? "Technician ID" :
+                "Employee ID"
+              }
                 value={user?._id ? user._id.slice(-8).toUpperCase() : FALLBACK.employeeId}
                 icon={<BadgeCheck className="h-3.5 w-3.5" />}
               />
