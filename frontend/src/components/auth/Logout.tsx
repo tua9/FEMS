@@ -7,26 +7,17 @@ export default function Logout() {
   const navigate = useNavigate();
 
   const handleLogout = async () => {
-    console.log("log out");
-    try {
-      await signOut();
-      console.log("finish logout");
-
-      navigate("/login");
-    } catch (error) {
-      console.error("Logout error:", error);
-    }
+    await signOut();
+    navigate("/login");
   };
 
   return (
-    <>
-      <Button
-        className="w-full border-0"
-        variant="destructive"
-        onClick={handleLogout}
-      >
-        Logout
-      </Button>
-    </>
+    <Button
+      className="w-full border-0"
+      variant="destructive"
+      onClick={handleLogout}
+    >
+      Logout
+    </Button>
   );
 }

@@ -1,11 +1,9 @@
-import { ArrowRightIcon } from "lucide-react";
-
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 
 import { cn } from "@/lib/utils";
+import { PrimaryCardButton } from "../ui/primary-button";
 
 export type EquipmentItem = {
   image: string;
@@ -85,7 +83,7 @@ const EquipmentList = ({ equipments }: EquipmentProps) => {
             <Card
               key={index}
               className={cn(
-                "border-border bg-muted overflow-hidden border shadow-sm transition-all hover:shadow-md",
+                "bg-card overflow-hidden border border-white/30 shadow-sm transition-all hover:shadow-md",
                 equipment.salePrice && "relative",
               )}
             >
@@ -102,7 +100,7 @@ const EquipmentList = ({ equipments }: EquipmentProps) => {
                   <img
                     src={equipment.image}
                     alt={equipment.imgAlt}
-                    className="mx-auto aspect-square w-full max-w-[180px] object-contain"
+                    className="mx-auto aspect-square w-full max-w-45 object-contain"
                   />
                 </a>
 
@@ -126,9 +124,7 @@ const EquipmentList = ({ equipments }: EquipmentProps) => {
 
                   {/* Product Price */}
                   <div className="flex items-center justify-center">
-                    <Button variant="default" className="w-full text-xs">
-                      Request Borrow <ArrowRightIcon />
-                    </Button>
+                    <PrimaryCardButton status="AVAILABLE" />
                   </div>
                 </div>
               </CardContent>

@@ -1,14 +1,29 @@
-import { Outlet } from "react-router-dom";
-import { Navigate } from "react-router-dom";
+import { Navigate, Outlet } from "react-router-dom";
+import { useAuthStore } from "../../stores/useAuthStore";
 
-export default function ProtectedRoute() {
-  console.log("############# ProtectedRoute");
-  const user = JSON.parse(localStorage.getItem("user") || "null");
-  console.log("user: ", user);
+type Props = {
+  allowRoles: string[];
+};
 
-  if (!user) {
-    return <Navigate to="/login" replace />;
+const ProtectedRoute = ({ allowRoles }: Props) => {
+  const { user, loading } = useAuthStore();
+
+  // Đang chờ refreshToken hoàn thành — chưa biết user là ai
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="h-10 w-10 animate-spin rounded-full border-b-2 border-[#1E2B58] dark:border-blue-400" />
+      </div>
+    );
   }
 
-  return <Outlet />;
-}
+  const role = user?.role;
+
+  if (role && allowRoles.includes(role)) {
+    return <Outlet />;
+  }
+
+  return <Navigate to="/login" replace />;
+};
+
+export default ProtectedRoute;

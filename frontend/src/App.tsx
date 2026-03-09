@@ -1,30 +1,21 @@
-import { Toaster } from "sonner";
-import { NavBar } from "./components/common/NavBar";
+import { useEffect } from "react";
 import { Outlet } from "react-router";
+import { Toaster } from "sonner";
 import { ThemeProvider } from "./components/common/theme-provider";
-import Footer from "./components/common/Footer";
+import { useAuthStore } from "./stores/useAuthStore";
 
 export default function App() {
+  const { refreshToken } = useAuthStore();
+
+  useEffect(() => {
+    refreshToken();
+  }, [refreshToken]);
+
   return (
     <>
       <Toaster richColors />
       <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
-        <div className="container w-[90%] p-1">
-          <header className="my-4 mb-6">
-            <NavBar></NavBar>
-          </header>
-          <Outlet /> {/* Nơi render các route con */}
-          {/* <Button
-            onClick={async () => {
-              const user = await authService.fetchUserProfile();
-              console.log("✅Success fetching user profile");
-              console.log("User = ", user);
-            }}
-          >
-            Fetch Profile
-          </Button> */}
-          <Footer />
-        </div>
+        <Outlet />
       </ThemeProvider>
     </>
   );
