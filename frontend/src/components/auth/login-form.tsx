@@ -202,11 +202,7 @@ export function LoginForm({ className, ...props }: React.ComponentProps<"div">) 
         {/* ── Form ── */}
         <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-5">
 
-          {/* Role select */}
-          <div className="flex flex-col gap-2">
-            <FieldLabel>Select Role</FieldLabel>
-            <CustomRoleSelect value={role} onChange={setRole} />
-          </div>
+        
 
           {/* Username */}
           <div className="flex flex-col gap-2">

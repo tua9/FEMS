@@ -30,6 +30,7 @@ export const updateBorrowRequest = asyncHandler(async (req, res) => {
 })
 
 export const getPersonalBorrowRequests = asyncHandler(async (req, res) => {
+  console.log('📚 get personal borrow requests for user:', req.user._id)
   const result = await borrowRequestService.getPersonalBorrowRequests(
     req.user._id,
   )

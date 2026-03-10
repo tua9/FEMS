@@ -60,9 +60,8 @@ assetSchema.pre('save', function (next) {
 })
 
 // Default sort by newest first
-assetSchema.pre('find', function (next) {
+assetSchema.pre('find', function () {
   this.sort({ createdAt: -1 })
-  next()
 })
 
 const Equipment = mongoose.model('Equipment', assetSchema)
