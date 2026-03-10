@@ -1,12 +1,12 @@
 export type BorrowRequestStatus =
-  | "Pending"
-  | "Approved"
-  | "HandedOver"
-  | "Returned"
-  | "Cancelled"
+  | "pending"
+  | "approved"
+  | "rejected"
+  | "handed_over"
+  | "returned"
   | string;
 
-export type BorrowRequestType = "equipment" | "room" | string;
+export type BorrowRequestType = "equipment" | "infrastructure" | string;
 
 export interface BorrowRequestUser {
   _id: string;

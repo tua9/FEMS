@@ -12,15 +12,30 @@ import { useBorrowRequestStore } from "@/stores/useBorrowRequestStore";
 const StatCards: React.FC = () => {
   const borrowRequests = useBorrowRequestStore((state) => state.borrowRequests);
 
+  const totalRequests = borrowRequests.length;
+
+  const activeBorrowCount = borrowRequests.filter(
+    (item) => item.status === "approved"
+  ).length;
+
+  const pendingRequestCount = borrowRequests.filter(
+    (item) => item.status === "pending"
+  ).length;
+
+  const returnedCount = borrowRequests.filter(
+    (item) => item.status === "returned"
+  ).length;
+
+  const usageScore =
+    totalRequests === 0
+      ? 0
+      : Math.round((returnedCount / totalRequests) * 100);
+
   const statCards = [
     {
       id: "active-borrows",
-      title: "Active Borrows",
-      value: String(
-        borrowRequests.filter((item) =>
-          ["Pending", "Approved", "HandedOver"].includes(item.status)
-        ).length
-      ),
+      title: "Active Borrow",
+      value: String(activeBorrowCount),
       icon: Package,
       color: "bg-blue-500",
       iconShadow: "shadow-blue-500/40",
@@ -31,7 +46,7 @@ const StatCards: React.FC = () => {
     {
       id: "history",
       title: "Total History",
-      value: String(borrowRequests.length),
+      value: String(totalRequests),
       icon: History,
       color: "bg-purple-500",
       iconShadow: "shadow-purple-500/40",
@@ -40,20 +55,20 @@ const StatCards: React.FC = () => {
       route: "/student/borrow-history",
     },
     {
-      id: "pending-reports",
-      title: "Pending Reports",
-      value: "0",
+      id: "pending-requests",
+      title: "Pending Request",
+      value: String(pendingRequestCount),
       icon: AlertCircle,
       color: "bg-orange-500",
       iconShadow: "shadow-orange-500/40",
       dot: "bg-orange-400",
       glow: "glow-orange",
-      route: "/student/report",
+      route: "/student/borrow-history",
     },
     {
       id: "usage",
       title: "Usage Score",
-      value: "0%",
+      value: `${usageScore}%`,
       icon: TrendingUp,
       color: "bg-emerald-500",
       iconShadow: "shadow-emerald-500/40",
