@@ -11,9 +11,22 @@ import {
   RECENT_ACTIVITIES,
   UPCOMING_ITEMS,
 } from "@/data/student/mockStudentHome";
+import { useEffect, useState } from "react";
+import { authService } from "@/services/authService";
+
 
 const HomePage: React.FC = () => {
   const navigate = useNavigate();
+  const [user, setUser] = useState<any>(null);
+
+    useEffect(() => {
+    const getProfile = async () => {
+      const res = await authService.fetchUserProfile();
+      setUser(res.data);
+    };
+
+    getProfile();
+  }, []);
 
   return (
     <PageShell topPadding="pt-32" className="pb-20 px-4 sm:px-6">
@@ -21,7 +34,7 @@ const HomePage: React.FC = () => {
         {/* Welcome Header */}
         <AnimatedSection variant="curtain" delay={0} className="mb-12">
           <header className="student-page-header">
-            <h2>Hello, Alex Chen</h2>
+            <h2>Hello, {user?.displayName || user?.username || "User"}</h2>
             <p>Welcome back to your University Dashboard.</p>
             <div className="mt-8">
               <button

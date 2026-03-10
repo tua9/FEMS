@@ -20,7 +20,6 @@ export const signOut = asyncHandler(async (req, res) => {
 })
 
 export const signIn = asyncHandler(async (req, res) => {
-  console.log('Call: ⛳authController.js -> signIn()')
   const { userInfo, accessToken, refreshToken, displayName } =
     await authService.signIn(req.body)
 
