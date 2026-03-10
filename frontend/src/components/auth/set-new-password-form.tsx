@@ -28,7 +28,7 @@ type SetPasswordValues = z.infer<typeof setPasswordSchema>;
 
 const cardCls = cn(
   "w-full rounded-[2.5rem] border border-white/40 bg-white/75 p-8 backdrop-blur-xl",
-  "shadow-[0_20px_60px_-10px_rgba(0,0,0,0.18)] dark:shadow-[0_20px_60px_-10px_rgba(0,0,0,0.65)]",
+  "shadow-[0_24px_70px_-8px_rgba(0,0,0,0.26)] dark:shadow-[0_24px_70px_-8px_rgba(0,0,0,0.82)]",
   "dark:border-slate-600/50 dark:bg-slate-800/90 md:p-12",
 );
 
@@ -46,7 +46,7 @@ const inputCls =
   "h-12 w-full rounded-xl border border-slate-300 bg-white pl-11 pr-11 text-[0.9rem] font-normal text-slate-700 placeholder:text-slate-300 outline-none transition-all duration-150 focus:border-slate-400/50 focus:ring-2 focus:ring-slate-900/8 shadow-[0_2px_12px_-3px_rgba(0,0,0,0.06)] dark:border-slate-500 dark:bg-slate-900/60 dark:text-slate-200 dark:placeholder:text-slate-600 dark:focus:border-slate-500/60 dark:focus:ring-white/8 dark:shadow-none";
 
 const FieldLabel = ({ children }: { children: React.ReactNode }) => (
-  <label className="block text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">
+  <label className="block text-[10px] font-extrabold uppercase tracking-widest text-slate-600 dark:text-slate-200">
     {children}
   </label>
 );
@@ -124,8 +124,8 @@ export function PasswordResetSuccessModal({ open }: PasswordResetSuccessModalPro
       <div
         className={cn(
           "relative w-full max-w-sm rounded-4xl border border-white/50 bg-white/90 px-8 py-10 text-center backdrop-blur-xl",
-          "shadow-[0_30px_80px_-10px_rgba(0,0,0,0.22)]",
-          "dark:border-slate-600/50 dark:bg-slate-800/95 dark:shadow-[0_30px_80px_-10px_rgba(0,0,0,0.7)]",
+          "shadow-[0_30px_80px_-10px_rgba(0,0,0,0.28)]",
+          "dark:border-slate-600/50 dark:bg-slate-800/95 dark:shadow-[0_30px_80px_-10px_rgba(0,0,0,0.82)]",
           "animate-in fade-in zoom-in-95 duration-300",
         )}
       >
@@ -153,7 +153,7 @@ export function PasswordResetSuccessModal({ open }: PasswordResetSuccessModalPro
         </h2>
 
         {/* Description */}
-        <p className="mx-auto mb-7 max-w-65 text-[0.875rem] leading-relaxed text-slate-500 dark:text-slate-400">
+        <p className="mx-auto mb-7 max-w-65 text-[0.875rem] font-medium leading-relaxed text-slate-500 dark:text-slate-300">
           Your password has been reset. You can now log in to your account with your new password.
         </p>
 
@@ -175,7 +175,7 @@ export function PasswordResetSuccessModal({ open }: PasswordResetSuccessModalPro
         </button>
 
         {/* Countdown */}
-        <p className="mt-4 text-[10px] font-bold uppercase tracking-[0.18em] text-slate-400 dark:text-slate-500">
+        <p className="mt-4 text-[10px] font-bold uppercase tracking-[0.18em] text-slate-400 dark:text-slate-300">
           Redirecting in {countdown} second{countdown !== 1 ? "s" : ""}…
         </p>
       </div>
@@ -242,7 +242,7 @@ export function SetNewPasswordForm({
           <h2 className="mb-2 text-center text-2xl font-extrabold tracking-tight text-slate-900 dark:text-white">
             Set New Password
           </h2>
-          <p className="mx-auto mb-7 max-w-xs text-center text-sm text-slate-500 dark:text-slate-400">
+          <p className="mx-auto mb-7 max-w-xs text-center text-sm font-medium text-slate-500 dark:text-slate-300">
             Please enter your new password to regain access to your account.
           </p>
 

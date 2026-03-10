@@ -20,16 +20,14 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     });
   },
 
-  signIn: async (username: string, password: string, role: string) => {
+  signIn: async (username: string, password: string) => {
     try {
       set({ loading: true });
-      const { accessToken } = await authService.signIn(username, password, role);
+      const { accessToken } = await authService.signIn(username, password);
       get().setAccessToken(accessToken);
       toast.success("Login successful!");
       await get().fetchUserProfile();
     } catch (error) {
-      // Re-throw so the calling form can catch it and show inline errors.
-      // Do NOT call toast.error here — the form handles its own error display.
       throw error;
     } finally {
       set({ loading: false });

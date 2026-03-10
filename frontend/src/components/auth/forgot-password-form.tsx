@@ -18,7 +18,7 @@ type ForgotFormValues = z.infer<typeof forgotSchema>;
 
 const cardCls = cn(
   "w-full rounded-[2.5rem] border border-white/40 bg-white/75 p-8 backdrop-blur-xl",
-  "shadow-[0_20px_60px_-10px_rgba(0,0,0,0.18)] dark:shadow-[0_20px_60px_-10px_rgba(0,0,0,0.65)]",
+  "shadow-[0_24px_70px_-8px_rgba(0,0,0,0.26)] dark:shadow-[0_24px_70px_-8px_rgba(0,0,0,0.82)]",
   "dark:border-slate-600/50 dark:bg-slate-800/90 md:p-12",
 );
 
@@ -26,7 +26,7 @@ const inputCls =
   "h-12 w-full rounded-xl border border-slate-300 bg-white pl-11 pr-4 text-[0.9rem] font-normal text-slate-700 placeholder:text-slate-300 outline-none transition-all duration-150 focus:border-slate-400/50 focus:ring-2 focus:ring-slate-900/8 shadow-[0_2px_12px_-3px_rgba(0,0,0,0.06)] dark:border-slate-500 dark:bg-slate-900/60 dark:text-slate-200 dark:placeholder:text-slate-600 dark:focus:border-slate-500/60 dark:focus:ring-white/8 dark:shadow-none";
 
 const FieldLabel = ({ children }: { children: React.ReactNode }) => (
-  <label className="block text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">
+  <label className="block text-[10px] font-extrabold uppercase tracking-widest text-slate-600 dark:text-slate-200">
     {children}
   </label>
 );
@@ -66,7 +66,7 @@ export function ForgotPasswordForm({
         </div>
 
         {/* Description */}
-        <p className="mx-auto mb-6 max-w-xs text-center text-sm text-slate-500 dark:text-slate-400">
+        <p className="mx-auto mb-6 max-w-xs text-center text-sm font-medium text-slate-500 dark:text-slate-300">
           Enter your university email and we will send you a reset link.
         </p>
 

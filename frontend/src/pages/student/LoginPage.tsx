@@ -23,7 +23,7 @@ export default function LoginPage() {
           <DarkModeToggle />
           <a
             href="#"
-            className="text-[0.85rem] font-medium text-slate-500 transition hover:text-slate-800 dark:text-slate-400 dark:hover:text-white"
+            className="text-[0.85rem] font-extrabold text-slate-600 transition hover:text-slate-900 dark:text-slate-200 dark:hover:text-white"
           >
             Report Issue
           </a>

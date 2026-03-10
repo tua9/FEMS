@@ -67,12 +67,12 @@ export const signIn = async (req, res) => {
   console.log('Call: ⛳authController.js -> signIn()')
 
   try {
-    const { username, password, role } = req.body
+    const { username, password } = req.body
 
-    if (!username || !password || !role) {
+    if (!username || !password) {
       return res
         .status(400)
-        .json({ message: 'Username, password and role are required!' })
+        .json({ message: 'Username and password are required!' })
     }
 
     const user = await User.findOne({ username })
@@ -85,11 +85,8 @@ export const signIn = async (req, res) => {
       return res.status(401).json({ message: 'Invalid password' })
     }
 
-    if (user.role !== role) {
-      return res
-        .status(403)
-        .json({ message: `User does not have the role: ${role}` })
-    }
+    // Role is taken directly from DB — no need for client to send it
+    const role = user.role
 
     // Tao Access Token
 
