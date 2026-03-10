@@ -1,47 +1,11 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import { ACTIVITIES, UPCOMING_CLASSES } from "./constants";
+import {
+  LECTURER_STAT_CARDS as STAT_CARDS,
+  LECTURER_ACTIVITIES as ACTIVITIES,
+  UPCOMING_CLASSES,
+} from "@/data/lecturer/mockLecturerData";
 import { PageShell, AnimatedList, AnimatedListItem, AnimatedSection } from "@/components/motion";
-
-// ── Stat card config – each card routes to the most relevant page ──────────
-const STAT_CARDS = [
-  {
-    label: "Equipment Borrowed",
-    value: "24",
-    icon: "laptop_mac",
-    route: "/lecturer/equipment",
-    hint: "View Equipment",
-    dot: "bg-blue-400",
-    glow: "glow-blue",
-  },
-  {
-    label: "Pending Requests",
-    value: "08",
-    icon: "pending_actions",
-    route: "/lecturer/approval",
-    hint: "Review Requests",
-    dot: "bg-amber-400",
-    glow: "glow-amber",
-  },
-  {
-    label: "Reports Sent",
-    value: "15",
-    icon: "assignment_turned_in",
-    route: "/lecturer/history",
-    hint: "View History",
-    dot: "bg-emerald-400",
-    glow: "glow-emerald",
-  },
-  {
-    label: "Assigned Rooms",
-    value: "04",
-    icon: "meeting_room",
-    route: "/lecturer/room-status",
-    hint: "View Rooms",
-    dot: "bg-violet-400",
-    glow: "glow-violet",
-  },
-];
 
 // ── Map activity type to destination route ─────────────────────────────────
 const ACTIVITY_ROUTE: Record<string, string> = {

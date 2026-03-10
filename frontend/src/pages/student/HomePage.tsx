@@ -7,10 +7,10 @@ import React from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { PageShell, AnimatedList, AnimatedListItem, AnimatedSection } from "@/components/motion";
 import {
-  STAT_CARDS,
-  RECENT_ACTIVITIES,
-  UPCOMING_ITEMS,
-} from "@/data/student/mockStudentHome";
+  STUDENT_STAT_CARDS as STAT_CARDS,
+  STUDENT_RECENT_ACTIVITIES as RECENT_ACTIVITIES,
+  STUDENT_UPCOMING_ITEMS as UPCOMING_ITEMS,
+} from "@/data/student/mockStudentData";
 
 const HomePage: React.FC = () => {
   const navigate = useNavigate();

@@ -19,8 +19,10 @@ import type {
   LocationKey,
 } from "@/components/shared/equipment";
 import {
-  ALL_EQUIPMENT,
+  STUDENT_ALL_EQUIPMENT as ALL_EQUIPMENT,
   ITEMS_PER_PAGE,
+} from "@/data/student/mockStudentData";
+import {
   CATEGORY_TO_TYPE,
   TYPE_TO_CATEGORY,
 } from "@/data/student/mockStudentEquipment";

@@ -9,10 +9,10 @@ interface NavBrandProps {
   brandIcon: string;
 }
 
-const NavBrand: React.FC<NavBrandProps> = ({ portalLabel, brandIcon }) => (
+const NavBrand: React.FC<NavBrandProps> = ({ portalLabel, brandIcon: _brandIcon }) => (
   <div className="flex min-w-40 items-center gap-3">
-    <div className="flex h-10 w-10 items-center justify-center rounded-full border-2 border-white/20 bg-[#1E2B58] text-white shadow-lg">
-      <span className="material-symbols-rounded text-xl">{brandIcon}</span>
+    <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full border-2 border-white/20 bg-[#1E2B58] shadow-lg">
+      <img src="/logo1.png" alt="F-EMS Logo" className="h-full w-full object-cover" />
     </div>
     <div>
       <h1 className="text-base font-extrabold leading-none tracking-tight text-[#1E2B58] dark:text-white">
