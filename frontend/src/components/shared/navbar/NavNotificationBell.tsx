@@ -131,8 +131,8 @@ const NotificationItem: React.FC<ItemProps> = ({
     <button
       type="button"
       onClick={handleClick}
-      className={`w-full px-5 py-4 text-left transition-colors hover:bg-slate-50 dark:hover:bg-slate-700/20 border-b border-slate-100 dark:border-slate-700/40 last:border-0 group ${
-        !notification.read ? "bg-blue-50/60 dark:bg-blue-900/10" : ""
+      className={`w-full px-5 py-4 text-left transition-colors hover:bg-[#1E2B58]/4 dark:hover:bg-white/5 border-b border-black/5 dark:border-white/6 last:border-0 group ${
+        !notification.read ? "bg-blue-500/5 dark:bg-blue-400/8" : ""
       }`}
     >
       <div className="flex items-start gap-3">
@@ -151,8 +151,8 @@ const NotificationItem: React.FC<ItemProps> = ({
             <p
               className={`text-[0.8125rem] font-bold leading-snug ${
                 notification.read
-                  ? "text-slate-600 dark:text-slate-300"
-                  : "text-slate-800 dark:text-slate-100"
+                  ? "text-slate-500 dark:text-slate-400"
+                  : "text-slate-900 dark:text-slate-100"
               }`}
             >
               {notification.title}
@@ -255,13 +255,24 @@ const NavNotificationBell: React.FC = () => {
             initial="hidden"
             animate="visible"
             exit="exit"
-            className="absolute right-0 z-50 mt-3 w-88 overflow-hidden rounded-3xl border border-slate-200/60 bg-white shadow-2xl shadow-[#1E2B58]/15 dark:border-slate-700/50 dark:bg-slate-900 dark:shadow-black/40"
+            className={[
+              // Shape & layout
+              "absolute right-0 z-50 mt-3 w-88 overflow-hidden rounded-3xl",
+              // Glass pane — light
+              "bg-white/70 backdrop-blur-[28px]",
+              // Glass pane — dark
+              "dark:bg-slate-950/40 dark:backdrop-blur-[28px]",
+              // Specular highlight border
+              "ring-1 ring-inset ring-black/5 dark:ring-white/12",
+              // Float shadow
+              "shadow-2xl shadow-[#1E2B58]/10 dark:shadow-black/50",
+            ].join(" ")}
           >
             {/* Header */}
-            <div className="flex items-center justify-between border-b border-slate-100 px-5 py-4 dark:border-slate-700/50">
+            <div className="flex items-center justify-between border-b border-black/6 px-5 py-4 dark:border-white/8">
               <div className="flex items-center gap-2.5">
                 <Bell className="h-4 w-4 text-[#1E2B58] dark:text-white" />
-                <h3 className="text-[0.9375rem] font-extrabold text-slate-800 dark:text-slate-100">
+                <h3 className="text-[0.9375rem] font-extrabold text-slate-900 dark:text-slate-100">
                   Notifications
                 </h3>
                 {unreadCount > 0 && (
@@ -274,7 +285,7 @@ const NavNotificationBell: React.FC = () => {
                 {unreadCount > 0 && (
                   <button
                     onClick={handleMarkAllRead}
-                    className="flex items-center gap-1 rounded-lg px-2 py-1 text-[0.6875rem] font-bold text-blue-500 transition-colors hover:bg-blue-50 hover:text-blue-600 dark:text-blue-400 dark:hover:bg-blue-900/20 dark:hover:text-blue-300"
+                    className="flex items-center gap-1 rounded-lg px-2 py-1 text-[0.6875rem] font-bold text-blue-500 transition-colors hover:bg-blue-500/8 hover:text-blue-600 dark:text-blue-400 dark:hover:bg-blue-400/10 dark:hover:text-blue-300"
                   >
                     <CheckCheck className="h-3.5 w-3.5" />
                     Mark all read
@@ -283,7 +294,7 @@ const NavNotificationBell: React.FC = () => {
                 <button
                   onClick={() => setIsOpen(false)}
                   aria-label="Close"
-                  className="ml-1 rounded-lg p-1.5 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-slate-700/40 dark:hover:text-slate-200"
+                  className="ml-1 rounded-lg p-1.5 text-slate-400 transition-colors hover:bg-black/5 hover:text-slate-600 dark:hover:bg-white/8 dark:hover:text-slate-200"
                 >
                   <X className="h-4 w-4" />
                 </button>
@@ -304,8 +315,8 @@ const NavNotificationBell: React.FC = () => {
                 ))
               ) : (
                 <div className="flex flex-col items-center gap-3 px-6 py-14 text-center">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-100 dark:bg-slate-700/40">
-                    <Bell className="h-6 w-6 text-slate-400" />
+                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-black/5 dark:bg-white/8">
+                    <Bell className="h-6 w-6 text-slate-400 dark:text-slate-500" />
                   </div>
                   <p className="text-sm font-semibold text-slate-400 dark:text-slate-500">
                     No notifications
@@ -316,7 +327,7 @@ const NavNotificationBell: React.FC = () => {
 
             {/* Footer */}
             {notifications.length > 0 && (
-              <div className="border-t border-slate-100 px-5 py-3.5 text-center dark:border-slate-700/50">
+              <div className="border-t border-black/6 px-5 py-3.5 text-center dark:border-white/8">
                 <button
                   onClick={() => {
                     setIsOpen(false);

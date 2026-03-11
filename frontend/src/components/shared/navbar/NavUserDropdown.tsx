@@ -232,13 +232,24 @@ const NavUserDropdown: React.FC = () => {
             initial="hidden"
             animate="visible"
             exit="exit"
-            className="absolute right-0 z-50 mt-3 w-72 overflow-hidden rounded-3xl border border-[#1E2B58]/8 bg-white/95 shadow-2xl shadow-[#1E2B58]/12 backdrop-blur-xl dark:border-white/10 dark:bg-slate-900/95 dark:shadow-black/40"
+            className={[
+              // Shape & layout
+              "absolute right-0 z-50 mt-3 w-72 overflow-hidden rounded-3xl",
+              // Glass pane — light
+              "bg-white/70 backdrop-blur-[28px]",
+              // Glass pane — dark
+              "dark:bg-slate-950/40 dark:backdrop-blur-[28px]",
+              // Specular highlight border
+              "ring-1 ring-inset ring-black/5 dark:ring-white/12",
+              // Float shadow
+              "shadow-2xl shadow-[#1E2B58]/10 dark:shadow-black/50",
+            ].join(" ")}
           >
             {/* ── User info header ── */}
             <button
               type="button"
               onClick={() => go(profileRoute[role] ?? "/lecturer/profile")}
-              className="group w-full border-b border-[#1E2B58]/6 px-5 py-4 text-left transition-colors hover:bg-[#1E2B58]/2 dark:border-white/10 dark:hover:bg-white/2"
+              className="group w-full border-b border-black/6 px-5 py-4 text-left transition-colors hover:bg-[#1E2B58]/4 dark:border-white/8 dark:hover:bg-white/5"
             >
               <div className="flex items-center gap-3">
                 {/* Avatar */}
@@ -265,7 +276,7 @@ const NavUserDropdown: React.FC = () => {
                   <p className="truncate text-[0.8125rem] font-extrabold leading-tight text-[#1E2B58] dark:text-white">
                     {user?.displayName ?? "—"}
                   </p>
-                  <p className="mt-0.5 truncate text-[0.6875rem] font-semibold text-slate-400 dark:text-slate-500">
+                  <p className="mt-0.5 truncate text-[0.6875rem] font-semibold text-slate-500 dark:text-slate-400">
                     {user?.email ?? ""}
                   </p>
                 </div>
@@ -306,8 +317,8 @@ const NavUserDropdown: React.FC = () => {
                     onClick={() => go(item.to)}
                     className={`group flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left transition-all ${
                       isActive
-                        ? "bg-[#1E2B58]/5 dark:bg-white/6"
-                        : "hover:bg-[#1E2B58]/3 dark:hover:bg-white/4"
+                        ? "bg-[#1E2B58]/8 dark:bg-white/8"
+                        : "hover:bg-[#1E2B58]/5 dark:hover:bg-white/6"
                     }`}
                   >
                     {/* Icon */}
@@ -357,14 +368,14 @@ const NavUserDropdown: React.FC = () => {
             </div>
 
             {/* ── Logout ── */}
-            <div className="border-t border-[#1E2B58]/6 p-2 dark:border-white/10">
+            <div className="border-t border-black/6 p-2 dark:border-white/8">
               <button
                 type="button"
                 onClick={handleLogout}
-                className="group flex w-full items-center gap-3 rounded-xl px-3 py-2.5 transition-all hover:bg-red-50 dark:hover:bg-red-900/20"
+                className="group flex w-full items-center gap-3 rounded-xl px-3 py-2.5 transition-all hover:bg-red-500/8 dark:hover:bg-red-400/10"
               >
-                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-red-50 transition-colors group-hover:bg-red-100 dark:bg-red-900/20 dark:group-hover:bg-red-900/30">
-                  <LogOut className="h-4 w-4 text-red-500" />
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-red-500/8 transition-colors group-hover:bg-red-500/15 dark:bg-red-400/10 dark:group-hover:bg-red-400/20">
+                  <LogOut className="h-4 w-4 text-red-500 dark:text-red-400" />
                 </div>
                 <span className="text-[0.8125rem] font-bold text-red-500 dark:text-red-400">
                   Log Out

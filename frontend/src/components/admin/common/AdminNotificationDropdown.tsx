@@ -1,6 +1,7 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { MOCK_NOTIFICATIONS, Notification, NotifType } from '@/data/technician/mockNotifications';
+import type { Notification, NotifType } from '@/data/technician/mockNotifications';
+import { MOCK_NOTIFICATIONS } from '@/data/technician/mockNotifications';
 
 // ── icon colour per type ────────────────────────────────────────────────────
 const TYPE_STYLE: Record<NotifType, { bg: string; text: string }> = {
@@ -12,10 +13,10 @@ const TYPE_STYLE: Record<NotifType, { bg: string; text: string }> = {
 };
 
 interface Props {
-    isDark: boolean;
+    isDark?: boolean; // kept for API compatibility, no longer used internally
 }
 
-const AdminNotificationDropdown: React.FC<Props> = ({ isDark }) => {
+const AdminNotificationDropdown: React.FC<Props> = () => {
     const [open, setOpen] = useState(false);
     const [items, setItems] = useState<Notification[]>(MOCK_NOTIFICATIONS);
     const ref = useRef<HTMLDivElement>(null);
@@ -52,29 +53,20 @@ const AdminNotificationDropdown: React.FC<Props> = ({ isDark }) => {
             {/* Dropdown panel */}
             {open && (
                 <div
-                    className="absolute right-0 top-full mt-3 w-80 rounded-2xl z-50 overflow-hidden"
-                    style={{
-                        background: isDark
-                            ? 'rgba(13, 20, 40, 0.97)'
-                            : 'rgba(247, 249, 255, 0.98)',
-                        backdropFilter: 'blur(32px) saturate(200%)',
-                        WebkitBackdropFilter: 'blur(32px) saturate(200%)',
-                        border: isDark
-                            ? '1px solid rgba(255,255,255,0.10)'
-                            : '1px solid rgba(200,210,240,0.70)',
-                        boxShadow: isDark
-                            ? '0 20px 60px rgba(0,0,0,0.60), 0 4px 16px rgba(0,0,0,0.40)'
-                            : '0 20px 60px rgba(26,43,86,0.16), 0 4px 16px rgba(26,43,86,0.10)',
-                    }}
+                    className={[
+                        // Shape & layout
+                        "absolute right-0 top-full mt-3 w-80 rounded-2xl z-50 overflow-hidden",
+                        // Glass pane
+                        "bg-white/70 backdrop-blur-[28px]",
+                        "dark:bg-slate-950/40 dark:backdrop-blur-[28px]",
+                        // Specular highlight border
+                        "ring-1 ring-inset ring-black/5 dark:ring-white/12",
+                        // Float shadow
+                        "shadow-2xl shadow-[#1A2B56]/10 dark:shadow-black/50",
+                    ].join(" ")}
                 >
                     {/* Header */}
-                    <div
-                        className="flex items-center justify-between px-4 py-3 border-b"
-                        style={{
-                            background: isDark ? 'rgba(26,43,86,0.50)' : 'rgba(26,43,86,0.05)',
-                            borderColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(26,43,86,0.08)',
-                        }}
-                    >
+                    <div className="flex items-center justify-between px-4 py-3 border-b border-black/6 bg-[#1A2B56]/4 dark:border-white/8 dark:bg-[#1A2B56]/30">
                         <div className="flex items-center gap-2">
                             <span className="text-sm font-extrabold text-[#1A2B56] dark:text-white tracking-tight">
                                 Admin Notifications
@@ -96,9 +88,9 @@ const AdminNotificationDropdown: React.FC<Props> = ({ isDark }) => {
                     </div>
 
                     {/* List */}
-                    <div className="max-h-[340px] overflow-y-auto custom-scrollbar">
+                    <div className="max-h-85 overflow-y-auto">
                         {items.length === 0 ? (
-                            <div className="flex flex-col items-center justify-center py-10 gap-2 text-slate-400">
+                            <div className="flex flex-col items-center justify-center py-10 gap-2 text-slate-400 dark:text-slate-500">
                                 <span className="material-symbols-outlined text-3xl">notifications_off</span>
                                 <p className="text-xs font-semibold">No notifications</p>
                             </div>
@@ -108,32 +100,16 @@ const AdminNotificationDropdown: React.FC<Props> = ({ isDark }) => {
                                 return (
                                     <button
                                         key={notif.id}
-                                        onClick={() => {
-                                            markRead(notif.id);
-                                            // Optional: navigate to specific page if needed
-                                        }}
-                                        className="w-full text-left flex items-start gap-3 px-4 py-3 transition-all"
-                                        style={{
-                                            background: notif.read
-                                                ? 'transparent'
-                                                : isDark ? 'rgba(58,82,152,0.18)' : 'rgba(26,43,86,0.04)',
-                                            borderBottom: idx < items.length - 1
-                                                ? isDark ? '1px solid rgba(255,255,255,0.05)' : '1px solid rgba(26,43,86,0.06)'
-                                                : 'none',
-                                        }}
-                                        onMouseEnter={(e) => {
-                                            (e.currentTarget as HTMLButtonElement).style.background = isDark
-                                                ? 'rgba(58,82,152,0.28)'
-                                                : 'rgba(26,43,86,0.07)';
-                                        }}
-                                        onMouseLeave={(e) => {
-                                            (e.currentTarget as HTMLButtonElement).style.background = notif.read
-                                                ? 'transparent'
-                                                : isDark ? 'rgba(58,82,152,0.18)' : 'rgba(26,43,86,0.04)';
-                                        }}
+                                        onClick={() => markRead(notif.id)}
+                                        className={[
+                                            "w-full text-left flex items-start gap-3 px-4 py-3 transition-colors",
+                                            "hover:bg-[#1A2B56]/6 dark:hover:bg-white/6",
+                                            idx < items.length - 1 ? "border-b border-black/5 dark:border-white/6" : "",
+                                            !notif.read ? "bg-[#1A2B56]/4 dark:bg-[#3A5298]/15" : "",
+                                        ].join(" ")}
                                     >
                                         {/* Icon badge */}
-                                        <div className={`mt-0.5 w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 ${style.bg}`}>
+                                        <div className={`mt-0.5 w-8 h-8 rounded-xl flex items-center justify-center shrink-0 ${style.bg}`}>
                                             <span className={`material-symbols-outlined text-[16px] ${style.text}`}>
                                                 {notif.icon}
                                             </span>
@@ -149,7 +125,7 @@ const AdminNotificationDropdown: React.FC<Props> = ({ isDark }) => {
                                                     {notif.title}
                                                 </p>
                                                 {!notif.read && (
-                                                    <span className="w-1.5 h-1.5 bg-rose-500 rounded-full flex-shrink-0 mt-1" />
+                                                    <span className="w-1.5 h-1.5 bg-rose-500 rounded-full shrink-0 mt-1" />
                                                 )}
                                             </div>
                                             <p className={`text-[10px] mt-0.5 leading-snug line-clamp-2 ${notif.read ? 'text-slate-400 dark:text-slate-500' : 'text-slate-600 dark:text-slate-300'
@@ -167,13 +143,7 @@ const AdminNotificationDropdown: React.FC<Props> = ({ isDark }) => {
                     </div>
 
                     {/* Footer */}
-                    <div
-                        className="px-4 py-2.5 border-t"
-                        style={{
-                            background: isDark ? 'rgba(26,43,86,0.50)' : 'rgba(26,43,86,0.05)',
-                            borderColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(26,43,86,0.08)',
-                        }}
-                    >
+                    <div className="px-4 py-2.5 border-t border-black/6 bg-[#1A2B56]/4 dark:border-white/8 dark:bg-[#1A2B56]/30">
                         <button
                             onClick={() => { setOpen(false); navigate('/admin/notifications'); }}
                             className="w-full flex items-center justify-center gap-1.5 text-[10px] font-extrabold text-[#1A2B56] dark:text-blue-300 hover:opacity-70 uppercase tracking-widest transition-opacity py-0.5"
