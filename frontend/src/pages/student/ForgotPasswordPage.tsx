@@ -39,7 +39,8 @@ export default function ForgotPasswordPage() {
   const handleVerified = async (code: string): Promise<{ success: boolean }> => {
     // TODO: call real "verify OTP" API here — return { success: false } on wrong code
     await new Promise((r) => setTimeout(r, 800));
-    const isCorrect = code === "123456"; // placeholder: accept "123456"
+    // Dev bypass: "123456" hoặc "000000" đều được chấp nhận
+    const isCorrect = code === "123456" || code === "000000";
     if (isCorrect) setStep("set-password");
     return { success: isCorrect };
   };
@@ -83,9 +84,9 @@ export default function ForgotPasswordPage() {
       <main className="flex flex-1 items-center justify-center px-4 pb-16 pt-10 sm:pt-16">
         <div className="flex w-full max-w-md -translate-y-6 flex-col items-center">
 
-          {/* Heading — hidden for OTP/set-password since they have their own in-card heading */}
-          {step === "email" && (
-            <h1 className="mb-4 text-4xl font-extrabold tracking-tight text-slate-900 dark:text-white md:text-5xl">
+          {/* Heading — only shown on email step */}
+          {(step === "email" || step === "otp" || step === "set-password") && (
+            <h1 className="mb-4 text-4xl font-extrabold tracking-tight text-navi dark:text-white md:text-5xl">
               {HEADINGS[step]}
             </h1>
           )}

@@ -238,9 +238,9 @@ export function LoginForm({ className, ...props }: React.ComponentProps<"div">) 
             disabled={isSubmitting}
             className={cn(
               "flex h-12 w-full items-center justify-center gap-2 rounded-xl",
-              "bg-slate-900 text-[0.9rem] font-semibold text-white",
-              "shadow-[0_10px_25px_-5px_rgba(30,41,59,0.3)]",
-              "transition-all duration-200 hover:bg-slate-800 active:scale-[0.99]",
+              "bg-[#1E2B58] text-[0.9rem] font-semibold text-white",
+              "shadow-[0_10px_25px_-5px_rgba(30,43,88,0.35)]",
+              "transition-all duration-200 hover:bg-[#162044] active:scale-[0.99]",
               "disabled:opacity-60",
               "dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white",
               "dark:shadow-[0_10px_25px_-5px_rgba(0,0,0,0.4)]",
@@ -275,12 +275,12 @@ export function LoginForm({ className, ...props }: React.ComponentProps<"div">) 
             type="button"
             className={cn(
               "flex h-12 w-full items-center justify-center gap-2.5 rounded-xl",
-              "border border-slate-300 bg-white text-[0.9rem] font-medium text-slate-700",
-              "shadow-[0_2px_12px_-3px_rgba(0,0,0,0.06)]",
-              "transition-all duration-150 hover:border-slate-300 hover:bg-slate-50",
+              "border border-[#1E2B58]/20 bg-white text-[0.9rem] font-medium text-[#1E2B58]",
+              "shadow-[0_2px_12px_-3px_rgba(30,43,88,0.08)]",
+              "transition-all duration-150 hover:border-[#1E2B58]/40 hover:bg-[#1E2B58]/5",
               "active:scale-[0.99]",
-              "dark:border-slate-500 dark:bg-slate-800 dark:text-slate-300 dark:shadow-none",
-              "dark:hover:border-slate-500 dark:hover:bg-slate-700",
+              "dark:border-slate-400/60 dark:bg-slate-800 dark:text-slate-100 dark:shadow-none",
+              "dark:hover:border-slate-300 dark:hover:bg-slate-700/60",
             )}
           >
             <GoogleIcon />

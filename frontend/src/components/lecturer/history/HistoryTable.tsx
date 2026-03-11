@@ -1,6 +1,6 @@
 import React from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { StatusBadge } from '../shared/StatusBadge';
+import { StatusBadge } from '@/components/shared/ui/StatusBadge';
 
 const mockHistory = [
     { id: 'HIS-101', item: 'Room AL-402', type: 'Facility', date: 'Ocr 20, 2024', status: 'RETURNED' },

@@ -4,6 +4,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router";
+import { createPortal } from "react-dom";
 
 // ── Validation schema ─────────────────────────────────────────────────────────
 
@@ -34,9 +35,9 @@ const cardCls = cn(
 
 const submitBtnCls = cn(
   "flex h-12 w-full items-center justify-center gap-2 rounded-xl",
-  "bg-slate-900 text-[0.9rem] font-semibold text-white",
-  "shadow-[0_10px_25px_-5px_rgba(30,41,59,0.3)]",
-  "transition-all duration-200 hover:bg-slate-800 active:scale-[0.99]",
+  "bg-[#1E2B58] text-[0.9rem] font-semibold text-white",
+  "shadow-[0_10px_25px_-5px_rgba(30,43,88,0.35)]",
+  "transition-all duration-200 hover:bg-[#162044] active:scale-[0.99]",
   "disabled:opacity-60",
   "dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white",
   "dark:shadow-[0_10px_25px_-5px_rgba(0,0,0,0.4)]",
@@ -114,18 +115,18 @@ export function PasswordResetSuccessModal({ open }: PasswordResetSuccessModalPro
 
   if (!open) return null;
 
-  return (
+  return createPortal(
     // ── Backdrop ──
     <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
       {/* Blurred overlay */}
-      <div className="absolute inset-0 bg-slate-900/30 backdrop-blur-sm dark:bg-slate-950/50" />
+      <div className="absolute inset-0 bg-slate-700/20 backdrop-blur-md dark:bg-slate-950/40" />
 
       {/* Modal card */}
       <div
         className={cn(
-          "relative w-full max-w-sm rounded-4xl border border-white/50 bg-white/90 px-8 py-10 text-center backdrop-blur-xl",
-          "shadow-[0_30px_80px_-10px_rgba(0,0,0,0.28)]",
-          "dark:border-slate-600/50 dark:bg-slate-800/95 dark:shadow-[0_30px_80px_-10px_rgba(0,0,0,0.82)]",
+          "relative w-full max-w-sm rounded-4xl border border-white/60 bg-white/50 px-8 py-10 text-center backdrop-blur-2xl",
+          "shadow-[0_30px_80px_-10px_rgba(0,0,0,0.18)]",
+          "dark:border-white/10 dark:bg-slate-800/50 dark:shadow-[0_30px_80px_-10px_rgba(0,0,0,0.60)]",
           "animate-in fade-in zoom-in-95 duration-300",
         )}
       >
@@ -163,9 +164,9 @@ export function PasswordResetSuccessModal({ open }: PasswordResetSuccessModalPro
           onClick={() => navigate("/login")}
           className={cn(
             "flex w-full items-center justify-center gap-2 rounded-2xl px-6 py-3.5",
-            "bg-slate-900 text-[0.9rem] font-semibold text-white",
-            "shadow-[0_10px_25px_-5px_rgba(30,41,59,0.35)]",
-            "transition-all duration-200 hover:bg-slate-800 active:scale-[0.99]",
+            "bg-[#1E2B58] text-[0.9rem] font-semibold text-white",
+            "shadow-[0_10px_25px_-5px_rgba(30,43,88,0.35)]",
+            "transition-all duration-200 hover:bg-[#162044] active:scale-[0.99]",
             "dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white",
             "dark:shadow-[0_10px_25px_-5px_rgba(0,0,0,0.4)]",
           )}
@@ -179,7 +180,8 @@ export function PasswordResetSuccessModal({ open }: PasswordResetSuccessModalPro
           Redirecting in {countdown} second{countdown !== 1 ? "s" : ""}…
         </p>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
 
@@ -238,10 +240,6 @@ export function SetNewPasswordForm({
             </span>
           </div>
 
-          {/* Heading */}
-          <h2 className="mb-2 text-center text-2xl font-extrabold tracking-tight text-slate-900 dark:text-white">
-            Set New Password
-          </h2>
           <p className="mx-auto mb-7 max-w-xs text-center text-sm font-medium text-slate-500 dark:text-slate-300">
             Please enter your new password to regain access to your account.
           </p>

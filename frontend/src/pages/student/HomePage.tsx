@@ -4,8 +4,9 @@ import {
     MoreVertical,
 } from "lucide-react";
 import React from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { PageShell, AnimatedList, AnimatedListItem, AnimatedSection } from "@/components/motion";
+import { StudentStatCard } from "@/components/student/dashboard";
 import {
   STUDENT_STAT_CARDS as STAT_CARDS,
   STUDENT_RECENT_ACTIVITIES as RECENT_ACTIVITIES,
@@ -37,26 +38,11 @@ const HomePage: React.FC = () => {
 
         {/* Stat Cards */}
         <AnimatedList className="mb-12 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4 lg:gap-7">
-          {STAT_CARDS.map((card) => {
-            const Icon = card.icon;
-            return (
-              <AnimatedListItem key={card.id}>
-                <Link
-                  to={card.route}
-                  className="glass-card group relative flex min-h-42.5 flex-col justify-between gap-4 rounded-4xl p-6 transition-all hover:-translate-y-1 hover:shadow-2xl"
-                >
-                  <div className={`absolute top-5 right-5 h-2 w-2 rounded-full ${card.dot} ${card.glow}`} />
-                  <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl ${card.color} text-white shadow-xl ${card.iconShadow}`}>
-                    <Icon className="h-6 w-6" />
-                  </div>
-                  <div>
-                    <p className="text-xs font-black tracking-widest text-[#1E2B58]/40 uppercase dark:text-white/40">{card.title}</p>
-                    <h3 className="mt-1 text-3xl font-black text-[#1E2B58] dark:text-white">{card.value}</h3>
-                  </div>
-                </Link>
-              </AnimatedListItem>
-            );
-          })}
+          {STAT_CARDS.map((card) => (
+            <AnimatedListItem key={card.id}>
+              <StudentStatCard card={card} />
+            </AnimatedListItem>
+          ))}
         </AnimatedList>
 
         {/* Dashboard Grid */}

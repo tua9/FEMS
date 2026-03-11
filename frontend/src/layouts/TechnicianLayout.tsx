@@ -1,4 +1,4 @@
-import TechnicianNavbar from "@/components/technician/navbar/TechnicianNavbar";
+import TechnicianNavbar from "@/components/navbar/TechnicianNavbar";
 import TechnicianFooter from "@/components/technician/TechnicianFooter";
 import { RouteTransitionWrapper } from "@/components/motion";
 

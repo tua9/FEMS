@@ -35,7 +35,7 @@ export default function LoginPage() {
         <div className="flex w-full max-w-md -translate-y-12 flex-col items-center">
 
           {/* Heading */}
-          <h1 className="mb-4 text-4xl font-extrabold tracking-tight text-slate-900 dark:text-white md:text-5xl">
+          <h1 className="mb-4 text-4xl font-extrabold tracking-tight text-navi dark:text-white md:text-5xl">
             Login
           </h1>
           <p className="mx-auto mb-10 max-w-md text-center text-sm font-medium text-slate-500 dark:text-slate-400">

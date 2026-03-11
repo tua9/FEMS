@@ -106,9 +106,9 @@ export function ForgotPasswordForm({
             disabled={isSubmitting}
             className={cn(
               "flex h-12 w-full items-center justify-center gap-2 rounded-xl",
-              "bg-slate-900 text-[0.9rem] font-semibold text-white",
-              "shadow-[0_10px_25px_-5px_rgba(30,41,59,0.3)]",
-              "transition-all duration-200 hover:bg-slate-800 active:scale-[0.99] disabled:opacity-60",
+              "bg-[#1E2B58] text-[0.9rem] font-semibold text-white",
+              "shadow-[0_10px_25px_-5px_rgba(30,43,88,0.35)]",
+              "transition-all duration-200 hover:bg-[#162044] active:scale-[0.99] disabled:opacity-60",
               "dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white",
               "dark:shadow-[0_10px_25px_-5px_rgba(0,0,0,0.4)]",
             )}
