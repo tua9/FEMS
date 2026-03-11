@@ -5,7 +5,6 @@ import { PageShell, AnimatedSection } from "@/components/motion";
 import { useBorrowRequestStore } from "@/stores/useBorrowRequestStore";
 import { useAuthStore } from "@/stores/useAuthStore";
 
-// Import 3 component đã tách
 import StudentStatCard from "@/components/student/dashboard/StudentStatCard";
 import RecentActivities from "@/components/student/dashboard/RecentActivities";
 import UpcomingDue from "@/components/student/dashboard/UpcomingDue";
