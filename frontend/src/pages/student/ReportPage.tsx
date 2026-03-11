@@ -86,7 +86,7 @@ const ReportPage: React.FC = () => {
 
   return (
     <div className="student-layout transition-colors duration-300">
-      <main className="mx-auto flex w-full max-w-[90vw] flex-1 flex-col overflow-hidden px-4 pt-32 pb-10 sm:px-6 md:pt-36 xl:max-w-4xl">
+      <main className="mx-auto flex w-full max-w-[90vw] flex-1 flex-col overflow-hidden px-4 pt-6 sm:pt-8 pb-10 sm:px-6 xl:max-w-4xl">
         <ReportHeader />
         <QuickScanReport onQRDetected={handleQRDetected} />
         <div className="mb-[2rem] flex items-center gap-[1rem]">

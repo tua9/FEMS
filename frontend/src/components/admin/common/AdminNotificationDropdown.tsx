@@ -145,7 +145,7 @@ const AdminNotificationDropdown: React.FC<Props> = () => {
                                 }}
                             >
                                 {/* Header */}
-                                <div className="flex items-center justify-between border-b border-white/40 bg-white/20 px-5 py-3.5 dark:border-white/8 dark:bg-white/5">
+                                <div className="flex items-center justify-between border-b border-black/10 bg-black/3 px-5 py-3.5 dark:border-white/15 dark:bg-white/5">
                                     <div className="flex items-center gap-2.5">
                                         <Bell className="h-4 w-4 text-[#1A2B56] dark:text-white" />
                                         <span className="text-[0.9375rem] font-extrabold tracking-tight text-slate-900 dark:text-white">
@@ -196,8 +196,8 @@ const AdminNotificationDropdown: React.FC<Props> = () => {
                                                     key={notif.id}
                                                     onClick={() => markRead(notif.id)}
                                                     className={[
-                                                        'group w-full border-b border-white/40 px-4 py-3.5 text-left transition-colors last:border-0 hover:bg-white/30 dark:border-white/6 dark:hover:bg-white/5',
-                                                        !notif.read ? 'bg-white/20 dark:bg-blue-400/8' : '',
+                                                        'group w-full border-b border-black/8 px-4 py-3.5 text-left transition-colors last:border-0 hover:bg-black/5 dark:border-white/12 dark:hover:bg-white/10',
+                                                        !notif.read ? 'bg-blue-500/6 dark:bg-blue-400/10' : '',
                                                     ].join(' ')}
                                                 >
                                                     <div className="flex items-start gap-3">
@@ -230,7 +230,7 @@ const AdminNotificationDropdown: React.FC<Props> = () => {
                                 </div>
 
                                 {/* Footer */}
-                                <div className="border-t border-white/40 bg-white/20 px-5 py-3 text-center dark:border-white/8 dark:bg-white/5">
+                                <div className="border-t border-black/10 bg-black/3 px-5 py-3 text-center dark:border-white/15 dark:bg-white/5">
                                     <button
                                         onClick={() => { setOpen(false); navigate('/admin/notifications'); }}
                                         className="text-[0.8125rem] font-bold text-[#1A2B56] transition-colors hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300"

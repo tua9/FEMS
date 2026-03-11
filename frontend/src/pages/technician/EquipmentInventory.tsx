@@ -12,6 +12,7 @@ import AssetPagination from '@/components/technician/equipment/AssetPagination';
 import AssetDetailModal from '@/components/technician/equipment/AssetDetailModal';
 import AssetEditModal from '@/components/technician/equipment/AssetEditModal';
 import AddEquipmentModal from '@/components/technician/equipment/AddEquipmentModal';
+import { PageHeader } from '@/components/shared/PageHeader';
 
 const ITEMS_PER_PAGE = 6;
 const STORAGE_PERCENTAGE = 92;
@@ -74,7 +75,7 @@ const EquipmentInventory: React.FC = () => {
   const closeModal = () => setModal({ type: 'none' });
 
   return (
-    <div className="pt-32 pb-16 px-6 max-w-7xl mx-auto">
+    <div className="pt-6 sm:pt-8 pb-16 px-6 max-w-7xl mx-auto">
       <div className="flex flex-col md:flex-row gap-8">
 
         {/* Sidebar */}
@@ -87,15 +88,12 @@ const EquipmentInventory: React.FC = () => {
         {/* Main content */}
         <div className="flex-1 space-y-8">
           {/* Page header */}
-          <section className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
-            <div className="space-y-1">
-              <h1 className="text-3xl font-extrabold text-[#232F58] dark:text-white tracking-tight">
-                Asset Inventory
-              </h1>
-              <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">
-                Manage and monitor technical equipment fleet
-              </p>
-            </div>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+            <PageHeader
+              title="Asset Inventory"
+              subtitle="Manage and monitor technical equipment fleet"
+              className="items-start! text-left! mb-0!"
+            />
             <button
               onClick={() => setModal({ type: 'add' })}
               className="flex items-center justify-center gap-2 px-6 py-3.5 bg-[#232F58] text-white rounded-2xl text-sm font-bold shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all whitespace-nowrap"
@@ -103,7 +101,7 @@ const EquipmentInventory: React.FC = () => {
               <span className="material-symbols-outlined text-xl">add</span>
               Add New Device
             </button>
-          </section>
+          </div>
 
           {/* Asset grid */}
           <AssetGrid assets={paged} onAssetClick={handleAssetClick} />

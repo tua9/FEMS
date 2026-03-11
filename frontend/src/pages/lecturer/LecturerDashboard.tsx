@@ -41,7 +41,7 @@ const LecturerDashboard: React.FC = () => {
     <PageShell
       title="Welcome, Dr. Alex Rivers"
       subtitle="Here's your academic facility overview for today."
-      topPadding="pt-36"
+      topPadding="pt-6"
       className="pb-20 px-6"
       contentClassName="max-w-350 mx-auto w-full"
     >

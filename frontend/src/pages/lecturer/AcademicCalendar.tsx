@@ -577,7 +577,7 @@ export const AcademicCalendar: React.FC = () => {
     // ─────────────────────────────────────────────────────────────────────────
     return (
         <div className="w-full">
-            <main className="pt-32 md:pt-36 pb-10 px-4 sm:px-6 w-full max-w-[1400px] mx-auto flex-1 flex flex-col">
+            <main className="pt-6 sm:pt-8 pb-10 px-4 sm:px-6 w-full max-w-350 mx-auto flex-1 flex flex-col">
 
                 {/* ── Header ── */}
                 <header className="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">

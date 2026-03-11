@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, PieChart, Pie } from 'recharts';
+import { PageHeader } from '@/components/shared/PageHeader';
 
 const DATA = [
   { name: 'CS101', current: 85, average: 60 },
@@ -18,11 +19,11 @@ const PIE_DATA = [
 
 const UsageStats: React.FC = () => {
   return (
-    <div className="pt-32 pb-10 px-6 max-w-[1400px] mx-auto animate-in fade-in duration-500">
-      <header className="mb-10">
-        <h2 className="text-4xl font-extrabold text-[#1E2B58] dark:text-white mb-2 tracking-tight">Resource Efficiency by Subject</h2>
-        <p className="text-slate-500 dark:text-slate-400 text-lg">Analyze how resources are distributed across course tracks.</p>
-      </header>
+    <div className="pt-6 sm:pt-8 pb-10 px-6 max-w-350 mx-auto animate-in fade-in duration-500">
+      <PageHeader
+        title="Resource Efficiency by Subject"
+        subtitle="Analyze how resources are distributed across course tracks."
+      />
 
       <div className="glass-card rounded-[40px] p-8 lg:p-12 mb-10 shadow-2xl relative overflow-hidden">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-12 relative z-10">

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MOCK_NOTIFICATIONS, Notification, NotifType } from '@/data/technician/mockNotifications';
+import { PageHeader } from '@/components/shared/PageHeader';
 
 // ── icon colour per type ─────────────────────────────────────────────────────
 const TYPE_STYLE: Record<NotifType, { bg: string; text: string; label: string }> = {
@@ -32,11 +33,11 @@ const TechnicianNotifications: React.FC = () => {
   });
 
   return (
-    <main className="pt-32 pb-16 px-6 max-w-4xl mx-auto space-y-8">
+    <main className="pt-6 sm:pt-8 pb-16 px-6 max-w-4xl mx-auto space-y-8">
 
       {/* ── Page header ── */}
-      <section className="flex items-end justify-between gap-4">
-        <div>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="flex-1">
           <button
             onClick={() => navigate(-1)}
             className="flex items-center gap-1 text-xs font-bold text-slate-400 hover:text-[#1A2B56] dark:hover:text-white uppercase tracking-wider transition-colors mb-3"
@@ -44,23 +45,22 @@ const TechnicianNotifications: React.FC = () => {
             <span className="material-symbols-outlined text-base">arrow_back</span>
             Back
           </button>
-          <h1 className="text-4xl font-extrabold text-[#1A2B56] dark:text-white tracking-tight">
-            Notifications
-          </h1>
-          <p className="text-slate-500 dark:text-slate-400 font-medium text-sm mt-1">
-            {unread > 0 ? `${unread} unread notification${unread > 1 ? 's' : ''}` : 'All caught up!'}
-          </p>
+          <PageHeader
+            title="Notifications"
+            subtitle={unread > 0 ? `${unread} unread notification${unread > 1 ? 's' : ''}` : 'All caught up!'}
+            className="items-start! text-left!"
+          />
         </div>
         {unread > 0 && (
           <button
             onClick={markAllRead}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[#1A2B56] text-white text-xs font-extrabold uppercase tracking-wider hover:opacity-90 transition-all shadow-sm"
+            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[#1A2B56] text-white text-xs font-extrabold uppercase tracking-wider hover:opacity-90 transition-all shadow-sm self-start sm:self-auto mt-2 sm:mt-0"
           >
             <span className="material-symbols-outlined text-sm">done_all</span>
             Mark all read
           </button>
         )}
-      </section>
+      </div>
 
       {/* ── Filter pills ── */}
       <div className="flex gap-2 flex-wrap">

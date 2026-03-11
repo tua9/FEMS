@@ -6,6 +6,7 @@ import {
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { PageShell, AnimatedList, AnimatedListItem, AnimatedSection } from "@/components/motion";
+import { PageHeader } from "@/components/shared/PageHeader";
 import { StudentStatCard } from "@/components/student/dashboard";
 import {
   STUDENT_STAT_CARDS as STAT_CARDS,
@@ -17,23 +18,23 @@ const HomePage: React.FC = () => {
   const navigate = useNavigate();
 
   return (
-    <PageShell topPadding="pt-32" className="pb-20 px-4 sm:px-6">
+    <PageShell className="pb-20 px-4 sm:px-6">
       <div className="mx-auto w-full max-w-350">
         {/* Welcome Header */}
-        <AnimatedSection variant="curtain" delay={0} className="mb-12">
-          <header className="student-page-header">
-            <h2>Hello, Alex Chen</h2>
-            <p>Welcome back to your University Dashboard.</p>
-            <div className="mt-8">
-              <button
-                onClick={() => navigate("/student/equipment")}
-                className="btn-navy group flex items-center gap-3 rounded-full px-8 py-4 font-bold shadow-xl shadow-[#1E2B58]/20 hover:scale-105 active:scale-95"
-              >
-                Borrow Equipment
-                <ChevronRight className="h-5 w-5 transition-transform group-hover:translate-x-1" />
-              </button>
-            </div>
-          </header>
+        <AnimatedSection variant="curtain" delay={0} className="mb-10">
+          <PageHeader
+            title="Hello, Alex Chen"
+            subtitle="Welcome back to your University Dashboard."
+          />
+          <div className="flex justify-center mt-6">
+            <button
+              onClick={() => navigate("/student/equipment")}
+              className="btn-navy group flex items-center gap-3 rounded-full px-8 py-4 font-bold shadow-xl shadow-[#1E2B58]/20 hover:scale-105 active:scale-95"
+            >
+              Borrow Equipment
+              <ChevronRight className="h-5 w-5 transition-transform group-hover:translate-x-1" />
+            </button>
+          </div>
         </AnimatedSection>
 
         {/* Stat Cards */}

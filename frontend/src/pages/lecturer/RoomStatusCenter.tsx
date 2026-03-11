@@ -1,8 +1,9 @@
 import { RoomCard } from '@/components/lecturer/room-status/RoomCard';
 import { RoomFilter } from '@/components/lecturer/room-status/RoomFilter';
-import { ArrowLeft, Building } from 'lucide-react';
+import { Building } from 'lucide-react';
 import React, { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { PageHeader } from '@/components/shared/PageHeader';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -288,26 +289,15 @@ export const RoomStatusCenter: React.FC = () => {
     // ── Render ────────────────────────────────────────────────────────────────
 
     return (
-        <div className="w-full">
-            <main className="pt-32 md:pt-36 pb-10 px-4 sm:px-6 w-full max-w-[90vw] xl:max-w-7xl mx-auto flex-1 flex flex-col overflow-hidden">
+        <div className="w-full">                <main className="pt-6 sm:pt-8 pb-10 px-4 sm:px-6 w-full max-w-[90vw] xl:max-w-7xl mx-auto flex-1 flex flex-col overflow-hidden">
                 <div className="w-full">
                     {/* Back button + Header */}
-                    <header className="mb-8 md:mb-12">
-                        <button
-                            onClick={() => navigate('/lecturer/dashboard')}
-                            className="flex items-center gap-2 text-sm font-bold text-[#1E2B58]/60 dark:text-white/50 hover:text-[#1E2B58] dark:hover:text-white transition-colors mb-4"
-                        >
-                            <ArrowLeft className="w-4 h-4" />
-                            Back to Dashboard
-                        </button>
-
-                        <h2 className="text-3xl sm:text-4xl md:text-5xl font-black text-[#1E2B58] dark:text-white tracking-tight break-words">
-                            Room Status Center
-                        </h2>
-                        <p className="mt-3 text-[#1E2B58] dark:text-slate-400 opacity-70 font-medium max-w-2xl">
-                            Live room status and real-time monitoring of facility conditions for faculty and maintenance staff.
-                        </p>
-                    </header>
+                    <div className="mb-8 md:mb-12">
+                        <PageHeader
+                            title="Room Status Center"
+                            subtitle="Live room status and real-time monitoring of facility conditions for faculty and maintenance staff."
+                        />
+                    </div>
 
                     {/* Filter bar */}
                     <RoomFilter

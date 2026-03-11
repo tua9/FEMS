@@ -21,6 +21,7 @@ import {
   CATEGORY_TO_TYPE,
   TYPE_TO_CATEGORY,
 } from "@/data/student/mockStudentEquipment";
+import { PageHeader } from "@/components/shared/PageHeader";
 
 const EquipmentPage: React.FC = () => {
   const navigate = useNavigate();
@@ -98,14 +99,11 @@ const EquipmentPage: React.FC = () => {
 
   return (
     <div className="student-layout transition-colors duration-300">
-      <main className="mx-auto flex w-full max-w-[90vw] flex-1 flex-col px-4 pt-32 pb-10 sm:px-6 md:pt-36 xl:max-w-7xl">
-        <header className="student-page-header">
-          <h2>Equipment Catalog</h2>
-          <p>
-            Explore and reserve university resources with our enhanced Student
-            Portal.
-          </p>
-        </header>
+      <main className="mx-auto flex w-full max-w-[90vw] flex-1 flex-col px-4 pt-6 sm:pt-8 pb-10 sm:px-6 xl:max-w-7xl">
+        <PageHeader
+          title="Equipment Catalog"
+          subtitle="Explore and reserve university resources with our enhanced Student Portal."
+        />
 
         <EquipmentFilter
           searchText={searchText}

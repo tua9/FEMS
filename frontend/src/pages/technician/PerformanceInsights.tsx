@@ -4,6 +4,7 @@ import ReportStatCards from '@/components/technician/reports/ReportStatCards';
 import TicketTrendChart from '@/components/technician/reports/TicketTrendChart';
 import TopPerformers from '@/components/technician/reports/TopPerformers';
 import FacilityHealthTable from '@/components/technician/reports/FacilityHealthTable';
+import { PageHeader } from '@/components/shared/PageHeader';
 
 const PerformanceInsights: React.FC = () => {
   const [dateRangeDays, setDateRangeDays] = useState<DateRangeDays>(30);
@@ -48,17 +49,14 @@ const PerformanceInsights: React.FC = () => {
         }
       `}</style>
 
-      <div id="performance-insights-root" className="pt-32 pb-16 px-6 max-w-7xl mx-auto space-y-8">
+      <div id="performance-insights-root" className="pt-6 sm:pt-8 pb-16 px-6 max-w-7xl mx-auto space-y-8">
         {/* ── Page header ── */}
-        <section className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-          <div className="space-y-1">
-            <h1 className="text-4xl font-extrabold text-[#232F58] dark:text-white tracking-tight">
-              Performance Insights
-            </h1>
-            <p className="text-slate-600 dark:text-slate-400 font-medium">
-              Operations reports and analytical overview
-            </p>
-          </div>
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+          <PageHeader
+            title="Performance Insights"
+            subtitle="Operations reports and analytical overview"
+            className="items-start! text-left! mb-0!"
+          />
 
           {/* Controls */}
           <div className="flex items-center gap-3 no-print">
@@ -125,7 +123,7 @@ const PerformanceInsights: React.FC = () => {
               Report period: <strong>{selectedLabel}</strong> — Printed {new Date().toLocaleDateString()}
             </p>
           </div>
-        </section>
+        </div>
 
         {/* ── KPI stat cards ── */}
         <ReportStatCards dateRangeDays={dateRangeDays} />

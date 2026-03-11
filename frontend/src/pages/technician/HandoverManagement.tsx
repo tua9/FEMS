@@ -6,6 +6,7 @@ import HandoverTab from '@/components/technician/handover/HandoverTab';
 import CollectTab from '@/components/technician/handover/CollectTab';
 import HistoryTab from '@/components/technician/handover/HistoryTab';
 import ManualHandoverModal from '@/components/technician/handover/ManualHandoverModal';
+import { PageHeader } from '@/components/shared/PageHeader';
 
 // ── Per-tab description ───────────────────────────────────────────────────────
 const TAB_SUBTITLE: Record<HandoverTabType, string> = {
@@ -34,19 +35,13 @@ const HandoverManagement: React.FC = () => {
   };
 
   return (
-    <div className="pt-32 pb-16 px-6 max-w-7xl mx-auto">
+    <div className="pt-6 sm:pt-8 pb-16 px-6 max-w-7xl mx-auto">
 
-      {/* ── Fixed title ── */}
-      <h1 className="text-3xl md:text-4xl font-extrabold text-[#1A2B56] dark:text-white text-center mb-3">
-        Handover Management
-      </h1>
-
-      {/* ── Description — fixed min-height, only text changes ── */}
-      <div style={{ minHeight: '1.75rem' }} className="mb-10">
-        <p className="text-slate-500 dark:text-slate-400 text-sm md:text-base font-medium text-center">
-          {TAB_SUBTITLE[activeTab]}
-        </p>
-      </div>
+      {/* ── Page Header ── */}
+      <PageHeader
+        title="Handover Management"
+        subtitle={TAB_SUBTITLE[activeTab]}
+      />
 
       {/* ── Tab bar — always centered, always same position ── */}
       <HandoverTabBar active={activeTab} onChange={setActiveTab} />

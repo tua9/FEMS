@@ -132,8 +132,8 @@ const NotificationItem: React.FC<ItemProps> = ({
     <button
       type="button"
       onClick={handleClick}
-      className={`w-full px-5 py-4 text-left transition-colors hover:bg-white/30 dark:hover:bg-white/5 border-b border-white/40 dark:border-white/6 last:border-0 group ${
-        !notification.read ? "bg-white/20 dark:bg-blue-400/8" : ""
+      className={`w-full px-5 py-4 text-left transition-colors hover:bg-black/5 dark:hover:bg-white/10 border-b border-black/8 dark:border-white/12 last:border-0 group ${
+        !notification.read ? "bg-blue-500/6 dark:bg-blue-400/10" : ""
       }`}
     >
       <div className="flex items-start gap-3">
@@ -330,7 +330,7 @@ const NavNotificationBell: React.FC = () => {
                 }}
               >
                 {/* Header */}
-                <div className="flex items-center justify-between border-b border-white/40 bg-white/20 px-5 py-4 dark:border-white/8 dark:bg-white/5">
+                <div className="flex items-center justify-between border-b border-black/10 bg-black/3 px-5 py-4 dark:border-white/15 dark:bg-white/5">
                   <div className="flex items-center gap-2.5">
                     <Bell className="h-4 w-4 text-[#1E2B58] dark:text-white" />
                     <h3 className="text-[0.9375rem] font-extrabold text-slate-900 dark:text-slate-100">
@@ -388,7 +388,7 @@ const NavNotificationBell: React.FC = () => {
 
                 {/* Footer */}
                 {notifications.length > 0 && (
-                  <div className="border-t border-white/40 bg-white/20 px-5 py-3.5 text-center dark:border-white/8 dark:bg-white/5">
+                  <div className="border-t border-black/10 bg-black/3 px-5 py-3.5 text-center dark:border-white/15 dark:bg-white/5">
                     <button
                       onClick={() => {
                         setIsOpen(false);
