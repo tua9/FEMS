@@ -6,6 +6,7 @@
  * - Framer Motion: fade + slide down khi mở/đóng
  */
 import React, { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { useNavigate, useLocation } from "react-router-dom";
 import { LogOut } from "lucide-react";
@@ -139,30 +140,38 @@ const MENU_ITEMS: Record<string, MenuItem[]> = {
 
 // ── Animation variants ────────────────────────────────────────────────────────
 
-const dropdownVariants = {
-  hidden: { opacity: 0, y: -8, scale: 0.97 },
+// NOTE: Only `y` on the outer motion.div — opacity is intentionally
+// kept OFF the wrapper. When opacity < 1 is set on a parent, the browser
+// composites the whole subtree into a separate GPU layer which makes
+// backdrop-filter invisible until the animation finishes (~0.5 s delay).
+// Instead we animate opacity on the inner glass <motion.div> via `glassVariants`.
+const wrapperVariants = {
+  hidden: { y: -8 },
   visible: {
-    opacity: 1,
     y: 0,
-    scale: 1,
     transition: {
       duration: 0.2,
       ease: [0.16, 1, 0.3, 1] as [number, number, number, number],
     },
   },
   exit: {
-    opacity: 0,
     y: -6,
-    scale: 0.97,
     transition: { duration: 0.15 },
   },
+};
+
+const glassVariants = {
+  hidden: { opacity: 0 },
+  visible: { opacity: 1, transition: { duration: 0.18, ease: "easeOut" } },
+  exit: { opacity: 0, transition: { duration: 0.12 } },
 };
 
 // ── NavUserDropdown ───────────────────────────────────────────────────────────
 
 const NavUserDropdown: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const containerRef = useRef<HTMLDivElement>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
   const location = useLocation();
   const { user, signOut } = useAuthStore();
@@ -177,15 +186,42 @@ const NavUserDropdown: React.FC = () => {
     technician: "/technician/profile",
   };
 
+  // ── Compute portal position from button bounding rect ─────────────────────
+  const [dropdownPos, setDropdownPos] = useState<{ top: number; right: number }>({ top: 0, right: 0 });
+
+  const updatePos = () => {
+    if (!buttonRef.current) return;
+    const rect = buttonRef.current.getBoundingClientRect();
+    setDropdownPos({
+      top: rect.bottom + 12,
+      right: window.innerWidth - rect.right,
+    });
+  };
+
+  const handleToggle = () => {
+    if (!isOpen) updatePos();
+    setIsOpen((p) => !p);
+  };
+
+  useEffect(() => {
+    if (!isOpen) return;
+    window.addEventListener("resize", updatePos);
+    window.addEventListener("scroll", updatePos, true);
+    return () => {
+      window.removeEventListener("resize", updatePos);
+      window.removeEventListener("scroll", updatePos, true);
+    };
+  }, [isOpen]);
+
   // Close on outside click
   useEffect(() => {
     if (!isOpen) return;
     const handler = (e: MouseEvent) => {
       if (
-        containerRef.current &&
-        !containerRef.current.contains(e.target as Node)
-      )
-        setIsOpen(false);
+        buttonRef.current?.contains(e.target as Node) ||
+        dropdownRef.current?.contains(e.target as Node)
+      ) return;
+      setIsOpen(false);
     };
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
@@ -203,10 +239,11 @@ const NavUserDropdown: React.FC = () => {
   };
 
   return (
-    <div ref={containerRef} className="relative">
+    <>
       {/* ── Avatar button ── */}
       <button
-        onClick={() => setIsOpen((p) => !p)}
+        ref={buttonRef}
+        onClick={handleToggle}
         aria-label="Open user menu"
         aria-expanded={isOpen}
         className="h-9 w-9 overflow-hidden rounded-full ring-2 ring-[#1E2B58] shadow-md transition-all hover:ring-4 focus:outline-none focus:ring-4 focus:ring-offset-2 focus:ring-offset-white sm:h-10 sm:w-10 dark:ring-blue-500 dark:focus:ring-offset-slate-900"
@@ -224,168 +261,181 @@ const NavUserDropdown: React.FC = () => {
         )}
       </button>
 
-      {/* ── Dropdown ── */}
-      <AnimatePresence>
-        {isOpen && (
-          <motion.div
-            variants={dropdownVariants}
-            initial="hidden"
-            animate="visible"
-            exit="exit"
-            className={[
-              // Shape & layout
-              "absolute right-0 z-50 mt-3 w-72 overflow-hidden rounded-3xl",
-              // Glass pane — light
-              "bg-white/70 backdrop-blur-[28px]",
-              // Glass pane — dark
-              "dark:bg-slate-950/40 dark:backdrop-blur-[28px]",
-              // Specular highlight border
-              "ring-1 ring-inset ring-black/5 dark:ring-white/12",
-              // Float shadow
-              "shadow-2xl shadow-[#1E2B58]/10 dark:shadow-black/50",
-            ].join(" ")}
-          >
-            {/* ── User info header ── */}
-            <button
-              type="button"
-              onClick={() => go(profileRoute[role] ?? "/lecturer/profile")}
-              className="group w-full border-b border-black/6 px-5 py-4 text-left transition-colors hover:bg-[#1E2B58]/4 dark:border-white/8 dark:hover:bg-white/5"
+      {/* ── Dropdown portal — rendered to document.body to escape all
+              stacking contexts (will-change-transform, filters, etc.)        ── */}
+      {createPortal(
+        <AnimatePresence>
+          {isOpen && (
+            // Outer wrapper: only y-translate, NO opacity — opacity on a
+            // parent creates a GPU compositing layer that breaks
+            // backdrop-filter (causes ~0.5 s blur delay on open).
+            <motion.div
+              ref={dropdownRef}
+              variants={wrapperVariants}
+              initial="hidden"
+              animate="visible"
+              exit="exit"
+              style={{
+                position: "fixed",
+                top: dropdownPos.top,
+                right: dropdownPos.right,
+                zIndex: 9999,
+                width: "18rem",
+              }}
             >
-              <div className="flex items-center gap-3">
-                {/* Avatar */}
-                <div className="relative shrink-0">
-                  <div className="h-11 w-11 overflow-hidden rounded-2xl shadow-md ring-2 ring-[#1E2B58]/15 dark:ring-white/20">
-                    {user?.avatarUrl ? (
-                      <img
-                        alt={user.displayName}
-                        src={user.avatarUrl}
-                        className="h-full w-full object-cover"
-                      />
-                    ) : (
-                      <div className="flex h-full w-full items-center justify-center bg-[#1E2B58] text-sm font-bold text-white">
-                        {user?.displayName?.charAt(0).toUpperCase() ?? "?"}
-                      </div>
-                    )}
-                  </div>
-                  {/* Online dot */}
-                  <span className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-white bg-emerald-400 dark:border-slate-900" />
-                </div>
-
-                {/* Name + email */}
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-[0.8125rem] font-extrabold leading-tight text-[#1E2B58] dark:text-white">
-                    {user?.displayName ?? "—"}
-                  </p>
-                  <p className="mt-0.5 truncate text-[0.6875rem] font-semibold text-slate-500 dark:text-slate-400">
-                    {user?.email ?? ""}
-                  </p>
-                </div>
-
-                <span className="material-symbols-rounded shrink-0 text-base text-[#1E2B58]/20 transition-all group-hover:translate-x-0.5 group-hover:text-[#1E2B58]/50 dark:text-white/20 dark:group-hover:text-white/50">
-                  chevron_right
-                </span>
-              </div>
-
-              {/* Role badge */}
-              <div className="mt-3">
-                <span className="inline-flex items-center gap-1.5 rounded-lg bg-[#1E2B58]/6 px-2.5 py-1 dark:bg-white/10">
-                  <span className="material-symbols-rounded text-[13px] text-[#1E2B58] dark:text-blue-400">
-                    school
-                  </span>
-                  <span className="text-[0.5625rem] font-black uppercase tracking-[0.12em] text-[#1E2B58]/70 dark:text-blue-400">
-                    {user?.role ?? ""}
-                  </span>
-                </span>
-              </div>
-            </button>
-
-            {/* ── Quick Access label ── */}
-            <div className="px-5 pb-1 pt-3">
-              <p className="text-[0.5625rem] font-black uppercase tracking-[0.18em] text-[#1E2B58]/30 dark:text-white/30">
-                Quick Access
-              </p>
-            </div>
-
-            {/* ── Menu items ── */}
-            <div className="px-2 py-1.5">
-              {menuItems.map((item) => {
-                const isActive = location.pathname === item.to;
-                return (
-                  <button
-                    key={item.to}
-                    type="button"
-                    onClick={() => go(item.to)}
-                    className={`group flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left transition-all ${
-                      isActive
-                        ? "bg-[#1E2B58]/8 dark:bg-white/8"
-                        : "hover:bg-[#1E2B58]/5 dark:hover:bg-white/6"
-                    }`}
-                  >
-                    {/* Icon */}
-                    <div
-                      className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-xl transition-all ${
-                        isActive
-                          ? "bg-[#1E2B58] dark:bg-blue-500"
-                          : `${item.iconBg} group-hover:scale-105`
-                      }`}
-                    >
-                      <span
-                        className={`material-symbols-rounded text-[16px] ${
-                          isActive ? "text-white" : item.iconColor
-                        }`}
-                      >
-                        {item.icon}
-                      </span>
-                    </div>
-
-                    {/* Text */}
-                    <div className="min-w-0 flex-1">
-                      <p
-                        className={`text-[0.8125rem] font-bold leading-tight ${
-                          isActive
-                            ? "text-[#1E2B58] dark:text-white"
-                            : "text-slate-700 dark:text-slate-200"
-                        }`}
-                      >
-                        {item.label}
-                      </p>
-                      <p className="mt-0.5 truncate text-[0.6875rem] text-slate-400 dark:text-slate-500">
-                        {item.description}
-                      </p>
-                    </div>
-
-                    {/* Active dot / arrow */}
-                    {isActive ? (
-                      <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-[#1E2B58] dark:bg-blue-400" />
-                    ) : (
-                      <span className="material-symbols-rounded shrink-0 text-sm text-slate-300 opacity-0 transition-all group-hover:translate-x-0.5 group-hover:opacity-100 dark:text-slate-600">
-                        chevron_right
-                      </span>
-                    )}
-                  </button>
-                );
-              })}
-            </div>
-
-            {/* ── Logout ── */}
-            <div className="border-t border-black/6 p-2 dark:border-white/8">
-              <button
-                type="button"
-                onClick={handleLogout}
-                className="group flex w-full items-center gap-3 rounded-xl px-3 py-2.5 transition-all hover:bg-red-500/8 dark:hover:bg-red-400/10"
+              {/* Glass surface: opacity is animated HERE so backdrop-filter
+                  is always active, even during the fade-in.              */}
+              <motion.div
+                variants={glassVariants}
+                initial="hidden"
+                animate="visible"
+                exit="exit"
+                className={[
+                  "overflow-hidden rounded-2xl",
+                  "bg-white/30 backdrop-saturate-150",
+                  "border border-white/60",
+                  "shadow-[0_8px_32px_0_rgba(0,0,0,0.12)]",
+                  "dark:bg-slate-900/40",
+                  "dark:border-white/15",
+                  "dark:shadow-[0_10px_40px_-10px_rgba(0,0,0,0.7)]",
+                ].join(" ")}
+                style={{
+                  WebkitBackdropFilter: "blur(20px) saturate(160%)",
+                  backdropFilter: "blur(20px) saturate(160%)",
+                }}
               >
-                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-red-500/8 transition-colors group-hover:bg-red-500/15 dark:bg-red-400/10 dark:group-hover:bg-red-400/20">
-                  <LogOut className="h-4 w-4 text-red-500 dark:text-red-400" />
+                {/* ── User info header ── */}
+                <button
+                  type="button"
+                  onClick={() => go(profileRoute[role] ?? "/lecturer/profile")}
+                  className="group w-full border-b border-white/40 px-5 py-4 text-left transition-colors hover:bg-white/30 dark:border-white/8 dark:hover:bg-white/5"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="relative shrink-0">
+                      <div className="h-11 w-11 overflow-hidden rounded-2xl shadow-md ring-2 ring-[#1E2B58]/15 dark:ring-white/20">
+                        {user?.avatarUrl ? (
+                          <img
+                            alt={user.displayName}
+                            src={user.avatarUrl}
+                            className="h-full w-full object-cover"
+                          />
+                        ) : (
+                          <div className="flex h-full w-full items-center justify-center bg-[#1E2B58] text-sm font-bold text-white">
+                            {user?.displayName?.charAt(0).toUpperCase() ?? "?"}
+                          </div>
+                        )}
+                      </div>
+                      <span className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-white bg-emerald-400 dark:border-slate-900" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-[0.8125rem] font-extrabold leading-tight text-[#1E2B58] dark:text-white">
+                        {user?.displayName ?? "—"}
+                      </p>
+                      <p className="mt-0.5 truncate text-[0.6875rem] font-semibold text-slate-500 dark:text-slate-400">
+                        {user?.email ?? ""}
+                      </p>
+                    </div>
+                    <span className="material-symbols-rounded shrink-0 text-base text-[#1E2B58]/20 transition-all group-hover:translate-x-0.5 group-hover:text-[#1E2B58]/50 dark:text-white/20 dark:group-hover:text-white/50">
+                      chevron_right
+                    </span>
+                  </div>
+                  <div className="mt-3">
+                    <span className="inline-flex items-center gap-1.5 rounded-lg bg-[#1E2B58]/6 px-2.5 py-1 dark:bg-white/10">
+                      <span className="material-symbols-rounded text-[13px] text-[#1E2B58] dark:text-blue-400">
+                        school
+                      </span>
+                      <span className="text-[0.5625rem] font-black uppercase tracking-[0.12em] text-[#1E2B58]/70 dark:text-blue-400">
+                        {user?.role ?? ""}
+                      </span>
+                    </span>
+                  </div>
+                </button>
+
+                {/* ── Quick Access label ── */}
+                <div className="px-5 pb-1 pt-3">
+                  <p className="text-[0.5625rem] font-black uppercase tracking-[0.18em] text-[#1E2B58]/30 dark:text-white/30">
+                    Quick Access
+                  </p>
                 </div>
-                <span className="text-[0.8125rem] font-bold text-red-500 dark:text-red-400">
-                  Log Out
-                </span>
-              </button>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
+
+                {/* ── Menu items ── */}
+                <div className="px-2 py-1.5">
+                  {menuItems.map((item) => {
+                    const isActive = location.pathname === item.to;
+                    return (
+                      <button
+                        key={item.to}
+                        type="button"
+                        onClick={() => go(item.to)}
+                        className={`group flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left transition-all ${
+                          isActive
+                            ? "bg-white/40 dark:bg-white/8"
+                            : "hover:bg-white/30 dark:hover:bg-white/6"
+                        }`}
+                      >
+                        <div
+                          className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-xl transition-all ${
+                            isActive
+                              ? "bg-[#1E2B58] dark:bg-blue-500"
+                              : `${item.iconBg} group-hover:scale-105`
+                          }`}
+                        >
+                          <span
+                            className={`material-symbols-rounded text-[16px] ${
+                              isActive ? "text-white" : item.iconColor
+                            }`}
+                          >
+                            {item.icon}
+                          </span>
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p
+                            className={`text-[0.8125rem] font-bold leading-tight ${
+                              isActive
+                                ? "text-[#1E2B58] dark:text-white"
+                                : "text-slate-700 dark:text-slate-200"
+                            }`}
+                          >
+                            {item.label}
+                          </p>
+                          <p className="mt-0.5 truncate text-[0.6875rem] text-slate-400 dark:text-slate-500">
+                            {item.description}
+                          </p>
+                        </div>
+                        {isActive ? (
+                          <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-[#1E2B58] dark:bg-blue-400" />
+                        ) : (
+                          <span className="material-symbols-rounded shrink-0 text-sm text-slate-300 opacity-0 transition-all group-hover:translate-x-0.5 group-hover:opacity-100 dark:text-slate-600">
+                            chevron_right
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* ── Logout ── */}
+                <div className="border-t border-white/40 p-2 dark:border-white/8">
+                  <button
+                    type="button"
+                    onClick={handleLogout}
+                    className="group flex w-full items-center gap-3 rounded-xl px-3 py-2.5 transition-all hover:bg-red-500/8 dark:hover:bg-red-400/10"
+                  >
+                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-red-500/8 transition-colors group-hover:bg-red-500/15 dark:bg-red-400/10 dark:group-hover:bg-red-400/20">
+                      <LogOut className="h-4 w-4 text-red-500 dark:text-red-400" />
+                    </div>
+                    <span className="text-[0.8125rem] font-bold text-red-500 dark:text-red-400">
+                      Log Out
+                    </span>
+                  </button>
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>,
+        document.body
+      )}
+    </>
   );
 };
 
