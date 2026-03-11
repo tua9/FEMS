@@ -4,6 +4,7 @@ import DarkModeToggle from "@/components/shared/navbar/DarkModeToggle";
 import { ForgotPasswordForm } from "@/components/auth/forgot-password-form";
 import { OtpVerificationForm } from "@/components/auth/otp-verification-form";
 import { SetNewPasswordForm } from "@/components/auth/set-new-password-form";
+import Footer from "@/components/common/Footer";
 
 // ── Steps ─────────────────────────────────────────────────────────────────────
 
@@ -39,7 +40,8 @@ export default function ForgotPasswordPage() {
   const handleVerified = async (code: string): Promise<{ success: boolean }> => {
     // TODO: call real "verify OTP" API here — return { success: false } on wrong code
     await new Promise((r) => setTimeout(r, 800));
-    const isCorrect = code === "123456"; // placeholder: accept "123456"
+    // Dev bypass: "123456" hoặc "000000" đều được chấp nhận
+    const isCorrect = code === "123456" || code === "000000";
     if (isCorrect) setStep("set-password");
     return { success: isCorrect };
   };
@@ -72,7 +74,7 @@ export default function ForgotPasswordPage() {
           <DarkModeToggle />
           <a
             href="#"
-            className="text-[0.85rem] font-medium text-slate-500 transition hover:text-slate-800 dark:text-slate-400 dark:hover:text-white"
+            className="text-[0.85rem] font-extrabold text-slate-600 transition hover:text-slate-900 dark:text-slate-200 dark:hover:text-white"
           >
             Report Issue
           </a>
@@ -80,12 +82,12 @@ export default function ForgotPasswordPage() {
       </header>
 
       {/* ── Main content ── */}
-      <main className="flex flex-1 items-center justify-center px-4 pb-16 pt-10 sm:pt-16">
+      <main className="flex flex-1 items-center justify-center px-4 pb-8 pt-10 sm:pt-16">
         <div className="flex w-full max-w-md -translate-y-6 flex-col items-center">
 
-          {/* Heading — hidden for OTP/set-password since they have their own in-card heading */}
-          {step === "email" && (
-            <h1 className="mb-4 text-4xl font-extrabold tracking-tight text-slate-900 dark:text-white md:text-5xl">
+          {/* Heading — only shown on email step */}
+          {(step === "email" || step === "otp" || step === "set-password") && (
+            <h1 className="mb-4 text-4xl font-extrabold tracking-tight text-navi dark:text-white md:text-5xl">
               {HEADINGS[step]}
             </h1>
           )}
@@ -119,6 +121,8 @@ export default function ForgotPasswordPage() {
 
         </div>
       </main>
+
+      <Footer role="auth" />
 
     </div>
   );

@@ -1,14 +1,18 @@
-import { ChevronRight, Clock, MoreVertical } from "lucide-react";
-import React, { useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { PageShell, AnimatedSection } from "@/components/motion";
+
 import {
-  RECENT_ACTIVITIES,
-  UPCOMING_ITEMS,
-} from "@/data/student/mockStudentHome";
-import { useBorrowRequestStore } from "@/stores/useBorrowRequestStore";
-import { useAuthStore } from "@/stores/useAuthStore";
-import StatCards from "@/components/student/StatCards";
+    ChevronRight,
+    Clock,
+    MoreVertical,
+} from "lucide-react";
+import React from "react";
+import { useNavigate } from "react-router-dom";
+import { PageShell, AnimatedList, AnimatedListItem, AnimatedSection } from "@/components/motion";
+import { StudentStatCard } from "@/components/student/dashboard";
+import {
+  STUDENT_STAT_CARDS as STAT_CARDS,
+  STUDENT_RECENT_ACTIVITIES as RECENT_ACTIVITIES,
+  STUDENT_UPCOMING_ITEMS as UPCOMING_ITEMS,
+} from "@/data/student/mockStudentData";
 
 const HomePage: React.FC = () => {
   const navigate = useNavigate();
@@ -44,7 +48,13 @@ const HomePage: React.FC = () => {
         </AnimatedSection>
 
         {/* Stat Cards */}
-        <StatCards />
+        <AnimatedList className="mb-12 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4 lg:gap-7">
+          {STAT_CARDS.map((card) => (
+            <AnimatedListItem key={card.id}>
+              <StudentStatCard card={card} />
+            </AnimatedListItem>
+          ))}
+        </AnimatedList>
 
         {/* Dashboard Grid */}
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-12 lg:items-start">

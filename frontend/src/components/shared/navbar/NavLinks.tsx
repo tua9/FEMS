@@ -15,7 +15,7 @@ const NavLinks: React.FC<NavLinksProps> = ({ links }) => {
   const location = useLocation();
 
   return (
-    <nav className="hide-scrollbar hidden flex-1 items-center justify-center gap-1 overflow-x-auto lg:flex">
+    <nav className="hide-scrollbar hidden flex-1 items-center justify-center gap-1 overflow-x-auto overflow-y-visible py-1 lg:flex">
       {links.map((link) => {
         const isActive = location.pathname.startsWith(link.path);
         return (
@@ -29,7 +29,8 @@ const NavLinks: React.FC<NavLinksProps> = ({ links }) => {
             {isActive && (
               <motion.span
                 layoutId="nav-active-pill"
-                className="absolute inset-0 rounded-full bg-white shadow-md dark:bg-white/15"
+                className="absolute inset-0 rounded-full bg-white dark:bg-white/15"
+                style={{ boxShadow: "0 2px 12px -1px rgba(0,0,0,0.13), 0 1px 4px -1px rgba(0,0,0,0.08)" }}
                 transition={{ type: "spring", stiffness: 400, damping: 35 }}
               />
             )}

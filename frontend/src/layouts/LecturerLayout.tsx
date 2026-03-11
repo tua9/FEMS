@@ -1,5 +1,5 @@
 import Footer from "@/components/common/Footer";
-import LecturerNavbar from "@/components/lecturer/navbar/LecturerNavbar";
+import LecturerNavbar from "@/components/navbar/LecturerNavbar";
 import { RouteTransitionWrapper } from "@/components/motion";
 
 export default function LecturerLayout() {

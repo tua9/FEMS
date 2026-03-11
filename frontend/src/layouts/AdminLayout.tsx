@@ -1,5 +1,5 @@
 import AdminFooter from "@/components/admin/common/AdminFooter";
-import AdminNavbar from "@/components/admin/common/AdminNavbar";
+import AdminNavbar from "@/components/navbar/AdminNavbar";
 import { RouteTransitionWrapper } from "@/components/motion";
 
 export default function AdminLayout() {
