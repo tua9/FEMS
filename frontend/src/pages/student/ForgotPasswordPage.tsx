@@ -4,6 +4,7 @@ import DarkModeToggle from "@/components/shared/navbar/DarkModeToggle";
 import { ForgotPasswordForm } from "@/components/auth/forgot-password-form";
 import { OtpVerificationForm } from "@/components/auth/otp-verification-form";
 import { SetNewPasswordForm } from "@/components/auth/set-new-password-form";
+import Footer from "@/components/common/Footer";
 
 // ── Steps ─────────────────────────────────────────────────────────────────────
 
@@ -81,7 +82,7 @@ export default function ForgotPasswordPage() {
       </header>
 
       {/* ── Main content ── */}
-      <main className="flex flex-1 items-center justify-center px-4 pb-16 pt-10 sm:pt-16">
+      <main className="flex flex-1 items-center justify-center px-4 pb-8 pt-10 sm:pt-16">
         <div className="flex w-full max-w-md -translate-y-6 flex-col items-center">
 
           {/* Heading — only shown on email step */}
@@ -120,6 +121,8 @@ export default function ForgotPasswordPage() {
 
         </div>
       </main>
+
+      <Footer role="auth" />
 
     </div>
   );

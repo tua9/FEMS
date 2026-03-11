@@ -1,5 +1,6 @@
 import { LoginForm } from "@/components/auth/login-form";
 import DarkModeToggle from "@/components/shared/navbar/DarkModeToggle";
+import Footer from "@/components/common/Footer";
 
 export default function LoginPage() {
   return (
@@ -31,7 +32,7 @@ export default function LoginPage() {
       </header>
 
       {/* ── Main content ── */}
-      <main className="flex flex-1 items-center justify-center px-4 pb-16 pt-10 sm:pt-16">
+      <main className="flex flex-1 items-center justify-center px-4 pb-8 pt-10 sm:pt-16">
         <div className="flex w-full max-w-md -translate-y-12 flex-col items-center">
 
           {/* Heading */}
@@ -47,6 +48,8 @@ export default function LoginPage() {
 
         </div>
       </main>
+
+      <Footer role="auth" />
 
     </div>
   );
