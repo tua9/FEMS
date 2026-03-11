@@ -1,10 +1,10 @@
 import api from "@/lib/axios";
 
 export const authService = {
-  signIn: async (username: string, password: string, role: string) => {
+  signIn: async (username: string, password: string) => {
     const response = await api.post(
       "/auth/signin",
-      { username, password, role },
+      { username, password },
       { withCredentials: true },
     );
     return response.data;

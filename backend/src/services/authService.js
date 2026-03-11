@@ -36,12 +36,12 @@ const signUp = async (body) => {
 }
 
 const signIn = async (body) => {
-  const { username, password, role } = body
+  const { username, password } = body
 
-  if (!username || !password || !role) {
+  if (!username || !password) {
     throw new ApiError(
       StatusCodes.BAD_REQUEST,
-      'Username, password and role are required!',
+      'Username and password are required!',
     )
   }
 
@@ -55,14 +55,11 @@ const signIn = async (body) => {
     throw new ApiError(StatusCodes.UNAUTHORIZED, 'Invalid password')
   }
 
-  if (user.role !== role) {
-    throw new ApiError(
-      StatusCodes.FORBIDDEN,
-      `User does not have the role: ${role}`,
-    )
+  const userInfo = {
+    _id: user._id,
+    username: user.username,
+    role: user.role,
   }
-
-  const userInfo = { _id: user._id, username, role }
 
   const accessToken = await JwtProvider.generateToken(
     { userInfo },

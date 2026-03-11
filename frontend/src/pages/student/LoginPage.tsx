@@ -1,5 +1,6 @@
 import { LoginForm } from "@/components/auth/login-form";
 import DarkModeToggle from "@/components/shared/navbar/DarkModeToggle";
+import Footer from "@/components/common/Footer";
 
 export default function LoginPage() {
   return (
@@ -23,7 +24,7 @@ export default function LoginPage() {
           <DarkModeToggle />
           <a
             href="#"
-            className="text-[0.85rem] font-medium text-slate-500 transition hover:text-slate-800 dark:text-slate-400 dark:hover:text-white"
+            className="text-[0.85rem] font-extrabold text-slate-600 transition hover:text-slate-900 dark:text-slate-200 dark:hover:text-white"
           >
             Report Issue
           </a>
@@ -31,11 +32,11 @@ export default function LoginPage() {
       </header>
 
       {/* ── Main content ── */}
-      <main className="flex flex-1 items-center justify-center px-4 pb-16 pt-10 sm:pt-16">
+      <main className="flex flex-1 items-center justify-center px-4 pb-8 pt-10 sm:pt-16">
         <div className="flex w-full max-w-md -translate-y-12 flex-col items-center">
 
           {/* Heading */}
-          <h1 className="mb-4 text-4xl font-extrabold tracking-tight text-slate-900 dark:text-white md:text-5xl">
+          <h1 className="mb-4 text-4xl font-extrabold tracking-tight text-navi dark:text-white md:text-5xl">
             Login
           </h1>
           <p className="mx-auto mb-10 max-w-md text-center text-sm font-medium text-slate-500 dark:text-slate-400">
@@ -47,6 +48,8 @@ export default function LoginPage() {
 
         </div>
       </main>
+
+      <Footer role="auth" />
 
     </div>
   );

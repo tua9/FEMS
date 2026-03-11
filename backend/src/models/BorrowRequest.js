@@ -57,9 +57,8 @@ const borrowRequestSchema = new mongoose.Schema(
 )
 
 // Default sort by newest first
-borrowRequestSchema.pre('find', function (next) {
+borrowRequestSchema.pre('find', function () {
   this.sort({ createdAt: -1 })
-  next()
 })
 
 const BorrowRequest = mongoose.model('BorrowRequest', borrowRequestSchema)

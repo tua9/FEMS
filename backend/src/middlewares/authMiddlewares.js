@@ -47,6 +47,8 @@ export const protectedRoute = async (req, res, next) => {
 
 export const restrictTo = (...roles) => {
   return (req, res, next) => {
+    console.log('>> restrictTo called with roles:', roles)
+    console.log('>> User role:', req.user?.role)
     if (!req.user || !roles.includes(req.user.role)) {
       return res.status(StatusCodes.FORBIDDEN).json({
         message: 'You do not have permission to perform this action',

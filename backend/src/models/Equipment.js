@@ -50,19 +50,20 @@ const assetSchema = new mongoose.Schema(
 )
 
 // If equipment is assigned to a room or borrowed, it's not available
-assetSchema.pre('save', function (next) {
+assetSchema.pre('save', function () {
   if (this.room_id || this.borrowed_by) {
     this.available = false
   } else {
     this.available = true
   }
-  next()
-})
+}
+
+)
 
 // Default sort by newest first
-assetSchema.pre('find', function (next) {
+assetSchema.pre('find', function () {
   this.sort({ createdAt: -1 })
-  next()
+ 
 })
 
 const Equipment = mongoose.model('Equipment', assetSchema)

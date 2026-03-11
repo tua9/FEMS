@@ -18,12 +18,12 @@ router.use(protectedRoute)
 
 router.get(
   '/me',
-  restrictTo('Student', 'Teacher', 'Tech', 'Admin'),
+  restrictTo('student', 'Teacher', 'Tech', 'Admin'),
   getPersonalBorrowRequests,
 )
 router.post(
   '/',
-  restrictTo('Student', 'Teacher', 'Tech', 'Admin'),
+  restrictTo('student', 'Teacher', 'Tech', 'Admin'),
   createBorrowRequest,
 ) // Student specific
 router.delete(
