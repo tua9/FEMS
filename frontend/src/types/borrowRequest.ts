@@ -29,12 +29,12 @@ export interface BorrowRequestRoom {
 
 export interface BorrowRequest {
   _id: string;
-  user_id?: string | BorrowRequestUser;
+  user_id: string | BorrowRequestUser;
   equipment_id?: string | BorrowRequestEquipment | null;
   room_id?: string | BorrowRequestRoom | null;
-  approved_by?: string | BorrowRequestUser | null;
   type: BorrowRequestType;
   status: BorrowRequestStatus;
+  approved_by?: string | BorrowRequestUser | null;
   borrow_date: string;
   return_date: string;
   note?: string | null;
