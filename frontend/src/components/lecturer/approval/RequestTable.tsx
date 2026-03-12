@@ -10,7 +10,7 @@ const mockRequests = [
 
 export const RequestTable: React.FC = () => {
     return (
-        <div className="glass-card rounded-[32px] p-6 sm:p-8 overflow-hidden">
+        <div className="dashboard-card rounded-4xl p-6 sm:p-8 overflow-hidden">
             <h3 className="text-xl font-extrabold text-[#1E2B58] dark:text-white mb-6">Pending Borrow Requests</h3>
             <div className="overflow-x-auto">
                 <Table>

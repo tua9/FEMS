@@ -37,7 +37,7 @@ const ActionConfirmationModal: React.FC<ActionConfirmationModalProps> = ({
             ></div>
 
             {/* Modal Content */}
-            <div className="relative w-full max-w-md glass-card rounded-[2rem] shadow-2xl shadow-[#1E2B58]/20 overflow-hidden p-8 flex flex-col items-center text-center animate-in fade-in zoom-in-95 duration-200">
+            <div className="relative w-full max-w-md dashboard-card rounded-4xl shadow-2xl shadow-[#1E2B58]/20 overflow-hidden p-8 flex flex-col items-center text-center animate-in fade-in zoom-in-95 duration-200">
 
                 {/* Icon */}
                 <div className={`w-16 h-16 rounded-full flex items-center justify-center mb-6 ${iconColor.replace('text-', 'bg-').replace(/\d+$/, '500/10')}`}>

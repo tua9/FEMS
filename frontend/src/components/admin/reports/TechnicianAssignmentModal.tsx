@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
-import { AdminUser } from '../../../types/admin.types';
+import type { AdminUser } from '../../../types/admin.types';
 
 interface TechnicianAssignmentModalProps {
     isOpen: boolean;
@@ -47,7 +47,7 @@ const TechnicianAssignmentModal: React.FC<TechnicianAssignmentModalProps> = ({
             ></div>
 
             {/* Modal Content */}
-            <div className="relative w-full max-w-lg glass-card rounded-[2rem] shadow-2xl shadow-[#1E2B58]/20 overflow-hidden flex flex-col max-h-[80vh] animate-in fade-in zoom-in-95 duration-200">
+            <div className="relative w-full max-w-lg dashboard-card rounded-4xl shadow-2xl shadow-[#1E2B58]/20 overflow-hidden flex flex-col max-h-[80vh] animate-in fade-in zoom-in-95 duration-200">
 
                 {/* Header */}
                 <div className="px-8 pt-7 pb-5 border-b border-black/8 dark:border-white/10 relative">

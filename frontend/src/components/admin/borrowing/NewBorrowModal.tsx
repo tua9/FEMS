@@ -13,7 +13,7 @@ const NewBorrowModal: React.FC<NewBorrowModalProps> = ({ isOpen, onClose }) => {
         <div className="fixed inset-0 z-[100] flex items-center justify-center px-4 py-6 bg-black/30 backdrop-blur-sm">
             <div className="absolute inset-0" onClick={onClose}></div>
 
-            <div className="relative w-full max-w-2xl glass-card rounded-[2rem] shadow-2xl shadow-[#1E2B58]/20 overflow-hidden flex flex-col max-h-[90vh] animate-in fade-in zoom-in-95 duration-200">
+            <div className="relative w-full max-w-2xl dashboard-card rounded-4xl shadow-2xl shadow-[#1E2B58]/20 overflow-hidden flex flex-col max-h-[90vh] animate-in fade-in zoom-in-95 duration-200">
 
                 {/* Header */}
                 <div className="flex items-center justify-between px-8 py-6 border-b border-black/8 dark:border-white/10">

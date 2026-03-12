@@ -1,6 +1,6 @@
 import React from 'react';
 import { createPortal } from 'react-dom';
-import { Asset } from '../../../types/admin.types';
+import type { Asset } from '../../../types/admin.types';
 
 interface DeviceDetailsModalProps {
     isOpen: boolean;
@@ -58,7 +58,7 @@ const DeviceDetailsModal: React.FC<DeviceDetailsModalProps> = ({ isOpen, device,
                 ></div>
 
                 {/* Modal Content */}
-                <div className="relative w-full max-w-4xl glass-card rounded-[2rem] shadow-2xl shadow-[#1E2B58]/20 overflow-hidden flex flex-col max-h-[92vh] animate-in fade-in zoom-in-95 duration-200">
+                <div className="relative w-full max-w-4xl dashboard-card rounded-4xl shadow-2xl shadow-[#1E2B58]/20 overflow-hidden flex flex-col max-h-[92vh] animate-in fade-in zoom-in-95 duration-200">
 
                     {/* Header with Image Background */}
                     <div className="relative min-h-[220px] overflow-hidden">

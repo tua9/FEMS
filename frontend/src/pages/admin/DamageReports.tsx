@@ -5,7 +5,7 @@ import ResolutionStats from '../../components/admin/reports/ResolutionStats';
 import DamageReportDetailModal from '../../components/admin/reports/DamageReportDetailModal';
 import TechnicianAssignmentModal from '../../components/admin/reports/TechnicianAssignmentModal';
 import { adminApi } from '../../services/api/adminApi';
-import { DamageReport, AdminUser } from '../../types/admin.types';
+import type { DamageReport, AdminUser } from '../../types/admin.types';
 import { PageHeader } from '@/components/shared/PageHeader';
 
 const DamageReports: React.FC = () => {
@@ -195,7 +195,7 @@ const DamageReports: React.FC = () => {
                         if (statusFilter === 'Pending') setStatusFilter('All');
                         else { setStatusFilter('Pending'); setPriorityFilter('All'); }
                     }}
-                    className="glass-card dark:!bg-slate-800/80 p-6 ambient-shadow flex items-center justify-between rounded-[24px] border border-white/40 dark:border-white/10 cursor-pointer hover:scale-[1.02] active:scale-[0.98] transition-all group"
+                    className="dashboard-card p-6 flex items-center justify-between rounded-3xl cursor-pointer hover:scale-[1.02] active:scale-[0.98] transition-all group"
                 >
                     <div>
                         <p className="text-[10px] font-medium uppercase tracking-[0.2em] text-slate-500 mb-1 transition-colors">Pending Reports</p>
@@ -210,7 +210,7 @@ const DamageReports: React.FC = () => {
                         if (statusFilter === 'Resolved') setStatusFilter('All');
                         else { setStatusFilter('Resolved'); setPriorityFilter('All'); }
                     }}
-                    className="glass-card dark:!bg-slate-800/80 p-6 ambient-shadow flex items-center justify-between rounded-[24px] border border-white/40 dark:border-white/10 cursor-pointer hover:scale-[1.02] active:scale-[0.98] transition-all group"
+                    className="dashboard-card p-6 flex items-center justify-between rounded-3xl cursor-pointer hover:scale-[1.02] active:scale-[0.98] transition-all group"
                 >
                     <div>
                         <p className="text-[10px] font-medium uppercase tracking-[0.2em] text-slate-500 mb-1 transition-colors">Resolved (This Month)</p>
@@ -225,7 +225,7 @@ const DamageReports: React.FC = () => {
                         if (priorityFilter === 'High Priority') setPriorityFilter('All');
                         else { setPriorityFilter('High Priority'); setStatusFilter('All'); }
                     }}
-                    className="glass-card dark:!bg-slate-800/80 p-6 ambient-shadow flex items-center justify-between rounded-[24px] border border-white/40 dark:border-white/10 cursor-pointer hover:scale-[1.02] active:scale-[0.98] transition-all group"
+                    className="dashboard-card p-6 flex items-center justify-between rounded-3xl cursor-pointer hover:scale-[1.02] active:scale-[0.98] transition-all group"
                 >
                     <div>
                         <p className="text-[10px] font-medium uppercase tracking-[0.2em] text-slate-500 mb-1 transition-colors">Critical Issues</p>
@@ -240,7 +240,7 @@ const DamageReports: React.FC = () => {
             <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
                 {/* Main Table Area */}
                 <div className="xl:col-span-2 space-y-8">
-                    <div className="bg-white/40 dark:bg-slate-800/60 p-8 ambient-shadow rounded-[32px] border border-white/40 dark:border-white/10 backdrop-blur-xl transition-all duration-300">
+                    <div className="dashboard-card p-8 rounded-4xl transition-all duration-300">
                         <div className="flex flex-row items-center justify-between gap-6 mb-8">
                             <h4 className="font-extrabold text-[#1A2B56] dark:text-white text-lg whitespace-nowrap">Report Management</h4>
 
@@ -257,7 +257,7 @@ const DamageReports: React.FC = () => {
                                         />
                                     </div>
                                 </div>
-                                <div className="glass-card !rounded-[1.5rem] flex items-center gap-0 p-1 flex-shrink-0">
+                                <div className="dashboard-card rounded-3xl! flex items-center gap-0 p-1 shrink-0">
                                     <CustomDropdown
                                         value={statusFilter}
                                         options={[

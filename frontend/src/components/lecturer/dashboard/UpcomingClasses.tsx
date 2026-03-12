@@ -10,14 +10,14 @@ const classes = [
 
 export const UpcomingClasses: React.FC = () => {
     return (
-        <div className="glass-card rounded-3xl lg:rounded-[2rem] p-6 lg:p-8 h-full flex flex-col">
+        <div className="dashboard-card rounded-3xl lg:rounded-4xl p-6 lg:p-8 h-full flex flex-col">
             <div className="flex items-center justify-between mb-6 lg:mb-8">
                 <h3 className="text-lg lg:text-xl font-extrabold text-[#1E2B58] dark:text-white">Upcoming Classes</h3>
                 <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse shrink-0"></span>
             </div>
             <div className="space-y-4 flex-1">
                 {classes.map((cls, idx) => (
-                    <div key={idx} className={`p-4 rounded-2xl bg-white/40 dark:bg-white/5 border border-white/60 dark:border-white/10 hover:border-[#1E2B58]/20 transition-all cursor-pointer group ${cls.opacity}`}>
+                    <div key={idx} className={`p-4 rounded-2xl dashboard-card hover:border-[#1E2B58]/20 transition-all cursor-pointer group ${cls.opacity}`}>
                         <p className="text-[0.5625rem] lg:text-[0.625rem] font-black text-[#1E2B58]/40 dark:text-white/40 uppercase tracking-widest mb-1.5 lg:mb-2">
                             {cls.time}
                         </p>

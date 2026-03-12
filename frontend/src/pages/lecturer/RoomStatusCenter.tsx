@@ -312,7 +312,7 @@ export const RoomStatusCenter: React.FC = () => {
 
                     {/* Empty state */}
                     {filteredRooms.length === 0 && (
-                        <div className="glass-card rounded-3xl p-12 flex flex-col items-center justify-center text-center gap-4">
+                        <div className="dashboard-card rounded-3xl p-12 flex flex-col items-center justify-center text-center gap-4">
                             <Building className="w-10 h-10 text-[#1E2B58]/30 dark:text-white/20" />
                             <p className="text-lg font-black text-[#1E2B58]/50 dark:text-white/40">No rooms match the selected filters.</p>
                             <button

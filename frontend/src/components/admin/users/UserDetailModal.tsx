@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { AdminUser } from '../../../types/admin.types';
+import type { AdminUser } from '../../../types/admin.types';
 import { adminApi } from '../../../services/api/adminApi';
 
 interface UserDetailModalProps {
@@ -72,7 +72,7 @@ const UserDetailModal: React.FC<UserDetailModalProps> = ({ isOpen, AdminUser, on
             ></div>
 
             {/* Modal Content */}
-            <div className="relative w-full max-w-3xl glass-card rounded-[2rem] shadow-2xl shadow-[#1E2B58]/20 overflow-hidden flex flex-col max-h-[92vh] animate-in fade-in zoom-in-95 duration-200">
+            <div className="relative w-full max-w-3xl dashboard-card rounded-4xl shadow-2xl shadow-[#1E2B58]/20 overflow-hidden flex flex-col max-h-[92vh] animate-in fade-in zoom-in-95 duration-200">
 
                 {/* Header Profile Section with Blended background */}
                 <div className="relative min-h-[220px] overflow-hidden">

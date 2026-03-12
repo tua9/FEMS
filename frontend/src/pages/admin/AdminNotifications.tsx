@@ -82,7 +82,7 @@ const AdminNotifications: React.FC = () => {
             </div>
 
             {/* Filter Bar */}
-            <div className="glass-card hover:transform-none bg-white/60 dark:bg-slate-800/40 p-2 rounded-[24px] mb-8 border border-white/40 dark:border-white/10 backdrop-blur-xl flex flex-wrap items-center justify-between gap-4">
+            <div className="dashboard-card p-2 rounded-3xl mb-8 flex flex-wrap items-center justify-between gap-4">
                 <div className="flex items-center gap-1 p-1 bg-slate-100/50 dark:bg-slate-900/30 rounded-2xl overflow-x-auto no-scrollbar">
                     {(Object.keys(TYPE_LABELS) as Array<NotifType | 'all'>).map((tab) => (
                         <button
