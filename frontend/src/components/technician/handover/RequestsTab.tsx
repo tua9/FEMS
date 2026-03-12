@@ -76,11 +76,13 @@ function toDetailRecord(req: RequestRecord): HandoverDetailRecord {
 interface ActionModalProps {
   request: RequestRecord;
   action: 'Approve' | 'Reject';
-  onConfirm: () => void;
+  onConfirm: (reason?: string) => void;
   onClose: () => void;
 }
 const ActionModal: React.FC<ActionModalProps> = ({ request, action, onConfirm, onClose }) => {
   const isApprove = action === 'Approve';
+  const [rejectReason, setRejectReason] = useState('');
+  const [rejectError, setRejectError] = useState('');
 
   useEffect(() => {
     const h = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
@@ -88,73 +90,147 @@ const ActionModal: React.FC<ActionModalProps> = ({ request, action, onConfirm, o
     return () => document.removeEventListener('keydown', h);
   }, [onClose]);
 
+  const handleConfirm = () => {
+    if (!isApprove && !rejectReason.trim()) {
+      setRejectError('Please provide a reason for rejection.');
+      return;
+    }
+    onConfirm(isApprove ? undefined : rejectReason.trim());
+  };
+
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4"
-      style={{ background: 'rgba(15,23,42,0.5)', backdropFilter: 'blur(4px)' }}
+      className="fixed inset-0 z-50 flex items-center justify-center px-4 py-6 bg-black/30 backdrop-blur-sm"
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
       <div
-        className="w-full max-w-md tech-dropdown rounded-3xl shadow-2xl overflow-hidden"
+        className="glass-card animate-in fade-in zoom-in-95 duration-200 w-full max-w-md rounded-[2rem] shadow-2xl shadow-[#1E2B58]/20 overflow-hidden flex flex-col max-h-[90vh]"
+        onClick={(e) => e.stopPropagation()}
       >
-        {/* Icon strip */}
-        <div className={`h-2 w-full ${isApprove ? 'bg-emerald-500' : 'bg-red-500'}`} />
+        {/* ── Colour accent bar ── */}
+        <div className={`h-1 w-full shrink-0 ${isApprove ? 'bg-gradient-to-r from-emerald-400 to-emerald-500' : 'bg-gradient-to-r from-red-400 to-red-500'}`} />
 
-        <div className="p-8">
-          {/* Icon + title */}
-          <div className="flex items-center gap-4 mb-6">
-            <div className={`w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0 ${isApprove ? 'bg-emerald-50' : 'bg-red-50'}`}>
-              <span className={`material-symbols-outlined text-2xl ${isApprove ? 'text-emerald-500' : 'text-red-500'}`}
-                style={{ fontVariationSettings: "'FILL' 1" }}>
+        {/* ── Header ── */}
+        <div className="px-7 pt-6 pb-5 flex items-start justify-between shrink-0">
+          <div className="flex items-center gap-4">
+            <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 ${isApprove ? 'bg-emerald-500/10' : 'bg-red-500/10'}`}>
+              <span
+                className={`material-symbols-outlined text-2xl ${isApprove ? 'text-emerald-500' : 'text-red-500'}`}
+                style={{ fontVariationSettings: "'FILL' 1" }}
+              >
                 {isApprove ? 'check_circle' : 'cancel'}
               </span>
             </div>
             <div>
-              <h3 className="text-lg font-extrabold text-[#1A2B56] dark:text-white">
+              <p className="text-[0.625rem] font-black uppercase tracking-widest text-[#1E2B58]/50 dark:text-white/40 mb-0.5">
                 {isApprove ? 'Approve Request' : 'Reject Request'}
+              </p>
+              <h3 className="text-lg font-extrabold text-[#1E2B58] dark:text-white">
+                {isApprove ? 'Approve this request?' : 'Reject this request?'}
               </h3>
-              <p className="text-xs text-slate-400 font-medium mt-0.5">{request.id}</p>
             </div>
           </div>
+          <button
+            onClick={onClose}
+            className="w-8 h-8 rounded-full flex items-center justify-center text-[#1E2B58]/50 dark:text-white/50 hover:bg-[#1E2B58]/8 dark:hover:bg-white/10 transition-colors shrink-0 ml-3"
+            aria-label="Close"
+          >
+            <span className="material-symbols-outlined text-lg">close</span>
+          </button>
+        </div>
 
-          {/* Info card */}
-          <div className="bg-slate-50 dark:bg-white/5 rounded-2xl p-4 space-y-2 mb-6">
-            <div className="flex justify-between text-xs">
-              <span className="text-slate-400 font-semibold">Borrower</span>
-              <span className="font-bold text-slate-700">{request.borrower.name}</span>
+        {/* ── Scrollable body ── */}
+        <div className="px-7 pb-6 overflow-y-auto flex-1 space-y-4">
+
+          {/* Request summary card */}
+          <div className="bg-white/40 dark:bg-slate-800/40 rounded-[1.25rem] p-4 space-y-3">
+            {/* ID + Equipment row */}
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-xl bg-[#1E2B58]/8 dark:bg-white/8 flex items-center justify-center shrink-0">
+                <span className="material-symbols-outlined text-[#1E2B58]/60 dark:text-white/60 text-[18px]">devices</span>
+              </div>
+              <div className="min-w-0">
+                <p className="text-[0.625rem] font-black uppercase tracking-widest text-[#1E2B58]/40 dark:text-white/40">
+                  {request.id}
+                </p>
+                <p className="text-sm font-extrabold text-[#1E2B58] dark:text-white truncate">
+                  {request.equipment.name}
+                </p>
+              </div>
             </div>
-            <div className="flex justify-between text-xs">
-              <span className="text-slate-400 font-semibold">Equipment</span>
-              <span className="font-bold text-slate-700">{request.equipment.name}</span>
-            </div>
-            <div className="flex justify-between text-xs">
-              <span className="text-slate-400 font-semibold">Duration</span>
-              <span className="font-bold text-slate-700">{request.duration}</span>
-            </div>
+            <div className="border-t border-black/8 dark:border-white/10" />
+            {/* Details rows */}
+            {[
+              { label: 'Borrower', value: request.borrower.name },
+              { label: 'Location', value: request.equipment.location },
+              { label: 'Duration', value: request.duration },
+              { label: 'Purpose',  value: request.purpose },
+            ].map(({ label, value }) => (
+              <div key={label} className="flex justify-between gap-4 text-xs">
+                <span className="text-[#1E2B58]/50 dark:text-white/40 font-medium shrink-0">{label}</span>
+                <span className="font-bold text-[#1E2B58] dark:text-white text-right">{value}</span>
+              </div>
+            ))}
           </div>
 
-          <p className="text-sm text-slate-600 mb-8">
-            {isApprove
-              ? 'This will approve the borrow request and notify the borrower. The equipment will be marked as reserved.'
-              : 'This will reject the borrow request and notify the borrower. This action cannot be undone.'}
-          </p>
+          {/* Reject reason textarea */}
+          {!isApprove && (
+            <div className="flex flex-col gap-2">
+              <label className="text-[0.625rem] font-black uppercase tracking-widest text-[#1E2B58]/50 dark:text-white/40">
+                Rejection Reason <span className="text-red-500">*</span>
+              </label>
+              <textarea
+                rows={3}
+                placeholder="Describe why this request is being rejected..."
+                value={rejectReason}
+                onChange={(e) => { setRejectReason(e.target.value); setRejectError(''); }}
+                className="w-full resize-none rounded-2xl border border-white/40 bg-white/40 px-4 py-3 text-sm font-medium text-[#1E2B58] outline-none transition-all placeholder:text-[#1E2B58]/30 focus:ring-2 focus:ring-red-400/30 dark:border-slate-700/50 dark:bg-slate-800/50 dark:text-white dark:placeholder:text-white/30"
+              />
+              {rejectError && (
+                <p className="text-xs font-bold text-red-500 dark:text-red-400">{rejectError}</p>
+              )}
+            </div>
+          )}
 
-          {/* Actions */}
-          <div className="flex gap-3">
-            <button
-              onClick={onClose}
-              className="flex-1 py-3 rounded-2xl border border-slate-200 dark:border-white/10 text-sm font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/5 transition-colors"
+          {/* Info notice */}
+          <div className={`flex items-start gap-3 rounded-2xl px-4 py-3.5 text-xs font-medium leading-relaxed ${
+            isApprove
+              ? 'bg-emerald-500/8 border border-emerald-500/20 text-emerald-700 dark:text-emerald-400'
+              : 'bg-red-500/8 border border-red-500/20 text-red-600 dark:text-red-400'
+          }`}>
+            <span
+              className="material-symbols-outlined text-base shrink-0 mt-0.5"
+              style={{ fontVariationSettings: "'FILL' 1" }}
             >
-              Cancel
-            </button>
-            <button
-              onClick={onConfirm}
-              className={`flex-1 py-3 rounded-2xl text-sm font-bold text-white transition-all hover:opacity-90 active:scale-95 flex items-center justify-center gap-2 ${isApprove ? 'bg-emerald-500' : 'bg-red-500'}`}
-            >
-              <span className="material-symbols-outlined text-base">{isApprove ? 'check' : 'close'}</span>
-              {isApprove ? 'Confirm Approval' : 'Confirm Rejection'}
-            </button>
+              {isApprove ? 'info' : 'warning'}
+            </span>
+            <span>
+              {isApprove
+                ? 'Approving this request will assign it for fulfillment. The requester will be notified automatically.'
+                : 'The requester will be notified with your rejection reason. Make sure your comment is clear and professional.'}
+            </span>
           </div>
+        </div>
+
+        {/* ── Footer ── */}
+        <div className="px-7 py-5 border-t border-black/8 dark:border-white/10 flex gap-3 shrink-0">
+          <button
+            onClick={onClose}
+            className="flex-1 py-3.5 rounded-[1.25rem] border border-[#1E2B58]/15 dark:border-white/15 text-sm font-bold text-[#1E2B58]/70 dark:text-white/70 hover:bg-[#1E2B58]/5 dark:hover:bg-white/5 transition-all"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleConfirm}
+            className={`flex-[2] py-3.5 rounded-[1.25rem] text-sm font-bold text-white transition-all hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-2 shadow-lg ${
+              isApprove
+                ? 'bg-emerald-500 hover:bg-emerald-600 shadow-emerald-500/20'
+                : 'bg-red-500 hover:bg-red-600 shadow-red-500/20'
+            }`}
+          >
+            <span className="material-symbols-outlined text-base">{isApprove ? 'check' : 'close'}</span>
+            {isApprove ? 'Confirm Approve' : 'Confirm Reject'}
+          </button>
         </div>
       </div>
     </div>
@@ -344,10 +420,10 @@ const RequestsTab: React.FC = () => {
 
   const handleSearch = (v: string) => { setSearch(v); setCurrentPage(1); };
 
-  const handleConfirmAction = () => {
+  const handleConfirmAction = (reason?: string) => {
     if (!actionModal) return;
     setRequests((prev) =>
-      prev.map((r) => r.id === actionModal.req.id ? { ...r, status: actionModal.action === 'Approve' ? 'Approved' : 'Rejected' } : r)
+      prev.map((r) => r.id === actionModal.req.id ? { ...r, status: actionModal.action === 'Approve' ? 'Approved' : 'Rejected', rejectReason: reason } : r)
     );
     setActionModal(null);
   };

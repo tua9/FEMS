@@ -98,7 +98,7 @@ const EquipmentPage: React.FC = () => {
   };
 
   return (
-    <div className="student-layout transition-colors duration-300">
+    <div className="w-full">
       <main className="mx-auto flex w-full max-w-[90vw] flex-1 flex-col px-4 pt-6 sm:pt-8 pb-10 sm:px-6 xl:max-w-7xl">
         <PageHeader
           title="Equipment Catalog"

@@ -5,7 +5,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { AnimatePresence, motion } from "framer-motion";
-import { Bell, CheckCheck, X } from "lucide-react";
+import { Bell, CheckCheck } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuthStore } from "@/stores/useAuthStore";
 
@@ -219,8 +219,13 @@ const NavNotificationBell: React.FC = () => {
   const updatePos = () => {
     if (!buttonRef.current) return;
     const rect = buttonRef.current.getBoundingClientRect();
+    // Anchor below the navbar pill (fixed top-4 + h-[4.25rem] = 84px), with 8px gap
+    const navbar = document.querySelector("header[class*='fixed'][class*='rounded-full']");
+    const navbarBottom = navbar
+      ? navbar.getBoundingClientRect().bottom
+      : rect.bottom;
     setDropdownPos({
-      top: rect.bottom + 12, // 12px gap below button
+      top: navbarBottom + 8,
       right: window.innerWidth - rect.right,
     });
   };
@@ -352,13 +357,6 @@ const NavNotificationBell: React.FC = () => {
                         Mark all read
                       </button>
                     )}
-                    <button
-                      onClick={() => setIsOpen(false)}
-                      aria-label="Close"
-                      className="ml-1 rounded-lg p-1.5 text-slate-400 transition-colors hover:bg-black/5 hover:text-slate-600 dark:hover:bg-white/8 dark:hover:text-slate-200"
-                    >
-                      <X className="h-4 w-4" />
-                    </button>
                   </div>
                 </div>
 

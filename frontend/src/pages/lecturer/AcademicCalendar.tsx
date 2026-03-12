@@ -410,11 +410,11 @@ const EventModal: React.FC<{
 
     return (
         <div
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/30 backdrop-blur-sm"
+            className="fixed inset-0 z-50 flex items-center justify-center px-4 py-6 bg-black/30 backdrop-blur-sm"
             onClick={onClose}
         >
             <div
-                className="extreme-glass rounded-[2rem] w-full max-w-md shadow-2xl shadow-[#1E2B58]/20 overflow-hidden"
+                className="glass-card rounded-[2rem] w-full max-w-md shadow-2xl shadow-[#1E2B58]/20 overflow-hidden animate-in fade-in zoom-in-95 duration-200"
                 onClick={e => e.stopPropagation()}
             >
                 {/* Color header strip */}
@@ -435,6 +435,7 @@ const EventModal: React.FC<{
                     <button
                         onClick={onClose}
                         className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center hover:bg-white/30 transition-colors shrink-0"
+                        aria-label="Close modal"
                     >
                         <X className="w-4 h-4 text-white" />
                     </button>

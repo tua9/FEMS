@@ -192,8 +192,13 @@ const NavUserDropdown: React.FC = () => {
   const updatePos = () => {
     if (!buttonRef.current) return;
     const rect = buttonRef.current.getBoundingClientRect();
+    // Anchor below the navbar pill (fixed top-4 + h-[4.25rem] = 84px), with 8px gap
+    const navbar = document.querySelector("header[class*='fixed'][class*='rounded-full']");
+    const navbarBottom = navbar
+      ? navbar.getBoundingClientRect().bottom
+      : rect.bottom;
     setDropdownPos({
-      top: rect.bottom + 12,
+      top: navbarBottom + 8,
       right: window.innerWidth - rect.right,
     });
   };

@@ -30,15 +30,15 @@ interface HistoryDetailModalProps {
 
 const HistoryDetailModal: React.FC<HistoryDetailModalProps> = ({ modal, onClose }) => (
   <div
-    className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4 backdrop-blur-sm"
+    className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 px-4 backdrop-blur-sm"
     onClick={(e) => e.target === e.currentTarget && onClose()}
   >
-    <div className="glass-card animate-in fade-in zoom-in-95 relative w-full max-w-md rounded-4xl p-8 shadow-2xl duration-200">
+    <div className="glass-card animate-in fade-in zoom-in-95 relative w-full max-w-md rounded-4xl p-8 shadow-2xl shadow-[#1E2B58]/20 duration-200">
       {/* Close button */}
       <button
         onClick={onClose}
         aria-label="Close modal"
-        className="absolute top-5 right-5 flex h-8 w-8 items-center justify-center rounded-full hover:bg-black/5 dark:hover:bg-white/5"
+        className="absolute top-5 right-5 flex h-8 w-8 items-center justify-center rounded-full text-[#1E2B58]/60 transition hover:bg-[#1E2B58]/10 dark:text-white/60 dark:hover:bg-white/10"
       >
         <X className="h-4 w-4" />
       </button>

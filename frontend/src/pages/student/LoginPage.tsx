@@ -23,7 +23,7 @@ export default function LoginPage() {
         <div className="flex items-center gap-4">
           <DarkModeToggle />
           <a
-            href="#"
+            href="/report-issue"
             className="text-[0.85rem] font-extrabold text-slate-600 transition hover:text-slate-900 dark:text-slate-200 dark:hover:text-white"
           >
             Report Issue

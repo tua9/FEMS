@@ -36,7 +36,7 @@ const BorrowingDetailModal: React.FC<BorrowingDetailModalProps> = ({
 
     return (
         createPortal(
-            <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+            <div className="fixed inset-0 z-[100] flex items-center justify-center px-4 py-6 bg-black/30 backdrop-blur-sm">
                 <style dangerouslySetInnerHTML={{
                     __html: `
                     .no-scrollbar::-webkit-scrollbar { display: none; }
@@ -44,35 +44,30 @@ const BorrowingDetailModal: React.FC<BorrowingDetailModalProps> = ({
                 ` }} />
                 {/* Backdrop */}
                 <div
-                    className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm transition-opacity"
+                    className="absolute inset-0"
                     onClick={onClose}
                 ></div>
 
                 {/* Modal Content */}
-                <div className="relative w-full max-w-2xl bg-white/95 dark:bg-slate-800/95 backdrop-blur-2xl rounded-[40px] border-2 border-white/50 dark:border-white/10 shadow-3xl overflow-hidden flex flex-col max-h-[90vh] animate-in fade-in zoom-in duration-300">
+                <div className="relative w-full max-w-2xl glass-card rounded-[2rem] shadow-2xl shadow-[#1E2B58]/20 overflow-hidden flex flex-col max-h-[90vh] animate-in fade-in zoom-in-95 duration-200">
 
-                    {/* Header Section with soft blending */}
-                    <div className="p-10 pb-6 relative overflow-hidden">
-                        {/* Soft background glow */}
-                        <div className="absolute top-0 left-0 w-full h-40 bg-gradient-to-b from-blue-50/50 dark:from-blue-900/10 to-transparent"></div>
-
+                    {/* Header Section */}
+                    <div className="px-10 pt-8 pb-6 relative border-b border-black/8 dark:border-white/10">
                         <button
                             onClick={onClose}
-                            className="absolute top-8 right-10 w-11 h-11 flex items-center justify-center hover:bg-slate-100 dark:hover:bg-slate-700/50 rounded-full transition-colors text-slate-400 z-20 border-2 border-transparent hover:border-slate-200 dark:hover:border-slate-600"
+                            className="absolute top-6 right-8 w-8 h-8 flex items-center justify-center text-[#1E2B58]/50 hover:text-[#1E2B58] hover:bg-[#1E2B58]/8 dark:text-white/50 dark:hover:text-white dark:hover:bg-white/10 rounded-full transition-colors z-20"
                         >
                             <span className="material-symbols-outlined text-xl">close</span>
                         </button>
 
-                        <div className="relative z-10">
-                            <div className="flex items-center gap-4 mb-6">
-                                <span className={`px-4 py-1.5 rounded-2xl text-[10px] font-black uppercase tracking-widest border-2 shadow-sm ${getStatusStyle(record.status)}`}>
-                                    {record.status}
-                                </span>
-                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Transaction ID: {record.id}</span>
-                            </div>
-
-                            <h3 className="text-3xl font-black text-[#1A2B56] dark:text-white tracking-tight">Loan Specifications</h3>
+                        <div className="flex items-center gap-4 mb-3">
+                            <span className={`px-4 py-1.5 rounded-2xl text-[10px] font-black uppercase tracking-widest border-2 shadow-sm ${getStatusStyle(record.status)}`}>
+                                {record.status}
+                            </span>
+                            <span className="text-[10px] font-black text-[#1E2B58]/40 dark:text-white/40 uppercase tracking-widest">Transaction ID: {record.id}</span>
                         </div>
+
+                        <h3 className="text-2xl font-black text-[#1E2B58] dark:text-white tracking-tight">Loan Specifications</h3>
                     </div>
 
                     <div className="p-10 pt-0 overflow-y-auto no-scrollbar space-y-8 relative z-10">

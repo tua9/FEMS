@@ -26,15 +26,6 @@ const HomePage: React.FC = () => {
             title="Hello, Alex Chen"
             subtitle="Welcome back to your University Dashboard."
           />
-          <div className="flex justify-center mt-6">
-            <button
-              onClick={() => navigate("/student/equipment")}
-              className="btn-navy group flex items-center gap-3 rounded-full px-8 py-4 font-bold shadow-xl shadow-[#1E2B58]/20 hover:scale-105 active:scale-95"
-            >
-              Borrow Equipment
-              <ChevronRight className="h-5 w-5 transition-transform group-hover:translate-x-1" />
-            </button>
-          </div>
         </AnimatedSection>
 
         {/* Stat Cards */}
