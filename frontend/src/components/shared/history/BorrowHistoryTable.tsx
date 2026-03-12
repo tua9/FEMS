@@ -1,35 +1,11 @@
 import { AlertTriangle, Cable, ChevronLeft, ChevronRight, Eye, Laptop, Mic, Microchip, Projector, Router } from 'lucide-react';
 import React from 'react';
 import { StatusBadge } from '@/components/shared/ui/StatusBadge';
+import type { BorrowRequest } from '@/types/borrowRequest';
 
-// ─── Types ────────────────────────────────────────────────────────────────────
-
-export type BorrowStatus = 'RETURNED' | 'BORROWED' | 'OVERDUE';
-
-export interface BorrowHistoryItem {
-    id:            string;
-    course:        string;
-    group:         string;
-    equipmentName: string;
-    icon:          React.ElementType;
-    period:        string;
-    returnDate:    string;
-    status:        BorrowStatus;
-}
-
-// ─── Mock data ────────────────────────────────────────────────────────────────
-
-export const ALL_BORROW_HISTORY: BorrowHistoryItem[] = [
-    { id: '#REQ-2024-892', course: 'CS-405 Adv. AI',    group: 'Group A',      equipmentName: 'MacBook Pro 16" (x2)', icon: Laptop,    period: 'Oct 24, 09:00–12:00', returnDate: 'Oct 24, 2023', status: 'RETURNED' },
-    { id: '#REQ-2024-885', course: 'ENG-101 Basics',    group: 'Lab 3',        equipmentName: 'HDMI Cables (x5)',     icon: Cable,     period: 'Oct 22, 14:00–16:00', returnDate: '-',            status: 'BORROWED' },
-    { id: '#REQ-2024-870', course: 'CS-302 Networks',   group: 'Lab 1',        equipmentName: 'Cisco Router',         icon: Router,    period: 'Oct 20, 10:00–11:30', returnDate: '-',            status: 'OVERDUE'  },
-    { id: '#REQ-2024-865', course: 'PHY-201 Quantum',   group: 'Lecture Hall', equipmentName: 'Projector 4K',         icon: Projector, period: 'Oct 18, 13:00–15:00', returnDate: 'Oct 18, 2023', status: 'RETURNED' },
-    { id: '#REQ-2024-850', course: 'CS-405 Adv. AI',    group: 'Group B',      equipmentName: 'Raspberry Pi Kit',     icon: Microchip, period: 'Oct 15, 09:00–17:00', returnDate: 'Oct 15, 2023', status: 'RETURNED' },
-    { id: '#REQ-2024-842', course: 'MAT-101 Algebra',   group: 'Room 204',     equipmentName: 'Wireless Mic Set',     icon: Mic,       period: 'Oct 12, 08:30–10:30', returnDate: 'Oct 12, 2023', status: 'RETURNED' },
-    { id: '#REQ-2024-835', course: 'CS-302 Networks',   group: 'Group C',      equipmentName: 'Network Switch',       icon: Router,    period: 'Oct 10, 09:00–11:00', returnDate: 'Oct 10, 2023', status: 'RETURNED' },
-    { id: '#REQ-2024-821', course: 'PHY-201 Quantum',   group: 'Lab 2',        equipmentName: 'Oscilloscope',         icon: Microchip, period: 'Oct 08, 13:00–16:00', returnDate: 'Oct 08, 2023', status: 'RETURNED' },
-    { id: '#REQ-2024-810', course: 'ENG-101 Basics',    group: 'Room 301',     equipmentName: 'USB Webcam',           icon: Laptop,    period: 'Oct 05, 10:00–12:00', returnDate: 'Oct 05, 2023', status: 'RETURNED' },
-];
+export type BorrowStatus = "Returned" | "Overdue" | "Borrowed" | "Pending" | "Approved" | "Rejected" | "Cancelled";
+export interface BorrowHistoryItem { id: string; room: string; roomType: string; category: string; equipment: string; date: string; returnDate: string; status: string; icon?: any; course?: string; group?: string; equipmentName?: string; period?: string; }
+export const ALL_BORROW_HISTORY: BorrowHistoryItem[] = [];
 
 // ─── Pagination helper ────────────────────────────────────────────────────────
 
@@ -43,12 +19,12 @@ function pageRange(current: number, total: number): (number | '...')[] {
 // ─── Props ────────────────────────────────────────────────────────────────────
 
 interface BorrowHistoryTableProps {
-    items:        BorrowHistoryItem[];
+    items:        BorrowRequest[];
     currentPage:  number;
     totalPages:   number;
     totalItems:   number;
     onPageChange: (page: number) => void;
-    onViewDetail: (item: BorrowHistoryItem) => void;
+    onViewDetail: (item: BorrowRequest) => void;
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -56,13 +32,34 @@ interface BorrowHistoryTableProps {
 export const BorrowHistoryTable: React.FC<BorrowHistoryTableProps> = ({
     items, currentPage, totalPages, totalItems, onPageChange, onViewDetail,
 }) => {
+    // Helper function to map category to an icon
+    const getIcon = (category?: string) => {
+        if (!category) return Projector;
+        const normalized = category.toLowerCase();
+        if (normalized.includes('laptop') || normalized.includes('computer')) return Laptop;
+        if (normalized.includes('cable')) return Cable;
+        if (normalized.includes('network') || normalized.includes('router')) return Router;
+        if (normalized.includes('audio') || normalized.includes('mic')) return Mic;
+        if (normalized.includes('component') || normalized.includes('kit')) return Microchip;
+        return Projector;
+    };
+
+    const formatDate = (dateStr: string) => {
+        if (!dateStr) return '-';
+        return new Date(dateStr).toLocaleDateString("en-US", {
+            month: "short",
+            day: "numeric",
+            year: "numeric"
+        });
+    };
+
     return (
         <div className="glass-card bg-white/60 dark:bg-slate-900/40 rounded-[1.5rem] sm:rounded-[2rem] overflow-hidden shadow-[0_10px_30px_-5px_rgba(30,43,88,0.1)] mb-[4rem] border border-white dark:border-white/10">
             <div className="overflow-x-auto hide-scrollbar">
                 <table className="w-full border-collapse min-w-[1000px]">
                     <thead>
                         <tr className="thead-tint">
-                            {['Request ID', 'Course / Class', 'Equipment', 'Borrow Period', 'Return Date', 'Status', 'Actions'].map((h, i) => (
+                            {['Request ID', 'Course / Class', 'Equipment', 'Borrow Date', 'Return Date', 'Status', 'Actions'].map((h, i) => (
                                 <th key={h} className={`px-[2rem] py-[1.5rem] text-[0.625rem] font-black uppercase tracking-[0.2em] text-[#1E2B58]/50 dark:text-slate-400 ${i === 5 ? 'text-center' : i === 6 ? 'text-right' : 'text-left'}`}>
                                     {h}
                                 </th>
@@ -76,39 +73,55 @@ export const BorrowHistoryTable: React.FC<BorrowHistoryTableProps> = ({
                                     No records found for the selected filters.
                                 </td>
                             </tr>
-                        ) : items.map(item => {
-                            const Icon = item.icon;
+                        ) : items.map((item: BorrowRequest) => {
+                            const equipment = item.equipment_id && typeof item.equipment_id !== 'string' ? item.equipment_id : null;
+                            const room = item.room_id && typeof item.room_id !== 'string' ? item.room_id : null;
+                            const Icon = getIcon(equipment?.category);
+                            
+                            const isOverdue = item.status === 'approved' && new Date(item.return_date) < new Date();
+                            const displayStatus = isOverdue ? 'overdue' : item.status;
+
                             return (
                                 <tr
-                                    key={item.id}
+                                    key={item._id}
                                     className="transition-all duration-200 hover:bg-white/70 dark:hover:bg-white/5 group cursor-pointer"
                                     onClick={() => onViewDetail(item)}
                                 >
                                     <td className="px-[2rem] py-[1.5rem]">
-                                        <span className="text-[0.625rem] font-bold text-[#1E2B58] dark:text-slate-300">{item.id}</span>
+                                        <span className="text-[0.625rem] font-bold text-[#1E2B58] dark:text-slate-300">
+                                            #{item._id.substring(item._id.length - 6).toUpperCase()}
+                                        </span>
                                     </td>
                                     <td className="px-[2rem] py-[1.5rem]">
-                                        <p className="font-bold text-[#1E2B58] dark:text-white text-[0.875rem] leading-none mb-[0.25rem]">{item.course}</p>
-                                        <p className="text-[0.625rem] text-slate-500 font-medium">{item.group}</p>
+                                        <p className="font-bold text-[#1E2B58] dark:text-white text-[0.875rem] leading-none mb-[0.25rem]">
+                                            {room ? room.name : 'Unknown Room'}
+                                        </p>
+                                        <p className="text-[0.625rem] text-slate-500 font-medium">
+                                            {room ? room.type : ''}
+                                        </p>
                                     </td>
                                     <td className="px-[2rem] py-[1.5rem]">
                                         <div className="flex items-center gap-[0.75rem]">
                                             <Icon className="w-[1.25rem] h-[1.25rem] text-slate-400 dark:text-slate-500" />
-                                            <span className="font-bold text-[#1E2B58] dark:text-white text-[0.875rem]">{item.equipmentName}</span>
+                                            <span className="font-bold text-[#1E2B58] dark:text-white text-[0.875rem]">
+                                                {equipment ? equipment.name : 'Infrastructure'}
+                                            </span>
                                         </div>
                                     </td>
                                     <td className="px-[2rem] py-[1.5rem]">
-                                        <span className="text-[0.75rem] font-bold text-[#1E2B58] dark:text-slate-300">{item.period}</span>
+                                        <span className="text-[0.75rem] font-bold text-[#1E2B58] dark:text-slate-300">
+                                            {formatDate(item.borrow_date)}
+                                        </span>
                                     </td>
                                     <td className="px-[2rem] py-[1.5rem]">
-                                        <span className={`text-[0.75rem] font-medium ${item.status === 'OVERDUE' ? 'text-red-500 font-bold flex items-center gap-1' : 'text-slate-600 dark:text-slate-400'}`}>
-                                            {item.status === 'OVERDUE' && <AlertTriangle className="w-3.5 h-3.5 shrink-0" />}
-                                            {item.returnDate}
+                                        <span className={`text-[0.75rem] font-medium ${isOverdue ? 'text-red-500 font-bold flex items-center gap-1' : 'text-slate-600 dark:text-slate-400'}`}>
+                                            {isOverdue && <AlertTriangle className="w-3.5 h-3.5 shrink-0" />}
+                                            {item.status === 'returned' || item.status === 'handed_over' ? formatDate(item.updatedAt || item.return_date) : formatDate(item.return_date)}
                                         </span>
                                     </td>
                                     <td className="px-[2rem] py-[1.5rem] text-center">
                                         <span className="inline-block">
-                                            <StatusBadge status={item.status} />
+                                            <StatusBadge status={displayStatus} />
                                         </span>
                                     </td>
                                     <td className="px-[2rem] py-[1.5rem] text-right">

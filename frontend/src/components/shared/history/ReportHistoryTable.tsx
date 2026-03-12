@@ -1,40 +1,15 @@
-import { Armchair, ChevronLeft, ChevronRight, Computer, Droplets, Eye, Lightbulb, Wind, Zap } from 'lucide-react';
+import { Armchair, ChevronLeft, ChevronRight, Computer, Eye, Zap } from 'lucide-react';
 import React from 'react';
 import { StatusBadge } from '@/components/shared/ui/StatusBadge';
+import type { Report } from '@/types/report';
 
-// ─── Types ────────────────────────────────────────────────────────────────────
-
-export type ReportSeverity = 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW';
-export type ReportStatus   = 'RESOLVED' | 'IN PROGRESS' | 'PENDING';
-
-export interface ReportHistoryItem {
-    id:       string;
-    date:     string;
-    category: string;
-    icon:     React.ElementType;
-    location: string;
-    block:    string;
-    severity: ReportSeverity;
-    status:   ReportStatus;
-}
-
-// ─── Mock data (exported for use in parent) ───────────────────────────────────
-
-export const ALL_REPORT_HISTORY: ReportHistoryItem[] = [
-    { id: '#REP-2024-102', date: 'Oct 25, 2023', category: 'Electrical', icon: Zap,      location: 'Room 405',      block: 'Block A',      severity: 'CRITICAL', status: 'RESOLVED'    },
-    { id: '#REP-2024-098', date: 'Oct 24, 2023', category: 'IT Device',  icon: Computer, location: 'Lab 3',         block: 'West Wing',    severity: 'HIGH',     status: 'IN PROGRESS' },
-    { id: '#REP-2024-095', date: 'Oct 22, 2023', category: 'HVAC',       icon: Wind,     location: 'Hall 2',        block: 'Main Complex', severity: 'MEDIUM',   status: 'PENDING'     },
-    { id: '#REP-2024-089', date: 'Oct 20, 2023', category: 'Furniture',  icon: Armchair, location: 'Room 102',      block: 'Block B',      severity: 'LOW',      status: 'RESOLVED'    },
-    { id: '#REP-2024-082', date: 'Oct 18, 2023', category: 'IT Device',  icon: Computer, location: 'Lab 1',         block: 'Block A',      severity: 'HIGH',     status: 'RESOLVED'    },
-    { id: '#REP-2024-075', date: 'Oct 15, 2023', category: 'Lighting',   icon: Lightbulb,location: 'Faculty Office', block: 'Level 4',     severity: 'LOW',      status: 'RESOLVED'    },
-    { id: '#REP-2024-068', date: 'Oct 12, 2023', category: 'Electrical', icon: Zap,      location: 'Server Room',   block: 'Block B2',     severity: 'CRITICAL', status: 'RESOLVED'    },
-    { id: '#REP-2024-061', date: 'Oct 10, 2023', category: 'IT Device',  icon: Computer, location: 'Lab 5',         block: 'East Wing',    severity: 'HIGH',     status: 'RESOLVED'    },
-    { id: '#REP-2024-055', date: 'Oct 07, 2023', category: 'Plumbing',   icon: Droplets, location: 'Restroom B1',   block: 'Block C',      severity: 'MEDIUM',   status: 'RESOLVED'    },
-];
+export type ReportSeverity = "CRITICAL" | "HIGH" | "MEDIUM" | "LOW";
+export interface ReportHistoryItem { id: string; date: string; category: string; location: string; severity: string; status: string; block?: string; icon?: any; }
+export const ALL_REPORT_HISTORY: ReportHistoryItem[] = [];
 
 // ─── Severity style helper ────────────────────────────────────────────────────
 
-const SEVERITY_CLASSES: Record<ReportSeverity, string> = {
+const SEVERITY_CLASSES: Record<string, string> = {
     CRITICAL: 'text-red-600 bg-red-100 border-red-200 dark:bg-red-900/30 dark:border-red-800/50 dark:text-red-400',
     HIGH:     'text-orange-600 bg-orange-100 border-orange-200 dark:bg-orange-900/30 dark:border-orange-800/50 dark:text-orange-400',
     MEDIUM:   'text-yellow-600 bg-yellow-100 border-yellow-200 dark:bg-yellow-900/30 dark:border-yellow-800/50 dark:text-yellow-400',
@@ -53,12 +28,12 @@ function pageRange(current: number, total: number): (number | '...')[] {
 // ─── Props ────────────────────────────────────────────────────────────────────
 
 interface ReportHistoryTableProps {
-    items:         ReportHistoryItem[];
+    items:         Report[];
     currentPage:   number;
     totalPages:    number;
     totalItems:    number;
     onPageChange:  (page: number) => void;
-    onViewDetail:  (item: ReportHistoryItem) => void;
+    onViewDetail:  (item: Report) => void;
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -67,6 +42,21 @@ export const ReportHistoryTable: React.FC<ReportHistoryTableProps> = ({
     items, currentPage, totalPages, totalItems, onPageChange, onViewDetail,
 }) => {
     const showing = items.length;
+
+    const getIcon = (type: string) => {
+        if (type === 'equipment') return Computer;
+        if (type === 'infrastructure') return Zap;
+        return Armchair;
+    };
+
+    const formatDate = (dateStr?: string) => {
+        if (!dateStr) return '-';
+        return new Date(dateStr).toLocaleDateString("en-US", {
+            month: "short",
+            day: "numeric",
+            year: "numeric"
+        });
+    };
 
     return (
         <div className="glass-card bg-white/60 dark:bg-slate-900/40 rounded-[1.5rem] sm:rounded-[2rem] overflow-hidden shadow-[0_10px_30px_-5px_rgba(30,43,88,0.1)] mb-[4rem] border border-white dark:border-white/10">
@@ -88,33 +78,46 @@ export const ReportHistoryTable: React.FC<ReportHistoryTableProps> = ({
                                     No records found for the selected filters.
                                 </td>
                             </tr>
-                        ) : items.map(item => {
-                            const Icon = item.icon;
+                        ) : items.map((item: Report) => {
+                            const Icon = getIcon(item.type);
+                            const equipment = item.equipment_id && typeof item.equipment_id !== 'string' ? item.equipment_id : null;
+                            const room = item.room_id && typeof item.room_id !== 'string' ? item.room_id : null;
+                            
+                            // Mock severity based on type for visual purposes 
+                            const severity = item.type === 'equipment' ? 'HIGH' : 'MEDIUM';
+
                             return (
                                 <tr
-                                    key={item.id}
+                                    key={item._id}
                                     className="transition-all duration-200 hover:bg-white/70 dark:hover:bg-white/5 group cursor-pointer"
                                     onClick={() => onViewDetail(item)}
                                 >
                                     <td className="px-[2rem] py-[1.5rem]">
-                                        <span className="text-[0.625rem] font-bold text-[#1E2B58] dark:text-slate-300">{item.id}</span>
+                                        <span className="text-[0.625rem] font-bold text-[#1E2B58] dark:text-slate-300">
+                                            #{item._id.substring(item._id.length - 6).toUpperCase()}
+                                        </span>
                                     </td>
                                     <td className="px-[2rem] py-[1.5rem]">
-                                        <span className="text-[0.875rem] font-bold text-[#1E2B58] dark:text-white">{item.date}</span>
+                                        <span className="text-[0.875rem] font-bold text-[#1E2B58] dark:text-white">
+                                            {formatDate(item.createdAt)}
+                                        </span>
                                     </td>
                                     <td className="px-[2rem] py-[1.5rem]">
                                         <div className="flex items-center gap-[0.75rem]">
                                             <Icon className="w-[1.25rem] h-[1.25rem] text-slate-400 dark:text-slate-500" strokeWidth={2} />
-                                            <span className="font-bold text-[#1E2B58] dark:text-white text-[0.875rem]">{item.category}</span>
+                                            <span className="font-bold text-[#1E2B58] dark:text-white text-[0.875rem] capitalize">
+                                                {equipment ? equipment.name : item.type}
+                                            </span>
                                         </div>
                                     </td>
                                     <td className="px-[2rem] py-[1.5rem]">
-                                        <p className="font-bold text-[#1E2B58] dark:text-white text-[0.875rem] leading-none mb-[0.25rem]">{item.location}</p>
-                                        <p className="text-[0.625rem] text-slate-500 font-medium">{item.block}</p>
+                                        <p className="font-bold text-[#1E2B58] dark:text-white text-[0.875rem] leading-none mb-[0.25rem]">
+                                            {room ? room.name : 'Unknown'}
+                                        </p>
                                     </td>
                                     <td className="px-[2rem] py-[1.5rem] text-center">
-                                        <span className={`inline-block min-w-[5.5rem] text-center text-[0.625rem] font-bold px-[0.75rem] py-[0.25rem] rounded-[0.5rem] border uppercase tracking-wider leading-none ${SEVERITY_CLASSES[item.severity]}`}>
-                                            {item.severity}
+                                        <span className={`inline-block min-w-[5.5rem] text-center text-[0.625rem] font-bold px-[0.75rem] py-[0.25rem] rounded-[0.5rem] border uppercase tracking-wider leading-none ${SEVERITY_CLASSES[severity]}`}>
+                                            {severity}
                                         </span>
                                     </td>
                                     <td className="px-[2rem] py-[1.5rem] text-center">
