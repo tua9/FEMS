@@ -57,7 +57,7 @@ export const BorrowHistoryTable: React.FC<BorrowHistoryTableProps> = ({
     items, currentPage, totalPages, totalItems, onPageChange, onViewDetail,
 }) => {
     return (
-        <div className="glass-card bg-white/60 dark:bg-slate-900/40 rounded-[1.5rem] sm:rounded-[2rem] overflow-hidden shadow-[0_10px_30px_-5px_rgba(30,43,88,0.1)] mb-[4rem] border border-white dark:border-white/10">
+        <div className="dashboard-card rounded-[1.5rem] sm:rounded-[2rem] overflow-hidden mb-[4rem]">
             <div className="overflow-x-auto hide-scrollbar">
                 <table className="w-full border-collapse min-w-[1000px]">
                     <thead>

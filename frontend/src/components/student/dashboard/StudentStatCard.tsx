@@ -16,7 +16,7 @@ const StudentStatCard: React.FC<StudentStatCardProps> = ({ card }) => {
   return (
     <Link
       to={card.route}
-      className="glass-card group relative flex min-h-42.5 flex-col justify-between gap-4 rounded-4xl p-6 transition-all hover:-translate-y-1 hover:shadow-2xl"
+      className="dashboard-card group relative flex min-h-42.5 flex-col justify-between gap-4 rounded-4xl p-6 transition-all"
     >
       {/* Status dot */}
       <div className={`absolute top-5 right-5 h-2 w-2 rounded-full ${card.dot} ${card.glow}`} />

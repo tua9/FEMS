@@ -51,7 +51,7 @@ export const BorrowedEquipmentGrid: React.FC<BorrowedEquipmentGridProps> = ({
     onItemClick,
 }) => {
     return (
-        <section className="glass-card rounded-[3rem] p-[2.5rem] mb-[3rem]">
+        <section className="dashboard-card rounded-[3rem] p-[2.5rem] mb-[3rem]">
             <div className="flex justify-between items-center mb-[2rem]">
                 <h3 className="text-[1.5rem] font-bold text-[#1E2B58] dark:text-white">
                     Currently Borrowed

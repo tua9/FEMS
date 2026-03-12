@@ -41,7 +41,7 @@ export const EquipmentGrid: React.FC<EquipmentGridProps> = ({ items, totalCount,
             </div>
 
             {items.length === 0 ? (
-                <div className="glass-card rounded-[2rem] p-[4rem] flex flex-col items-center justify-center text-center gap-4">
+                <div className="dashboard-card rounded-[2rem] p-[4rem] flex flex-col items-center justify-center text-center gap-4">
                     <span className="material-symbols-outlined text-4xl text-[#1E2B58]/30 dark:text-white/20">
                         search_off
                     </span>
@@ -58,7 +58,7 @@ export const EquipmentGrid: React.FC<EquipmentGridProps> = ({ items, totalCount,
                         return (
                             <div key={item.id} className="flex flex-col gap-[1.5rem]">
                                 {/* Card image area */}
-                                <div className="glass-card aspect-[4/3] rounded-[2rem] relative flex items-center justify-center p-[2rem] group overflow-hidden border border-white/30 dark:border-slate-700/50">
+                                <div className="dashboard-card aspect-[4/3] rounded-[2rem] relative flex items-center justify-center p-[2rem] group overflow-hidden">
                                     <span className={`absolute top-[1.5rem] right-[1.5rem] px-[0.75rem] py-[0.25rem] rounded-full text-[0.65rem] font-bold uppercase tracking-[0.05em] ${cfg.color}`}>
                                         {item.status}
                                     </span>

@@ -168,7 +168,7 @@ export const EquipmentFilter: React.FC<EquipmentFilterProps> = ({
     };
 
     return (
-        <section className="extreme-glass rounded-[2rem] md:rounded-full px-[1rem] md:px-[1.5rem] py-[0.75rem] md:py-[0.5rem] flex flex-col md:flex-row flex-wrap items-stretch md:items-center gap-[1rem] mb-[2rem] md:mb-[3rem]">
+        <section className="dashboard-card rounded-[2rem] md:rounded-full px-[1rem] md:px-[1.5rem] py-[0.75rem] md:py-[0.5rem] flex flex-col md:flex-row flex-wrap items-stretch md:items-center gap-[1rem] mb-[2rem] md:mb-[3rem]">
 
             {/* Search */}
             <div className="flex-1 min-w-0 md:min-w-[18.75rem] flex items-center gap-[0.75rem] bg-white/20 dark:bg-slate-800/40 px-[1rem] py-[0.5rem] md:py-0 md:bg-transparent rounded-full border border-white/30 dark:border-slate-700/50 md:border-none focus-within:ring-2 focus-within:ring-[#1E2B58]/20 transition-all">

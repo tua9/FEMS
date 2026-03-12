@@ -41,7 +41,7 @@ const HomePage: React.FC = () => {
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-12 lg:items-start">
           {/* Recent Activity */}
           <AnimatedSection variant="fade" delay={0.1} className="lg:col-span-8">
-            <div className="glass-card flex h-full flex-col overflow-hidden rounded-[40px] shadow-sm">
+            <div className="dashboard-card flex h-full flex-col overflow-hidden rounded-[40px]">
               <div className="flex items-center justify-between border-b border-[#1E2B58]/5 px-6 py-5 sm:px-8 sm:py-6 dark:border-white/5">
                 <h3 className="text-xl font-black text-[#1E2B58] dark:text-white">Recent Activity</h3>
                 <button type="button" onClick={() => navigate("/student/borrow-history")} className="rounded-full p-2 text-[#1E2B58]/40 transition hover:bg-[#1E2B58]/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1E2B58]/30 dark:text-white/40 dark:hover:bg-white/5" aria-label="View full activity history">
@@ -67,13 +67,13 @@ const HomePage: React.FC = () => {
 
           {/* Upcoming / Due Items */}
           <AnimatedSection variant="slide-up" delay={0.15} className="lg:col-span-4">
-            <div className="glass-card flex h-full flex-col rounded-[40px] shadow-sm">
+            <div className="dashboard-card flex h-full flex-col rounded-[40px]">
               <div className="flex items-center justify-between border-b border-[#1E2B58]/5 px-6 py-5 sm:px-8 sm:py-6 dark:border-white/5">
                 <h3 className="text-xl font-black text-[#1E2B58] dark:text-white">Upcoming Due</h3>
               </div>
               <div className="flex flex-1 flex-col gap-4 px-6 py-5 sm:px-8 sm:py-6">
                 {UPCOMING_ITEMS.map((item) => (
-                  <button key={item.id} type="button" onClick={() => navigate(item.route)} className="rounded-4xl border border-white/60 bg-white/40 p-5 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg dark:border-white/8 dark:bg-white/5">
+                  <button key={item.id} type="button" onClick={() => navigate(item.route)} className="dashboard-card rounded-4xl p-5 text-left transition hover:-translate-y-0.5">
                     <div className="mb-3 flex items-center justify-between">
                       <span className="flex items-center gap-2 rounded-full bg-[#1E2B58] px-3 py-1 text-[10px] font-bold text-white">
                         <Clock className="h-3 w-3" />{item.due}

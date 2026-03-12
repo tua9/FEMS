@@ -31,7 +31,8 @@ export const EquipmentCategories: React.FC<EquipmentCategoriesProps> = ({
                         key={category.id}
                         onClick={() => onCategoryChange(category.id)}
                         className={`
-                            ${isActive ? 'extreme-glass' : 'glass-card hover:bg-white/60 dark:hover:bg-slate-800/60'} 
+                            dashboard-card
+                            ${isActive ? 'ring-2 ring-[#1E2B58]/30 dark:ring-white/30 bg-white/70 dark:bg-slate-800/70' : 'hover:bg-white/60 dark:hover:bg-slate-800/60'} 
                             rounded-[1.5rem] md:rounded-[2rem] p-[1.5rem] md:p-[2rem] 
                             flex flex-col items-center justify-center gap-[0.75rem] 
                             shadow-sm hover:shadow-lg dark:hover:shadow-slate-900/40 
