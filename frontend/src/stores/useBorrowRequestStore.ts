@@ -7,11 +7,13 @@ import type {
 
 type BorrowRequestStore = {
   borrowRequests: BorrowRequest[];
+  pendingBorrowRequests: BorrowRequest[];
   selectedBorrowRequest: BorrowRequest | null;
   loading: boolean;
   error: string | null;
 
   fetchMyBorrowRequests: () => Promise<void>;
+  fetchPendingBorrowRequests: () => Promise<void>;
   fetchBorrowRequestById: (id: string) => Promise<void>;
   createMyBorrowRequest: (payload: CreateBorrowRequestPayload) => Promise<void>;
   cancelMyBorrowRequest: (id: string) => Promise<void>;
@@ -21,6 +23,7 @@ type BorrowRequestStore = {
 
 export const useBorrowRequestStore = create<BorrowRequestStore>((set) => ({
   borrowRequests: [],
+  pendingBorrowRequests: [],
   selectedBorrowRequest: null,
   loading: false,
   error: null,
@@ -35,6 +38,22 @@ export const useBorrowRequestStore = create<BorrowRequestStore>((set) => ({
         error:
           error?.response?.data?.message ||
           "Không tải được danh sách borrow request",
+      });
+    } finally {
+      set({ loading: false });
+    }
+  },
+
+  fetchPendingBorrowRequests: async () => {
+    try {
+      set({ loading: true, error: null });
+      const data = await borrowRequestService.getPendingBorrowRequests();
+      set({ pendingBorrowRequests: data });
+    } catch (error: any) {
+      set({
+        error:
+          error?.response?.data?.message ||
+          "Không tải được danh sách yêu cầu chờ duyệt",
       });
     } finally {
       set({ loading: false });

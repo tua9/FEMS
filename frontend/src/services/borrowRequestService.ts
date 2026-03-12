@@ -46,4 +46,9 @@ export const borrowRequestService = {
     const res = await api.patch(`/requests/${id}/return`);
     return res.data;
   },
+
+  async getPendingBorrowRequests(): Promise<BorrowRequest[]> {
+    const res = await api.get("/requests/pending");
+    return res.data;
+  },
 };
