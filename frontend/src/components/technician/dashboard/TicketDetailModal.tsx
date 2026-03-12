@@ -1,45 +1,20 @@
 import React, { useState } from 'react';
-import { MockTask } from '@/data/technician/mockTasks';
+import type { MockTask } from '@/data/technician/mockTasks';
 import ConfirmRejectModal from '@/components/technician/common/ConfirmRejectModal';
-import ConfirmApproveModal from '@/components/technician/common/ConfirmApproveModal';
-import {
-  MODAL_OVERLAY, MODAL_CARD, CLOSE_BTN,
-  BTN_PRIMARY, SECTION_LABEL, INFO_CARD, CHIP,
-} from '@/components/technician/common/modalStyles';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 const getCategoryMeta = (label: string) => {
-  const map: Record<string, { icon: string; color: string; bg: string }> = {
-    'AV Device':  { icon: 'video_settings', color: 'text-blue-600',   bg: 'bg-blue-50'   },
-    'HVAC':       { icon: 'ac_unit',        color: 'text-cyan-600',   bg: 'bg-cyan-50'   },
-    'IT Device':  { icon: 'computer',       color: 'text-indigo-600', bg: 'bg-indigo-50' },
-    'Electrical': { icon: 'electric_bolt',  color: 'text-yellow-600', bg: 'bg-yellow-50' },
-    'Plumbing':   { icon: 'water_drop',     color: 'text-blue-600',   bg: 'bg-blue-50'   },
-    'Furniture':  { icon: 'chair',          color: 'text-purple-600', bg: 'bg-purple-50' },
-    'Safety':     { icon: 'warning',        color: 'text-orange-600', bg: 'bg-orange-50' },
-    'Other':      { icon: 'grid_view',      color: 'text-slate-500',  bg: 'bg-slate-50'  },
+  const map: Record<string, { icon: string; color: string }> = {
+    'AV Device':  { icon: 'video_settings', color: 'text-blue-500'   },
+    'HVAC':       { icon: 'ac_unit',        color: 'text-cyan-500'   },
+    'IT Device':  { icon: 'computer',       color: 'text-indigo-500' },
+    'Electrical': { icon: 'electric_bolt',  color: 'text-yellow-500' },
+    'Plumbing':   { icon: 'water_drop',     color: 'text-blue-500'   },
+    'Furniture':  { icon: 'chair',          color: 'text-purple-500' },
+    'Safety':     { icon: 'warning',        color: 'text-orange-500' },
+    'Other':      { icon: 'grid_view',      color: 'text-slate-400'  },
   };
   return map[label] ?? map['Other'];
-};
-
-const getPriorityStyle = (priority: string) => {
-  const map: Record<string, { pill: string; dot: string }> = {
-    Urgent: { pill: 'bg-rose-100 text-rose-600',       dot: 'bg-rose-500'        },
-    High:   { pill: 'bg-rose-100 text-rose-600',       dot: 'bg-rose-400'        },
-    Medium: { pill: 'bg-amber-100 text-amber-700',     dot: 'bg-amber-400'       },
-    Low:    { pill: 'bg-emerald-100 text-emerald-700', dot: 'bg-emerald-400'     },
-  };
-  return map[priority] ?? map.Medium;
-};
-
-const getStatusStyle = (status: string) => {
-  const map: Record<string, { pill: string; dot: string; label: string }> = {
-    Completed:    { pill: 'bg-emerald-100 text-emerald-700', dot: 'bg-emerald-500',           label: 'Completed'   },
-    'In Progress':{ pill: 'bg-blue-100 text-blue-700',       dot: 'bg-blue-500 animate-pulse', label: 'In Progress' },
-    Pending:      { pill: 'bg-slate-100 text-slate-600',     dot: 'bg-slate-400',              label: 'Pending'     },
-    Cancelled:    { pill: 'bg-rose-100 text-rose-600',       dot: 'bg-rose-400',               label: 'Cancelled'   },
-  };
-  return map[status] ?? map.Pending;
 };
 
 const formatDate = (iso: string) => {
@@ -50,17 +25,6 @@ const formatDate = (iso: string) => {
   } catch { return iso; }
 };
 
-// ── Sub-component ─────────────────────────────────────────────────────────────
-const InfoRow: React.FC<{ icon: string; label: string; value: string }> = ({ icon, label, value }) => (
-  <div className="flex items-center justify-between py-2.5 border-b border-slate-100 last:border-0">
-    <div className="flex items-center gap-2 text-slate-500">
-      <span className="material-symbols-outlined text-[15px]">{icon}</span>
-      <span className="text-xs font-medium">{label}</span>
-    </div>
-    <span className="text-xs font-semibold text-slate-800">{value}</span>
-  </div>
-);
-
 // ── Main Modal ────────────────────────────────────────────────────────────────
 interface Props {
   task: MockTask;
@@ -69,164 +33,156 @@ interface Props {
 
 const TicketDetailModal: React.FC<Props> = ({ task, onClose }) => {
   const cat      = getCategoryMeta(task.displayCategory ?? task.category);
-  const priority = getPriorityStyle(task.priority);
-  const status   = getStatusStyle(task.status);
-
+  const canAct   = task.status !== 'Completed' && task.status !== 'Cancelled';
+  const [note,        setNote]        = useState('');
   const [showReject,  setShowReject]  = useState(false);
-  const [showApprove, setShowApprove] = useState(false);
 
-  const initials = task.reportedBy.name
-    .split(' ').slice(0, 2).map((w) => w[0]).join('').toUpperCase();
-
-  const canAct = task.status !== 'Completed' && task.status !== 'Cancelled';
+  const handleApprove = () => {
+    // TODO: call API with note
+    onClose();
+  };
 
   return (
     <>
-      <div className={MODAL_OVERLAY} onClick={onClose}>
+      <div
+        className="fixed inset-0 z-50 flex items-center justify-center px-4 py-6 bg-black/30 backdrop-blur-sm"
+        onClick={onClose}
+      >
         <div
-          className={`${MODAL_CARD} max-w-lg`}
-          style={{ maxHeight: '92vh' }}
+          className="relative w-full max-w-sm bg-white dark:bg-[#1a2340] rounded-3xl shadow-2xl shadow-[#1A2B56]/20 overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-200"
           onClick={(e) => e.stopPropagation()}
         >
           {/* ── Header ── */}
-          <div className="px-7 pt-7 pb-5 flex items-start justify-between">
-            <div className="flex items-center gap-4">
-              <div className={`w-12 h-12 rounded-xl ${cat.bg} flex items-center justify-center shrink-0`}>
-                <span className={`material-symbols-outlined text-2xl ${cat.color}`}>{cat.icon}</span>
+          <div className="px-7 pt-7 pb-5 flex items-center justify-between">
+            <div className="flex items-center gap-3.5">
+              {/* Circular category icon */}
+              <div className="w-10 h-10 rounded-full bg-[#1A2B56] flex items-center justify-center shrink-0 shadow-md shadow-[#1A2B56]/30">
+                <span
+                  className="material-symbols-outlined text-white text-[18px]"
+                  style={{ fontVariationSettings: "'FILL' 1" }}
+                >
+                  {cat.icon}
+                </span>
               </div>
               <div>
-                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-0.5">
-                  Ticket #{task.id}
-                </p>
-                <h2 className="text-base font-extrabold text-[#1A2B56] leading-tight">{task.title}</h2>
-                <p className="text-xs text-slate-500 mt-0.5">
-                  {task.location.building} · {task.location.room}
+                <h2 className="text-base font-extrabold text-[#1A2B56] dark:text-white leading-tight">
+                  {task.title}
+                </h2>
+                <p className="text-[11px] text-slate-400 font-medium mt-0.5">
+                  #{task.id}
                 </p>
               </div>
             </div>
-            <button onClick={onClose} className={CLOSE_BTN}>
-              <span className="material-symbols-outlined text-lg">close</span>
+            {/* Close button */}
+            <button
+              type="button"
+              onClick={onClose}
+              className="w-8 h-8 rounded-full flex items-center justify-center text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:bg-white/10 dark:hover:text-white transition-all ml-2 shrink-0"
+              aria-label="Close"
+            >
+              <span className="material-symbols-outlined text-[18px]">close</span>
             </button>
           </div>
 
-          {/* ── Chips row ── */}
-          <div className="px-7 pb-5 flex flex-wrap gap-2">
-            <span className={`${CHIP} ${status.pill}`}>
-              <span className={`w-1.5 h-1.5 rounded-full ${status.dot}`} />
-              {status.label}
-            </span>
-            <span className={`${CHIP} ${priority.pill}`}>
-              <span className={`w-1.5 h-1.5 rounded-full ${priority.dot}`} />
-              {task.priority} Priority
-            </span>
-            <span className={`${CHIP} bg-slate-100 text-slate-600`}>
-              <span className={`material-symbols-outlined text-[12px] ${cat.color}`}>{cat.icon}</span>
-              {task.displayCategory ?? task.category}
-            </span>
-          </div>
+          {/* ── Body ── */}
+          <div className="px-7 pb-6 space-y-4">
 
-          <div className="mx-7 border-t border-slate-100" />
-
-          {/* ── Equipment Image ── */}
-          {task.imageUrl && (
-            <div className="px-7 pt-5">
-              <div className="relative w-full h-44 rounded-2xl overflow-hidden bg-slate-100">
-                <img
-                  src={task.imageUrl}
-                  alt={task.title}
-                  className="w-full h-full object-cover"
-                  onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
-                <div className="absolute bottom-3 left-3 flex items-center gap-1.5">
-                  <span className={`material-symbols-outlined text-[13px] ${cat.color}`}>{cat.icon}</span>
-                  <span className="text-[10px] font-bold text-white/90 uppercase tracking-wider drop-shadow">
-                    {task.displayCategory ?? task.category}
-                  </span>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* ── Scrollable body ── */}
-          <div className="px-7 py-6 overflow-y-auto flex-1 space-y-5">
-
-            {/* Meta info */}
-            <div className={`${INFO_CARD}`}>
-              <InfoRow icon="location_on"  label="Building" value={task.location.building} />
-              <InfoRow icon="meeting_room" label="Room"     value={task.location.room} />
-              <InfoRow icon="layers"       label="Floor"    value={`Floor ${task.location.floor}`} />
-              <InfoRow icon="schedule"     label="Reported" value={formatDate(task.createdAt)} />
-            </div>
-
-            {/* Description */}
-            {task.description && (
-              <div className="space-y-2">
-                <p className={SECTION_LABEL}>Description</p>
-                <div className={INFO_CARD}>
-                  <p className="text-sm text-slate-700 leading-relaxed">{task.description}</p>
-                </div>
-              </div>
-            )}
-
-            {/* Reported by */}
-            <div className="space-y-2">
-              <p className={SECTION_LABEL}>Reported By</p>
-              <div className={`${INFO_CARD} flex items-center gap-3`}>
-                <div className="w-9 h-9 rounded-full bg-[#1A2B56]/10 flex items-center justify-center text-[#1A2B56] font-extrabold text-xs shrink-0">
-                  {initials}
-                </div>
+            {/* Confirm info box */}
+            <div className="flex items-start gap-3 px-4 py-4 rounded-2xl bg-slate-50 dark:bg-white/5 border border-slate-200/60 dark:border-white/10">
+              <span
+                className="material-symbols-outlined text-[#1A2B56] dark:text-blue-300 text-[20px] shrink-0 mt-0.5"
+                style={{ fontVariationSettings: "'FILL' 1" }}
+              >
+                info
+              </span>
+              <div className="space-y-2.5 w-full">
                 <div>
-                  <p className="text-sm font-bold text-slate-900">{task.reportedBy.name}</p>
-                  {task.reportedBy.email && (
-                    <p className="text-[10px] text-slate-400 mt-0.5 flex items-center gap-1">
-                      <span className="material-symbols-outlined text-[11px]">mail</span>
-                      {task.reportedBy.email}
-                    </p>
-                  )}
+                  <p className="text-sm font-bold text-[#1A2B56] dark:text-white leading-snug">
+                    Confirm approval
+                  </p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
+                    You are approving the repair request for{' '}
+                    <span className="font-semibold text-slate-700 dark:text-slate-200">
+                      {task.title}
+                    </span>{' '}
+                    in{' '}
+                    <span className="font-semibold text-slate-700 dark:text-slate-200">
+                      {task.location.building}, {task.location.room}
+                    </span>.
+                  </p>
+                </div>
+
+                {/* Compact detail rows inside the info box */}
+                <div className="border-t border-slate-200/70 dark:border-white/10 pt-2.5 grid grid-cols-2 gap-x-4 gap-y-1.5">
+                  {[
+                    { icon: 'location_on',  label: 'Building', value: task.location.building },
+                    { icon: 'meeting_room', label: 'Room',     value: task.location.room },
+                    { icon: 'layers',       label: 'Floor',    value: `Floor ${task.location.floor}` },
+                    { icon: 'schedule',     label: 'Reported', value: formatDate(task.createdAt) },
+                  ].map(({ icon, label, value }) => (
+                    <div key={label} className="flex items-center gap-1.5 min-w-0">
+                      <span className={`material-symbols-outlined text-[13px] shrink-0 ${cat.color}`}>
+                        {icon}
+                      </span>
+                      <span className="text-[10px] text-slate-400 dark:text-slate-500 shrink-0">{label}</span>
+                      <span className="text-[10px] font-semibold text-slate-700 dark:text-slate-200 truncate ml-auto">
+                        {value}
+                      </span>
+                    </div>
+                  ))}
                 </div>
               </div>
             </div>
 
-            {/* Notes */}
-            {task.notes && (
-              <div className="space-y-2">
-                <p className={SECTION_LABEL}>Notes</p>
-                <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3.5">
-                  <p className="text-sm text-slate-700 leading-relaxed">{task.notes}</p>
-                </div>
-              </div>
-            )}
-
-            {/* Timestamps */}
-            <div className={INFO_CARD}>
-              <InfoRow icon="add_circle" label="Created" value={formatDate(task.createdAt)} />
-              <InfoRow icon="update"     label="Updated" value={formatDate(task.updatedAt)} />
+            {/* Note field */}
+            <div className="space-y-1.5">
+              <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500">
+                Note <span className="normal-case font-semibold">(optional)</span>
+              </label>
+              <textarea
+                value={note}
+                onChange={(e) => setNote(e.target.value)}
+                placeholder="Add approval notes or instructions for the technician..."
+                rows={3}
+                className="w-full resize-none rounded-2xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 px-4 py-3 text-sm text-[#1A2B56] dark:text-white placeholder:text-slate-300 dark:placeholder:text-slate-600 outline-none focus:ring-2 focus:ring-[#1A2B56]/20 dark:focus:ring-blue-500/20 transition-all"
+              />
             </div>
           </div>
 
           {/* ── Footer ── */}
-          <div className="px-7 py-5 border-t border-slate-100 flex gap-3">
+          <div className="px-7 py-5 border-t border-slate-100 dark:border-white/8 flex gap-3">
             {canAct ? (
               <>
+                {/* Reject — ghost rose pill */}
                 <button
                   type="button"
                   onClick={() => setShowReject(true)}
-                  className="flex-1 py-3 rounded-xl border border-rose-200 text-rose-500 text-sm font-semibold hover:bg-rose-50 transition-colors"
+                  className="flex-1 py-3 rounded-full border border-rose-200 dark:border-rose-500/30 text-sm font-bold text-rose-500 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-500/10 transition-all"
                 >
                   Reject
                 </button>
+                {/* Approve — solid navy pill */}
                 <button
                   type="button"
-                  onClick={() => setShowApprove(true)}
-                  className={BTN_PRIMARY}
+                  onClick={handleApprove}
+                  className="flex-2 py-3 rounded-full bg-[#1A2B56] text-white text-sm font-bold hover:bg-[#151f40] hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-2 shadow-lg shadow-[#1A2B56]/25"
                 >
-                  <span className="material-symbols-outlined text-base">check_circle</span>
+                  <span
+                    className="material-symbols-outlined text-[17px]"
+                    style={{ fontVariationSettings: "'FILL' 1" }}
+                  >
+                    check_circle
+                  </span>
                   Approve
                 </button>
               </>
             ) : (
-              <button type="button" onClick={onClose} className={BTN_PRIMARY}>
+              /* Completed / Cancelled — close only */
+              <button
+                type="button"
+                onClick={onClose}
+                className="flex-1 py-3 rounded-full bg-[#1A2B56] text-white text-sm font-bold hover:bg-[#151f40] transition-all flex items-center justify-center gap-2 shadow-lg shadow-[#1A2B56]/25"
+              >
                 Close
               </button>
             )}
@@ -234,7 +190,7 @@ const TicketDetailModal: React.FC<Props> = ({ task, onClose }) => {
         </div>
       </div>
 
-      {/* Reject confirmation */}
+      {/* Reject confirmation (stacked z-60) */}
       {showReject && (
         <ConfirmRejectModal
           ticketId={task.id}
@@ -242,15 +198,6 @@ const TicketDetailModal: React.FC<Props> = ({ task, onClose }) => {
           imageUrl={task.imageUrl}
           onCancel={() => setShowReject(false)}
           onConfirm={(_reason) => { setShowReject(false); onClose(); }}
-        />
-      )}
-
-      {/* Approve confirmation */}
-      {showApprove && (
-        <ConfirmApproveModal
-          task={task}
-          onCancel={() => setShowApprove(false)}
-          onConfirm={() => { setShowApprove(false); onClose(); }}
         />
       )}
     </>

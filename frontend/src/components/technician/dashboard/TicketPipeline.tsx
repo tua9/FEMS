@@ -116,7 +116,7 @@ const TicketPipeline: React.FC = () => {
   const YEAR_RANGE  = Array.from({ length: 6 }, (_, i) => now.getFullYear() - 5 + i);
 
   return (
-    <div className="glass-card p-8 rounded-3xl shadow-sm h-full">
+    <div className="dashboard-card p-8 rounded-3xl h-full">
       {/* Header */}
       <div className="flex justify-between items-center mb-10">
         <h3 className="text-sm font-bold text-[#1A2B56] dark:text-white uppercase tracking-widest">

@@ -185,7 +185,7 @@ const EquipmentInventory: React.FC = () => {
           onClick={closeModal}
         >
           <div
-            className="relative glass-card rounded-[2rem] shadow-2xl shadow-[#1E2B58]/20 p-8 flex flex-col items-center gap-5 w-full max-w-sm animate-in fade-in zoom-in-95 duration-200"
+            className="relative dashboard-card rounded-[2rem] shadow-2xl shadow-[#1E2B58]/20 p-8 flex flex-col items-center gap-5 w-full max-w-sm animate-in fade-in zoom-in-95 duration-200"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Close */}

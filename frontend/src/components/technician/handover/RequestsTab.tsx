@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { MOCK_BORROW_REQUESTS, BorrowRequest } from '@/data/technician/mockHandover';
 import HandoverPagination from './HandoverPagination';
 import HandoverDetailModal, { HandoverDetailRecord } from './HandoverDetailModal';
+import ModalPortal from '@/components/technician/common/ModalPortal';
 
 const ITEMS_PER_PAGE = 4;
 
@@ -99,6 +100,7 @@ const ActionModal: React.FC<ActionModalProps> = ({ request, action, onConfirm, o
   };
 
   return (
+    <ModalPortal>
     <div
       className="fixed inset-0 z-50 flex items-center justify-center px-4 py-6 bg-black/30 backdrop-blur-sm"
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
@@ -234,10 +236,9 @@ const ActionModal: React.FC<ActionModalProps> = ({ request, action, onConfirm, o
         </div>
       </div>
     </div>
+    </ModalPortal>
   );
 };
-
-// ── Status pill ───────────────────────────────────────────────────────────────
 const StatusPill: React.FC<{ status: ReqStatus }> = ({ status }) => {
   const map: Record<ReqStatus, string> = {
     Pending: 'bg-amber-50 text-amber-600 border border-amber-200',
@@ -436,7 +437,7 @@ const RequestsTab: React.FC = () => {
 
   return (
     <>
-      <div className="tech-card rounded-3xl border border-white/50 dark:border-white/10 shadow-2xl overflow-hidden">
+      <div className="dashboard-card rounded-3xl border-none shadow-2xl overflow-hidden">
         {/* ── Header ── */}
         <div className="px-6 pt-6 pb-4 border-b border-slate-200/50">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">

@@ -49,7 +49,7 @@ const StatsOverview: React.FC = () => {
       {statCards.map((stat) => (
         <div
           key={stat.label}
-          className="glass-card p-7 rounded-3xl shadow-sm relative group"
+          className="dashboard-card p-7 rounded-3xl relative group"
         >
           {/* Top row: icon + dot */}
           <div className="flex justify-between items-start mb-4">
