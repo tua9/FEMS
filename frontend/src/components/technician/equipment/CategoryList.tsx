@@ -1,5 +1,6 @@
 import React from 'react';
-import { AssetCategory, CATEGORY_META } from '@/data/technician/mockEquipment';
+import type { AssetCategory } from '@/data/technician/mockEquipment';
+import { CATEGORY_META } from '@/data/technician/mockEquipment';
 
 interface Props {
   activeCategory: AssetCategory;

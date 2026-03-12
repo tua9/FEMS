@@ -1,6 +1,6 @@
 import { technicianApi } from '../../../services/api/technicianApi';
 import React, { useEffect, useState } from 'react';
-import { TaskStats } from '../../../types/technician.types';
+import type { TaskStats } from '../../../types/technician.types';
 
 const StatsOverview: React.FC = () => {
   const [stats, setStats] = useState<TaskStats | null>(null);

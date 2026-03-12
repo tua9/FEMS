@@ -1,7 +1,9 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
-import { MOCK_BORROW_REQUESTS, BorrowRequest } from '@/data/technician/mockHandover';
+import { MOCK_BORROW_REQUESTS } from '@/data/technician/mockHandover';
+import type { BorrowRequest } from '@/data/technician/mockHandover';
 import HandoverPagination from './HandoverPagination';
-import HandoverDetailModal, { HandoverDetailRecord } from './HandoverDetailModal';
+import HandoverDetailModal from './HandoverDetailModal';
+import type { HandoverDetailRecord } from './HandoverDetailModal';
 import ModalPortal from '@/components/technician/common/ModalPortal';
 
 const ITEMS_PER_PAGE = 4;
@@ -106,11 +108,11 @@ const ActionModal: React.FC<ActionModalProps> = ({ request, action, onConfirm, o
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
       <div
-        className="glass-card animate-in fade-in zoom-in-95 duration-200 w-full max-w-md rounded-[2rem] shadow-2xl shadow-[#1E2B58]/20 overflow-hidden flex flex-col max-h-[90vh]"
+        className="glass-card animate-in fade-in zoom-in-95 duration-200 w-full max-w-md rounded-4xl shadow-2xl shadow-[#1E2B58]/20 overflow-hidden flex flex-col max-h-[90vh]"
         onClick={(e) => e.stopPropagation()}
       >
         {/* ── Colour accent bar ── */}
-        <div className={`h-1 w-full shrink-0 ${isApprove ? 'bg-gradient-to-r from-emerald-400 to-emerald-500' : 'bg-gradient-to-r from-red-400 to-red-500'}`} />
+        <div className={`h-1 w-full shrink-0 ${isApprove ? 'bg-linear-to-r from-emerald-400 to-emerald-500' : 'bg-linear-to-r from-red-400 to-red-500'}`} />
 
         {/* ── Header ── */}
         <div className="px-7 pt-6 pb-5 flex items-start justify-between shrink-0">
@@ -224,7 +226,7 @@ const ActionModal: React.FC<ActionModalProps> = ({ request, action, onConfirm, o
           </button>
           <button
             onClick={handleConfirm}
-            className={`flex-[2] py-3.5 rounded-[1.25rem] text-sm font-bold text-white transition-all hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-2 shadow-lg ${
+            className={`flex-2 py-3.5 rounded-[1.25rem] text-sm font-bold text-white transition-all hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-2 shadow-lg ${
               isApprove
                 ? 'bg-emerald-500 hover:bg-emerald-600 shadow-emerald-500/20'
                 : 'bg-red-500 hover:bg-red-600 shadow-red-500/20'
@@ -274,9 +276,9 @@ const RequestRow: React.FC<RowProps> = ({ req, onDetails, onApprove, onReject })
     <td className="px-5 py-5 w-52">
       <div className="flex items-center gap-3">
         {req.borrower.avatar ? (
-          <img src={req.borrower.avatar} alt={req.borrower.name} className="w-9 h-9 rounded-full border border-slate-200 object-cover flex-shrink-0" />
+          <img src={req.borrower.avatar} alt={req.borrower.name} className="w-9 h-9 rounded-full border border-slate-200 object-cover shrink-0" />
         ) : (
-          <div className="w-9 h-9 rounded-full bg-blue-100 border-2 border-white shadow-sm flex items-center justify-center text-[10px] font-extrabold text-blue-700 flex-shrink-0">
+          <div className="w-9 h-9 rounded-full bg-blue-100 border-2 border-white shadow-sm flex items-center justify-center text-[10px] font-extrabold text-blue-700 shrink-0">
             {initials(req.borrower.name)}
           </div>
         )}
@@ -289,8 +291,8 @@ const RequestRow: React.FC<RowProps> = ({ req, onDetails, onApprove, onReject })
 
     {/* Equipment */}
     <td className="px-5 py-5 w-48">
-      <p className="text-sm font-semibold text-slate-800 dark:text-slate-100 truncate max-w-[170px]">{req.equipment.name}</p>
-      <p className="text-[10px] text-slate-400 mt-0.5 truncate max-w-[170px]">{req.equipment.location}</p>
+      <p className="text-sm font-semibold text-slate-800 dark:text-slate-100 truncate max-w-42.5">{req.equipment.name}</p>
+      <p className="text-[10px] text-slate-400 mt-0.5 truncate max-w-42.5">{req.equipment.location}</p>
     </td>
 
     {/* Duration — compact pill */}
@@ -443,7 +445,7 @@ const RequestsTab: React.FC = () => {
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             {/* Title */}
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-600 flex-shrink-0">
+              <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-600 shrink-0">
                 <span className="material-symbols-outlined">pending_actions</span>
               </div>
               <div>
@@ -492,7 +494,7 @@ const RequestsTab: React.FC = () => {
                   <span className="material-symbols-outlined text-lg">tune</span>
                   <span className="text-xs font-bold">Filter</span>
                   {activeFilterCount > 0 && (
-                    <span className="min-w-[18px] h-[18px] rounded-full bg-white/25 text-white text-[10px] font-extrabold flex items-center justify-center px-1">
+                    <span className="min-w-4.5 h-4.5 rounded-full bg-white/25 text-white text-[10px] font-extrabold flex items-center justify-center px-1">
                       {activeFilterCount}
                     </span>
                   )}
@@ -546,7 +548,7 @@ const RequestsTab: React.FC = () => {
                                   onClick={() => { toggle('statuses', s); setCurrentPage(1); }}
                                   className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold border transition-all ${colorMap[s]}`}
                                 >
-                                  <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${s === 'Pending' ? 'bg-amber-400' : s === 'Approved' ? 'bg-emerald-400' : 'bg-red-400'
+                                  <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${s === 'Pending' ? 'bg-amber-400' : s === 'Approved' ? 'bg-emerald-400' : 'bg-red-400'
                                     } ${on ? 'opacity-0' : ''}`} />
                                   {s}
                                   {on && <span className="material-symbols-outlined text-[11px]">check</span>}
@@ -573,7 +575,7 @@ const RequestsTab: React.FC = () => {
                                     }`}
                                 >
                                   {/* Checkbox */}
-                                  <span className={`w-4 h-4 rounded-md flex items-center justify-center flex-shrink-0 border-2 transition-all ${on ? 'bg-white/25 border-white/40' : 'border-slate-300 bg-white'
+                                  <span className={`w-4 h-4 rounded-md flex items-center justify-center shrink-0 border-2 transition-all ${on ? 'bg-white/25 border-white/40' : 'border-slate-300 bg-white'
                                     }`}>
                                     {on && <span className="material-symbols-outlined text-[11px]">check</span>}
                                   </span>
