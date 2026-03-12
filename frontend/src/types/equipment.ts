@@ -9,8 +9,13 @@ export interface Equipment {
   room_id?: {
     _id: string;
     name: string;
-  } | null;
-  borrowed_by?: string | null;
+  } | string | null;
+  borrowed_by?: {
+    _id: string;
+    username: string;
+    displayName: string;
+    email: string;
+  } | string | null;
   qr_code?: string | null;
   createdAt?: string;
   updatedAt?: string;

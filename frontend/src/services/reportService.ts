@@ -1,0 +1,24 @@
+import api from "@/lib/axios";
+import type { Report, CreateReportPayload, ReportStatus } from "@/types/report";
+
+export const reportService = {
+  create: async (payload: CreateReportPayload): Promise<Report> => {
+    const res = await api.post("/tickets/report", payload);
+    return res.data.report || res.data;
+  },
+
+  getPersonalHistory: async (): Promise<Report[]> => {
+    const res = await api.get("/tickets/history");
+    return res.data;
+  },
+
+  getAll: async (): Promise<Report[]> => {
+    const res = await api.get("/tickets");
+    return res.data;
+  },
+
+  updateStatus: async (id: string, status: ReportStatus): Promise<Report> => {
+    const res = await api.patch(`/tickets/${id}/status`, { status });
+    return res.data.report || res.data;
+  },
+};
