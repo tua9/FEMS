@@ -5,19 +5,22 @@ import AddUserModal from '../../components/admin/users/AddUserModal';
 import UserDetailModal from '../../components/admin/users/UserDetailModal';
 import DeleteConfirmationModal from '../../components/admin/common/DeleteConfirmationModal';
 import ActionConfirmationModal from '../../components/admin/common/ActionConfirmationModal';
-import { adminApi } from '../../services/api/adminApi';
-import { AdminUser } from '../../types/admin.types';
+import { useUserStore } from '../../stores/useUserStore';
+import type { User } from '../../types/user';
 
 const UserManagement: React.FC = () => {
-    const [users, setUsers] = useState<AdminUser[]>([]);
-    const [loading, setLoading] = useState(true);
+    const users = useUserStore(state => state.users);
+    const loading = useUserStore(state => state.loading);
+    const fetchAllUsers = useUserStore(state => state.fetchAllUsers);
+    const deleteUser = useUserStore(state => state.deleteUser);
+    const updateUser = useUserStore(state => state.updateUser);
 
     // Modal states
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-    const [selectedUser, setSelectedUser] = useState<AdminUser | null>(null);
+    const [selectedUser, setSelectedUser] = useState<User | null>(null);
     const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
-    const [userToDelete, setUserToDelete] = useState<AdminUser | null>(null);
-    const [userToToggle, setUserToToggle] = useState<AdminUser | null>(null);
+    const [userToDelete, setUserToDelete] = useState<User | null>(null);
+    const [userToToggle, setUserToToggle] = useState<User | null>(null);
 
     // Filter and Pagination states
     const [searchQuery, setSearchQuery] = useState('');
@@ -28,92 +31,39 @@ const UserManagement: React.FC = () => {
     const [isExporting, setIsExporting] = useState(false);
     const fileInputRef = React.useRef<HTMLInputElement>(null);
 
-    const fetchUserData = React.useCallback(async () => {
-        try {
-            // Generating mock data as requested
-            const mockUsers: AdminUser[] = [
-                // Super Admin
-                { id: 'AdminUser-0001', name: 'Dr. Alex Rivers', email: 'alex.rivers@fems.edu.vn', role: 'Super Admin' as const, status: 'Active', phone: '0901234567', department: 'Management' },
-
-                // 2 Technicians
-                ...Array.from({ length: 2 }).map((_, i) => ({
-                    id: `TECH-${(i + 1).toString().padStart(4, '0')}`,
-                    name: `Technician ${i + 1}`,
-                    email: `tech${i + 1}@fems.edu.vn`,
-                    role: 'Technician' as const,
-                    status: 'Active' as const,
-                    phone: `09123456${i.toString().padStart(2, '0')}`,
-                    department: 'Technical'
-                })),
-
-                // 10 Lecturers
-                ...Array.from({ length: 10 }).map((_, i) => ({
-                    id: `LECT-${(i + 1).toString().padStart(4, '0')}`,
-                    name: `Lecturer ${i + 1}`,
-                    email: `lecturer${i + 1}@fems.edu.vn`,
-                    role: 'Lecturer' as const,
-                    status: 'Active' as const,
-                    phone: `09223456${i.toString().padStart(2, '0')}`,
-                    department: 'Academic'
-                })),
-
-                // 30 Students
-                ...Array.from({ length: 30 }).map((_, i) => ({
-                    id: `STUD-${(i + 1).toString().padStart(4, '0')}`,
-                    name: `Student ${i + 1}`,
-                    email: `student${i + 1}@fems.edu.vn`,
-                    role: 'Student' as const,
-                    status: (i % 5 === 0) ? 'Inactive' as const : 'Active' as const,
-                    phone: `09323456${i.toString().padStart(2, '0')}`,
-                    department: 'Engineering'
-                }))
-            ];
-
-            setUsers(mockUsers);
-        } catch (error) {
-            console.error("Failed to fetch AdminUser data", error);
-        } finally {
-            setLoading(false);
-        }
-    }, []);
-
     useEffect(() => {
-        fetchUserData();
-    }, [fetchUserData]);
+        fetchAllUsers();
+    }, [fetchAllUsers]);
 
-    const handleOpenDetails = (AdminUser: AdminUser) => {
-        setSelectedUser(AdminUser);
+    const handleOpenDetails = (user: User) => {
+        setSelectedUser(user);
         setIsDetailModalOpen(true);
     };
 
-    const handleEditUser = (AdminUser: AdminUser) => {
-        handleOpenDetails(AdminUser);
+    const handleEditUser = (user: User) => {
+        handleOpenDetails(user);
     };
 
-    const handleDeleteClick = (AdminUser: AdminUser) => {
-        setUserToDelete(AdminUser);
+    const handleDeleteClick = (user: User) => {
+        setUserToDelete(user);
     };
 
-    const confirmDelete = () => {
+    const confirmDelete = async () => {
         if (userToDelete) {
-            setUsers(prev => prev.filter(u => u.id !== userToDelete.id));
+            await deleteUser(userToDelete._id);
             setUserToDelete(null);
-            // In a real app, call API here
         }
     };
 
-    const handleToggleStatus = (AdminUser: AdminUser) => {
-        setUserToToggle(AdminUser);
+    const handleToggleStatus = (user: User) => {
+        setUserToToggle(user);
     };
 
-    const confirmToggleStatus = () => {
+    const confirmToggleStatus = async () => {
         if (userToToggle) {
-            const newStatus = userToToggle.status === 'Active' ? 'Inactive' : 'Active';
-            setUsers(prev => prev.map(u =>
-                u.id === userToToggle.id ? { ...u, status: newStatus as any } : u
-            ));
+            const newStatus = userToToggle.avatarId === 'Inactive' ? 'Active' : 'Inactive';
+            await updateUser(userToToggle._id, { avatarId: newStatus } as any);
             setUserToToggle(null);
-            // In a real app, call API here
         }
     };
 
@@ -121,7 +71,7 @@ const UserManagement: React.FC = () => {
         setIsExporting(true);
         // Simulate CSV generation
         const headers = "ID,Name,Email,Role,Status\n";
-        const rows = users.map(u => `${u.id},${u.name},${u.email},${u.role},${u.status}`).join("\n");
+        const rows = users.map(u => `${u._id},${u.displayName},${u.email},${u.role},${u.avatarId === 'Inactive' ? 'Inactive' : 'Active'}`).join("\n");
         const blob = new Blob([headers + rows], { type: 'text/csv' });
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
@@ -144,12 +94,16 @@ const UserManagement: React.FC = () => {
         }
     };
 
-    const filteredUsers = users.filter(AdminUser => {
-        const matchesSearch = AdminUser.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            AdminUser.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            AdminUser.id.toLowerCase().includes(searchQuery.toLowerCase());
-        const matchesRole = roleFilter === 'All' || AdminUser.role === roleFilter;
-        const matchesStatus = statusFilter === 'All' || AdminUser.status === statusFilter;
+    const filteredUsers = users.filter(user => {
+        const nameMatch = user.displayName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            user.username?.toLowerCase().includes(searchQuery.toLowerCase());
+        const emailMatch = user.email?.toLowerCase().includes(searchQuery.toLowerCase()) || false;
+        const idMatch = user._id.toLowerCase().includes(searchQuery.toLowerCase());
+
+        const matchesSearch = nameMatch || emailMatch || idMatch;
+        const matchesRole = roleFilter === 'All' || user.role.toLowerCase() === roleFilter.toLowerCase();
+        const matchesStatus = statusFilter === 'All' || (statusFilter === 'Active' ? user.avatarId !== 'Inactive' : user.avatarId === 'Inactive');
+
         return matchesSearch && matchesRole && matchesStatus;
     });
 
@@ -172,8 +126,8 @@ const UserManagement: React.FC = () => {
         );
     }
 
-    const activeUsers = users.filter(u => u.status === 'Active').length;
-    const inactiveUsers = users.filter(u => u.status === 'Inactive').length;
+    const activeUsers = users.filter(u => u.avatarId !== 'Inactive').length;
+    const inactiveUsers = users.filter(u => u.avatarId === 'Inactive').length;
 
     const isBlurred = isAddModalOpen || isDetailModalOpen || !!userToDelete || !!userToToggle;
 
@@ -214,7 +168,7 @@ const UserManagement: React.FC = () => {
                             className="flex items-center gap-2 px-6 py-3 bg-[#1A2B56] text-white rounded-2xl font-bold text-sm shadow-[0_10px_20px_rgba(26,43,86,0.3)] hover:opacity-90 transition-all border border-white/10"
                         >
                             <span className="material-symbols-outlined text-lg">person_add</span>
-                            Add AdminUser
+                            Add User
                         </button>
                     </div>
                 </div>
@@ -265,9 +219,9 @@ const UserManagement: React.FC = () => {
                     >
                         <div>
                             <p className="text-[10px] font-medium uppercase tracking-[0.2em] text-slate-500 mb-1">Technicians</p>
-                            <h3 className="text-3xl font-bold text-[#1A2B56] dark:text-white tracking-tight">
-                                {users.filter(u => u.role === 'Technician').length}
-                            </h3>
+                            <p className="text-sm font-black text-slate-800 dark:text-white">
+                                {users.filter(u => u.role === 'technician').length}
+                            </p>
                         </div>
                         <div className="w-10 h-10 rounded-full flex items-center justify-center bg-slate-50 dark:bg-slate-700/30 text-slate-400 dark:text-slate-500 transition-all duration-300">
                             <span className="material-symbols-outlined">engineering</span>
@@ -389,42 +343,42 @@ const UserManagement: React.FC = () => {
             <AddUserModal
                 isOpen={isAddModalOpen}
                 onClose={() => setIsAddModalOpen(false)}
-                AdminUser={selectedUser}
-                onUserUpdated={fetchUserData}
+                user={selectedUser}
+                onUserUpdated={fetchAllUsers}
             />
 
             <UserDetailModal
                 isOpen={isDetailModalOpen}
-                AdminUser={selectedUser}
+                user={selectedUser}
                 onClose={() => setIsDetailModalOpen(false)}
-                onEdit={(AdminUser) => {
+                onEdit={(user) => {
                     setIsDetailModalOpen(false);
-                    setSelectedUser(AdminUser);
+                    setSelectedUser(user);
                     setIsAddModalOpen(true);
                 }}
-                onUpdate={fetchUserData}
+                onUpdate={fetchAllUsers}
             />
 
             <DeleteConfirmationModal
                 isOpen={!!userToDelete}
-                title="Remove AdminUser Account"
-                message="Are you sure you want to remove this AdminUser from the system? This action cannot be undone."
-                itemName={userToDelete?.name}
+                title="Remove User Account"
+                message="Are you sure you want to remove this user from the system? This action cannot be undone."
+                itemName={userToDelete?.displayName}
                 onClose={() => setUserToDelete(null)}
                 onConfirm={confirmDelete}
             />
 
             <ActionConfirmationModal
                 isOpen={!!userToToggle}
-                title={userToToggle?.status === 'Active' ? "Deactivate AdminUser Account" : "Activate AdminUser Account"}
-                message={userToToggle?.status === 'Active'
-                    ? "Are you sure you want to deactivate this account? The AdminUser will no longer be able to sign in."
-                    : "Are you sure you want to reactivate this account? The AdminUser will regain access to the system."}
-                itemName={userToToggle?.name}
-                confirmText={userToToggle?.status === 'Active' ? "Deactivate" : "Activate"}
-                confirmColor={userToToggle?.status === 'Active' ? "bg-amber-500 hover:bg-amber-600" : "bg-emerald-500 hover:bg-emerald-600"}
-                icon={userToToggle?.status === 'Active' ? "person_off" : "check_circle"}
-                iconColor={userToToggle?.status === 'Active' ? "text-amber-500" : "text-emerald-500"}
+                title={userToToggle?.avatarId !== 'Inactive' ? "Deactivate User Account" : "Activate User Account"}
+                message={userToToggle?.avatarId !== 'Inactive'
+                    ? "Are you sure you want to deactivate this account? The user will no longer be able to sign in."
+                    : "Are you sure you want to reactivate this account? The user will regain access to the system."}
+                itemName={userToToggle?.displayName}
+                confirmText={userToToggle?.avatarId !== 'Inactive' ? "Deactivate" : "Activate"}
+                confirmColor={userToToggle?.avatarId !== 'Inactive' ? "bg-amber-500 hover:bg-amber-600" : "bg-emerald-500 hover:bg-emerald-600"}
+                icon={userToToggle?.avatarId !== 'Inactive' ? "person_off" : "check_circle"}
+                iconColor={userToToggle?.avatarId !== 'Inactive' ? "text-amber-500" : "text-emerald-500"}
                 onClose={() => setUserToToggle(null)}
                 onConfirm={confirmToggleStatus}
             />

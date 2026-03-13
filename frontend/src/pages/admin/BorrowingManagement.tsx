@@ -5,94 +5,76 @@ import UpcomingReturnCards from '../../components/admin/borrowing/UpcomingReturn
 import ReturnCalendar from '../../components/admin/borrowing/ReturnCalendar';
 import NewBorrowModal from '../../components/admin/borrowing/NewBorrowModal';
 import BorrowingDetailModal from '../../components/admin/borrowing/BorrowingDetailModal';
-import { adminApi } from '../../services/api/adminApi';
-import { BorrowRecord } from '../../types/admin.types';
-import { useLocation } from 'react-router-dom';
+import { useBorrowRequestStore } from '../../stores/useBorrowRequestStore';
+import type { BorrowRequest } from '../../types/borrowRequest';
 
 const BorrowingManagement: React.FC = () => {
-    const location = useLocation();
-    const [borrowRecords, setBorrowRecords] = useState<BorrowRecord[]>([]);
-    const [loading, setLoading] = useState(true);
+    const borrowRecords = useBorrowRequestStore(state => state.borrowRequests);
+    const loading = useBorrowRequestStore(state => state.loading);
+    const fetchAll = useBorrowRequestStore(state => state.fetchAllBorrowRequests);
+    const approveRequest = useBorrowRequestStore(state => state.approveBorrowRequest);
+    const rejectRequest = useBorrowRequestStore(state => state.rejectBorrowRequest);
+    const returnRequest = useBorrowRequestStore(state => state.returnBorrowRequest);
+    const handoverRequest = useBorrowRequestStore(state => state.handoverBorrowRequest);
+
     const [isNewBorrowModalOpen, setIsNewBorrowModalOpen] = useState(false);
-    const [selectedRecord, setSelectedRecord] = useState<BorrowRecord | null>(null);
+    const [selectedRecord, setSelectedRecord] = useState<BorrowRequest | null>(null);
     const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
-    const [statusFilter, setStatusFilter] = useState<BorrowRecord['status'] | 'All'>('All');
+    const [statusFilter, setStatusFilter] = useState<string>('All');
 
     useEffect(() => {
-        if (location.state && (location.state as any).status) {
-            setStatusFilter((location.state as any).status);
-        }
-    }, [location.state]);
+        fetchAll();
+    }, [fetchAll]);
 
-    const fetchBorrowingData = async () => {
-        setLoading(true);
+    const handleUpdateStatus = async (id: string, action: 'approved' | 'handed_over' | 'returned' | 'rejected') => {
         try {
-            const records = await adminApi.getBorrowingList();
-            setBorrowRecords(records);
-        } catch (error) {
-            console.error("Failed to fetch borrowing data", error);
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    useEffect(() => {
-        fetchBorrowingData();
-    }, []);
-
-    const handleUpdateStatus = async (id: string, status: BorrowRecord['status']) => {
-        try {
-            await adminApi.updateBorrowStatus(id, status);
-            // Refresh local state
-            setBorrowRecords(prev => prev.map(r => r.id === id ? { ...r, status } : r));
+            if (action === 'approved') await approveRequest(id);
+            else if (action === 'handed_over') await handoverRequest(id);
+            else if (action === 'returned') await returnRequest(id);
+            else if (action === 'rejected') await rejectRequest(id);
         } catch (error) {
             alert("Failed to update status");
         }
     };
 
     const handleAlert = async (id: string) => {
-        try {
-            await adminApi.sendBorrowAlert(id);
-            alert("Alert sent successfully to the borrower.");
-        } catch (error) {
-            alert("Failed to send alert");
-        }
+        // alert logic might need a dedicated service later
+        console.log("Send alert for", id);
+        alert("Alert logic to be implemented with notification service.");
     };
 
-    const handleViewDetails = (record: BorrowRecord) => {
+    const handleViewDetails = (record: BorrowRequest) => {
         setSelectedRecord(record);
         setIsDetailModalOpen(true);
     };
 
     const handleViewDetailsById = (recordId: string) => {
-        const record = borrowRecords.find(r => r.id === recordId);
+        const record = borrowRecords.find(r => r._id === recordId);
         if (record) {
             handleViewDetails(record);
         }
     };
 
     const parseDateRaw = (dateStr: string) => {
-        const months: Record<string, number> = { Jan: 0, Feb: 1, Mar: 2, Apr: 3, May: 4, Jun: 5, Jul: 6, Aug: 7, Sep: 8, Oct: 9, Nov: 10, Dec: 11 };
-        const parts = dateStr.replace(',', '').split(' ');
-        if (parts.length === 3) {
-            return new Date(parseInt(parts[2]), months[parts[0]], parseInt(parts[1])).getTime();
-        }
-        return 0;
+        return new Date(dateStr).getTime();
     };
 
     const sortedRecords = borrowRecords
         .filter(record => {
+            const borrower = typeof record.user_id === 'object' ? record.user_id?.displayName : 'Unknown';
+            const equipment = typeof record.equipment_id === 'object' ? record.equipment_id?.name : 'Unknown Room/Item';
+            
             const matchesSearch =
-                record.borrowerName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                record.equipmentName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                record.borrowerId.toLowerCase().includes(searchQuery.toLowerCase());
+                borrower?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                equipment?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                record._id.toLowerCase().includes(searchQuery.toLowerCase());
 
             const matchesStatus = statusFilter === 'All' || record.status === statusFilter;
 
             return matchesSearch && matchesStatus;
         })
-        .sort((a, b) => parseDateRaw(a.dueDate) - parseDateRaw(b.dueDate));
+        .sort((a, b) => parseDateRaw(a.return_date) - parseDateRaw(b.return_date));
 
     if (loading) {
         return (
@@ -103,9 +85,9 @@ const BorrowingManagement: React.FC = () => {
     }
 
     // Filter statuses for counts
-    const pendingCount = borrowRecords.filter(r => r.status === 'Pending').length;
-    const overdueCount = borrowRecords.filter(r => r.status === 'Overdue').length;
-    const activeLoansCount = borrowRecords.filter(r => r.status === 'Approved').length;
+    const pendingCount = borrowRecords.filter(r => r.status === 'pending').length;
+    const overdueCount = 0; // Backend needs logic for overdue status
+    const activeLoansCount = borrowRecords.filter(r => r.status === 'approved' || r.status === 'handed_over').length;
 
     const isBlurred = isNewBorrowModalOpen || isDetailModalOpen;
 
@@ -131,50 +113,44 @@ const BorrowingManagement: React.FC = () => {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
                     {/* Active Loans Card */}
                     <button
-                        onClick={() => setStatusFilter(statusFilter === 'Approved' ? 'All' : 'Approved')}
+                        onClick={() => setStatusFilter(statusFilter === 'approved' ? 'All' : 'approved')}
                         className="group relative p-6 ambient-shadow flex items-center justify-between rounded-[24px] border transition-all duration-300 hover:scale-[1.02] active:scale-95 text-left w-full backdrop-blur-xl bg-white/60 dark:bg-slate-800/60 border-white/60 dark:border-white/10"
                     >
                         <div>
                             <p className="text-[10px] font-medium uppercase tracking-[0.2em] text-slate-500 mb-1">Active Loans</p>
                             <h3 className="text-3xl font-bold text-[#1A2B56] dark:text-white tracking-tight">{activeLoansCount}</h3>
                         </div>
-                        <div className={`p-3 rounded-2xl transition-all duration-300 ${statusFilter === 'Approved' ? 'text-blue-500 bg-blue-50 dark:bg-blue-900/40' : 'text-slate-400 dark:text-slate-500 bg-slate-50 dark:bg-slate-700/30 group-hover:text-blue-500 group-hover:bg-blue-50 dark:group-hover:bg-blue-900/40'}`}>
+                        <div className={`p-3 rounded-2xl transition-all duration-300 ${statusFilter === 'approved' ? 'text-blue-500 bg-blue-50 dark:bg-blue-900/40' : 'text-slate-400 dark:text-slate-500 bg-slate-50 dark:bg-slate-700/30 group-hover:text-blue-500 group-hover:bg-blue-50 dark:group-hover:bg-blue-900/40'}`}>
                             <span className="material-symbols-outlined text-3xl">swap_horiz</span>
                         </div>
                     </button>
 
                     {/* Pending Approvals Card */}
                     <button
-                        onClick={() => setStatusFilter(statusFilter === 'Pending' ? 'All' : 'Pending')}
+                        onClick={() => setStatusFilter(statusFilter === 'pending' ? 'All' : 'pending')}
                         className="group relative p-6 ambient-shadow flex items-center justify-between rounded-[24px] border transition-all duration-300 hover:scale-[1.02] active:scale-95 text-left w-full backdrop-blur-xl bg-white/60 dark:bg-slate-800/60 border-white/60 dark:border-white/10"
                     >
                         <div>
                             <p className="text-[10px] font-medium uppercase tracking-[0.2em] text-slate-500 mb-1">Pending Approvals</p>
                             <h3 className="text-3xl font-bold text-[#1A2B56] dark:text-white tracking-tight">{pendingCount}</h3>
                         </div>
-                        <div className={`p-3 rounded-2xl transition-all duration-300 ${statusFilter === 'Pending' ? 'text-amber-500 bg-amber-50 dark:bg-amber-900/40' : 'text-slate-400 dark:text-slate-500 bg-slate-50 dark:bg-slate-700/30 group-hover:text-amber-500 group-hover:bg-amber-50 dark:group-hover:bg-amber-900/40'}`}>
+                        <div className={`p-3 rounded-2xl transition-all duration-300 ${statusFilter === 'pending' ? 'text-amber-500 bg-amber-50 dark:bg-amber-900/40' : 'text-slate-400 dark:text-slate-500 bg-slate-50 dark:bg-slate-700/30 group-hover:text-amber-500 group-hover:bg-amber-50 dark:group-hover:bg-amber-900/40'}`}>
                             <span className="material-symbols-outlined text-3xl">pending_actions</span>
                         </div>
                     </button>
 
                     {/* Overdue Returns Card */}
                     <button
-                        onClick={() => setStatusFilter(statusFilter === 'Overdue' ? 'All' : 'Overdue')}
+                        onClick={() => setStatusFilter(statusFilter === 'overdue' ? 'All' : 'overdue')}
                         className="group relative p-6 ambient-shadow flex items-center justify-between rounded-[24px] border transition-all duration-300 hover:scale-[1.02] active:scale-95 text-left w-full backdrop-blur-xl bg-white/60 dark:bg-slate-800/60 border-white/60 dark:border-white/10"
                     >
                         <div>
                             <p className="text-[10px] font-medium uppercase tracking-[0.2em] text-slate-500 mb-1">Overdue Returns</p>
                             <h3 className="text-3xl font-bold text-[#1A2B56] dark:text-white tracking-tight">{overdueCount}</h3>
                         </div>
-                        <div className={`p-3 rounded-2xl transition-all duration-300 ${statusFilter === 'Overdue' ? 'text-red-500 bg-red-50 dark:bg-red-900/40' : 'text-slate-400 dark:text-slate-500 bg-slate-50 dark:bg-slate-700/30 group-hover:text-red-500 group-hover:bg-red-50 dark:group-hover:bg-red-900/40'}`}>
+                        <div className={`p-3 rounded-2xl transition-all duration-300 ${statusFilter === 'overdue' ? 'text-red-500 bg-red-50 dark:bg-red-900/40' : 'text-slate-400 dark:text-slate-500 bg-slate-50 dark:bg-slate-700/30 group-hover:text-red-500 group-hover:bg-red-50 dark:group-hover:bg-red-900/40'}`}>
                             <span className="material-symbols-outlined text-3xl">warning</span>
                         </div>
-                        {overdueCount > 0 && (
-                            <span className="absolute top-3 right-3 flex h-2 w-2">
-                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                                <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
-                            </span>
-                        )}
                     </button>
                 </div>
 
@@ -211,11 +187,11 @@ const BorrowingManagement: React.FC = () => {
                                             value={statusFilter as string}
                                             options={[
                                                 { value: 'All',      label: 'All Status' },
-                                                { value: 'Pending',  label: 'Pending'    },
-                                                { value: 'Approved', label: 'Approved'   },
-                                                { value: 'Overdue',  label: 'Overdue'    },
-                                                { value: 'Returned', label: 'Returned'   },
-                                                { value: 'Rejected', label: 'Rejected'   },
+                                                { value: 'pending',  label: 'Pending'    },
+                                                { value: 'approved', label: 'Approved'   },
+                                                { value: 'handed_over', label: 'Handed Over' },
+                                                { value: 'returned', label: 'Returned'   },
+                                                { value: 'rejected', label: 'Rejected'   },
                                             ]}
                                             onChange={v => setStatusFilter(v as any)}
                                             align="right"
@@ -224,11 +200,12 @@ const BorrowingManagement: React.FC = () => {
                                 </div>
                             </div>
 
-                            <BorrowingTable
+                             <BorrowingTable
                                 records={sortedRecords}
-                                onApprove={(id) => handleUpdateStatus(id, 'Approved')}
-                                onReject={(id) => handleUpdateStatus(id, 'Rejected')}
-                                onReturn={(id) => handleUpdateStatus(id, 'Returned')}
+                                onApprove={(id) => handleUpdateStatus(id, 'approved')}
+                                onHandover={(id) => handleUpdateStatus(id, 'handed_over')}
+                                onReject={(id) => handleUpdateStatus(id, 'rejected')}
+                                onReturn={(id) => handleUpdateStatus(id, 'returned')}
                                 onAlert={handleAlert}
                                 onViewDetails={handleViewDetails}
                             />
@@ -254,9 +231,10 @@ const BorrowingManagement: React.FC = () => {
                 isOpen={isDetailModalOpen}
                 record={selectedRecord}
                 onClose={() => setIsDetailModalOpen(false)}
-                onApprove={(id) => handleUpdateStatus(id, 'Approved')}
-                onReject={(id) => handleUpdateStatus(id, 'Rejected')}
-                onReturn={(id) => handleUpdateStatus(id, 'Returned')}
+                onApprove={(id) => handleUpdateStatus(id, 'approved')}
+                onHandover={(id) => handleUpdateStatus(id, 'handed_over')}
+                onReject={(id) => handleUpdateStatus(id, 'rejected')}
+                onReturn={(id) => handleUpdateStatus(id, 'returned')}
                 onAlert={handleAlert}
             />
         </div>

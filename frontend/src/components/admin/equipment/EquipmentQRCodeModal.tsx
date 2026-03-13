@@ -1,11 +1,11 @@
 import React from 'react';
 import { createPortal } from 'react-dom';
-import { Asset } from '../../../types/admin.types';
+import type { Equipment } from '../../../types/equipment';
 
 interface EquipmentQRCodeModalProps {
     isOpen: boolean;
     onClose: () => void;
-    equipment: Asset | null;
+    equipment: Equipment | null;
 }
 
 const EquipmentQRCodeModal: React.FC<EquipmentQRCodeModalProps> = ({ isOpen, onClose, equipment }) => {
@@ -28,11 +28,11 @@ const EquipmentQRCodeModal: React.FC<EquipmentQRCodeModalProps> = ({ isOpen, onC
                         <img src={equipment.imageUrl} alt={equipment.name} className="w-full h-full object-cover rounded-xl" />
                     </div>
                     <h3 className="text-xl font-extrabold text-[#1A2B56] dark:text-white">{equipment.name}</h3>
-                    <p className="text-sm font-semibold text-slate-500 dark:text-slate-400">ID: {equipment.id}</p>
+                    <p className="text-sm font-semibold text-slate-500 dark:text-slate-400">ID: {equipment._id}</p>
                 </div>
 
                 <div className="bg-white p-4 rounded-2xl shadow-inner mx-auto w-48 h-48 flex items-center justify-center border border-slate-100">
-                    <img src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${equipment.id}`} alt="QR Code" className="w-full h-full opacity-90" />
+                    <img src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${equipment._id}`} alt="QR Code" className="w-full h-full opacity-90" />
                 </div>
 
                 <div className="mt-8 flex gap-3">

@@ -1,10 +1,10 @@
 import React from 'react';
-import { Asset } from '../../../types/admin.types';
+import type { Equipment } from '../../../types/equipment';
 
 interface BrokenAttentionCardProps {
-    items: Asset[];
-    onViewDetails?: (item: Asset) => void;
-    onUpdateStatus?: (id: string, newStatus: Asset['status']) => void;
+    items: Equipment[];
+    onViewDetails?: (item: Equipment) => void;
+    onUpdateStatus?: (id: string, newStatus: string) => void;
     onViewAll?: () => void;
 }
 
@@ -32,37 +32,37 @@ const BrokenAttentionCard: React.FC<BrokenAttentionCardProps> = ({ items, onView
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {items.map(item => (
-                    <div key={item.id} className="bg-white/80 dark:bg-slate-700/60 p-4 rounded-2xl border border-white dark:border-slate-600 flex gap-4 transition-all duration-300 cursor-pointer backdrop-blur-sm hover:-translate-y-1.5 hover:shadow-2xl hover:bg-white dark:hover:bg-slate-700 hover:border-blue-200 dark:hover:border-slate-500 active:scale-95 group">
+                    <div key={item._id} className="bg-white/80 dark:bg-slate-700/60 p-4 rounded-2xl border border-white dark:border-slate-600 flex gap-4 transition-all duration-300 cursor-pointer backdrop-blur-sm hover:-translate-y-1.5 hover:shadow-2xl hover:bg-white dark:hover:bg-slate-700 hover:border-blue-200 dark:hover:border-slate-500 active:scale-95 group">
                         <div className="w-16 h-16 rounded-xl bg-slate-50 dark:bg-slate-800 p-1 flex-shrink-0">
-                            <img alt={item.name} className="w-full h-full object-cover rounded-lg" src={item.imageUrl} />
+                            <img alt={item.name} className="w-full h-full object-cover rounded-lg" src={(item as any).imageUrl || 'https://via.placeholder.com/150'} />
                         </div>
                         <div className="flex-1">
                             <div className="flex justify-between items-start">
                                 <p className="text-sm font-bold text-slate-800 dark:text-white">{item.name}</p>
-                                <span className={`px-2 py-0.5 rounded-full text-[8px] font-bold uppercase tracking-wider inline-flex items-center justify-center whitespace-nowrap ${item.status === 'Repairing' ? 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400' : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'}`}>
+                                <span className={`px-2 py-0.5 rounded-full text-[8px] font-bold uppercase tracking-wider inline-flex items-center justify-center whitespace-nowrap ${item.status === 'Repairing' || item.status === 'maintenance' ? 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400' : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'}`}>
                                     {item.status}
                                 </span>
                             </div>
-                            <p className="text-[10px] text-slate-500 dark:text-slate-400 font-semibold mb-2">ID: {item.id}</p>
+                            <p className="text-[10px] text-slate-500 dark:text-slate-400 font-semibold mb-2">ID: {item._id}</p>
 
                             <div className="flex gap-1.5 flex-wrap">
-                                {item.status === 'Repairing' ? (
+                                {item.status === 'maintenance' ? (
                                     <>
                                         <button
-                                            onClick={() => onUpdateStatus?.(item.id, 'Available')}
+                                            onClick={() => onUpdateStatus?.(item._id, 'good')}
                                             className="text-[9px] font-bold px-3 py-1 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 rounded-lg border border-emerald-100 dark:border-emerald-800/50 hover:bg-emerald-500 hover:text-white dark:hover:bg-emerald-600 transition-all flex-grow text-center"
                                         >
                                             Complete
                                         </button>
                                         <button
-                                            onClick={() => onUpdateStatus?.(item.id, 'Broken')}
+                                            onClick={() => onUpdateStatus?.(item._id, 'broken')}
                                             className="text-[9px] font-bold px-2 py-1 bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 transition-all"
                                             title="Cancel Repair"
                                         >
                                             Cancel
                                         </button>
                                         <button
-                                            onClick={() => onUpdateStatus?.(item.id, 'Decommissioned')}
+                                            onClick={() => onUpdateStatus?.(item._id, 'Decommissioned')}
                                             className="text-[9px] font-bold px-2 py-1 bg-red-50 dark:bg-red-900/20 text-red-400 dark:text-red-500 rounded-lg border border-red-100 dark:border-red-900/30 hover:bg-red-500 hover:text-white transition-all"
                                             title="Mark as Unrepairable"
                                         >
@@ -71,7 +71,7 @@ const BrokenAttentionCard: React.FC<BrokenAttentionCardProps> = ({ items, onView
                                     </>
                                 ) : (
                                     <button
-                                        onClick={() => onUpdateStatus?.(item.id, 'Repairing')}
+                                        onClick={() => onUpdateStatus?.(item._id, 'maintenance')}
                                         className="text-[9px] font-bold px-3 py-1 bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-lg border border-red-100 dark:border-red-800/50 hover:bg-red-500 hover:text-white dark:hover:bg-red-600 transition-all flex-grow text-center"
                                     >
                                         Start Repair

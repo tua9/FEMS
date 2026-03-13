@@ -1,68 +1,62 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { AdminUser } from '../../../types/admin.types';
+import type { User } from '../../../types/user';
+import { useUserStore } from '../../../stores/useUserStore';
 
 interface AddUserModalProps {
     isOpen: boolean;
     onClose: () => void;
-    AdminUser?: AdminUser | null;
+    user?: User | null;
     onUserUpdated?: () => void;
 }
 
-import { adminApi } from '../../../services/api/adminApi';
+const AddUserModal: React.FC<AddUserModalProps> = ({ isOpen, onClose, user, onUserUpdated }) => {
+    const isEdit = !!user;
+    const [username, setUsername] = useState(user?.username || '');
+    const [name, setName] = useState(user?.displayName || '');
+    const [email, setEmail] = useState(user?.email || '');
+    const [role, setRole] = useState(user?.role || 'student');
+    const [password] = useState('');
 
-const generateUserId = () => `AdminUser-${Math.floor(1000 + Math.random() * 9000)}`;
-
-const AddUserModal: React.FC<AddUserModalProps> = ({ isOpen, onClose, AdminUser, onUserUpdated }) => {
-    const isEdit = !!AdminUser;
-    const [userId, setUserId] = useState(AdminUser?.id || generateUserId());
-    const [name, setName] = useState(AdminUser?.name || '');
-    const [email, setEmail] = useState(AdminUser?.email || '');
-    const [role, setRole] = useState(AdminUser?.role || 'Student');
-    const [isSubmitting, setIsSubmitting] = useState(false);
+    const createUser = useUserStore(state => state.createUser);
+    const updateUser = useUserStore(state => state.updateUser);
+    const isSubmitting = useUserStore(state => state.loading);
 
     useEffect(() => {
-        if (AdminUser) {
-            setUserId(AdminUser.id);
-            setName(AdminUser.name);
-            setEmail(AdminUser.email);
-            setRole(AdminUser.role);
+        if (user) {
+            setUsername(user.username);
+            setName(user.displayName);
+            setEmail(user.email);
+            setRole(user.role);
         } else {
-            setUserId(generateUserId());
+            setUsername('');
             setName('');
             setEmail('');
-            setRole('Student');
+            setRole('student');
         }
-    }, [AdminUser, isOpen]);
+    }, [user, isOpen]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        const userData: AdminUser = {
-            id: userId,
-            name,
+        const userData = {
+            username,
+            displayName: name,
             email,
             role: role as any,
-            status: AdminUser?.status || 'Active',
-            avatar: AdminUser?.avatar
+            ...(password ? { password } : {})
         };
 
-        setIsSubmitting(true);
         try {
-            if (isEdit) {
-                await adminApi.updateUser(userData);
+            if (isEdit && user) {
+                await updateUser(user._id, userData);
             } else {
-                // In a real app we'd call createUser
-                // For now we persist to mock list if it's new too
-                await adminApi.updateUser(userData);
+                await createUser(userData as any);
             }
             if (onUserUpdated) onUserUpdated();
             onClose();
         } catch (error) {
-            console.error("Failed to save AdminUser", error);
-            alert("Failed to save changes. Please try again.");
-        } finally {
-            setIsSubmitting(false);
+            console.error("Failed to save user", error);
         }
     };
 
@@ -95,31 +89,21 @@ const AddUserModal: React.FC<AddUserModalProps> = ({ isOpen, onClose, AdminUser,
                 {/* Body */}
                 <div className="p-6 overflow-y-auto custom-scrollbar">
                     <form id="userForm" onSubmit={handleSubmit} className="space-y-5">
-                        {/* AdminUser ID */}
+                        {/* Username */}
                         <div className="space-y-1.5">
-                            <label className="text-xs font-bold text-slate-700 dark:text-slate-300 ml-1">AdminUser ID <span className="text-red-500">*</span></label>
+                            <label className="text-xs font-bold text-slate-700 dark:text-slate-300 ml-1">Username <span className="text-red-500">*</span></label>
                             <div className="flex gap-2">
                                 <div className="relative flex-1">
                                     <span className="material-symbols-outlined absolute left-4 top-3 text-slate-400 text-[18px]">badge</span>
                                     <input
                                         type="text"
-                                        value={userId}
-                                        onChange={e => setUserId(e.target.value)}
+                                        value={username}
+                                        onChange={e => setUsername(e.target.value)}
                                         readOnly={isEdit}
                                         className={`w-full pl-11 pr-4 bg-white/50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl py-3 text-sm font-bold text-[#1A2B56] dark:text-blue-300 focus:ring-2 focus:ring-[#1A2B56] dark:focus:ring-blue-500 outline-none transition-all tracking-wider ${isEdit ? 'opacity-60 cursor-not-allowed' : ''}`}
-                                        placeholder="AdminUser-0000"
+                                        placeholder="Username"
                                     />
                                 </div>
-                                {!isEdit && (
-                                    <button
-                                        type="button"
-                                        onClick={() => setUserId(generateUserId())}
-                                        className="px-4 py-2 rounded-xl bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-600 dark:text-slate-300 text-xs font-bold transition-colors flex items-center gap-1.5 whitespace-nowrap"
-                                    >
-                                        <span className="material-symbols-outlined text-[16px]">autorenew</span>
-                                        Auto
-                                    </button>
-                                )}
                             </div>
                         </div>
 
@@ -210,7 +194,7 @@ const AddUserModal: React.FC<AddUserModalProps> = ({ isOpen, onClose, AdminUser,
                         className={`px-8 py-2.5 rounded-xl font-bold text-sm bg-[#1A2B56] hover:bg-[#2A3B66] text-white shadow-lg transition-colors flex items-center gap-2 ${isSubmitting ? 'animate-pulse' : ''}`}
                     >
                         <span className="material-symbols-outlined text-sm">{isSubmitting ? 'hourglass_top' : (isEdit ? 'save' : 'person_add')}</span>
-                        {isSubmitting ? 'Saving...' : (isEdit ? 'Update AdminUser' : 'Create AdminUser')}
+                        {isSubmitting ? 'Saving...' : (isEdit ? 'Update User' : 'Create User')}
                     </button>
                 </div>
             </div>
