@@ -23,7 +23,7 @@ const HomePage: React.FC = () => {
   }, [fetchMyBorrowRequests]);
 
   return (
-    <PageShell topPadding="pt-32" className="pb-20 px-4 sm:px-6">
+    <PageShell className="pb-20 px-4 sm:px-6">
       <div className="mx-auto w-full max-w-350">
         {/* Welcome Header */}
         <AnimatedSection variant="curtain" delay={0} className="mb-12">

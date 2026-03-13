@@ -10,7 +10,7 @@ const ReportStatCards: React.FC<Props> = ({ dateRangeDays }) => {
       {cards.map((card) => (
         <div
           key={card.label}
-          className="tech-card p-6 rounded-3xl border border-white/50 shadow-sm"
+          className="dashboard-card p-6 rounded-3xl"
         >
           {/* Icon row */}
           <div className="flex items-center justify-between mb-4">

@@ -1,5 +1,4 @@
 import React from 'react';
-import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Monitor, Thermometer, Video, Cpu, Shield, Droplets, AlertTriangle, CheckCircle2 } from 'lucide-react';
 
@@ -31,8 +30,8 @@ export const RoomCard: React.FC<RoomCardProps> = ({ roomName, roomType, statusTe
     const hasFault = devices.some(d => d.status === 'FAULTY');
 
     return (
-        <Card className="glass-card hover:shadow-[#1E2B58]/5 transition-all w-[85vw] sm:w-[22rem] md:w-[24rem] lg:w-[25rem] max-w-full flex-shrink-0 border-none rounded-3xl lg:rounded-[2rem] overflow-hidden">
-            <CardContent className="p-6 md:p-8 flex flex-col h-full">
+        <div className="dashboard-card w-[85vw] sm:w-88 md:w-96 lg:w-100 max-w-full shrink-0 rounded-3xl lg:rounded-4xl overflow-hidden transition-all hover:scale-[1.01]">
+            <div className="p-6 md:p-8 flex flex-col h-full">
                 {/* Header */}
                 <div className="flex justify-between items-start mb-6 md:mb-8">
                     <div>
@@ -54,24 +53,26 @@ export const RoomCard: React.FC<RoomCardProps> = ({ roomName, roomType, statusTe
                 </div>
 
                 {/* Device list */}
-                <div className="space-y-4 flex-1">
+                <div className="space-y-3 flex-1">
                     {devices.map((device, idx) => {
                         const Icon = IconMap[device.icon] || Monitor;
-                        const bgClass = device.status === 'ACTIVE'
-                            ? 'bg-white/40 dark:bg-white/10'
-                            : 'bg-white/20 dark:bg-white/5 opacity-60';
-                        const textClass = device.status === 'ACTIVE'
+                        const isActive = device.status === 'ACTIVE';
+                        const textClass = isActive
                             ? 'text-[#1E2B58] dark:text-white'
                             : 'text-[#4A5A8A] dark:text-slate-400';
                         const statusColor =
-                            device.status === 'FAULTY' ? 'text-red-500 font-black' :
+                            device.status === 'FAULTY'      ? 'text-red-500 font-black' :
                             device.status === 'MAINTENANCE' ? 'text-amber-500 font-black' :
                             `${textClass} font-black`;
 
                         return (
                             <div
                                 key={idx}
-                                className={`flex items-center justify-between p-3 md:p-4 rounded-xl md:rounded-2xl border border-white/30 dark:border-white/10 ${bgClass}`}
+                                className={`flex items-center justify-between p-3 md:p-4 rounded-xl md:rounded-2xl border border-white/40 dark:border-white/10 backdrop-blur-sm ${
+                                    isActive
+                                        ? 'bg-white/25 dark:bg-white/5'
+                                        : 'bg-white/10 dark:bg-white/3 opacity-60'
+                                }`}
                             >
                                 <div className="flex items-center gap-2 md:gap-3">
                                     <Icon className={`w-4 h-4 md:w-5 md:h-5 ${textClass} shrink-0`} />
@@ -108,7 +109,7 @@ export const RoomCard: React.FC<RoomCardProps> = ({ roomName, roomType, statusTe
                         )}
                     </button>
                 )}
-            </CardContent>
-        </Card>
+            </div>
+        </div>
     );
 };

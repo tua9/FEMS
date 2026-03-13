@@ -19,7 +19,7 @@
  * Các trang bên trong chỉ cần bọc nội dung bằng <AnimatedPage>:
  *   export default function SomePage() {
  *     return (
- *       <AnimatedPage className="max-w-7xl mx-auto px-6 pt-32 pb-20">
+ *       <AnimatedPage className="max-w-7xl mx-auto px-6 pt-6 sm:pt-8 pb-20">
  *         …
  *       </AnimatedPage>
  *     );

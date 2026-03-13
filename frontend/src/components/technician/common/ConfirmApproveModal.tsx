@@ -1,45 +1,5 @@
-import React from 'react';
-import { MockTask } from '@/data/technician/mockTasks';
-import {
-  MODAL_OVERLAY_TOP, MODAL_CARD, CLOSE_BTN,
-  BTN_PRIMARY, BTN_SECONDARY,
-  SECTION_LABEL, INFO_CARD, CHIP,
-} from '@/components/technician/common/modalStyles';
-
-// ── Helpers ───────────────────────────────────────────────────────────────────
-const getPriorityStyle = (priority: string) => {
-  const map: Record<string, { pill: string; dot: string }> = {
-    Urgent: { pill: 'bg-rose-100 text-rose-600',       dot: 'bg-rose-500'    },
-    High:   { pill: 'bg-rose-100 text-rose-600',       dot: 'bg-rose-400'    },
-    Medium: { pill: 'bg-amber-100 text-amber-700',     dot: 'bg-amber-400'   },
-    Low:    { pill: 'bg-emerald-100 text-emerald-700', dot: 'bg-emerald-400' },
-  };
-  return map[priority] ?? map.Medium;
-};
-
-const getCategoryMeta = (label: string) => {
-  const map: Record<string, { icon: string; color: string }> = {
-    'AV Device':  { icon: 'video_settings', color: 'text-blue-600'   },
-    'HVAC':       { icon: 'ac_unit',        color: 'text-cyan-600'   },
-    'IT Device':  { icon: 'computer',       color: 'text-indigo-600' },
-    'Electrical': { icon: 'electric_bolt',  color: 'text-yellow-600' },
-    'Plumbing':   { icon: 'water_drop',     color: 'text-blue-600'   },
-    'Furniture':  { icon: 'chair',          color: 'text-purple-600' },
-    'Safety':     { icon: 'warning',        color: 'text-orange-600' },
-    'Other':      { icon: 'grid_view',      color: 'text-slate-500'  },
-  };
-  return map[label] ?? map['Other'];
-};
-
-const InfoRow: React.FC<{ icon: string; label: string; value: string }> = ({ icon, label, value }) => (
-  <div className="flex items-center justify-between py-2.5 border-b border-slate-100 last:border-0">
-    <div className="flex items-center gap-2 text-slate-500">
-      <span className="material-symbols-outlined text-[15px]">{icon}</span>
-      <span className="text-xs font-medium">{label}</span>
-    </div>
-    <span className="text-xs font-semibold text-slate-800">{value}</span>
-  </div>
-);
+import React, { useState } from 'react';
+import type { MockTask } from '@/data/technician/mockTasks';
 
 // ── Main Modal ────────────────────────────────────────────────────────────────
 interface Props {
@@ -49,107 +9,114 @@ interface Props {
 }
 
 const ConfirmApproveModal: React.FC<Props> = ({ task, onCancel, onConfirm }) => {
-  const priority = getPriorityStyle(task.priority);
-  const cat      = getCategoryMeta(task.displayCategory ?? task.category);
-
-  const initials = task.reportedBy.name
-    .split(' ').slice(0, 2).map((w) => w[0]).join('').toUpperCase();
+  const [note, setNote] = useState('');
 
   return (
-    <div className={MODAL_OVERLAY_TOP} onClick={onCancel}>
+    <div
+      className="fixed inset-0 z-60 flex items-center justify-center px-4 py-6 bg-black/30 backdrop-blur-sm"
+      onClick={onCancel}
+    >
       <div
-        className={`${MODAL_CARD} max-w-md`}
+        className="relative w-full max-w-sm bg-white dark:bg-[#1a2340] rounded-3xl shadow-2xl shadow-[#1A2B56]/25 overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-200"
         onClick={(e) => e.stopPropagation()}
       >
         {/* ── Header ── */}
-        <div className="px-7 pt-7 pb-5 flex items-start justify-between">
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-xl bg-emerald-50 flex items-center justify-center shrink-0">
-              <span className="material-symbols-outlined text-emerald-500 text-2xl">check_circle</span>
+        <div className="px-7 pt-7 pb-5 flex items-center justify-between">
+          <div className="flex items-center gap-3.5">
+            {/* Small circular icon */}
+            <div className="w-10 h-10 rounded-full bg-[#1A2B56] flex items-center justify-center shrink-0 shadow-md shadow-[#1A2B56]/30">
+              <span
+                className="material-symbols-outlined text-white text-[18px]"
+                style={{ fontVariationSettings: "'FILL' 1" }}
+              >
+                check_circle
+              </span>
             </div>
             <div>
-              <h2 className="text-base font-extrabold text-[#1A2B56] leading-tight">Approve Ticket?</h2>
-              <p className="text-xs text-slate-500 mt-0.5">Review the details before confirming.</p>
+              <h2 className="text-base font-extrabold text-[#1A2B56] dark:text-white leading-tight">
+                Approve Ticket
+              </h2>
+              <p className="text-[11px] text-slate-400 dark:text-slate-400 font-medium mt-0.5">
+                #{task.id}
+              </p>
             </div>
           </div>
-          <button onClick={onCancel} className={CLOSE_BTN}>
-            <span className="material-symbols-outlined text-lg">close</span>
+          {/* Close button */}
+          <button
+            type="button"
+            onClick={onCancel}
+            className="w-8 h-8 rounded-full flex items-center justify-center text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:bg-white/10 dark:text-slate-400 dark:hover:text-white transition-all ml-2 shrink-0"
+            aria-label="Close"
+          >
+            <span className="material-symbols-outlined text-[18px]">close</span>
           </button>
         </div>
 
-        {/* ── Ticket chips ── */}
-        <div className="px-7 pb-5 flex flex-wrap gap-2">
-          <span className={`${CHIP} bg-slate-100 text-slate-600`}>
-            TICKET: #{task.id}
-          </span>
-          <span className={`${CHIP} bg-slate-100 text-slate-600`}>
-            <span className={`material-symbols-outlined text-[12px] ${cat.color}`}>{cat.icon}</span>
-            {task.displayCategory ?? task.category}
-          </span>
-        </div>
-
-        <div className="mx-7 border-t border-slate-100" />
-
         {/* ── Body ── */}
-        <div className="px-7 py-6 space-y-5">
-          {/* Summary card */}
-          <div>
-            <p className={`${SECTION_LABEL} mb-2`}>Ticket Summary</p>
-            <div className={INFO_CARD}>
-              {/* Equipment image */}
-              {task.imageUrl && (
-                <div className="relative w-full h-32 rounded-xl overflow-hidden mb-3 bg-slate-100">
-                  <img
-                    src={task.imageUrl}
-                    alt={task.title}
-                    className="w-full h-full object-cover"
-                    onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/25 to-transparent" />
-                </div>
-              )}
-              <div className="flex items-start gap-3 mb-3">
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-bold text-slate-900 leading-snug">{task.title}</p>
-                </div>
-                <span className={`${CHIP} ${priority.pill} shrink-0`}>
-                  <span className={`w-1.5 h-1.5 rounded-full ${priority.dot}`} />
-                  {task.priority}
-                </span>
-              </div>
-              <InfoRow icon="location_on" label="Location" value={`${task.location.building}, ${task.location.room}`} />
-              <InfoRow icon="layers"      label="Floor"    value={`Floor ${task.location.floor}`} />
+        <div className="px-7 pb-6 space-y-4">
+          {/* Confirm info box */}
+          <div className="flex items-start gap-3 px-4 py-4 rounded-2xl bg-slate-50 dark:bg-white/5 border border-slate-200/60 dark:border-white/10">
+            <span
+              className="material-symbols-outlined text-[#1A2B56] dark:text-blue-300 text-[20px] shrink-0 mt-0.5"
+              style={{ fontVariationSettings: "'FILL' 1" }}
+            >
+              info
+            </span>
+            <div>
+              <p className="text-sm font-bold text-[#1A2B56] dark:text-white leading-snug">
+                Confirm approval
+              </p>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
+                You are approving the repair request for{' '}
+                <span className="font-semibold text-slate-700 dark:text-slate-200">
+                  {task.title}
+                </span>{' '}
+                in{' '}
+                <span className="font-semibold text-slate-700 dark:text-slate-200">
+                  {task.location.building}, {task.location.room}
+                </span>.
+              </p>
             </div>
           </div>
 
-          {/* Reported by */}
-          <div>
-            <p className={`${SECTION_LABEL} mb-2`}>Reported By</p>
-            <div className={`${INFO_CARD} flex items-center gap-3`}>
-              <div className="w-9 h-9 rounded-full bg-[#1A2B56]/10 flex items-center justify-center text-[#1A2B56] font-extrabold text-xs shrink-0">
-                {initials}
-              </div>
-              <p className="text-sm font-semibold text-slate-900">{task.reportedBy.name}</p>
-            </div>
-          </div>
-
-          {/* Notice */}
-          <div className="flex items-start gap-3 bg-emerald-50 border border-emerald-100 rounded-xl px-4 py-3.5">
-            <span className="material-symbols-outlined text-emerald-500 text-base mt-0.5 shrink-0">info</span>
-            <p className="text-xs text-emerald-700 leading-relaxed">
-              Approving this ticket will assign it for fulfillment. The requester will be notified automatically.
-            </p>
+          {/* Note field */}
+          <div className="space-y-1.5">
+            <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500">
+              Note <span className="normal-case font-semibold">(optional)</span>
+            </label>
+            <textarea
+              value={note}
+              onChange={(e) => setNote(e.target.value)}
+              placeholder="Add approval notes or instructions for the technician..."
+              rows={3}
+              className="w-full resize-none rounded-2xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 px-4 py-3 text-sm text-[#1A2B56] dark:text-white placeholder:text-slate-300 dark:placeholder:text-slate-600 outline-none focus:ring-2 focus:ring-[#1A2B56]/20 dark:focus:ring-blue-500/20 transition-all"
+            />
           </div>
         </div>
 
         {/* ── Footer ── */}
-        <div className="px-7 py-5 border-t border-slate-100 flex gap-3">
-          <button type="button" onClick={onCancel} className={BTN_SECONDARY}>
+        <div className="px-7 py-5 border-t border-slate-100 dark:border-white/8 flex gap-3">
+          {/* Cancel — ghost pill */}
+          <button
+            type="button"
+            onClick={onCancel}
+            className="flex-1 py-3 rounded-full border border-slate-200 dark:border-white/15 text-sm font-bold text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-white/5 transition-all"
+          >
             Cancel
           </button>
-          <button type="button" onClick={onConfirm} className={BTN_PRIMARY}>
-            <span className="material-symbols-outlined text-base">check_circle</span>
-            Confirm Approve
+          {/* Approve — solid pill */}
+          <button
+            type="button"
+            onClick={onConfirm}
+            className="flex-2 py-3 rounded-full bg-[#1A2B56] dark:bg-[#1A2B56] text-white text-sm font-bold hover:bg-[#151f40] hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-2 shadow-lg shadow-[#1A2B56]/25"
+          >
+            <span
+              className="material-symbols-outlined text-[17px]"
+              style={{ fontVariationSettings: "'FILL' 1" }}
+            >
+              check_circle
+            </span>
+            Approve
           </button>
         </div>
       </div>

@@ -155,7 +155,7 @@ const LecturerChangePassword: React.FC = () => {
   if (success) {
     return (
       <div className="w-full">
-        <main className="mx-auto flex w-full max-w-[90vw] flex-1 flex-col justify-center px-4 pt-32 pb-10 sm:px-6 md:pt-36 xl:max-w-lg">
+        <main className="mx-auto flex w-full max-w-[90vw] flex-1 flex-col justify-center px-4 pt-6 sm:pt-8 pb-10 sm:px-6 xl:max-w-lg">
           <div className="extreme-glass rounded-[2rem] p-12 text-center shadow-2xl shadow-[#1E2B58]/8">
             <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-[1.5rem] bg-emerald-500/10 dark:bg-emerald-500/15">
               <CheckCircle2 className="h-10 w-10 text-emerald-500" />
@@ -191,7 +191,7 @@ const LecturerChangePassword: React.FC = () => {
 
   return (
     <div className="w-full">
-      <main className="mx-auto flex w-full max-w-[90vw] flex-1 flex-col px-4 pt-32 pb-10 sm:px-6 md:pt-36 xl:max-w-xl">
+      <main className="mx-auto flex w-full max-w-[90vw] flex-1 flex-col px-4 pt-6 sm:pt-8 pb-10 sm:px-6 xl:max-w-xl">
         {/* Back */}
         <button
           type="button"

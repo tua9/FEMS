@@ -1,5 +1,6 @@
 
 import React from 'react';
+import { PageHeader } from '@/components/shared/PageHeader';
 
 const CATEGORIES = [
   { id: 'elec', name: 'Electrical', icon: 'bolt' },
@@ -16,11 +17,11 @@ const LecturerReportIssue: React.FC = () => {
   };
 
   return (
-    <div className="pt-32 pb-16 px-6 max-w-4xl mx-auto w-full animate-in fade-in duration-500">
-      <div className="mb-8 text-left">
-        <h2 className="text-4xl font-extrabold text-[#1E2B58] dark:text-white mb-2 tracking-tight">Report an Issue</h2>
-        <p className="text-slate-500 dark:text-slate-400 text-sm">Submit a maintenance request for university facilities or equipment.</p>
-      </div>
+    <div className="pt-6 sm:pt-8 pb-16 px-6 max-w-4xl mx-auto w-full animate-in fade-in duration-500">
+      <PageHeader
+        title="Report an Issue"
+        subtitle="Submit a maintenance request for university facilities or equipment."
+      />
 
       <div className="glass-card p-6 mb-8 flex flex-col sm:flex-row items-center justify-between rounded-4xl gap-4">
         <div className="flex items-center gap-4">

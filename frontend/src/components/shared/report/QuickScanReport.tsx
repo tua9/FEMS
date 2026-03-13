@@ -71,7 +71,7 @@ export const QuickScanReport: React.FC<QuickScanReportProps> = ({ onQRDetected }
 
     return (
         <>
-            <div className="glass-card bg-white/60 dark:bg-slate-800/70 p-[1.5rem] mb-[2rem] flex flex-col sm:flex-row items-center justify-between rounded-[2rem] gap-[1rem] shadow-[0_10px_30px_-5px_rgba(30,43,88,0.1)] border border-white dark:border-white/10">
+            <div className="dashboard-card p-[1.5rem] mb-[2rem] flex flex-col sm:flex-row items-center justify-between rounded-[2rem] gap-[1rem]">
                 <div className="flex items-center gap-[1rem]">
                     <div className="w-[3rem] h-[3rem] bg-white/40 dark:bg-white/5 border border-white/50 dark:border-white/10 rounded-[1rem] flex items-center justify-center shrink-0">
                         <Scan className="text-[#1E2B58] dark:text-slate-300 w-[1.5rem] h-[1.5rem]" strokeWidth={2.5} />
@@ -93,10 +93,10 @@ export const QuickScanReport: React.FC<QuickScanReportProps> = ({ onQRDetected }
             {/* ── QR Scan Modal ──────────────────────────────────────────────── */}
             {showModal && (
                 <div
-                    className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm px-4"
+                    className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm px-4"
                     onClick={e => { if (e.target === e.currentTarget) closeModal(); }}
                 >
-                    <div className="glass-card rounded-[2rem] p-8 w-full max-w-sm shadow-2xl shadow-[#1E2B58]/20 relative animate-in fade-in zoom-in-95 duration-200">
+                    <div className="dashboard-card rounded-[2rem] p-8 w-full max-w-sm shadow-2xl shadow-[#1E2B58]/20 relative animate-in fade-in zoom-in-95 duration-200">
                         {/* Close */}
                         <button
                             onClick={closeModal}

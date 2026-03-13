@@ -10,7 +10,7 @@ interface StatCardProps {
 
 export const StatCard: React.FC<StatCardProps> = ({ title, value, icon: Icon }) => {
     return (
-        <Card className="glass-card border-none rounded-3xl lg:rounded-[2rem] overflow-hidden">
+        <Card className="dashboard-card border-none rounded-3xl lg:rounded-4xl overflow-hidden">
             <CardContent className="p-4 lg:p-6 flex items-center gap-4 lg:gap-5">
                 <div className="w-12 h-12 lg:w-14 lg:h-14 rounded-xl lg:rounded-2xl flex items-center justify-center stat-card-icon shrink-0">
                     <Icon className="w-6 h-6 lg:w-7 lg:h-7" />

@@ -38,7 +38,7 @@ const BorrowingDetailModal: React.FC<BorrowingDetailModalProps> = ({
 
     return (
         createPortal(
-            <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+            <div className="fixed inset-0 z-100 flex items-center justify-center px-4 py-6 bg-black/30 backdrop-blur-sm">
                 <style dangerouslySetInnerHTML={{
                     __html: `
                     .no-scrollbar::-webkit-scrollbar { display: none; }
@@ -46,21 +46,18 @@ const BorrowingDetailModal: React.FC<BorrowingDetailModalProps> = ({
                 ` }} />
                 {/* Backdrop */}
                 <div
-                    className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm transition-opacity"
+                    className="absolute inset-0"
                     onClick={onClose}
                 ></div>
 
                 {/* Modal Content */}
-                <div className="relative w-full max-w-2xl bg-white/95 dark:bg-slate-800/95 backdrop-blur-2xl rounded-[40px] border-2 border-white/50 dark:border-white/10 shadow-3xl overflow-hidden flex flex-col max-h-[90vh] animate-in fade-in zoom-in duration-300">
+                <div className="relative w-full max-w-2xl dashboard-card rounded-4xl shadow-2xl shadow-[#1E2B58]/20 overflow-hidden flex flex-col max-h-[90vh] animate-in fade-in zoom-in-95 duration-200">
 
-                    {/* Header Section with soft blending */}
-                    <div className="p-10 pb-6 relative overflow-hidden">
-                        {/* Soft background glow */}
-                        <div className="absolute top-0 left-0 w-full h-40 bg-gradient-to-b from-blue-50/50 dark:from-blue-900/10 to-transparent"></div>
-
+                    {/* Header Section */}
+                    <div className="px-10 pt-8 pb-6 relative border-b border-black/8 dark:border-white/10">
                         <button
                             onClick={onClose}
-                            className="absolute top-8 right-10 w-11 h-11 flex items-center justify-center hover:bg-slate-100 dark:hover:bg-slate-700/50 rounded-full transition-colors text-slate-400 z-20 border-2 border-transparent hover:border-slate-200 dark:hover:border-slate-600"
+                            className="absolute top-6 right-8 w-8 h-8 flex items-center justify-center text-[#1E2B58]/50 hover:text-[#1E2B58] hover:bg-[#1E2B58]/8 dark:text-white/50 dark:hover:text-white dark:hover:bg-white/10 rounded-full transition-colors z-20"
                         >
                             <span className="material-symbols-outlined text-xl">close</span>
                         </button>
@@ -76,6 +73,7 @@ const BorrowingDetailModal: React.FC<BorrowingDetailModalProps> = ({
                             <h3 className="text-3xl font-black text-[#1A2B56] dark:text-white tracking-tight">Loan Specifications</h3>
                         </div>
                     </div>
+
 
                     <div className="p-10 pt-0 overflow-y-auto no-scrollbar space-y-8 relative z-10">
                         {/* Borrower & Equipment Grid */}
@@ -118,7 +116,7 @@ const BorrowingDetailModal: React.FC<BorrowingDetailModalProps> = ({
                         </div>
 
                         {/* Schedule & Timing */}
-                        <div className="p-8 rounded-[32px] bg-slate-50/50 dark:bg-slate-900/20 border-2 border-slate-100 dark:border-slate-800">
+                        <div className="p-8 rounded-4xl bg-slate-50/50 dark:bg-slate-900/20 border-2 border-slate-100 dark:border-slate-800">
                             <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                                 <div className="space-y-1">
                                     <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Scheduled Due Date</p>
@@ -163,7 +161,7 @@ const BorrowingDetailModal: React.FC<BorrowingDetailModalProps> = ({
 
                         {/* Important Warning if Overdue */}
                         {record.status === 'Overdue' && (
-                            <div className="p-6 rounded-[32px] bg-red-50/50 dark:bg-red-900/10 border-2 border-red-200 dark:border-red-900/30 flex gap-4">
+                            <div className="p-6 rounded-4xl bg-red-50/50 dark:bg-red-900/10 border-2 border-red-200 dark:border-red-900/30 flex gap-4">
                                 <span className="material-symbols-outlined text-red-500">warning</span>
                                 <div>
                                     <p className="text-sm font-bold text-red-700 dark:text-red-400">Compliance Warning</p>

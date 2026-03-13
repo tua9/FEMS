@@ -10,7 +10,7 @@ const Dashboard: React.FC = () => {
     <PageShell
       title="System Status"
       subtitle="Real-time facility maintenance and ticket management"
-      topPadding="pt-32"
+      topPadding="pt-6"
       className="pb-16 px-6"
     >
       {/* Stats Cards */}

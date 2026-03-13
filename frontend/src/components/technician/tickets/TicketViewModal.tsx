@@ -4,6 +4,7 @@ import {
   MODAL_OVERLAY, MODAL_CARD, CLOSE_BTN,
   BTN_SECONDARY, SECTION_LABEL, INFO_CARD, CHIP,
 } from '@/components/technician/common/modalStyles';
+import ModalPortal from '@/components/technician/common/ModalPortal';
 
 interface Props {
   ticket: Ticket;
@@ -35,6 +36,7 @@ const TicketViewModal: React.FC<Props> = ({
   };
 
   return (
+    <ModalPortal>
     <div className={MODAL_OVERLAY} onClick={onClose}>
       <div
         className={`${MODAL_CARD} max-w-md`}
@@ -187,6 +189,7 @@ const TicketViewModal: React.FC<Props> = ({
         </div>
       </div>
     </div>
+    </ModalPortal>
   );
 };
 

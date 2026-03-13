@@ -33,7 +33,7 @@ const UpcomingReturnCards: React.FC<UpcomingReturnCardsProps> = ({ records, onVi
     if (attentionRecords.length === 0) return null;
 
     return (
-        <div className="mt-12 bg-white/40 dark:bg-slate-800/60 p-8 ambient-shadow border-amber-200/50 dark:border-amber-900/30 rounded-[32px] border backdrop-blur-xl">
+        <div className="mt-12 dashboard-card p-8 rounded-4xl">
             <div className="flex items-center justify-between mb-6">
                 <div>
                     <h3 className="text-xl font-extrabold text-[#1A2B56] dark:text-white tracking-tight flex items-center gap-2">

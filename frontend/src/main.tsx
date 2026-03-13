@@ -23,6 +23,7 @@ import HomePage from "./pages/student/HomePage.tsx";
 import LoginPage from "./pages/student/LoginPage.tsx";
 import ForgotPasswordPage from "./pages/student/ForgotPasswordPage.tsx";
 import ReportPage from "./pages/student/ReportPage.tsx";
+import GuestReportPage from "./pages/guest/GuestReportPage.tsx";
 
 // Shared pages
 import NotificationsPage from "./pages/shared/NotificationsPage.tsx";
@@ -68,6 +69,9 @@ createRoot(document.getElementById("root")!).render(
             <Route path="/login" element={<LoginPage />} />
             <Route path="/forgot-password" element={<ForgotPasswordPage />} />
           </Route>
+
+          {/* Public route – guest report (không cần login) */}
+          <Route path="/report-issue" element={<GuestReportPage />} />
 
           {/* Root "/" → redirect theo role */}
           <Route path="/" element={<RoleRedirect />} />

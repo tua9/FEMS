@@ -10,7 +10,7 @@ interface BrokenAttentionCardProps {
 
 const BrokenAttentionCard: React.FC<BrokenAttentionCardProps> = ({ items, onViewDetails, onUpdateStatus, onViewAll }) => {
     return (
-        <div className="mt-12 p-8 ambient-shadow border border-white/40 dark:border-red-900/30 rounded-[32px] bg-white/40 dark:bg-slate-800/80 backdrop-blur-[30px] transition-none">
+        <div className="mt-12 dashboard-card p-8 rounded-4xl transition-none">
             <div className="flex items-center justify-between mb-6">
                 <div>
                     <h3 className="text-xl font-extrabold text-[#1A2B56] dark:text-white tracking-tight flex items-center gap-2">

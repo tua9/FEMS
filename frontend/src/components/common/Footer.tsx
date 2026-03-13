@@ -21,7 +21,7 @@ export default function Footer({ role, className }: FooterProps) {
     <footer
       className={
         className ??
-        'mt-4 flex w-full shrink-0 flex-col items-center justify-center gap-2 border-t border-[#1E2B58]/10 px-4 py-5 text-center opacity-40 dark:border-white/10'
+        'mt-4 flex w-full shrink-0 flex-col items-center justify-center gap-2 border-t border-[#1E2B58]/50 px-4 py-5 text-center opacity-50 dark:border-white/50'
       }
     >
       <div className="flex items-center justify-center gap-5 text-[#1E2B58] dark:text-white">

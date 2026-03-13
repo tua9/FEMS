@@ -44,7 +44,7 @@ export const StatsOverview: React.FC<StatsOverviewProps> = ({
     const avgAvailability = Math.round(chartData.reduce((s, d) => s + d.cur, 0) / chartData.length);
 
     return (
-        <div className="glass-card bg-[#F8F9FB] dark:bg-slate-800/40 border-none sm:border-solid sm:border border-white/60 dark:border-white/10 rounded-[1.5rem] sm:rounded-[2rem] p-[1.5rem] sm:p-[2rem] lg:p-[3rem] mb-[2.5rem] shadow-[0_8px_32px_0_rgba(30,43,88,0.05)] relative overflow-hidden">
+        <div className="dashboard-card rounded-3xl sm:rounded-4xl p-6 sm:p-8 lg:p-12 mb-10 relative overflow-hidden">
             {/* Background glow */}
             <div className="absolute -top-[6rem] -right-[6rem] w-[16rem] h-[16rem] bg-sky-400/10 rounded-full blur-3xl pointer-events-none" />
 
@@ -134,7 +134,7 @@ export const StatsOverview: React.FC<StatsOverviewProps> = ({
                     {/* Small detail cards */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-[1rem] pt-[0.5rem]">
                         {/* Peak / Selected subject card */}
-                        <div className="p-[1.5rem] rounded-[1.5rem] bg-white/60 dark:bg-slate-800/60 border border-white/60 dark:border-white/5 relative transition-all duration-300">
+                        <div className="dashboard-card p-6 rounded-3xl relative transition-all duration-300">
                             {activeSubject && (
                                 <button
                                     onClick={() => onSubjectChange(null)}
@@ -164,7 +164,7 @@ export const StatsOverview: React.FC<StatsOverviewProps> = ({
                         </div>
 
                         {/* Availability card */}
-                        <div className="p-[1.5rem] rounded-[1.5rem] bg-white/60 dark:bg-slate-800/60 border border-white/60 dark:border-white/5">
+                        <div className="dashboard-card p-6 rounded-3xl">
                             <p className="text-[0.6875rem] font-bold text-slate-500 dark:text-slate-400 mb-[0.25rem] uppercase tracking-wider">Resource Availability</p>
                             <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-2">
                                 <div>

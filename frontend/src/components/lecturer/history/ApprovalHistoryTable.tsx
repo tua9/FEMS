@@ -60,7 +60,7 @@ export const ApprovalHistoryTable: React.FC<ApprovalHistoryTableProps> = ({
     items, currentPage, totalPages, totalItems, onPageChange, onViewDetail,
 }) => {
     return (
-        <div className="glass-card bg-white/60 dark:bg-slate-900/40 rounded-[1.5rem] sm:rounded-[2rem] overflow-hidden shadow-[0_10px_30px_-5px_rgba(30,43,88,0.1)] mb-[4rem] border border-white dark:border-white/10">
+        <div className="dashboard-card rounded-3xl sm:rounded-4xl overflow-hidden mb-16">
             <div className="overflow-x-auto hide-scrollbar">
                 <table className="w-full border-collapse min-w-[900px]">
                     <thead>
@@ -72,7 +72,7 @@ export const ApprovalHistoryTable: React.FC<ApprovalHistoryTableProps> = ({
                             ))}
                         </tr>
                     </thead>
-                    <tbody className="divide-y divide-black/5 dark:divide-white/5 bg-white/40 dark:bg-black/10">
+                    <tbody className="divide-y divide-black/5 dark:divide-white/5">
                         {items.length === 0 ? (
                             <tr>
                                 <td colSpan={7} className="px-[2rem] py-[4rem] text-center text-slate-400 dark:text-slate-500 font-bold text-sm">

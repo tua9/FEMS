@@ -84,7 +84,7 @@ const ReturnCalendar: React.FC<ReturnCalendarProps> = ({ records = [], onViewDet
     const selectedReturns = selectedDay ? derivedReturns[selectedDay] : null;
 
     return (
-        <div className="bg-white/40 dark:bg-slate-800/60 p-8 ambient-shadow border border-white/40 dark:border-white/10 rounded-[32px] backdrop-blur-xl flex flex-col transition-all duration-300">
+        <div className="dashboard-card p-8 rounded-4xl flex flex-col transition-all duration-300">
             {/* Header ... */}
             <div className="flex items-center justify-between mb-6">
                 <div>
@@ -92,7 +92,7 @@ const ReturnCalendar: React.FC<ReturnCalendarProps> = ({ records = [], onViewDet
                         <span className="material-symbols-outlined text-[#1A2B56] dark:text-blue-400">calendar_month</span>
                         Return Schedule
                     </h3>
-                    <div className="glass-card !rounded-[1.25rem] flex items-center mt-1.5">
+                    <div className="dashboard-card rounded-[1.25rem]! flex items-center mt-1.5">
                         <CustomDropdown
                             value={String(currentMonth)}
                             options={monthNames.map((name, idx) => ({ value: String(idx), label: name }))}

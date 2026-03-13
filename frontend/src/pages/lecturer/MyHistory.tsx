@@ -8,21 +8,21 @@ import { HistoryFilterBar } from '../../components/lecturer/history/HistoryFilte
 
 import {
     ReportHistoryTable,
-    ReportHistoryItem,
+    type ReportHistoryItem,
     ALL_REPORT_HISTORY,
-    ReportSeverity,
+    type ReportSeverity,
 } from '../../components/lecturer/history/ReportHistoryTable';
 
 import {
     BorrowHistoryTable,
-    BorrowHistoryItem,
+    type BorrowHistoryItem,
     ALL_BORROW_HISTORY,
-    BorrowStatus,
+    type BorrowStatus,
 } from '../../components/lecturer/history/BorrowHistoryTable';
 
 import {
     ApprovalHistoryTable,
-    ApprovalHistoryItem,
+    type ApprovalHistoryItem,
     ALL_APPROVAL_HISTORY,
 } from '../../components/lecturer/history/ApprovalHistoryTable';
 
@@ -112,7 +112,7 @@ export const MyHistory: React.FC = () => {
     const filteredBorrow = useMemo(() => {
         const q = searchTerm.toLowerCase();
         return ALL_BORROW_HISTORY.filter(b => {
-            const matchSearch = !q || b.id.toLowerCase().includes(q) || b.course.toLowerCase().includes(q) || b.equipmentName.toLowerCase().includes(q);
+            const matchSearch = !q || b.id.toLowerCase().includes(q) || (b.course || '').toLowerCase().includes(q) || (b.equipmentName || '').toLowerCase().includes(q);
             const matchStatus = statusFilter === 'All' || b.status === statusFilter.toUpperCase() as BorrowStatus;
             return matchSearch && matchStatus;
         });
@@ -125,6 +125,9 @@ export const MyHistory: React.FC = () => {
     const filteredApproval = useMemo(() => {
         const q = searchTerm.toLowerCase();
         return ALL_APPROVAL_HISTORY.filter(a => {
+            // Logic updated: Only show approval history for items that have been APPROVED
+            if (a.decision !== 'APPROVED') return false;
+
             const matchSearch   = !q || a.id.toLowerCase().includes(q) || a.studentName.toLowerCase().includes(q) || a.equipment.toLowerCase().includes(q);
             const matchDecision = statusFilter === 'All' || a.decision === statusFilter.toUpperCase();
             return matchSearch && matchDecision;
@@ -141,7 +144,7 @@ export const MyHistory: React.FC = () => {
     const FILTER_CONFIG: Record<Tab, { label: string; options: string[]; placeholder: string }> = {
         report:   { label: 'Severity', options: ['All', 'Critical', 'High', 'Medium', 'Low'],  placeholder: 'Search by Report ID, category, or location…'  },
         borrow:   { label: 'Status',   options: ['All', 'Borrowed', 'Returned', 'Overdue'],    placeholder: 'Search by ID, course, or equipment…'            },
-        approval: { label: 'Decision', options: ['All', 'Approved', 'Rejected'],               placeholder: 'Search by ID, student name, or equipment…'      },
+        approval: { label: 'Decision', options: ['All', 'Approved'],                           placeholder: 'Search by ID, student name, or equipment…'      },
     };
 
     // ── Export CSV ─────────────────────────────────────────────────────────────
@@ -176,7 +179,7 @@ export const MyHistory: React.FC = () => {
 
     return (
         <div className="w-full">
-            <main className="pt-32 md:pt-36 pb-10 px-4 sm:px-6 w-full max-w-[90vw] xl:max-w-7xl mx-auto flex-1 flex flex-col overflow-hidden">
+            <main className="pt-6 sm:pt-8 pb-10 px-4 sm:px-6 w-full max-w-[90vw] xl:max-w-7xl mx-auto flex-1 flex flex-col overflow-hidden">
                 <div className="w-full">
                     <HistoryHeader />
 
@@ -204,23 +207,23 @@ export const MyHistory: React.FC = () => {
 
                         {activeTab === 'report' && (
                             <ReportHistoryTable
-                                items={pagedReports}
+                                items={pagedReports as any}
                                 currentPage={reportPage}
                                 totalPages={reportPages}
                                 totalItems={filteredReports.length}
                                 onPageChange={setReportPage}
-                                onViewDetail={item => setModal({ type: 'report', item })}
+                                onViewDetail={item => setModal({ type: 'report', item: item as any })}
                             />
                         )}
 
                         {activeTab === 'borrow' && (
                             <BorrowHistoryTable
-                                items={pagedBorrow}
+                                items={pagedBorrow as any}
                                 currentPage={borrowPage}
                                 totalPages={borrowPages}
                                 totalItems={filteredBorrow.length}
                                 onPageChange={setBorrowPage}
-                                onViewDetail={item => setModal({ type: 'borrow', item })}
+                                onViewDetail={item => setModal({ type: 'borrow', item: item as any })}
                             />
                         )}
 
@@ -241,10 +244,10 @@ export const MyHistory: React.FC = () => {
             {/* ── Detail Modals ─────────────────────────────────────────────── */}
             {modal && (
                 <div
-                    className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm px-4"
+                    className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm px-4"
                     onClick={e => { if (e.target === e.currentTarget) setModal(null); }}
                 >
-                    <div className="glass-card rounded-[2rem] p-8 w-full max-w-md shadow-2xl shadow-[#1E2B58]/20 relative animate-in fade-in zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto">
+                    <div className="dashboard-card rounded-4xl p-8 w-full max-w-md shadow-2xl shadow-[#1E2B58]/20 relative animate-in fade-in zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto">
                         {/* Close */}
                         <button
                             onClick={() => setModal(null)}
@@ -281,7 +284,7 @@ export const MyHistory: React.FC = () => {
                                         ))}
                                         <div className="flex justify-between items-center text-sm">
                                             <span className="text-[#1E2B58]/60 dark:text-white/50 font-medium">Severity</span>
-                                            <span className={`text-[0.625rem] font-bold px-3 py-1 rounded-full border uppercase tracking-wider ${SEVERITY_COLORS[r.severity]}`}>{r.severity}</span>
+                                            <span className={`text-[0.625rem] font-bold px-3 py-1 rounded-full border uppercase tracking-wider ${SEVERITY_COLORS[r.severity as ReportSeverity] || SEVERITY_COLORS.MEDIUM}`}>{r.severity}</span>
                                         </div>
                                         <div className="flex justify-between items-center text-sm pt-2 border-t border-[#1E2B58]/10 dark:border-white/10">
                                             <span className="text-[#1E2B58]/60 dark:text-white/50 font-medium">Status</span>
