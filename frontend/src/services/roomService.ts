@@ -19,6 +19,11 @@ export const roomService = {
     return res.data;
   },
 
+  getByBuildingId: async (buildingId: string): Promise<Room[]> => {
+    const res = await api.get(`/rooms/building/${buildingId}`);
+    return res.data;
+  },
+
   create: async (payload: CreateRoomPayload): Promise<Room> => {
     const res = await api.post("/rooms", payload);
     return res.data.room || res.data;

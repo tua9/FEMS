@@ -63,9 +63,14 @@ const deleteRoom = async (id) => {
   return { message: 'Delete success' }
 }
 
+const getRoomsByBuilding = async (buildingId) => {
+  return await Room.find({ building_id: buildingId }).populate('building_id')
+}
+
 export const roomService = {
   createRoom,
   getAllRooms,
+  getRoomsByBuilding,
   getRoomById,
   updateRoom,
   deleteRoom,

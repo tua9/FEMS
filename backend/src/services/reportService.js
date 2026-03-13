@@ -3,13 +3,14 @@ import Report from '../models/Report.js'
 import ApiError from '../utils/ApiError.js'
 
 const createReport = async (body) => {
-  const { user_id, equipment_id, room_id, description, imageUrl, imageId } =
+  const { user_id, equipment_id, room_id, type, description, imageUrl, imageId } =
     body
 
   const newReport = await Report.create({
     user_id,
     equipment_id,
     room_id,
+    type,
     description,
     imageUrl,
     imageId,
@@ -25,7 +26,11 @@ const getAllReports = async () => {
   return await Report.find()
     .populate('user_id', 'displayName email')
     .populate('equipment_id', 'name category')
-    .populate('room_id', 'name type')
+    .populate({
+      path: 'room_id',
+      select: 'name type building_id',
+      populate: { path: 'building_id', select: 'name' }
+    })
     .populate('approved_by', 'displayName')
 }
 
@@ -33,7 +38,11 @@ const getReportById = async (id) => {
   const report = await Report.findById(id)
     .populate('user_id', 'displayName email')
     .populate('equipment_id', 'name category')
-    .populate('room_id', 'name type')
+    .populate({
+      path: 'room_id',
+      select: 'name type building_id',
+      populate: { path: 'building_id', select: 'name' }
+    })
     .populate('approved_by', 'displayName')
 
   if (!report) {
@@ -65,7 +74,11 @@ const deleteReport = async (id) => {
 const getPersonalReports = async (userId) => {
   return await Report.find({ user_id: userId })
     .populate('equipment_id', 'name category')
-    .populate('room_id', 'name type')
+    .populate({
+      path: 'room_id',
+      select: 'name type building_id',
+      populate: { path: 'building_id', select: 'name' }
+    })
     .populate('approved_by', 'displayName')
 }
 

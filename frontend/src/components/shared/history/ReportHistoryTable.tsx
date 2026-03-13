@@ -2,6 +2,7 @@ import { Armchair, ChevronLeft, ChevronRight, Computer, Eye, Zap } from 'lucide-
 import React from 'react';
 import { StatusBadge } from '@/components/shared/ui/StatusBadge';
 import type { Report } from '@/types/report';
+import { formatDisplayDate } from '@/utils/dateUtils';
 
 export type ReportSeverity = "CRITICAL" | "HIGH" | "MEDIUM" | "LOW";
 export interface ReportHistoryItem { id: string; date: string; category: string; location: string; severity: string; status: string; block?: string; icon?: any; }
@@ -49,14 +50,6 @@ export const ReportHistoryTable: React.FC<ReportHistoryTableProps> = ({
         return Armchair;
     };
 
-    const formatDate = (dateStr?: string) => {
-        if (!dateStr) return '-';
-        return new Date(dateStr).toLocaleDateString("en-US", {
-            month: "short",
-            day: "numeric",
-            year: "numeric"
-        });
-    };
 
     return (
         <div className="dashboard-card rounded-[1.5rem] sm:rounded-[2rem] overflow-hidden mb-[4rem]">
@@ -82,6 +75,8 @@ export const ReportHistoryTable: React.FC<ReportHistoryTableProps> = ({
                             const Icon = getIcon(item.type);
                             const equipment = item.equipment_id && typeof item.equipment_id !== 'string' ? item.equipment_id : null;
                             const room = item.room_id && typeof item.room_id !== 'string' ? item.room_id : null;
+                            const building: any = room && room.building_id && typeof room.building_id !== 'string' ? room.building_id : null;
+                            const locationStr = room ? (building ? `${building.name}, ${room.name}` : room.name) : 'Unknown';
                             
                             // Mock severity based on type for visual purposes 
                             const severity = item.type === 'equipment' ? 'HIGH' : 'MEDIUM';
@@ -99,7 +94,7 @@ export const ReportHistoryTable: React.FC<ReportHistoryTableProps> = ({
                                     </td>
                                     <td className="px-[2rem] py-[1.5rem]">
                                         <span className="text-[0.875rem] font-bold text-[#1E2B58] dark:text-white">
-                                            {formatDate(item.createdAt)}
+                                            {formatDisplayDate(item.createdAt)}
                                         </span>
                                     </td>
                                     <td className="px-[2rem] py-[1.5rem]">
@@ -112,7 +107,7 @@ export const ReportHistoryTable: React.FC<ReportHistoryTableProps> = ({
                                     </td>
                                     <td className="px-[2rem] py-[1.5rem]">
                                         <p className="font-bold text-[#1E2B58] dark:text-white text-[0.875rem] leading-none mb-[0.25rem]">
-                                            {room ? room.name : 'Unknown'}
+                                            {locationStr}
                                         </p>
                                     </td>
                                     <td className="px-[2rem] py-[1.5rem] text-center">

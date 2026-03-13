@@ -24,6 +24,7 @@ import {
   EquipmentStatus,
 } from "../../components/lecturer/equipment/EquipmentGrid";
 import { BorrowedEquipmentGrid } from "../../components/lecturer/equipment/BorrowedEquipmentGrid";
+import { getTodayLocal, getTomorrowLocal } from "@/utils/dateUtils";
 
 // ─── Static Equipment Data ────────────────────────────────────────────────────
 
@@ -246,10 +247,8 @@ export const EquipmentCatalog: React.FC = () => {
   };
 
   // ── Borrow modal ──────────────────────────────────────────────────────────
-  const today = new Date().toISOString().split("T")[0];
-  const tomorrow = new Date(Date.now() + 86_400_000)
-    .toISOString()
-    .split("T")[0];
+  const today = getTodayLocal();
+  const tomorrow = getTomorrowLocal();
 
   const openBorrowModal = (item: EquipmentItem) => {
     setBorrowingItem(item);

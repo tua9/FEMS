@@ -17,6 +17,10 @@ export interface Report {
   room_id?: {
     _id: string;
     name: string;
+    building_id?: {
+      _id: string;
+      name: string;
+    } | string | null;
   } | string | null;
   type: ReportType;
   status: ReportStatus;

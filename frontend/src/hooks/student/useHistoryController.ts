@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { useBorrowRequestStore } from "@/stores/useBorrowRequestStore";
 import { useReportStore } from "@/stores/useReportStore";
 import { useAuthStore } from "@/stores/useAuthStore";
@@ -12,10 +13,12 @@ export function useHistoryController(ITEMS_PER_PAGE: number = 6) {
   // Stores
   const { user } = useAuthStore();
   const { borrowRequests, loading: borrowLoading, fetchMyBorrowRequests } = useBorrowRequestStore();
-  const { reports, loading: reportLoading, fetchMyReports } = useReportStore();
+  const { myReports, loading: reportLoading, fetchMyReports } = useReportStore();
+  const [searchParams, setSearchParamsUrl] = useSearchParams();
 
   // State
-  const [activeTab, setActiveTab] = useState<Tab>("borrow");
+  const initialTab = (searchParams.get("tab") as Tab) || "borrow";
+  const [activeTab, setActiveTab] = useState<Tab>(initialTab);
   const [searchTerm, setSearchTerm] = useState("");
   const [dateFilter, setDateFilter] = useState("Last 30 Days");
   const [statusFilter, setStatusFilter] = useState("All");
@@ -34,7 +37,10 @@ export function useHistoryController(ITEMS_PER_PAGE: number = 6) {
 
   // Handlers
   const handleTabChange = (tab: any) => {
-    setActiveTab(tab as Tab);
+    const newTab = tab as Tab;
+    setActiveTab(newTab);
+    setSearchParamsUrl({ tab: newTab }, { replace: true });
+    
     setSearchTerm("");
     setStatusFilter("All");
     setReportPage(1);
@@ -52,7 +58,7 @@ export function useHistoryController(ITEMS_PER_PAGE: number = 6) {
   // Filter Reports
   const filteredReports = useMemo(() => {
     const q = searchTerm.toLowerCase();
-    return reports.filter((r: Report) => {
+    return myReports.filter((r: Report) => {
       const eqName = getEquipmentName(r.equipment_id).toLowerCase();
       const rmName = getRoomName(r.room_id).toLowerCase();
       const typeMatches = r.type && r.type.toLowerCase().includes(q);
@@ -64,7 +70,7 @@ export function useHistoryController(ITEMS_PER_PAGE: number = 6) {
       
       return matchSearch && matchSeverity;
     });
-  }, [reports, searchTerm, statusFilter]);
+  }, [myReports, searchTerm, statusFilter]);
 
   // Filter Borrow Requests
   const filteredBorrow = useMemo(() => {

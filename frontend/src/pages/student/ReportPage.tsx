@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { CheckCircle2, X, ArrowRight, ClipboardList } from "lucide-react";
 
@@ -12,77 +12,88 @@ import type {
   QRResult,
   ReportFormData,
   IssueCategory,
-  ReportEntry,
 } from "@/components/shared/report";
-
-interface SubmittedReport {
-  id: string;
-  subject: string;
-  location: string;
-  category: IssueCategory;
-  description: string;
-  date: string;
-}
+import { useReportStore } from "@/stores/useReportStore";
+import { useRoomStore } from "@/stores/useRoomStore";
+import { useEquipmentStore } from "@/stores/useEquipmentStore";
+import type { CreateReportPayload, ReportType } from "@/types/report";
 
 const ReportPage: React.FC = () => {
   const navigate = useNavigate();
 
-  const [prefillLocation, setPrefillLocation] = useState<string>("");
+  const [prefillRoomId, setPrefillRoomId] = useState<string>("");
+  const [prefillEquipmentId, setPrefillEquipmentId] = useState<string>("");
   const [prefillCategory, setPrefillCategory] = useState<
     IssueCategory | undefined
   >(undefined);
   const [prefillDescription, setPrefillDescription] = useState<string>("");
 
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submittedReport, setSubmittedReport] =
-    useState<SubmittedReport | null>(null);
+  const [submittedReportId, setSubmittedReportId] = useState<string | null>(null);
   const [showSuccess, setShowSuccess] = useState(false);
 
+  const { createReport, loading: isSubmitting, fetchMyReports } = useReportStore();
+  const { rooms, fetchAll: fetchRooms } = useRoomStore();
+  const { fetchAll: fetchEquipments } = useEquipmentStore();
+
+  useEffect(() => {
+    fetchRooms();
+    fetchEquipments();
+    fetchMyReports();
+  }, [fetchRooms, fetchEquipments, fetchMyReports]);
+
   const handleQRDetected = (result: QRResult) => {
-    setPrefillLocation(result.location);
+    setPrefillRoomId(result.roomId);
+    setPrefillEquipmentId(result.equipmentId);
     setPrefillCategory(result.category);
     setPrefillDescription(result.description);
   };
 
-  const handleFormSubmit = (data: ReportFormData) => {
-    setIsSubmitting(true);
-    setTimeout(() => {
-      const reportId = `#REP-${Math.floor(7800 + Math.random() * 200)}`;
-      const categoryLabels: Record<IssueCategory, string> = {
-        electrical: "Electrical",
-        plumbing: "Plumbing",
-        it: "IT Device",
-        furniture: "Furniture",
-        other: "Other",
-      };
-      const subject = `${categoryLabels[data.category]} Issue — ${data.location}`;
-      const today = new Date().toLocaleDateString("en-GB", {
-        day: "numeric",
-        month: "short",
-        year: "numeric",
-      });
-
-      setSubmittedReport({
-        id: reportId,
-        subject,
-        location: data.location,
-        category: data.category,
-        description: data.description,
-        date: today,
-      });
-      setIsSubmitting(false);
-      setShowSuccess(true);
-    }, 1500);
+  const mapCategoryToReportType = (category: IssueCategory): ReportType => {
+    switch (category) {
+      case "it":
+        return "equipment";
+      case "electrical":
+      case "plumbing":
+      case "furniture":
+        return "infrastructure";
+      case "other":
+      default:
+        return "other";
+    }
   };
 
-  const newReportEntry: ReportEntry | null = submittedReport
-    ? {
-        id: submittedReport.id,
-        subject: submittedReport.subject,
-        date: submittedReport.date,
-        status: "Pending",
+  const handleFormSubmit = async (data: ReportFormData) => {
+    try {
+      const payload: CreateReportPayload = {
+        type: mapCategoryToReportType(data.category),
+        room_id: data.room_id,
+        description: data.description,
+      };
+
+      if (data.equipment_id) {
+        payload.equipment_id = data.equipment_id;
       }
-    : null;
+
+      // If we supported actual image upload, we'd handle it here
+      // For now, API expects img?: string, we could leave empty or mock string if needed
+
+      await createReport(payload);
+      
+      // Update local state for success modal
+      setSubmittedReportId(`New Report submitted successfully.`);
+      setShowSuccess(true);
+      
+      // Reset form prefills
+      setPrefillRoomId("");
+      setPrefillEquipmentId("");
+      setPrefillCategory(undefined);
+      setPrefillDescription("");
+      
+    } catch (error) {
+      console.error("Failed to submit report:", error);
+      // Optional: show error toast here
+    }
+  };
 
   return (
     <div className="w-full">
@@ -92,22 +103,24 @@ const ReportPage: React.FC = () => {
         <div className="mb-[2rem] flex items-center gap-[1rem]">
           <div className="h-px flex-grow bg-slate-300 dark:bg-slate-700/50" />
           <span className="px-[0.5rem] text-[0.625rem] font-bold tracking-widest text-slate-400 uppercase">
-            Or create manual request
+            Or create manual request (Debug: {rooms?.length || 0} rooms loaded)
           </span>
           <div className="h-px flex-grow bg-slate-300 dark:bg-slate-700/50" />
         </div>
         <ReportManualForm
-          key={`${prefillLocation}-${prefillCategory}`}
-          prefillLocation={prefillLocation}
+          key={`${prefillRoomId}-${prefillEquipmentId}-${prefillCategory}`}
+          prefillRoomId={prefillRoomId}
+          prefillEquipmentId={prefillEquipmentId}
           prefillCategory={prefillCategory}
           prefillDescription={prefillDescription}
           onSubmit={handleFormSubmit}
           isSubmitting={isSubmitting}
+          rooms={rooms}
         />
-        <RecentReports newReport={newReportEntry} />
+        <RecentReports />
       </main>
 
-      {showSuccess && submittedReport && (
+      {showSuccess && submittedReportId && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 px-4 backdrop-blur-sm"
           onClick={(e) => e.target === e.currentTarget && setShowSuccess(false)}
@@ -129,19 +142,8 @@ const ReportPage: React.FC = () => {
               Your issue has been logged successfully.
             </p>
             <div className="mb-6 space-y-2.5 rounded-[1.25rem] bg-white/40 p-4 dark:bg-slate-800/40">
-              <div className="flex justify-between text-xs">
-                <span>Report ID</span>
-                <span className="font-black">{submittedReport.id}</span>
-              </div>
-              <div className="flex justify-between text-xs">
-                <span>Subject</span>
-                <span className="max-w-[11rem] truncate font-bold">
-                  {submittedReport.subject}
-                </span>
-              </div>
-              <div className="flex justify-between text-xs">
-                <span>Date</span>
-                <span className="font-bold">{submittedReport.date}</span>
+              <div className="flex justify-center text-center text-sm font-bold">
+                {submittedReportId}
               </div>
             </div>
             <div className="flex flex-col gap-3">

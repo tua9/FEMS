@@ -1,10 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { QrCode, Scan, X, CheckCircle2, RefreshCw, Laptop, Video, Zap, Thermometer } from 'lucide-react';
+import { useEquipmentStore } from '@/stores/useEquipmentStore';
 
 export interface QRResult {
     equipmentId: string;
     equipmentName: string;
-    location: string;
+    roomId: string;
+    locationName: string;
     category: 'electrical' | 'it' | 'plumbing' | 'furniture' | 'other';
     description: string;
 }
@@ -13,40 +15,73 @@ interface QuickScanReportProps {
     onQRDetected: (result: QRResult) => void;
 }
 
-const MOCK_QR_ITEMS: QRResult[] = [
-    { equipmentId: 'FPT-PJ-014',     equipmentName: '4K Laser Projector',   location: 'Room G402',       category: 'it',          description: 'Report issue with projector unit' },
-    { equipmentId: 'FPT-LAP-082',    equipmentName: 'MacBook Pro M2',        location: 'Room G405',       category: 'it',          description: 'Report issue with laptop device'   },
-    { equipmentId: 'FPT-SOCKET-107', equipmentName: 'Power Socket Panel',    location: 'Room A101',       category: 'electrical',  description: 'Electrical fault on socket panel'  },
-    { equipmentId: 'FPT-AC-033',     equipmentName: 'Air Conditioning Unit', location: 'Library Floor 2', category: 'plumbing',    description: 'AC unit needs maintenance'         },
-];
-
 const CATEGORY_ICONS: Record<QRResult['category'], React.ElementType> = {
     electrical: Zap,
-    it:         Laptop,
-    plumbing:   Thermometer,
-    furniture:  Video,
-    other:      QrCode,
+    it: Laptop,
+    plumbing: Thermometer,
+    furniture: Video,
+    other: QrCode,
 };
 
 type ScanState = 'scanning' | 'detected' | 'error';
 
 export const QuickScanReport: React.FC<QuickScanReportProps> = ({ onQRDetected }) => {
-    const [showModal,    setShowModal]    = useState(false);
-    const [scanState,    setScanState]    = useState<ScanState>('scanning');
-    const [scannedItem,  setScannedItem]  = useState<QRResult | null>(null);
+    const [showModal, setShowModal] = useState(false);
+    const [scanState, setScanState] = useState<ScanState>('scanning');
+    const [scannedItem, setScannedItem] = useState<QRResult | null>(null);
     const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+    const { equipments } = useEquipmentStore();
 
     // Simulate QR scanning
     useEffect(() => {
         if (showModal && scanState === 'scanning') {
             timerRef.current = setTimeout(() => {
-                const item = MOCK_QR_ITEMS[Math.floor(Math.random() * MOCK_QR_ITEMS.length)];
-                setScannedItem(item);
-                setScanState('detected');
+                let item: QRResult | null = null;
+
+                if (equipments && equipments.length > 0) {
+                    // Pick a random equipment
+                    const randomEq = equipments[Math.floor(Math.random() * equipments.length)];
+
+                    let cat: "electrical" | "it" | "plumbing" | "furniture" | "other" = "other";
+                    const eqCat = (randomEq.category || "").toLowerCase();
+                    if (eqCat.includes('it') || eqCat.includes('computer') || eqCat.includes('laptop')) cat = 'it';
+                    else if (eqCat.includes('furniture') || eqCat.includes('desk') || eqCat.includes('chair')) cat = 'furniture';
+                    else if (eqCat.includes('electric') || eqCat.includes('power')) cat = 'electrical';
+                    else if (eqCat.includes('plumb') || eqCat.includes('water') || eqCat.includes('ac')) cat = 'plumbing';
+
+                    let roomId = '';
+                    let locationName = 'Unknown Location';
+
+                    if (randomEq.room_id) {
+                        if (typeof randomEq.room_id === 'string') {
+                            roomId = randomEq.room_id;
+                        } else {
+                            roomId = randomEq.room_id._id;
+                            locationName = randomEq.room_id.name;
+                        }
+                    }
+
+                    item = {
+                        equipmentId: randomEq._id,
+                        equipmentName: randomEq.name,
+                        roomId: roomId,
+                        locationName: locationName,
+                        category: cat,
+                        description: `Issue with ${randomEq.name}`
+                    };
+                }
+
+                if (item && item.roomId) {
+                    setScannedItem(item);
+                    setScanState('detected');
+                } else {
+                    setScanState('error');
+                }
             }, 2000);
         }
         return () => { if (timerRef.current) clearTimeout(timerRef.current); };
-    }, [showModal, scanState]);
+    }, [showModal, scanState, equipments]);
 
     const openModal = () => {
         setScanState('scanning');
@@ -107,7 +142,9 @@ export const QuickScanReport: React.FC<QuickScanReportProps> = ({ onQRDetected }
 
                         <p className="text-[0.625rem] font-black uppercase tracking-widest text-[#1E2B58]/50 dark:text-white/40 mb-1">Quick Scan</p>
                         <h3 className="text-xl font-black text-[#1E2B58] dark:text-white mb-6">
-                            {scanState === 'scanning' ? 'Scanning QR Code…' : 'Equipment Detected'}
+                            {scanState === 'scanning' ? 'Scanning QR Code…'
+                                : scanState === 'error' ? 'Scan Failed'
+                                    : 'Equipment Detected'}
                         </h3>
 
                         {/* Camera frame */}
@@ -124,6 +161,13 @@ export const QuickScanReport: React.FC<QuickScanReportProps> = ({ onQRDetected }
                                     <QrCode className="w-16 h-16 text-[#1E2B58]/20 dark:text-white/20" />
                                     <p className="absolute bottom-3 text-[0.625rem] font-bold text-[#1E2B58]/50 dark:text-white/40 uppercase tracking-widest">Detecting…</p>
                                 </>
+                            ) : scanState === 'error' ? (
+                                <div className="flex flex-col items-center gap-3 p-4 text-center">
+                                    <div className="w-14 h-14 rounded-full bg-red-500/10 flex items-center justify-center">
+                                        <X className="w-8 h-8 text-red-500" />
+                                    </div>
+                                    <p className="text-sm text-slate-500">No equipment found matching QR code, or equipment has no room assigned.</p>
+                                </div>
                             ) : (
                                 <div className="flex flex-col items-center gap-3 p-4 text-center">
                                     <div className="w-14 h-14 rounded-full bg-emerald-500/10 flex items-center justify-center">
@@ -139,15 +183,15 @@ export const QuickScanReport: React.FC<QuickScanReportProps> = ({ onQRDetected }
                             <div className="bg-white/40 dark:bg-slate-800/40 rounded-[1.25rem] p-4 mb-5 space-y-2 text-sm">
                                 <div className="flex justify-between">
                                     <span className="text-[#1E2B58]/60 dark:text-white/50 font-medium text-xs">Equipment</span>
-                                    <span className="font-bold text-[#1E2B58] dark:text-white text-xs">{scannedItem.equipmentName}</span>
+                                    <span className="font-bold text-[#1E2B58] dark:text-white text-xs truncate max-w-[12rem]">{scannedItem.equipmentName}</span>
                                 </div>
                                 <div className="flex justify-between">
                                     <span className="text-[#1E2B58]/60 dark:text-white/50 font-medium text-xs">Asset ID</span>
-                                    <span className="font-bold text-[#1E2B58] dark:text-white text-xs">{scannedItem.equipmentId}</span>
+                                    <span className="font-bold text-[#1E2B58] dark:text-white text-xs truncate max-w-[12rem]">{scannedItem.equipmentId}</span>
                                 </div>
                                 <div className="flex justify-between">
                                     <span className="text-[#1E2B58]/60 dark:text-white/50 font-medium text-xs">Location</span>
-                                    <span className="font-bold text-[#1E2B58] dark:text-white text-xs">{scannedItem.location}</span>
+                                    <span className="font-bold text-[#1E2B58] dark:text-white text-xs truncate max-w-[12rem]">{scannedItem.locationName}</span>
                                 </div>
                             </div>
                         )}

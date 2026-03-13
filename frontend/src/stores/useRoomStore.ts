@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import type { Room } from "@/types/room";
-import { roomService, CreateRoomPayload } from "@/services/roomService";
+import { roomService, type CreateRoomPayload } from "@/services/roomService";
 
 type RoomStore = {
   rooms: Room[];
@@ -13,6 +13,7 @@ type RoomStore = {
   createRoom: (payload: CreateRoomPayload) => Promise<void>;
   updateRoom: (id: string, payload: Partial<CreateRoomPayload>) => Promise<void>;
   deleteRoom: (id: string) => Promise<void>;
+  fetchByBuildingId: (buildingId: string) => Promise<void>;
 };
 
 export const useRoomStore = create<RoomStore>((set) => ({
@@ -40,6 +41,18 @@ export const useRoomStore = create<RoomStore>((set) => ({
       set({ currentRoom: data });
     } catch (error: any) {
       set({ error: error?.response?.data?.message || "Cannot fetch room details" });
+    } finally {
+      set({ loading: false });
+    }
+  },
+
+  fetchByBuildingId: async (buildingId: string) => {
+    try {
+      set({ loading: true, error: null });
+      const data = await roomService.getByBuildingId(buildingId);
+      set({ rooms: data });
+    } catch (error: any) {
+      set({ error: error?.response?.data?.message || "Cannot fetch rooms by building" });
     } finally {
       set({ loading: false });
     }

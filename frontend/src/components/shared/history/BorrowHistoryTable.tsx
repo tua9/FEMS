@@ -2,6 +2,7 @@ import { AlertTriangle, Cable, ChevronLeft, ChevronRight, Eye, Laptop, Mic, Micr
 import React from 'react';
 import { StatusBadge } from '@/components/shared/ui/StatusBadge';
 import type { BorrowRequest } from '@/types/borrowRequest';
+import { formatDisplayDate } from '@/utils/dateUtils';
 
 export type BorrowStatus = "Returned" | "Overdue" | "Borrowed" | "Pending" | "Approved" | "Rejected" | "Cancelled";
 export interface BorrowHistoryItem { id: string; room: string; roomType: string; category: string; equipment: string; date: string; returnDate: string; status: string; icon?: any; course?: string; group?: string; equipmentName?: string; period?: string; }
@@ -44,14 +45,6 @@ export const BorrowHistoryTable: React.FC<BorrowHistoryTableProps> = ({
         return Projector;
     };
 
-    const formatDate = (dateStr: string) => {
-        if (!dateStr) return '-';
-        return new Date(dateStr).toLocaleDateString("en-US", {
-            month: "short",
-            day: "numeric",
-            year: "numeric"
-        });
-    };
 
     return (
         <div className="dashboard-card rounded-[1.5rem] sm:rounded-[2rem] overflow-hidden mb-[4rem]">
@@ -110,13 +103,13 @@ export const BorrowHistoryTable: React.FC<BorrowHistoryTableProps> = ({
                                     </td>
                                     <td className="px-[2rem] py-[1.5rem]">
                                         <span className="text-[0.75rem] font-bold text-[#1E2B58] dark:text-slate-300">
-                                            {formatDate(item.borrow_date)}
+                                            {formatDisplayDate(item.borrow_date)}
                                         </span>
                                     </td>
                                     <td className="px-[2rem] py-[1.5rem]">
                                         <span className={`text-[0.75rem] font-medium ${isOverdue ? 'text-red-500 font-bold flex items-center gap-1' : 'text-slate-600 dark:text-slate-400'}`}>
                                             {isOverdue && <AlertTriangle className="w-3.5 h-3.5 shrink-0" />}
-                                            {item.status === 'returned' || item.status === 'handed_over' ? formatDate(item.updatedAt || item.return_date) : formatDate(item.return_date)}
+                                            {item.status === 'returned' || item.status === 'handed_over' ? formatDisplayDate(item.updatedAt || item.return_date) : formatDisplayDate(item.return_date)}
                                         </span>
                                     </td>
                                     <td className="px-[2rem] py-[1.5rem] text-center">

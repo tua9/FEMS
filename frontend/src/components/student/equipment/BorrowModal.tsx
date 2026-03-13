@@ -5,6 +5,7 @@
 import React, { useState } from "react";
 import { X, ArrowRight, CalendarDays, FileText } from "lucide-react";
 import type { EquipmentItem } from "@/components/shared/equipment";
+import { getTomorrowLocal } from "@/utils/dateUtils";
 
 interface BorrowModalProps {
   item: EquipmentItem;
@@ -13,7 +14,7 @@ interface BorrowModalProps {
 }
 
 const BorrowModal: React.FC<BorrowModalProps> = ({ item, onClose, onSubmit }) => {
-  const tomorrow = new Date(Date.now() + 86_400_000).toISOString().split("T")[0];
+  const tomorrow = getTomorrowLocal();
   const [returnDate, setReturnDate] = useState(tomorrow);
   const [purpose, setPurpose] = useState("");
   const [formError, setFormError] = useState("");

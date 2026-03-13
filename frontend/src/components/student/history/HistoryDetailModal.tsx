@@ -2,7 +2,8 @@
  * HistoryDetailModal — Dialog xem chi tiết lịch sử mượn / báo cáo sự cố.
  * Tách ra từ BorrowHistoryPage để trang page gọn hơn.
  */
-import React from "react";
+import React, { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 import type { Report } from "@/types/report";
 import type { BorrowRequest } from "@/types/borrowRequest";
@@ -44,14 +45,29 @@ const HistoryDetailModal: React.FC<HistoryDetailModalProps> = ({ modal, onClose 
   const getRoomName = (room: any) => {
     if (!room) return "Unknown Room";
     if (typeof room === 'string') return room;
-    return room.name || "Unknown Room";
+    const building = room.building_id && typeof room.building_id !== 'string' ? room.building_id : null;
+    return building ? `${building.name}, ${room.name}` : (room.name || "Unknown Room");
   };
 
   const severity = isReport ? ((item as Report).type === 'equipment' ? 'HIGH' : 'MEDIUM') : null;
 
-  return (
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+    // Prevent scrolling behind modal
+    const originalStyle = window.getComputedStyle(document.body).overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = originalStyle;
+    };
+  }, []);
+
+  if (!mounted) return null;
+
+  return createPortal(
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4 backdrop-blur-sm"
+      className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/40 px-4 backdrop-blur-sm"
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
       <div className="glass-card animate-in fade-in zoom-in-95 relative w-full max-w-md rounded-4xl p-8 shadow-2xl duration-200">
@@ -159,7 +175,8 @@ const HistoryDetailModal: React.FC<HistoryDetailModalProps> = ({ modal, onClose 
           Close
         </button>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };
 

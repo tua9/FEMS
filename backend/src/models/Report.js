@@ -52,9 +52,8 @@ const reportSchema = new mongoose.Schema(
 )
 
 // Default sort by newest first
-reportSchema.pre('find', function (next) {
+reportSchema.pre('find', function () {
   this.sort({ createdAt: -1 })
-  next()
 })
 
 const Report = mongoose.model('Report', reportSchema)

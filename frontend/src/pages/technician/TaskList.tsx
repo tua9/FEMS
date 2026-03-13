@@ -11,6 +11,7 @@ import TicketViewModal from '@/components/technician/tickets/TicketViewModal';
 import TicketApproveModal from '@/components/technician/tickets/TicketApproveModal';
 import TicketRejectModal from '@/components/technician/tickets/TicketRejectModal';
 import { StartRepairModal, MarkResolvedModal } from '@/components/technician/tickets/TicketActionModals';
+import { getTodayLocal } from '@/utils/dateUtils';
 
 // ── Equipment types derived from mock data ────────────────────────────────────
 const EQUIPMENT_TYPES = [
@@ -64,7 +65,7 @@ function exportTicketsToCSV(tickets: Ticket[], status: TicketStatus) {
   const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
-  const date = new Date().toISOString().slice(0, 10);
+  const date = getTodayLocal();
   link.href = url;
   link.download = `tickets_${status.replace(' ', '_').toLowerCase()}_${date}.csv`;
   link.click();

@@ -47,11 +47,13 @@ export const useReportStore = create<ReportStore>((set) => ({
   createReport: async (payload: CreateReportPayload) => {
     try {
       set({ loading: true, error: null });
-      const newReport = await reportService.create(payload);
-      set((state) => ({ 
-        reports: [newReport, ...state.reports],
-        myReports: [newReport, ...state.myReports]
-      }));
+      await reportService.create(payload);
+      
+      // The backend returns only { message, report_id } instead of the full report.
+      // We must refetch the history to prevent crashes in the UI (e.g. RecentReports reading report._id).
+      const freshMyReports = await reportService.getPersonalHistory();
+      set({ myReports: freshMyReports });
+      
     } catch (error: any) {
       set({ error: error?.response?.data?.message || "Cannot create report" });
       throw error;
