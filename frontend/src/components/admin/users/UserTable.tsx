@@ -1,12 +1,12 @@
 import React from 'react';
-import type { User } from '../../../types/user';
+import { AdminUser } from '../../../types/admin.types';
 
 interface UserTableProps {
-    users: User[];
-    onOpenDetails?: (user: User) => void;
-    onEdit?: (user: User) => void;
-    onDelete?: (user: User) => void;
-    onToggleStatus?: (user: User) => void;
+    users: AdminUser[];
+    onOpenDetails?: (AdminUser: AdminUser) => void;
+    onEdit?: (AdminUser: AdminUser) => void;
+    onDelete?: (AdminUser: AdminUser) => void;
+    onToggleStatus?: (AdminUser: AdminUser) => void;
 }
 
 const UserTable: React.FC<UserTableProps> = ({ users, onOpenDetails, onEdit, onDelete, onToggleStatus }) => {
@@ -43,39 +43,39 @@ const UserTable: React.FC<UserTableProps> = ({ users, onOpenDetails, onEdit, onD
                 </thead>
                 <tbody>
                     {users.length > 0 ? (
-                        users.map(user => (
-                            <tr key={user._id} className="group cursor-pointer" onClick={() => onOpenDetails && onOpenDetails(user)}>
+                        users.map(AdminUser => (
+                            <tr key={AdminUser.id} className="group cursor-pointer" onClick={() => onOpenDetails && onOpenDetails(AdminUser)}>
                                 {/* AdminUser: avatar + name + email */}
                                 <td className={`p-3 rounded-l-xl ${rowBg}`}>
                                     <div className="flex items-center gap-3">
-                                        {user.avatarUrl ? (
-                                            <img alt={user.displayName} className="w-9 h-9 rounded-full object-cover flex-shrink-0 border-2 border-white dark:border-slate-600 shadow-sm" src={user.avatarUrl} />
+                                        {AdminUser.avatar ? (
+                                            <img alt={AdminUser.name} className="w-9 h-9 rounded-full object-cover flex-shrink-0 border-2 border-white dark:border-slate-600 shadow-sm" src={AdminUser.avatar} />
                                         ) : (
                                             <div className="w-9 h-9 rounded-full bg-[#1A2B56] text-white flex items-center justify-center font-bold text-sm flex-shrink-0 border-2 border-white dark:border-slate-600">
-                                                {user.displayName?.charAt(0) || user.username?.charAt(0)}
+                                                {AdminUser.name.charAt(0)}
                                             </div>
                                         )}
                                         <div className="min-w-0">
-                                            <p className="text-sm font-bold text-slate-800 dark:text-white truncate">{user.displayName}</p>
-                                            <p className="text-[10px] text-slate-500 dark:text-slate-400 font-semibold truncate">{user.email}</p>
+                                            <p className="text-sm font-bold text-slate-800 dark:text-white truncate">{AdminUser.name}</p>
+                                            <p className="text-[10px] text-slate-500 dark:text-slate-400 font-semibold truncate">{AdminUser.email}</p>
                                         </div>
                                     </div>
                                 </td>
 
                                 {/* ID */}
                                 <td className={`p-3 ${rowBg}`}>
-                                    <span className="text-xs font-medium text-slate-400 dark:text-slate-500 tracking-wide">{user._id}</span>
+                                    <span className="text-xs font-medium text-slate-400 dark:text-slate-500 tracking-wide">{AdminUser.id}</span>
                                 </td>
 
                                 {/* Role: plain text */}
                                 <td className={`p-3 text-sm font-medium text-slate-500 dark:text-slate-400 ${rowBg}`}>
-                                    {user.role}
+                                    {AdminUser.role}
                                 </td>
 
                                 {/* Status: pill badge */}
                                 <td className={`p-3 ${rowBg}`}>
-                                    <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider inline-flex items-center justify-center whitespace-nowrap ${getStatusStyle(user.avatarId === 'Inactive' ? 'Inactive' : 'Active')}`}>
-                                        {user.avatarId === 'Inactive' ? 'Inactive' : 'Active'}
+                                    <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider inline-flex items-center justify-center whitespace-nowrap ${getStatusStyle(AdminUser.status)}`}>
+                                        {AdminUser.status}
                                     </span>
                                 </td>
 
@@ -83,19 +83,19 @@ const UserTable: React.FC<UserTableProps> = ({ users, onOpenDetails, onEdit, onD
                                 <td className={`p-3 rounded-r-xl text-right ${rowBg}`} onClick={e => e.stopPropagation()}>
                                     <div className="flex items-center justify-end gap-1.5 text-slate-400 transition-opacity">
                                         <button
-                                            onClick={() => onEdit && onEdit(user)}
+                                            onClick={() => onEdit && onEdit(AdminUser)}
                                             className="p-1.5 hover:bg-white/80 dark:hover:bg-slate-600 rounded-lg transition-all text-slate-400 hover:text-[#1A2B56] dark:hover:text-blue-400 inline-flex items-center justify-center"
                                         >
                                             <span className="material-symbols-outlined text-[10px]">tune</span>
                                         </button>
                                         <button
-                                            onClick={() => onToggleStatus && onToggleStatus(user)}
-                                            className={`p-1.5 rounded-lg transition-all inline-flex items-center justify-center ${user.avatarId !== 'Inactive' ? 'hover:bg-amber-50 dark:hover:bg-amber-900/30 text-slate-400 hover:text-amber-500' : 'hover:bg-emerald-50 dark:hover:bg-emerald-900/30 text-slate-400 hover:text-emerald-500'}`}
+                                            onClick={() => onToggleStatus && onToggleStatus(AdminUser)}
+                                            className={`p-1.5 rounded-lg transition-all inline-flex items-center justify-center ${AdminUser.status !== 'Inactive' ? 'hover:bg-amber-50 dark:hover:bg-amber-900/30 text-slate-400 hover:text-amber-500' : 'hover:bg-emerald-50 dark:hover:bg-emerald-900/30 text-slate-400 hover:text-emerald-500'}`}
                                         >
-                                            <span className="material-symbols-outlined text-[10px]">{user.avatarId !== 'Inactive' ? 'person_off' : 'check_circle'}</span>
+                                            <span className="material-symbols-outlined text-[10px]">{AdminUser.status !== 'Inactive' ? 'person_off' : 'check_circle'}</span>
                                         </button>
                                         <button
-                                            onClick={() => onDelete && onDelete(user)}
+                                            onClick={() => onDelete && onDelete(AdminUser)}
                                             className="p-1.5 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition-all text-slate-400 hover:text-red-500 inline-flex items-center justify-center"
                                         >
                                             <span className="material-symbols-outlined text-[10px]">delete</span>

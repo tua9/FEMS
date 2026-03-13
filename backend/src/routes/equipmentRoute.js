@@ -18,9 +18,9 @@ router.get('/:id', getEquipmentById)
 
 // Admin/Tech routes
 router.use(protectedRoute)
-router.post('/', restrictTo('admin', 'technician'), createEquipment)
-router.put('/:id', restrictTo('admin', 'technician'), updateEquipment)
-router.patch('/:id', restrictTo('admin', 'technician'), updateEquipment)
-router.delete('/:id', restrictTo('admin', 'technician'), deleteEquipment)
+router.post('/', restrictTo('admin', 'Tech'), createEquipment)
+router.put('/:id', restrictTo('admin', 'Tech'), updateEquipment)
+router.patch('/:id', restrictTo('admin', 'Tech'), updateEquipment)
+router.delete('/:id', restrictTo('admin', 'Tech'), deleteEquipment)
 
 export default router

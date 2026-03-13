@@ -7,7 +7,7 @@ import { protectedRoute, restrictTo } from '../middlewares/authMiddlewares.js'
 
 const router = express.Router()
 
-router.use(protectedRoute, restrictTo('admin'))
+router.use(protectedRoute, restrictTo('Admin'))
 router.get('/dashboard/stats', getDashboardStats)
 router.get('/dashboard/chart', getDashboardChart)
 

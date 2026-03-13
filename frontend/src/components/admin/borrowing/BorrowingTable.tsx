@@ -1,17 +1,16 @@
 import React from 'react';
-import type { BorrowRequest } from '../../../types/borrowRequest';
+import { BorrowRecord } from '../../../types/admin.types';
 
 interface BorrowingTableProps {
-    records: BorrowRequest[];
+    records: BorrowRecord[];
     onApprove?: (recordId: string) => void;
-    onHandover?: (recordId: string) => void;
     onReject?: (recordId: string) => void;
     onReturn?: (recordId: string) => void;
     onAlert?: (recordId: string) => void;
-    onViewDetails?: (record: BorrowRequest) => void;
+    onViewDetails?: (record: BorrowRecord) => void;
 }
 
-const BorrowingTable: React.FC<BorrowingTableProps> = ({ records, onApprove, onHandover, onReject, onReturn, onAlert, onViewDetails }) => {
+const BorrowingTable: React.FC<BorrowingTableProps> = ({ records, onApprove, onReject, onReturn, onAlert, onViewDetails }) => {
     const [processingId, setProcessingId] = React.useState<string | null>(null);
     const [currentPage, setCurrentPage] = React.useState(1);
     const itemsPerPage = 5;
@@ -37,11 +36,11 @@ const BorrowingTable: React.FC<BorrowingTableProps> = ({ records, onApprove, onH
 
     const getStatusStyle = (status: string) => {
         switch (status) {
-            case 'pending': return 'bg-amber-100/50 dark:bg-amber-900/30 text-amber-500 dark:text-amber-400';
-            case 'approved': return 'bg-blue-100/50 dark:bg-blue-900/30 text-blue-500 dark:text-blue-400';
-            case 'handed_over': return 'bg-indigo-100/50 dark:bg-indigo-900/30 text-indigo-500 dark:text-indigo-400';
-            case 'returned': return 'bg-emerald-100/50 dark:bg-emerald-900/30 text-emerald-500 dark:text-emerald-400';
-            case 'rejected': return 'bg-orange-100/50 dark:bg-orange-900/30 text-orange-500 dark:text-orange-400';
+            case 'Pending': return 'bg-amber-100/50 dark:bg-amber-900/30 text-amber-500 dark:text-amber-400';
+            case 'Approved': return 'bg-blue-100/50 dark:bg-blue-900/30 text-blue-500 dark:text-blue-400';
+            case 'Returned': return 'bg-emerald-100/50 dark:bg-emerald-900/30 text-emerald-500 dark:text-emerald-400';
+            case 'Overdue': return 'bg-red-100/50 dark:bg-red-900/30 text-red-500 dark:text-red-400';
+            case 'Rejected': return 'bg-orange-100/50 dark:bg-orange-900/30 text-orange-500 dark:text-orange-400';
             default: return 'bg-slate-100/50 dark:bg-slate-800/60 text-slate-400 dark:text-slate-500';
         }
     };
@@ -68,36 +67,34 @@ const BorrowingTable: React.FC<BorrowingTableProps> = ({ records, onApprove, onH
                     </tr>
                 </thead>
                 <tbody>
-                    {currentRecords.map(record => {
-                        const borrower = typeof record.user_id === 'object' ? record.user_id : null;
-                        const equipment = typeof record.equipment_id === 'object' ? record.equipment_id : null;
-                        const borrowerName = borrower?.displayName || 'Unknown';
-                        const equipmentName = equipment?.name || 'Unknown Item';
-
-                        return (
-                            <tr
-                                key={record._id}
-                                onClick={() => onViewDetails?.(record)}
-                                className="group cursor-pointer transition-all hover:scale-[1.002] active:scale-[0.998]"
-                            >
-                                <td className={`p-3 rounded-l-lg ${rowBg}`}>
-                                    <div className="flex items-center gap-3">
+                    {currentRecords.map(record => (
+                        <tr
+                            key={record.id}
+                            onClick={() => onViewDetails?.(record)}
+                            className="group cursor-pointer transition-all hover:scale-[1.002] active:scale-[0.998]"
+                        >
+                            <td className={`p-3 rounded-l-lg ${rowBg}`}>
+                                <div className="flex items-center gap-3">
+                                    {record.borrowerAvatar ? (
+                                        <img alt={record.borrowerName} className="w-8 h-8 rounded-full object-cover shadow-sm border border-white dark:border-slate-600 flex-shrink-0" src={record.borrowerAvatar} />
+                                    ) : (
                                         <div className="w-8 h-8 rounded-full bg-[#1A2B56] text-white flex items-center justify-center font-semibold text-xs flex-shrink-0">
-                                            {borrowerName.charAt(0)}
+                                            {record.borrowerName.charAt(0)}
                                         </div>
-                                        <div className="min-w-0">
-                                            <p className="text-xs font-semibold text-slate-800 dark:text-white truncate">{borrowerName}</p>
-                                            <p className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">ID: {borrower?._id || 'N/A'}</p>
-                                        </div>
+                                    )}
+                                    <div className="min-w-0">
+                                        <p className="text-xs font-semibold text-slate-800 dark:text-white truncate">{record.borrowerName}</p>
+                                        <p className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">ID: {record.borrowerId}</p>
                                     </div>
-                                </td>
-                                <td className={`p-3 ${rowBg}`}>
-                                    <p className="text-xs font-semibold text-slate-800 dark:text-white truncate">{equipmentName}</p>
-                                    <p className="text-[10px] text-slate-500 dark:text-slate-400 font-medium mt-0.5">ID: {record._id.substring(0, 8)}...</p>
-                                </td>
-                                <td className={`p-3 text-xs font-medium text-slate-400 dark:text-slate-500 ${rowBg}`}>
-                                    <div>{new Date(record.return_date).toLocaleDateString()}</div>
-                                </td>
+                                </div>
+                            </td>
+                            <td className={`p-3 ${rowBg}`}>
+                                <p className="text-xs font-semibold text-slate-800 dark:text-white truncate">{record.equipmentName}</p>
+                                <p className="text-[10px] text-slate-500 dark:text-slate-400 font-medium mt-0.5">ID: {record.equipmentId}</p>
+                            </td>
+                            <td className={`p-3 text-xs font-medium text-slate-400 dark:text-slate-500 ${rowBg}`}>
+                                <div>{record.dueDate}</div>
+                            </td>
                             <td className={`p-3 ${rowBg}`}>
                                 <span className={`px-2 py-1 rounded-full text-[10px] font-medium uppercase tracking-wider inline-flex items-center justify-center whitespace-nowrap ${getStatusStyle(record.status)}`}>
                                     {record.status}
@@ -105,55 +102,59 @@ const BorrowingTable: React.FC<BorrowingTableProps> = ({ records, onApprove, onH
                             </td>
                             <td className={`p-3 rounded-r-lg text-right ${rowBg}`}>
                                 <div className="flex items-center justify-end gap-1.5">
-                                    {processingId === record._id ? (
+                                    {processingId === record.id ? (
                                         <div className="px-4 py-1 animate-pulse text-[10px] font-semibold uppercase tracking-widest text-[#1A2B56] dark:text-blue-400 bg-white/50 dark:bg-slate-700 rounded-lg">Processing...</div>
                                     ) : (
                                         <>
-                                            {record.status === 'pending' && (
+                                            {record.status === 'Pending' && (
                                                 <>
                                                     <button
-                                                        onClick={(e) => { e.stopPropagation(); handleAction(record._id, onApprove); }}
+                                                        onClick={() => handleAction(record.id, onApprove)}
                                                         className="px-2.5 py-1 bg-emerald-100/50 text-emerald-500 hover:bg-emerald-500 hover:text-white rounded-md text-xs font-semibold transition-colors border border-emerald-100"
                                                     >
                                                         Approve
                                                     </button>
                                                     <button
-                                                        onClick={(e) => { e.stopPropagation(); handleAction(record._id, onReject); }}
+                                                        onClick={() => handleAction(record.id, onReject)}
                                                         className="px-2.5 py-1 bg-red-100/50 text-red-500 hover:bg-red-500 hover:text-white rounded-md text-xs font-semibold transition-colors border border-red-100"
                                                     >
                                                         Reject
                                                     </button>
                                                 </>
                                             )}
-                                            {record.status === 'approved' && (
+                                            {record.status === 'Approved' && (
                                                 <button
-                                                    onClick={(e) => { e.stopPropagation(); handleAction(record._id, onHandover); }}
+                                                    onClick={() => handleAction(record.id, onReturn)}
                                                     className="px-2.5 py-1 bg-[#1A2B56] text-white hover:bg-[#2A3B66] rounded-md text-xs font-semibold transition-colors shadow-sm whitespace-nowrap"
                                                 >
-                                                    Handover
+                                                    Mark Returned
                                                 </button>
                                             )}
-                                            {record.status === 'handed_over' && (
-                                                <button
-                                                    onClick={(e) => { e.stopPropagation(); handleAction(record._id, onReturn); }}
-                                                    className="px-2.5 py-1 bg-indigo-600 text-white hover:bg-indigo-700 rounded-md text-xs font-semibold transition-colors shadow-sm whitespace-nowrap"
-                                                >
-                                                    Confirm Return
-                                                </button>
+                                            {record.status === 'Overdue' && (
+                                                <div className="flex gap-1.5">
+                                                    <button
+                                                        onClick={() => handleAction(record.id, onAlert)}
+                                                        className="px-2.5 py-1 bg-red-100/50 text-red-500 hover:bg-red-600 hover:text-white rounded-md text-xs font-semibold transition-colors border border-red-100 flex items-center gap-1 whitespace-nowrap"
+                                                    >
+                                                        <span className="material-symbols-outlined text-[13px]">warning</span> Alert
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleAction(record.id, onReturn)}
+                                                        className="px-2.5 py-1 bg-[#1A2B56] text-white hover:bg-[#2A3B66] rounded-md text-xs font-semibold transition-colors shadow-sm whitespace-nowrap"
+                                                    >
+                                                        Mark Returned
+                                                    </button>
+                                                </div>
                                             )}
-                                            {record.status === 'returned' && (
+                                            {record.status === 'Returned' && (
                                                 <div className="px-2.5 py-1 text-[10px] font-semibold uppercase text-slate-400 tracking-widest">Completed</div>
-                                            )}
-                                            {record.status === 'rejected' && (
-                                                <div className="px-2.5 py-1 text-[10px] font-semibold uppercase text-red-400 tracking-widest">Rejected</div>
                                             )}
                                         </>
                                     )}
                                 </div>
                             </td>
                         </tr>
-                    );
-                })}
+                    ))}
                 </tbody>
             </table>
 

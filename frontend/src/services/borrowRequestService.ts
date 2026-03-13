@@ -46,9 +46,4 @@ export const borrowRequestService = {
     const res = await api.patch(`/requests/${id}/return`);
     return res.data;
   },
-
-  async rejectBorrowRequest(id: string): Promise<BorrowRequest> {
-    const res = await api.patch(`/requests/${id}/reject`);
-    return res.data;
-  },
 };
