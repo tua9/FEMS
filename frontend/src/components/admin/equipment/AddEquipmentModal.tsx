@@ -1,16 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import type { Equipment, CreateEquipmentPayload } from '../../../types/equipment';
-import { useEquipmentStore } from '../../../stores/useEquipmentStore';
+import type { Asset } from '../../../types/admin.types';
 
 interface AddEquipmentModalProps {
     isOpen: boolean;
     onClose: () => void;
-    equipment?: Equipment | null;
+    equipment?: Asset | null;
     onEquipmentUpdated?: () => void;
 }
 
-// generateDeviceId removed as it's not needed for backend-driven IDs
+import { adminApi } from '../../../services/api/adminApi';
+
+const generateDeviceId = () => `EQ-${Math.floor(100000 + Math.random() * 900000)}`;
 
 const AddEquipmentModal: React.FC<AddEquipmentModalProps> = ({ isOpen, onClose, equipment, onEquipmentUpdated }) => {
     const isEdit = !!equipment;
@@ -18,27 +19,26 @@ const AddEquipmentModal: React.FC<AddEquipmentModalProps> = ({ isOpen, onClose, 
     const [name, setName] = useState('');
     const [category, setCategory] = useState('');
     const [quantity, setQuantity] = useState(1);
+    const [location, setLocation] = useState('');
     const [description, setDescription] = useState('');
     const [warranty, setWarranty] = useState('');
     const [purchaseDate, setPurchaseDate] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
 
-    const createEquipment = useEquipmentStore(state => state.createEquipment);
-    const updateEquipment = useEquipmentStore(state => state.updateEquipment);
-
     useEffect(() => {
         if (equipment) {
             setName(equipment.name);
             setCategory(equipment.category);
-            setQuantity(1);
-            // location is handled via room_id in the new model
-            setDescription((equipment as any).description || '');
-            setWarranty(equipment.updatedAt || ''); // Placeholder if warranty is not in new type
-            setPurchaseDate(equipment.createdAt || ''); // Placeholder
+            setQuantity(1); // Default to 1 for edit mode (though it will be hidden)
+            setLocation(equipment.location);
+            setDescription(equipment.description || '');
+            setWarranty(equipment.warranty || '');
+            setPurchaseDate(equipment.purchaseDate || '');
         } else {
             setName('');
             setCategory('');
             setQuantity(1);
+            setLocation('');
             setDescription('');
             setWarranty('');
             setPurchaseDate('');
@@ -50,25 +50,41 @@ const AddEquipmentModal: React.FC<AddEquipmentModalProps> = ({ isOpen, onClose, 
         setIsSubmitting(true);
 
         try {
-            const payload: CreateEquipmentPayload = {
-                name,
-                category,
-                status: (equipment?.status as any) || 'good',
-                room_id: null // Placeholder, should be selected from a room list
-            };
-
-            if (isEdit && equipment) {
-                await updateEquipment(equipment._id, payload);
+            if (isEdit) {
+                const assetData: Asset = {
+                    id: equipment.id,
+                    name,
+                    category: category as any,
+                    location,
+                    status: equipment.status || 'Available',
+                    imageUrl: equipment.imageUrl || 'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?auto=format&fit=crop&q=80&w=1026',
+                    description,
+                    warranty,
+                    purchaseDate
+                };
+                await adminApi.updateEquipment(assetData);
             } else {
-                // Bulk create individual units if quantity > 1
+                // Bulk create individual units
                 for (let i = 0; i < quantity; i++) {
-                    await createEquipment(payload);
+                    const assetData: Asset = {
+                        id: generateDeviceId(),
+                        name,
+                        category: category as any,
+                        location,
+                        status: 'Available',
+                        imageUrl: 'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?auto=format&fit=crop&q=80&w=1026',
+                        description,
+                        warranty,
+                        purchaseDate
+                    };
+                    await adminApi.createEquipment(assetData);
                 }
             }
             if (onEquipmentUpdated) onEquipmentUpdated();
             onClose();
         } catch (error) {
             console.error("Failed to save equipment", error);
+            alert("An error occurred while saving. Please try again.");
         } finally {
             setIsSubmitting(false);
         }
@@ -155,12 +171,14 @@ const AddEquipmentModal: React.FC<AddEquipmentModalProps> = ({ isOpen, onClose, 
                             )}
 
                             <div className="space-y-1.5">
-                                <label className="text-xs font-bold text-slate-700 dark:text-slate-300 ml-1">Room <span className="text-red-500">*</span></label>
+                                <label className="text-xs font-bold text-slate-700 dark:text-slate-300 ml-1">Location / Room <span className="text-red-500">*</span></label>
                                 <input
                                     type="text"
-                                    value="Lab 402"
-                                    disabled
-                                    className="w-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm outline-none dark:text-white cursor-not-allowed"
+                                    value={location}
+                                    onChange={e => setLocation(e.target.value)}
+                                    className="w-full bg-white/50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-[#1A2B56] dark:focus:ring-blue-500 outline-none transition-all dark:text-white"
+                                    placeholder="e.g. Lab 402"
+                                    required
                                 />
                             </div>
 

@@ -12,10 +12,10 @@ import { restrictTo } from '../middlewares/authMiddlewares.js'
 const router = express.Router()
 
 // Admin only routes
-router.post('/', restrictTo('admin'), createUser)
-router.get('/', restrictTo('admin'), getAllUsers)
-router.get('/:id', restrictTo('admin'), getUserById)
-router.patch('/:id', restrictTo('admin'), updateUser)
-router.delete('/:id', restrictTo('admin'), deleteUser)
+router.post('/', restrictTo('Admin'), createUser)
+router.get('/', restrictTo('Admin'), getAllUsers)
+router.get('/:id', restrictTo('Admin'), getUserById)
+router.patch('/:id', restrictTo('Admin'), updateUser)
+router.delete('/:id', restrictTo('Admin'), deleteUser)
 
 export default router

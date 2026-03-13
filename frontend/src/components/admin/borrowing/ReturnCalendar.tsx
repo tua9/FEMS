@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import CustomDropdown from '../../shared/CustomDropdown';
-import type { BorrowRequest } from '../../../types/borrowRequest';
+import type { BorrowRecord } from '../../../types/admin.types';
 
 interface ReturnCalendarProps {
-    records?: BorrowRequest[];
+    records?: BorrowRecord[];
     onViewDetails?: (recordId: string) => void;
 }
 
@@ -26,25 +26,25 @@ const ReturnCalendar: React.FC<ReturnCalendarProps> = ({ records = [], onViewDet
     // Derive returns from records that match the currently viewed month and year
     const derivedReturns = React.useMemo(() => {
         const map: Record<number, { id: string; name: string; borrower: string; time: string; avatar?: string; status: string }[]> = {};
+        const viewedMonthStr = monthNames[currentMonth].substring(0, 3);
 
         records.forEach(record => {
-            if (record.status === 'returned' || record.status === 'rejected') return;
+            if (record.status === 'Returned' || record.status === 'Rejected') return;
 
-            const returnDate = new Date(record.return_date);
-            if (returnDate.getMonth() === currentMonth && returnDate.getFullYear() === currentYear) {
-                const day = returnDate.getDate();
+            // Adjusted regex to match any month: "[Month] [Day], [Year]"
+            const regex = new RegExp(`${viewedMonthStr} (\\d+), ${currentYear}`);
+            const match = record.dueDate.match(regex);
+
+            if (match) {
+                const day = parseInt(match[1]);
                 if (!map[day]) map[day] = [];
-                
-                const borrower = typeof record.user_id === 'object' ? record.user_id : null;
-                const equipment = typeof record.equipment_id === 'object' ? record.equipment_id : null;
-                const isOverdue = returnDate.getTime() < new Date().getTime();
-
                 map[day].push({
-                    id: record._id,
-                    name: equipment?.name || 'Unknown Item',
-                    borrower: borrower?.displayName || 'Unknown',
+                    id: record.id,
+                    name: record.equipmentName,
+                    borrower: record.borrowerName,
                     time: '04:00 PM', // Fallback time
-                    status: isOverdue ? 'overdue' : record.status
+                    avatar: record.borrowerAvatar,
+                    status: record.status
                 });
             }
         });
@@ -150,7 +150,7 @@ const ReturnCalendar: React.FC<ReturnCalendarProps> = ({ records = [], onViewDet
 
                     const dayReturns = derivedReturns[dayNumber];
                     const hasReturn = !!dayReturns;
-                    const isOverdue = hasReturn && dayReturns.some(r => r.status === 'overdue');
+                    const isOverdue = hasReturn && dayReturns.some(r => r.status === 'Overdue');
 
                     const isSelected = selectedDay === dayNumber;
 

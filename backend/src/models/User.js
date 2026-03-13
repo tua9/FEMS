@@ -45,8 +45,9 @@ const userSchema = new mongoose.Schema(
 )
 
 // Default sort by newest first
-userSchema.pre('find', function () {
+userSchema.pre('find', function (next) {
   this.sort({ createdAt: -1 })
+  next()
 })
 
 const User = mongoose.model('User', userSchema)

@@ -1,22 +1,23 @@
 import React from 'react';
-import type { Equipment } from '../../../types/equipment';
+import { Asset } from '../../../types/admin.types';
 
 interface EquipmentTableProps {
-    equipments: Equipment[];
-    onOpenDetails?: (asset: Equipment) => void;
-    onOpenQRCode?: (asset: Equipment) => void;
-    onEdit?: (asset: Equipment) => void;
-    onDelete?: (asset: Equipment) => void;
-    onReportDamage?: (asset: Equipment) => void;
+    equipments: Asset[];
+    onOpenDetails?: (asset: Asset) => void;
+    onOpenQRCode?: (asset: Asset) => void;
+    onEdit?: (asset: Asset) => void;
+    onDelete?: (asset: Asset) => void;
+    onReportDamage?: (asset: Asset) => void;
 }
 
 const EquipmentTable: React.FC<EquipmentTableProps> = ({ equipments, onOpenDetails, onOpenQRCode, onEdit, onDelete, onReportDamage }) => {
 
     const getStatusStyle = (status: string) => {
         switch (status) {
-            case 'good': return 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400';
-            case 'maintenance': return 'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400';
-            case 'broken': return 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400';
+            case 'Available': return 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400';
+            case 'In Use': return 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400';
+            case 'Maintenance': return 'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400';
+            case 'Broken': return 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400';
             default: return 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300';
         }
     };
@@ -38,20 +39,20 @@ const EquipmentTable: React.FC<EquipmentTableProps> = ({ equipments, onOpenDetai
                 <tbody className="space-y-4">
                     {equipments.length > 0 ? (
                         equipments.map(item => (
-                            <tr key={item._id} className="group cursor-pointer" onClick={() => onOpenDetails && onOpenDetails(item)}>
+                            <tr key={item.id} className="group cursor-pointer" onClick={() => onOpenDetails && onOpenDetails(item)}>
                                 <td className={`p-4 rounded-l-2xl ${rowBg}`}>
                                     <div className="flex items-center gap-4">
                                         <div className="w-12 h-12 rounded-xl bg-white dark:bg-slate-700 p-1 shadow-sm overflow-hidden flex-shrink-0">
-                                            <img alt={item.name} className="w-full h-full object-cover rounded-lg" src={(item as any).imageUrl || 'https://via.placeholder.com/150'} />
+                                            <img alt={item.name} className="w-full h-full object-cover rounded-lg" src={item.imageUrl || 'https://via.placeholder.com/150'} />
                                         </div>
                                         <div>
                                             <p className="text-sm font-semibold text-slate-800 dark:text-white">{item.name}</p>
-                                            <p className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">ID: {item._id}</p>
+                                            <p className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">ID: {item.id}</p>
                                         </div>
                                     </div>
                                 </td>
                                 <td className={`p-4 text-sm font-medium text-slate-600 dark:text-slate-300 hidden md:table-cell ${rowBg}`}>{item.category}</td>
-                                <td className={`p-4 text-sm font-medium text-slate-600 dark:text-slate-300 hidden sm:table-cell ${rowBg}`}>{(item.room_id as any)?.name || 'N/A'}</td>
+                                <td className={`p-4 text-sm font-medium text-slate-600 dark:text-slate-300 hidden sm:table-cell ${rowBg}`}>{item.location}</td>
                                 <td className={`p-4 ${rowBg}`}>
                                     <span className={`px-3 py-1 rounded-full text-[10px] font-semibold uppercase tracking-wider inline-flex items-center justify-center whitespace-nowrap ${getStatusStyle(item.status)}`}>
                                         {item.status}

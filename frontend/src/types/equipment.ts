@@ -17,9 +17,6 @@ export interface Equipment {
     email: string;
   } | string | null;
   qr_code?: string | null;
-  imageUrl?: string;
-  description?: string;
-  issueDescription?: string;
   createdAt?: string;
   updatedAt?: string;
 }
