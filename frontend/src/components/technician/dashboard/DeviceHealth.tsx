@@ -2,7 +2,7 @@ import React from 'react';
 
 const DeviceHealth: React.FC = () => {
   return (
-    <div className="glass-card p-8 rounded-3xl shadow-sm flex flex-col h-full">
+    <div className="dashboard-card p-8 rounded-3xl flex flex-col h-full">
       <h3 className="text-sm font-bold text-[#1A2B56] dark:text-white uppercase tracking-widest mb-10">
         Device Health
       </h3>

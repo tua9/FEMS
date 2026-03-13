@@ -18,41 +18,41 @@ router.use(protectedRoute)
 
 router.get(
   '/me',
-  restrictTo('student', 'Teacher', 'Tech', 'Admin'),
+  restrictTo('student', 'lecturer', 'tech', 'admin'),
   getPersonalBorrowRequests,
 )
 router.post(
   '/',
-  restrictTo('student', 'Teacher', 'Tech', 'Admin'),
+  restrictTo('student', 'lecturer', 'tech', 'admin'),
   createBorrowRequest,
 ) // Student specific
 router.delete(
   '/:id',
-  restrictTo('Student', 'Teacher', 'Tech', 'Admin'),
+  restrictTo('student', 'lecturer', 'tech', 'admin'),
   cancelBorrowRequest,
 )
 
 router.patch(
   '/:id/approve',
-  restrictTo('Teacher', 'Tech', 'Admin'),
+  restrictTo('lecturer', 'tech', 'admin'),
   approveBorrowRequest,
 )
 router.patch(
   '/:id/handover',
-  restrictTo('Tech', 'Student', 'Admin'),
+  restrictTo('lecturer', 'tech', 'admin'),
   handoverBorrowRequest,
 )
 router.patch(
   '/:id/return',
-  restrictTo('Student', 'Tech', 'Admin'),
+  restrictTo('lecturer', 'tech', 'admin'),
   returnBorrowRequest,
 )
 
-router.get('/', restrictTo('Tech', 'Teacher', 'Admin'), getAllBorrowRequests)
-router.get('/:id', restrictTo('Tech', 'Teacher', 'Admin'), getBorrowRequestById)
+router.get('/', restrictTo('lecturer', 'tech', 'admin'), getAllBorrowRequests)
+router.get('/:id', restrictTo('lecturer', 'tech', 'admin'), getBorrowRequestById)
 router.patch(
   '/:id',
-  restrictTo('Tech', 'Teacher', 'Admin'),
+  restrictTo('lecturer', 'tech', 'admin'),
   updateBorrowRequest,
 )
 

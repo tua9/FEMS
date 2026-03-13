@@ -7,8 +7,9 @@ import EquipmentQRCodeModal from '../../components/admin/equipment/EquipmentQRCo
 import DeviceDetailsModal from '../../components/admin/equipment/DeviceDetailsModal';
 import DeleteConfirmationModal from '../../components/admin/common/DeleteConfirmationModal';
 import { adminApi } from '../../services/api/adminApi';
-import { Asset } from '../../types/admin.types';
+import type { Asset } from '../../types/admin.types';
 import { useLocation } from 'react-router-dom';
+import { PageHeader } from '@/components/shared/PageHeader';
 
 const EquipmentManagement: React.FC = () => {
     const location = useLocation();
@@ -121,23 +122,24 @@ const EquipmentManagement: React.FC = () => {
     const isBlurred = isAddModalOpen || isDetailModalOpen || qrDevice || !!deviceToDelete;
 
     return (
-        <div className="max-w-7xl mx-auto px-6 pb-16 relative z-0">
+        <div className="max-w-7xl mx-auto px-6 pt-6 sm:pt-8 pb-16 relative z-0">
             <div className={`transition-all duration-300 ${isBlurred ? 'filter blur-sm opacity-50 pointer-events-none' : ''}`}>
-                <div className="mb-8 px-2 flex flex-col md:flex-row md:items-end justify-between gap-6 mt-6">
-                    <div>
-                        <h2 className="text-3xl font-extrabold text-[#1A2B56] dark:text-white tracking-tight">Equipment Management</h2>
-                        <p className="text-slate-700 dark:text-slate-300 mt-1 font-medium">Track, manage and audit university assets and hardware.</p>
-                    </div>
+                <div className="mb-8 px-2 flex flex-col md:flex-row md:items-center justify-between gap-6 mt-2">
+                    <PageHeader
+                        title="Equipment Management"
+                        subtitle="Track, manage and audit university assets and hardware."
+                        className="items-start! text-left! mb-0!"
+                    />
                     <button
                         onClick={() => { setSelectedDevice(null); setIsAddModalOpen(true); }}
-                        className="flex items-center gap-2 px-6 py-3 bg-[#1A2B56] text-white rounded-2xl font-semibold text-sm shadow-[0_10px_20px_rgba(26,43,86,0.3)] hover:opacity-90 transition-all border border-white/10"
+                        className="flex items-center gap-2 px-6 py-3 bg-[#1A2B56] text-white rounded-2xl font-semibold text-sm shadow-[0_10px_20px_rgba(26,43,86,0.3)] hover:opacity-90 transition-all border border-white/10 shrink-0"
                     >
                         <span className="material-symbols-outlined text-lg">add</span>
                         Add Equipment
                     </button>
                 </div>
 
-                <div className="bg-white/40 dark:bg-slate-800/60 p-8 ambient-shadow rounded-[32px] border border-white/40 dark:border-white/10 backdrop-blur-xl transition-all duration-300">
+                <div className="dashboard-card p-8 rounded-4xl transition-all duration-300">
                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-10">
                         <div className="relative max-w-md w-full bg-white/60 dark:bg-slate-700/50 rounded-2xl border border-white/80 dark:border-slate-600 p-0.5">
                             <div className="relative flex items-center">
@@ -153,7 +155,7 @@ const EquipmentManagement: React.FC = () => {
                         </div>
 
                         {/* Dropdown Section */}
-                        <div className="glass-card !rounded-[1.5rem] flex items-center gap-0 p-1">
+                        <div className="dashboard-card rounded-3xl! flex items-center gap-0 p-1">
                             <CustomDropdown
                                 value={categoryFilter}
                                 options={[

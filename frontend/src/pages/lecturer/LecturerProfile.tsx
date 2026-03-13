@@ -114,7 +114,7 @@ const LecturerProfile: React.FC = () => {
 
   return (
     <div className="w-full">
-      <main className="mx-auto flex w-full max-w-[90vw] flex-1 flex-col px-4 pt-32 pb-10 sm:px-6 md:pt-36 xl:max-w-5xl">
+      <main className="mx-auto flex w-full max-w-[90vw] flex-1 flex-col px-4 pt-6 sm:pt-8 pb-10 sm:px-6 xl:max-w-5xl">
         {/* Back */}
         <button
           type="button"

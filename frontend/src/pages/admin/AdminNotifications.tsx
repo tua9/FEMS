@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import CustomDropdown from '@/components/shared/CustomDropdown';
 import { MOCK_ADMIN_NOTIFICATIONS } from '@/data/admin/mockAdminNotifications';
 import { NotifType } from '@/data/technician/mockNotifications';
+import { PageHeader } from '@/components/shared/PageHeader';
 
 const TYPE_LABELS: Record<NotifType | 'all', string> = {
     all: 'All',
@@ -61,24 +62,15 @@ const AdminNotifications: React.FC = () => {
     };
 
     return (
-        <div className="max-w-5xl mx-auto px-6 py-10">
+        <div className="max-w-5xl mx-auto px-6 pt-6 sm:pt-8 pb-10">
             {/* Header with Stats */}
-            <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10">
-                <div>
-                    <div className="flex items-center gap-3 mb-2">
-                        <div className="bg-[#1A2B56] p-2 rounded-xl shadow-lg shadow-blue-900/10">
-                            <span className="material-symbols-outlined text-white text-xl block">notifications_active</span>
-                        </div>
-                        <h2 className="text-3xl font-extrabold text-[#1A2B56] dark:text-white tracking-tight">
-                            Command Center
-                        </h2>
-                    </div>
-                    <p className="text-slate-500 dark:text-slate-400 font-semibold uppercase tracking-[0.14em] text-[10px] ml-1">
-                        Monitoring {items.length} total events • <span className="text-rose-500">{unreadCount} unread alerts</span>
-                    </p>
-                </div>
-
-                <div className="flex items-center gap-3">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
+                <PageHeader
+                    title="Command Center"
+                    subtitle={`Monitoring ${items.length} total events • ${unreadCount} unread alerts`}
+                    className="items-start! text-left! mb-0!"
+                />
+                <div className="flex items-center gap-3 shrink-0">
                     <button
                         onClick={markAllRead}
                         className="px-5 py-2.5 bg-[#1A2B56] text-white rounded-2xl font-bold text-xs hover:bg-[#2A3B66] transition-all shadow-lg shadow-blue-900/20 flex items-center gap-2"
@@ -90,7 +82,7 @@ const AdminNotifications: React.FC = () => {
             </div>
 
             {/* Filter Bar */}
-            <div className="glass-card hover:transform-none bg-white/60 dark:bg-slate-800/40 p-2 rounded-[24px] mb-8 border border-white/40 dark:border-white/10 backdrop-blur-xl flex flex-wrap items-center justify-between gap-4">
+            <div className="dashboard-card p-2 rounded-3xl mb-8 flex flex-wrap items-center justify-between gap-4">
                 <div className="flex items-center gap-1 p-1 bg-slate-100/50 dark:bg-slate-900/30 rounded-2xl overflow-x-auto no-scrollbar">
                     {(Object.keys(TYPE_LABELS) as Array<NotifType | 'all'>).map((tab) => (
                         <button

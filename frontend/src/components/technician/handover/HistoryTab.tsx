@@ -125,7 +125,7 @@ const HistoryTab: React.FC = () => {
   return (
     <div>
       {/* Filter bar */}
-      <div className="tech-card rounded-3xl mb-6 p-6">
+      <div className="dashboard-card rounded-3xl mb-6 p-6">
         <div className="flex flex-wrap items-center gap-4">
           {/* Search */}
           <div className="flex-1 min-w-[240px] relative">
@@ -172,7 +172,7 @@ const HistoryTab: React.FC = () => {
       </div>
 
       {/* Table */}
-      <div className="tech-card rounded-3xl overflow-hidden">
+      <div className="dashboard-card rounded-3xl overflow-hidden">
         <div className="overflow-x-auto custom-scrollbar">
           <table className="w-full text-left border-collapse">
             <thead>

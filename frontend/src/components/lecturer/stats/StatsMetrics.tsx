@@ -27,7 +27,7 @@ export const StatsMetrics: React.FC<StatsMetricsProps> = ({ metrics, onNavigate 
                     <div
                         key={index}
                         onClick={() => isClickable && onNavigate(item.navigateTo!)}
-                        className={`glass-card bg-white/50 dark:bg-slate-800/40 p-[2rem] rounded-[1.5rem] md:rounded-[2rem] border-none sm:border-solid sm:border border-[#1E2B58]/5 dark:border-white/10 group transition-all duration-200 shadow-[0_4px_24px_0_rgba(30,43,88,0.02)] relative overflow-hidden ${
+                        className={`dashboard-card p-8 rounded-3xl md:rounded-4xl group transition-all duration-200 relative overflow-hidden ${
                             isClickable
                                 ? 'cursor-pointer hover:bg-white/80 dark:hover:bg-slate-800/60 hover:shadow-lg hover:scale-[1.02] active:scale-[0.99]'
                                 : 'cursor-default hover:bg-white/80 dark:hover:bg-slate-800/60'

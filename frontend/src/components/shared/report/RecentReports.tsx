@@ -34,7 +34,7 @@ export const RecentReports: React.FC<RecentReportsProps> = ({ newReport }) => {
         : DEFAULT_REPORTS;
 
     return (
-        <div className="mt-[3rem] glass-card bg-white/60 dark:bg-slate-800/70 p-[2rem] lg:p-[2.5rem] rounded-[2.5rem] border border-white dark:border-white/10 shadow-[0_10px_30px_-5px_rgba(30,43,88,0.1)]">
+        <div className="mt-[3rem] dashboard-card p-[2rem] lg:p-[2.5rem] rounded-[2.5rem]">
             {/* Header */}
             <div className="flex items-center justify-between mb-[2rem]">
                 <h3 className="text-[1.5rem] font-bold text-[#1E2B58] dark:text-white tracking-tight">My Recent Reports</h3>
@@ -53,7 +53,7 @@ export const RecentReports: React.FC<RecentReportsProps> = ({ newReport }) => {
                     <div
                         key={report.id}
                         onClick={() => navigate('/lecturer/history')}
-                        className="bg-white/40 dark:bg-white/5 border border-white/50 dark:border-white/10 rounded-[1.5rem] p-[1.25rem] grid grid-cols-1 md:grid-cols-12 items-start md:items-center gap-[1rem] transition-all hover:bg-white/80 dark:hover:bg-white/10 cursor-pointer group hover:shadow-sm active:scale-[0.995]"
+                        className="bg-white/50 dark:bg-white/5 border border-white/70 dark:border-white/10 rounded-[1.5rem] p-[1.25rem] grid grid-cols-1 md:grid-cols-12 items-start md:items-center gap-[1rem] transition-all hover:bg-white/80 dark:hover:bg-white/10 cursor-pointer group hover:shadow-md active:scale-[0.995]"
                     >
                         {/* ID */}
                         <div className="md:col-span-3">

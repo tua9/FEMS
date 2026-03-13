@@ -32,7 +32,7 @@ const BorrowModal: React.FC<BorrowModalProps> = ({ item, onClose, onSubmit }) =>
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 px-4 backdrop-blur-sm"
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
-      <div className="glass-card animate-in fade-in zoom-in-95 relative w-full max-w-md rounded-4xl p-8 shadow-2xl shadow-[#1E2B58]/20 duration-200">
+      <div className="dashboard-card animate-in fade-in zoom-in-95 relative w-full max-w-md rounded-4xl p-8 shadow-2xl shadow-[#1E2B58]/20 duration-200">
         {/* Close button */}
         <button
           onClick={onClose}

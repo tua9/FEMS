@@ -3,6 +3,7 @@ import React, { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { NotificationType } from '@/components/lecturer/navbar/NotificationPanel';
 import { useAuthStore } from '@/stores/useAuthStore';
+import { PageHeader } from '@/components/shared/PageHeader';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -242,12 +243,12 @@ const NotificationsPage: React.FC = () => {
 
     return (
         <div className="w-full">
-            <main className="pt-32 md:pt-36 pb-10 px-4 sm:px-6 w-full max-w-[90vw] xl:max-w-3xl mx-auto flex-1 flex flex-col">
+            <main className="pt-6 sm:pt-8 pb-10 px-4 sm:px-6 w-full max-w-[90vw] xl:max-w-3xl mx-auto flex-1 flex flex-col">
                 {/* Back */}
                 <button
                     type="button"
                     onClick={() => navigate(-1)}
-                    className="flex items-center gap-2 text-[0.8125rem] font-bold text-[#1E2B58]/60 dark:text-white/50 hover:text-[#1E2B58] dark:hover:text-white transition-colors mb-8 group"
+                    className="flex items-center gap-2 text-[0.8125rem] font-bold text-[#1E2B58]/60 dark:text-white/50 hover:text-[#1E2B58] dark:hover:text-white transition-colors mb-6 group"
                 >
                     <ArrowLeft className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" />
                     Back
@@ -255,20 +256,19 @@ const NotificationsPage: React.FC = () => {
 
                 {/* Header */}
                 <div className="flex items-start justify-between gap-4 mb-8 flex-wrap">
-                    <div>
-                        <div className="flex items-center gap-3 mb-1">
-                            <h1 className="text-[2.25rem] md:text-[2.75rem] font-extrabold text-[#1E2B58] dark:text-white leading-none tracking-tight">
-                                Notifications
-                            </h1>
-                            {unreadCount > 0 && (
-                                <span className="bg-blue-500 text-white text-sm font-black px-2.5 py-1 rounded-full leading-none self-end mb-1">
-                                    {unreadCount} new
-                                </span>
-                            )}
-                        </div>
-                        <p className="text-[#1E2B58]/55 dark:text-white/50 text-sm font-medium">
-                            Stay updated with equipment, borrows, and facility alerts.
-                        </p>
+                    <div className="flex-1">
+                        <PageHeader
+                            title="Notifications"
+                            subtitle={unreadCount > 0
+                                ? `${unreadCount} unread · Stay updated with equipment, borrows, and facility alerts.`
+                                : "You're all caught up! Stay updated with equipment, borrows, and facility alerts."}
+                            className="items-start! text-left! mb-0!"
+                        />
+                        {unreadCount > 0 && (
+                            <span className="inline-block mt-2 bg-blue-500 text-white text-sm font-black px-2.5 py-1 rounded-full leading-none">
+                                {unreadCount} new
+                            </span>
+                        )}
                     </div>
 
                     {/* Actions */}
@@ -277,7 +277,7 @@ const NotificationsPage: React.FC = () => {
                             <button
                                 type="button"
                                 onClick={handleMarkAllRead}
-                                className="flex items-center gap-2 px-4 py-2.5 glass-card !rounded-xl font-bold text-[0.8125rem] text-[#1E2B58] dark:text-white hover:bg-blue-50/60 dark:hover:bg-blue-900/20 transition-colors"
+                                className="flex items-center gap-2 px-4 py-2.5 glass-card rounded-xl! font-bold text-[0.8125rem] text-[#1E2B58] dark:text-white hover:bg-blue-50/60 dark:hover:bg-blue-900/20 transition-colors"
                             >
                                 <CheckCheck className="w-4 h-4 text-blue-500" />
                                 Mark all read
@@ -287,7 +287,7 @@ const NotificationsPage: React.FC = () => {
                             <button
                                 type="button"
                                 onClick={handleClearAll}
-                                className="flex items-center gap-2 px-4 py-2.5 glass-card !rounded-xl font-bold text-[0.8125rem] text-red-500 dark:text-red-400 hover:bg-red-50/60 dark:hover:bg-red-900/20 transition-colors"
+                                className="flex items-center gap-2 px-4 py-2.5 glass-card rounded-xl! font-bold text-[0.8125rem] text-red-500 dark:text-red-400 hover:bg-red-50/60 dark:hover:bg-red-900/20 transition-colors"
                             >
                                 <Trash2 className="w-4 h-4" />
                                 Clear all

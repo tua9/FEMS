@@ -27,6 +27,7 @@ import { AnimatedPage } from "./AnimatedPage";
 import { AnimatedSection } from "./AnimatedSection";
 import { AnimatedList, AnimatedListItem } from "./AnimatedList";
 import { Link } from "react-router";
+import { PageHeader } from "@/components/shared/PageHeader";
 
 // ── Breadcrumb ──────────────────────────────────────────────────────────────
 interface BreadcrumbItem {
@@ -81,7 +82,7 @@ interface PageShellProps {
   className?: string;
   /** Override className phần content bên dưới header */
   contentClassName?: string;
-  /** pt- cho main (vì có navbar fixed), mặc định pt-28 */
+  /** pt- cho phần content (layout đã cung cấp pt-22), mặc định pt-6 */
   topPadding?: string;
 }
 
@@ -94,7 +95,7 @@ export const PageShell: React.FC<PageShellProps> = ({
   variant = "fade",
   className,
   contentClassName,
-  topPadding = "pt-28",
+  topPadding = "pt-6",
 }) => {
   const hasHeader = title || subtitle || breadcrumbs || action;
 
@@ -111,21 +112,19 @@ export const PageShell: React.FC<PageShellProps> = ({
       <div className="mx-auto w-full max-w-7xl">
         {/* ── Page Header ── */}
         {hasHeader && (
+          <PageHeader
+            title={title ?? ""}
+            subtitle={subtitle}
+            className={clsx(!title && "hidden")}
+          />
+        )}
+        {/* ── Breadcrumb + action row (kept outside PageHeader for layout flexibility) ── */}
+        {(breadcrumbs || action) && (
           <AnimatedSection variant="curtain" delay={0} className="mb-8">
             <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
-              <div className="space-y-1">
+              <div>
                 {breadcrumbs && breadcrumbs.length > 0 && (
                   <Breadcrumb items={breadcrumbs} />
-                )}
-                {title && (
-                  <h1 className="text-3xl font-extrabold tracking-tight text-[#1A2B56] dark:text-white">
-                    {title}
-                  </h1>
-                )}
-                {subtitle && (
-                  <p className="text-sm text-slate-500 dark:text-slate-400 font-medium">
-                    {subtitle}
-                  </p>
                 )}
               </div>
               {action && (

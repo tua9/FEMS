@@ -1,5 +1,6 @@
 import React from 'react';
-import { AssetCategory, CATEGORY_META } from '@/data/technician/mockEquipment';
+import type { AssetCategory } from '@/data/technician/mockEquipment';
+import { CATEGORY_META } from '@/data/technician/mockEquipment';
 
 interface Props {
   activeCategory: AssetCategory;
@@ -7,7 +8,7 @@ interface Props {
 }
 
 const CategoryList: React.FC<Props> = ({ activeCategory, onSelect }) => (
-  <div className="tech-card p-6 rounded-3xl border border-white/40 dark:border-white/10 shadow-sm">
+  <div className="dashboard-card p-6 rounded-3xl">
     <h3 className="text-xs font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-6">
       Categories
     </h3>

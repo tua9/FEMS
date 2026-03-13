@@ -3,9 +3,12 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { CheckCircle2, X, ArrowRight, ClipboardList } from 'lucide-react';
 
 import { ReportHeader } from '../../components/lecturer/report/ReportHeader';
-import { QuickScanReport, QRResult } from '../../components/lecturer/report/QuickScanReport';
-import { ReportManualForm, ReportFormData, IssueCategory } from '../../components/lecturer/report/ReportManualForm';
-import { RecentReports, ReportEntry } from '../../components/lecturer/report/RecentReports';
+import { QuickScanReport } from '../../components/lecturer/report/QuickScanReport';
+import type { QRResult } from '../../components/lecturer/report/QuickScanReport';
+import { ReportManualForm } from '../../components/lecturer/report/ReportManualForm';
+import type { ReportFormData, IssueCategory } from '../../components/lecturer/report/ReportManualForm';
+import { RecentReports } from '../../components/lecturer/report/RecentReports';
+import type { ReportEntry } from '../../components/lecturer/report/RecentReports';
 
 // ─── Navigation state from Room Status ────────────────────────────────────────
 interface NavState {
@@ -103,7 +106,7 @@ export const ReportIssueCenter: React.FC = () => {
 
     return (
         <div className="w-full">
-            <main className="pt-32 md:pt-36 pb-10 px-4 sm:px-6 w-full max-w-[90vw] xl:max-w-4xl mx-auto flex-1 flex flex-col overflow-hidden">
+            <main className="pt-6 sm:pt-8 pb-10 px-4 sm:px-6 w-full max-w-[90vw] xl:max-w-4xl mx-auto flex-1 flex flex-col overflow-hidden">
                 <div className="w-full">
                     <ReportHeader />
 
@@ -111,12 +114,12 @@ export const ReportIssueCenter: React.FC = () => {
                     <QuickScanReport onQRDetected={handleQRDetected} />
 
                     {/* Divider */}
-                    <div className="flex items-center gap-[1rem] mb-[2rem]">
-                        <div className="flex-grow h-px bg-slate-300 dark:bg-slate-700/50" />
-                        <span className="text-[0.625rem] font-bold text-slate-400 uppercase tracking-widest px-[0.5rem]">
+                    <div className="flex items-center gap-4 mb-8">
+                        <div className="grow h-px bg-slate-300 dark:bg-slate-700/50" />
+                        <span className="text-[0.625rem] font-bold text-slate-400 uppercase tracking-widest px-2">
                             Or create manual request
                         </span>
-                        <div className="flex-grow h-px bg-slate-300 dark:bg-slate-700/50" />
+                        <div className="grow h-px bg-slate-300 dark:bg-slate-700/50" />
                     </div>
 
                     {/* Manual form */}
@@ -137,10 +140,10 @@ export const ReportIssueCenter: React.FC = () => {
             {/* ── Success Modal ─────────────────────────────────────────────── */}
             {showSuccess && submittedReport && (
                 <div
-                    className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm px-4"
+                    className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm px-4"
                     onClick={e => { if (e.target === e.currentTarget) setShowSuccess(false); }}
                 >
-                    <div className="glass-card rounded-[2rem] p-8 w-full max-w-sm shadow-2xl shadow-[#1E2B58]/20 relative animate-in fade-in zoom-in-95 duration-200">
+                    <div className="dashboard-card rounded-4xl p-8 w-full max-w-sm shadow-2xl shadow-[#1E2B58]/20 relative animate-in fade-in zoom-in-95 duration-200">
                         {/* Close */}
                         <button
                             onClick={() => setShowSuccess(false)}
@@ -170,7 +173,7 @@ export const ReportIssueCenter: React.FC = () => {
                             </div>
                             <div className="flex justify-between text-xs">
                                 <span className="text-[#1E2B58]/60 dark:text-white/50 font-medium">Subject</span>
-                                <span className="font-bold text-[#1E2B58] dark:text-white text-right ml-4 truncate max-w-[11rem]">{submittedReport.subject}</span>
+                                <span className="font-bold text-[#1E2B58] dark:text-white text-right ml-4 truncate max-w-44">{submittedReport.subject}</span>
                             </div>
                             <div className="flex justify-between text-xs">
                                 <span className="text-[#1E2B58]/60 dark:text-white/50 font-medium">Date</span>

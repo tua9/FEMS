@@ -6,7 +6,8 @@ import UserDetailModal from '../../components/admin/users/UserDetailModal';
 import DeleteConfirmationModal from '../../components/admin/common/DeleteConfirmationModal';
 import ActionConfirmationModal from '../../components/admin/common/ActionConfirmationModal';
 import { adminApi } from '../../services/api/adminApi';
-import { AdminUser } from '../../types/admin.types';
+import type { AdminUser } from '../../types/admin.types';
+import { PageHeader } from '@/components/shared/PageHeader';
 
 const UserManagement: React.FC = () => {
     const [users, setUsers] = useState<AdminUser[]>([]);
@@ -178,15 +179,16 @@ const UserManagement: React.FC = () => {
     const isBlurred = isAddModalOpen || isDetailModalOpen || !!userToDelete || !!userToToggle;
 
     return (
-        <div className="max-w-7xl mx-auto px-6 pb-16 relative">
+        <div className="max-w-7xl mx-auto px-6 pt-6 sm:pt-8 pb-16 relative">
             {/* Background Blur for Modals */}
             <div className={`transition-all duration-300 ${isBlurred ? 'filter blur-sm opacity-50 pointer-events-none' : ''}`}>
-                <div className="mb-8 px-2 flex flex-col md:flex-row md:items-end justify-between gap-6 mt-6">
-                    <div>
-                        <h2 className="text-3xl font-extrabold text-[#1A2B56] dark:text-white tracking-tight">System Users</h2>
-                        <p className="text-slate-700 dark:text-slate-300 mt-1 font-medium">Manage staff, students and administrative accounts.</p>
-                    </div>
-                    <div className="flex items-center gap-3">
+                <div className="mb-8 px-2 flex flex-col md:flex-row md:items-center justify-between gap-6 mt-2">
+                    <PageHeader
+                        title="System Users"
+                        subtitle="Manage staff, students and administrative accounts."
+                        className="items-start! text-left! mb-0!"
+                    />
+                    <div className="flex items-center gap-3 shrink-0">
                         <input
                             type="file"
                             ref={fileInputRef}
@@ -224,10 +226,10 @@ const UserManagement: React.FC = () => {
                     {/* Total Users Card */}
                     <button
                         onClick={() => { setRoleFilter('All'); setStatusFilter('All'); }}
-                        className={`glass-card dark:!bg-slate-800/80 p-5 ambient-shadow rounded-2xl border transition-all duration-300 flex items-center justify-between hover:scale-[1.02] active:scale-95 text-left
+                        className={`dashboard-card p-5 rounded-2xl transition-all duration-300 flex items-center justify-between hover:scale-[1.02] active:scale-95 text-left
                             ${roleFilter === 'All' && statusFilter === 'All'
-                                ? 'border-blue-500 ring-2 ring-blue-500/20 shadow-lg bg-blue-50/10'
-                                : 'border-white/40 dark:border-white/10'}`}
+                                ? 'ring-2 ring-blue-500/20'
+                                : ''}`}
                     >
                         <div>
                             <p className="text-[10px] font-medium uppercase tracking-[0.2em] text-slate-500 mb-1">Total Users</p>
@@ -241,10 +243,10 @@ const UserManagement: React.FC = () => {
                     {/* Active Users Card */}
                     <button
                         onClick={() => { setRoleFilter('All'); setStatusFilter('Active'); }}
-                        className={`glass-card dark:!bg-slate-800/80 p-5 ambient-shadow rounded-2xl border transition-all duration-300 flex items-center justify-between hover:scale-[1.02] active:scale-95 text-left
+                        className={`dashboard-card p-5 rounded-2xl transition-all duration-300 flex items-center justify-between hover:scale-[1.02] active:scale-95 text-left
                             ${statusFilter === 'Active'
-                                ? 'border-emerald-500 ring-2 ring-emerald-500/20 shadow-lg bg-emerald-50/10'
-                                : 'border-white/40 dark:border-white/10'}`}
+                                ? 'ring-2 ring-emerald-500/20'
+                                : ''}`}
                     >
                         <div>
                             <p className="text-[10px] font-medium uppercase tracking-[0.2em] text-emerald-500 mb-1">Active</p>
@@ -258,10 +260,10 @@ const UserManagement: React.FC = () => {
                     {/* Technicians Card */}
                     <button
                         onClick={() => { setRoleFilter('Technician'); setStatusFilter('All'); }}
-                        className={`glass-card dark:!bg-slate-800/80 p-5 ambient-shadow rounded-2xl border transition-all duration-300 flex items-center justify-between hover:scale-[1.02] active:scale-95 text-left
+                        className={`dashboard-card p-5 rounded-2xl transition-all duration-300 flex items-center justify-between hover:scale-[1.02] active:scale-95 text-left
                             ${roleFilter === 'Technician'
-                                ? 'border-amber-500 ring-2 ring-amber-500/20 shadow-lg bg-amber-50/10'
-                                : 'border-white/40 dark:border-white/10'}`}
+                                ? 'ring-2 ring-amber-500/20'
+                                : ''}`}
                     >
                         <div>
                             <p className="text-[10px] font-medium uppercase tracking-[0.2em] text-slate-500 mb-1">Technicians</p>
@@ -277,10 +279,10 @@ const UserManagement: React.FC = () => {
                     {/* Inactive Users Card */}
                     <button
                         onClick={() => { setRoleFilter('All'); setStatusFilter('Inactive'); }}
-                        className={`glass-card dark:!bg-slate-800/80 p-5 ambient-shadow rounded-2xl border transition-all duration-300 flex items-center justify-between hover:scale-[1.02] active:scale-95 text-left
+                        className={`dashboard-card p-5 rounded-2xl transition-all duration-300 flex items-center justify-between hover:scale-[1.02] active:scale-95 text-left
                             ${statusFilter === 'Inactive'
-                                ? 'border-red-500 ring-2 ring-red-500/20 shadow-lg bg-red-50/10'
-                                : 'border-red-200 dark:border-red-900/40 bg-red-50/50'}`}
+                                ? 'ring-2 ring-red-500/20'
+                                : ''}`}
                     >
                         <div>
                             <p className="text-[10px] font-medium uppercase tracking-[0.2em] text-red-500 mb-1">Inactive</p>
@@ -292,7 +294,7 @@ const UserManagement: React.FC = () => {
                     </button>
                 </div>
 
-                <div className="bg-white/40 dark:bg-slate-800/60 p-8 ambient-shadow rounded-[32px] border border-white/40 dark:border-white/10 backdrop-blur-xl transition-all duration-300">
+                <div className="dashboard-card p-8 rounded-4xl transition-all duration-300">
                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
                         <div className="relative max-w-sm w-full bg-white/60 dark:bg-slate-700/50 rounded-2xl border border-white/80 dark:border-slate-600 p-0.5">
                             <div className="relative flex items-center">
@@ -307,7 +309,7 @@ const UserManagement: React.FC = () => {
                             </div>
                         </div>
 
-                        <div className="glass-card !rounded-[1.5rem] flex items-center gap-0 p-1">
+                        <div className="dashboard-card rounded-3xl! flex items-center gap-0 p-1">
                             <CustomDropdown
                                 value={roleFilter}
                                 options={[

@@ -74,7 +74,7 @@ const AdminDashboard: React.FC = () => {
         <PageShell
             title="Admin Dashboard"
             subtitle="Overview of equipment, borrowings and damage reports"
-            topPadding="pt-0"
+            topPadding="pt-6"
             className="px-6 pb-16"
         >
             {/* ── Stat Cards ── */}
@@ -116,7 +116,7 @@ const AdminDashboard: React.FC = () => {
 
             {/* ── Analytics ── */}
             <AnimatedSection variant="fade" delay={0.1} className="grid grid-cols-1 lg:grid-cols-12 gap-8 mb-8">
-                <div className="lg:col-span-8 bg-white/40 dark:bg-slate-800/60 p-8 ambient-shadow rounded-4xl border border-white/40 dark:border-white/10 backdrop-blur-xl transition-all duration-300">
+                <div className="lg:col-span-8 dashboard-card p-8 rounded-4xl transition-all duration-300">
                     <h4 className="font-extrabold text-[#1A2B56] dark:text-white text-lg mb-8">Equipment Performance Analytics</h4>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
                         <DeviceHealthChart

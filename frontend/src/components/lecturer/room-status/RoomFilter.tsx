@@ -174,7 +174,7 @@ export const RoomFilter: React.FC<RoomFilterProps> = ({
 
     return (
         <div className="mb-8 md:mb-12">
-            <div className="glass-card !rounded-[1.5rem] p-2 md:p-3 flex flex-col md:flex-row flex-wrap gap-2 md:gap-0 items-stretch md:items-center">
+            <div className="dashboard-card rounded-3xl! p-2 md:p-3 flex flex-col md:flex-row flex-wrap gap-2 md:gap-0 items-stretch md:items-center">
 
                 {/* Building */}
                 <div className="flex-1 min-w-0">
