@@ -1,13 +1,13 @@
 import React from 'react';
 import { createPortal } from 'react-dom';
-import type { Asset } from '../../../types/admin.types';
+import type { Equipment } from '../../../types/equipment';
 
 interface DeviceDetailsModalProps {
     isOpen: boolean;
-    device: Asset | null;
+    device: Equipment | null;
     onClose: () => void;
-    onEdit?: (device: Asset) => void;
-    onReportDamage?: (device: Asset) => void;
+    onEdit?: (device: Equipment) => void;
+    onReportDamage?: (device: Equipment) => void;
 }
 
 const DeviceDetailsModal: React.FC<DeviceDetailsModalProps> = ({ isOpen, device, onClose, onEdit, onReportDamage }) => {
@@ -15,10 +15,9 @@ const DeviceDetailsModal: React.FC<DeviceDetailsModalProps> = ({ isOpen, device,
 
     const getStatusColor = (status: string) => {
         switch (status) {
-            case 'Available': return 'text-emerald-500 bg-emerald-50 dark:bg-emerald-900/20';
-            case 'In Use': return 'text-blue-500 bg-blue-50 dark:bg-blue-900/20';
-            case 'Maintenance': return 'text-orange-500 bg-orange-50 dark:bg-orange-900/20';
-            case 'Broken': return 'text-red-500 bg-red-50 dark:bg-red-900/20';
+            case 'good': return 'text-emerald-500 bg-emerald-50 dark:bg-emerald-900/20';
+            case 'maintenance': return 'text-orange-500 bg-orange-50 dark:bg-orange-900/20';
+            case 'broken': return 'text-red-500 bg-red-50 dark:bg-red-900/20';
             default: return 'text-slate-500 bg-slate-50 dark:bg-slate-800';
         }
     };
@@ -87,7 +86,7 @@ const DeviceDetailsModal: React.FC<DeviceDetailsModalProps> = ({ isOpen, device,
                                     <span className={`px-4 py-1.5 rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-sm border-2 border-transparent ${getStatusColor(device.status)}`}>
                                         {device.status}
                                     </span>
-                                    <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">{device.category} • ID: {device.id}</span>
+                                    <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">{device.category} • ID: {device._id}</span>
                                 </div>
                             </div>
                         </div>
@@ -106,11 +105,11 @@ const DeviceDetailsModal: React.FC<DeviceDetailsModalProps> = ({ isOpen, device,
                                 <div className="grid grid-cols-2 gap-6">
                                     <div className="p-5 rounded-3xl bg-white/40 dark:bg-slate-900/30 border-2 border-white dark:border-slate-700 shadow-sm">
                                         <p className="text-[10px] text-slate-400 font-bold uppercase mb-2">Location</p>
-                                        <p className="text-sm font-black text-slate-800 dark:text-slate-200">{device.location}</p>
+                                        <p className="text-sm font-black text-slate-800 dark:text-slate-200">{(device.room_id as any)?.name || 'N/A'}</p>
                                     </div>
                                     <div className="p-5 rounded-3xl bg-white/40 dark:bg-slate-900/30 border-2 border-white dark:border-slate-700 shadow-sm">
-                                        <p className="text-[10px] text-slate-400 font-bold uppercase mb-2">Warranty</p>
-                                        <p className="text-sm font-black text-emerald-600 dark:text-emerald-400">{formatWarranty(device.warranty)}</p>
+                                        <p className="text-[10px] text-slate-400 font-bold uppercase mb-2">Last Updated</p>
+                                        <p className="text-sm font-black text-emerald-600 dark:text-emerald-400">{formatWarranty(device.updatedAt)}</p>
                                     </div>
                                 </div>
                             </div>
@@ -123,7 +122,7 @@ const DeviceDetailsModal: React.FC<DeviceDetailsModalProps> = ({ isOpen, device,
                                     </h4>
                                     <div className="p-6 rounded-3xl bg-slate-50/50 dark:bg-slate-900/20 border-2 border-slate-200 dark:border-slate-800">
                                         <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
-                                            {device.description}
+                                            {(device as any).description || "No description provided."}
                                         </p>
                                     </div>
                                 </div>
@@ -198,7 +197,7 @@ const DeviceDetailsModal: React.FC<DeviceDetailsModalProps> = ({ isOpen, device,
                             <div className="p-8 rounded-[40px] border-2 border-slate-200 dark:border-slate-700 border-dashed text-center">
                                 <span className="material-symbols-outlined text-4xl text-slate-300 dark:text-slate-600 mb-4 block">inventory_2</span>
                                 <p className="text-[10px] text-slate-400 font-black tracking-widest uppercase mb-1">Purchased On</p>
-                                <p className="text-sm font-black text-slate-700 dark:text-slate-300 tracking-tight">{formatDate(device.purchaseDate)}</p>
+                                <p className="text-sm font-black text-slate-700 dark:text-slate-300 tracking-tight">{formatDate(device.createdAt)}</p>
                             </div>
                         </div>
                     </div>
