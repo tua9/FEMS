@@ -53,7 +53,7 @@ export const STAT_CARDS: StatCard[] = [
   {
     id: "history",
     title: "Total History",
-    value: "24",
+    value: "25",
     icon: History,
     color: "bg-purple-500",
     iconShadow: "shadow-purple-500/40",

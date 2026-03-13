@@ -1,6 +1,10 @@
-import React, { useState, useMemo } from "react";
+import React, { useEffect, useMemo, useState } from "react";
+import { PageShell } from "@/components/motion";
 import { useNavigate } from "react-router-dom";
+import { useEquipmentStore } from "@/stores/useEquipmentStore";
+import { useBorrowRequestStore } from "@/stores/useBorrowRequestStore";
 
+<<<<<<< HEAD
 import {
   EquipmentFilter,
   EquipmentCategories,
@@ -22,82 +26,97 @@ import {
   TYPE_TO_CATEGORY,
 } from "@/data/student/mockStudentEquipment";
 import { PageHeader } from "@/components/shared/PageHeader";
+=======
+import { EquipmentGrid } from "@/components/shared/equipment/EquipmentGrid";
+import { BorrowedEquipmentGrid } from "@/components/shared/equipment/BorrowedEquipmentGrid";
+import { EquipmentCategories } from "@/components/shared/equipment/EquipmentCategories";
+import { EquipmentFilter } from "@/components/shared/equipment/EquipmentFilter";
+>>>>>>> 827992c66364d33a73b13d8a6f021304265cc9e1
 
 const EquipmentPage: React.FC = () => {
   const navigate = useNavigate();
 
-  // ── Filter state ──────────────────────────────────────────────────────────
+  const equipments = useEquipmentStore((state) => state.equipments);
+  const fetchEquipments = useEquipmentStore((state) => state.fetchAll);
+
+  const borrowRequests = useBorrowRequestStore((state) => state.borrowRequests);
+  const fetchBorrowRequests = useBorrowRequestStore(
+    (state) => state.fetchMyBorrowRequests
+  );
+
   const [searchText, setSearchText] = useState("");
   const [typeFilter, setTypeFilter] = useState("all-types");
   const [locationFilter, setLocationFilter] = useState("all-locations");
-  const [activeCategory, setActiveCategory] = useState("all");
-  const [currentPage, setCurrentPage] = useState(1);
+  const [activeCategory, setActiveCategory] = useState<string>("all");
 
-  // ── Borrow modal state ────────────────────────────────────────────────────
-  const [borrowingItem, setBorrowingItem] = useState<EquipmentItem | null>(null);
+  useEffect(() => {
+    fetchEquipments();
+    fetchBorrowRequests();
+  }, [fetchEquipments, fetchBorrowRequests]);
 
-  const handleTypeChange = (val: string) => {
-    setTypeFilter(val);
-    setActiveCategory(TYPE_TO_CATEGORY[val] ?? "all");
-    setCurrentPage(1);
-  };
+  // Map trạng thái borrow request
+  const borrowStatusMap = useMemo(() => {
+    const map: Record<string, string> = {};
 
-  const handleCategoryChange = (id: string) => {
-    setActiveCategory(id);
-    setTypeFilter(CATEGORY_TO_TYPE[id] ?? "all-types");
-    setCurrentPage(1);
-  };
-
-  const filteredEquipment = useMemo(() => {
-    return ALL_EQUIPMENT.filter((item) => {
-      const q = searchText.toLowerCase();
-      if (
-        q &&
-        !item.title.toLowerCase().includes(q) &&
-        !item.sku.toLowerCase().includes(q)
-      )
-        return false;
-      if (
-        typeFilter !== "all-types" &&
-        item.type !== (typeFilter as EquipmentType)
-      )
-        return false;
-      if (
-        locationFilter !== "all-locations" &&
-        item.locationKey !== (locationFilter as LocationKey)
-      )
-        return false;
-      return true;
+    borrowRequests.forEach((r) => {
+      if (r.equipment_id?._id) {
+        map[r.equipment_id._id] = r.status;
+      }
     });
-  }, [searchText, typeFilter, locationFilter]);
 
-  const totalPages = Math.max(
-    1,
-    Math.ceil(filteredEquipment.length / ITEMS_PER_PAGE),
-  );
-  const safePage = Math.min(currentPage, totalPages);
-  const pagedItems = filteredEquipment.slice(
-    (safePage - 1) * ITEMS_PER_PAGE,
-    safePage * ITEMS_PER_PAGE,
-  );
+    return map;
+  }, [borrowRequests]);
 
-  const handlePageChange = (page: number) => {
-    if (page < 1 || page > totalPages) return;
-    setCurrentPage(page);
-    window.scrollTo({ top: 0, behavior: "smooth" });
+  // Equipment available
+  const filteredEquipment = useMemo(() => {
+    return equipments
+      .filter((item) => item.status === "good")
+      .filter((item) => {
+        if (
+          searchText &&
+          !item.name.toLowerCase().includes(searchText.toLowerCase())
+        )
+          return false;
+
+        if (typeFilter !== "all-types" && item.category !== typeFilter)
+          return false;
+
+        if (
+          locationFilter !== "all-locations" &&
+          item.room_id?.name !== locationFilter
+        )
+          return false;
+
+        if (activeCategory !== "all" && item.category !== activeCategory)
+          return false;
+
+        return true;
+      });
+  }, [equipments, searchText, typeFilter, locationFilter, activeCategory]);
+
+  // Equipment đang borrow
+  const borrowedEquipment = useMemo(() => {
+    const borrowedIds = borrowRequests
+      .map((r) => r.equipment_id?._id)
+      .filter(Boolean) as string[];
+
+    return equipments.filter((e) => borrowedIds.includes(e._id));
+  }, [equipments, borrowRequests]);
+
+  const handleBorrowRequest = (item: any) => {
+    navigate(`/borrow/${item._id}`);
   };
 
-  const openBorrowModal = (item: EquipmentItem) => {
-    setBorrowingItem(item);
+  const handleViewHistory = () => {
+    navigate("/borrow/history");
   };
 
-  const closeBorrowModal = () => setBorrowingItem(null);
-
-  const handleSubmitBorrow = () => {
-    navigate("/student/borrow-history");
+  const handleItemClick = (item: any) => {
+    navigate(`/equipment/${item._id}`);
   };
 
   return (
+<<<<<<< HEAD
     <div className="w-full">
       <main className="mx-auto flex w-full max-w-[90vw] flex-1 flex-col px-4 pt-6 sm:pt-8 pb-10 sm:px-6 xl:max-w-7xl">
         <PageHeader
@@ -120,46 +139,46 @@ const EquipmentPage: React.FC = () => {
           }}
           onFilter={() => setCurrentPage(1)}
         />
+=======
+    <PageShell topPadding="pt-32" className="pb-20 px-4 sm:px-6">
+      <div className="mx-auto w-full max-w-7xl">
+>>>>>>> 827992c66364d33a73b13d8a6f021304265cc9e1
 
+        {/* Categories */}
         <EquipmentCategories
           activeCategory={activeCategory}
-          onCategoryChange={handleCategoryChange}
+          onCategoryChange={setActiveCategory}
         />
 
+        {/* Filter */}
+        <EquipmentFilter
+          searchText={searchText}
+          onSearchChange={setSearchText}
+          typeFilter={typeFilter}
+          onTypeChange={setTypeFilter}
+          locationFilter={locationFilter}
+          onLocationChange={setLocationFilter}
+          onFilter={() => {}}
+        />
+
+        {/* Available Equipment */}
         <EquipmentGrid
-          items={pagedItems}
-          totalCount={filteredEquipment.length}
-          onBorrowRequest={openBorrowModal}
+          items={filteredEquipment}
+          onBorrowRequest={handleBorrowRequest}
         />
 
-        <BorrowedEquipmentGrid
-          onViewHistory={() => navigate("/student/borrow-history")}
-          onItemClick={() => navigate("/student/borrow-history")}
-        />
-
-        {totalPages > 1 && (
-          <div className="mt-8 flex justify-center gap-2">
-            {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
-              <button
-                key={p}
-                onClick={() => handlePageChange(p)}
-                className={`h-10 w-10 rounded-full font-bold transition-all ${safePage === p ? "bg-[#1E2B58] text-white shadow-lg" : "text-[#1E2B58] hover:bg-white/40 dark:text-white dark:hover:bg-slate-800/40"}`}
-              >
-                {p}
-              </button>
-            ))}
-          </div>
+        {/* Currently Borrowed */}
+        {borrowedEquipment.length > 0 && (
+          <BorrowedEquipmentGrid
+            items={borrowedEquipment}
+            onViewHistory={handleViewHistory}
+            onItemClick={handleItemClick}
+            borrowStatus={borrowStatusMap}
+          />
         )}
-      </main>
 
-      {borrowingItem && (
-        <BorrowModal
-          item={borrowingItem}
-          onClose={closeBorrowModal}
-          onSubmit={handleSubmitBorrow}
-        />
-      )}
-    </div>
+      </div>
+    </PageShell>
   );
 };
 

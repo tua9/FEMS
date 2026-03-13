@@ -76,11 +76,14 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       }
     } catch {
       get().clearState();
+<<<<<<< HEAD
       // Không hiện toast lỗi nếu đang ở trang public (không cần đăng nhập)
       const publicPaths = ["/login", "/report-issue", "/forgot-password"];
       if (!publicPaths.includes(window.location.pathname)) {
         toast.error("Session expired. Please log in again.");
       }
+=======
+>>>>>>> 827992c66364d33a73b13d8a6f021304265cc9e1
     } finally {
       set({ loading: false });
     }

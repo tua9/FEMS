@@ -11,20 +11,18 @@ export const authService = {
   },
 
   signOut: async () => {
-    await api.delete("/auth/signout");
+    await api.post("/auth/logout");
   },
 
   fetchUserProfile: async () => {
-    const response = await api.get("/users/profile");
-    return response.data.user;
+    const response = await api.get("/auth/me");
+    return response.data;
   },
 
   refreshToken: async () => {
-    const response = await api.post(
-      "/auth/refresh-token",
-      null,
-      { withCredentials: true },
-    );
+    const response = await api.post("/auth/refresh-token", null, {
+      withCredentials: true,
+    });
     return response.data.accessToken;
   },
 };
