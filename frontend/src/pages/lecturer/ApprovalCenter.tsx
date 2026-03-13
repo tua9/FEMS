@@ -261,13 +261,13 @@ export const ApprovalCenter: React.FC = () => {
 
                             {/* Stats */}
                             <div className="flex flex-row items-center gap-4 shrink-0">
-                                <div className="glass-card bg-white/60 dark:bg-slate-800/60 border border-white/60 dark:border-white/10 px-6 md:px-10 py-5 md:py-7 rounded-3xl md:rounded-4xl flex flex-col items-center justify-center min-w-32 md:min-w-40">
+                                <div className="dashboard-card px-6 md:px-10 py-5 md:py-7 rounded-3xl md:rounded-4xl flex flex-col items-center justify-center min-w-32 md:min-w-40">
                                     <span className="text-4xl md:text-5xl font-black text-[#1E2B58] dark:text-white leading-none mb-1.5">
                                         {pendingCount}
                                     </span>
                                     <span className="text-[0.625rem] font-bold uppercase tracking-[0.2em] text-[#1E2B58]/50 dark:text-white/50">Pending</span>
                                 </div>
-                                <div className="glass-card bg-white/60 dark:bg-slate-800/60 border border-white/60 dark:border-white/10 px-6 md:px-10 py-5 md:py-7 rounded-3xl md:rounded-4xl flex flex-col items-center justify-center min-w-32 md:min-w-40">
+                                <div className="dashboard-card px-6 md:px-10 py-5 md:py-7 rounded-3xl md:rounded-4xl flex flex-col items-center justify-center min-w-32 md:min-w-40">
                                     <span className="text-4xl md:text-5xl font-black text-slate-500 dark:text-slate-300 leading-none mb-1.5">
                                         {TOTAL_STAT}
                                     </span>
@@ -307,7 +307,7 @@ export const ApprovalCenter: React.FC = () => {
                     className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm px-4"
                     onClick={e => { if (e.target === e.currentTarget) setApprovingReq(null); }}
                 >
-                    <div className="glass-card rounded-[2rem] p-8 w-full max-w-md shadow-2xl shadow-[#1E2B58]/20 relative animate-in fade-in zoom-in-95 duration-200">
+                    <div className="dashboard-card rounded-4xl p-8 w-full max-w-md shadow-2xl shadow-[#1E2B58]/20 relative animate-in fade-in zoom-in-95 duration-200">
                         <button
                             onClick={() => setApprovingReq(null)}
                             className="absolute top-5 right-5 w-8 h-8 flex items-center justify-center rounded-full hover:bg-[#1E2B58]/10 dark:hover:bg-white/10 transition"
@@ -366,7 +366,7 @@ export const ApprovalCenter: React.FC = () => {
                     className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm px-4"
                     onClick={e => { if (e.target === e.currentTarget) setRejectingReq(null); }}
                 >
-                    <div className="glass-card rounded-[2rem] p-8 w-full max-w-md shadow-2xl shadow-[#1E2B58]/20 relative animate-in fade-in zoom-in-95 duration-200">
+                    <div className="dashboard-card rounded-4xl p-8 w-full max-w-md shadow-2xl shadow-[#1E2B58]/20 relative animate-in fade-in zoom-in-95 duration-200">
                         <button
                             onClick={() => setRejectingReq(null)}
                             className="absolute top-5 right-5 w-8 h-8 flex items-center justify-center rounded-full hover:bg-[#1E2B58]/10 dark:hover:bg-white/10 transition"

@@ -1,5 +1,5 @@
 import React, { useRef } from 'react';
-import { BorrowRecord } from '../../../types/admin.types';
+import type { BorrowRecord } from '../../../types/admin.types';
 
 interface UpcomingReturnCardsProps {
     records: BorrowRecord[];
@@ -44,7 +44,7 @@ const UpcomingReturnCards: React.FC<UpcomingReturnCardsProps> = ({ records, onVi
     if (attentionRecords.length === 0) return null;
 
     return (
-        <div className="mt-12 bg-white/40 dark:bg-slate-800/60 p-8 ambient-shadow border-amber-200/50 dark:border-amber-900/30 rounded-[32px] border backdrop-blur-xl">
+        <div className="mt-12 dashboard-card p-8 rounded-4xl">
             <div className="flex items-center justify-between mb-6">
                 <div>
                     <h3 className="text-xl font-extrabold text-[#1A2B56] dark:text-white tracking-tight flex items-center gap-2">
@@ -83,7 +83,7 @@ const UpcomingReturnCards: React.FC<UpcomingReturnCardsProps> = ({ records, onVi
                     <div
                         key={record.id}
                         onClick={() => onViewDetails?.(record)}
-                        className="min-w-[280px] md:min-w-[31%] lg:min-w-[31%] flex-shrink-0 snap-start bg-white/80 dark:bg-slate-700/60 p-6 rounded-[28px] border border-white dark:border-slate-600 flex flex-col gap-3 group hover:bg-white dark:hover:bg-slate-700 hover:-translate-y-2 shadow-sm hover:shadow-[0_30px_60px_-15px_rgba(26,43,86,0.3)] dark:hover:shadow-[0_30px_60px_-15px_rgba(0,0,0,0.5)] cursor-pointer transition-all duration-500 backdrop-blur-sm relative overflow-hidden"
+                        className="min-w-[280px] md:min-w-[31%] lg:min-w-[31%] flex-shrink-0 snap-start dashboard-card p-6 rounded-[28px] flex flex-col gap-3 group hover:-translate-y-2 cursor-pointer transition-all duration-500 relative overflow-hidden"
                     >
                         {record.status === 'Overdue' && (
                             <div className="absolute top-2.5 right-2.5 text-[9px] font-bold uppercase tracking-wider text-red-500 bg-red-500/10 border border-red-300/40 px-2 py-0.5 rounded-full">

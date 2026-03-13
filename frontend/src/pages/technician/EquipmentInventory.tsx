@@ -1,11 +1,8 @@
 import React, { useState, useMemo } from 'react';
 import {
-  CATEGORY_META,
-  AssetCategory,
-  Asset,
   MOCK_ASSETS,
-  getAssetsByCategory,
 } from '@/data/technician/mockEquipment';
+import type { AssetCategory, Asset } from '@/data/technician/mockEquipment';
 import EquipmentSidebar from '@/components/technician/equipment/EquipmentSidebar';
 import AssetGrid from '@/components/technician/equipment/AssetGrid';
 import AssetPagination from '@/components/technician/equipment/AssetPagination';
@@ -185,7 +182,7 @@ const EquipmentInventory: React.FC = () => {
           onClick={closeModal}
         >
           <div
-            className="relative glass-card rounded-[2rem] shadow-2xl shadow-[#1E2B58]/20 p-8 flex flex-col items-center gap-5 w-full max-w-sm animate-in fade-in zoom-in-95 duration-200"
+            className="relative dashboard-card rounded-4xl shadow-2xl shadow-[#1E2B58]/20 p-8 flex flex-col items-center gap-5 w-full max-w-sm animate-in fade-in zoom-in-95 duration-200"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Close */}

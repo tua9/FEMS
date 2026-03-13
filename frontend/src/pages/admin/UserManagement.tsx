@@ -6,7 +6,7 @@ import UserDetailModal from '../../components/admin/users/UserDetailModal';
 import DeleteConfirmationModal from '../../components/admin/common/DeleteConfirmationModal';
 import ActionConfirmationModal from '../../components/admin/common/ActionConfirmationModal';
 import { adminApi } from '../../services/api/adminApi';
-import { AdminUser } from '../../types/admin.types';
+import type { AdminUser } from '../../types/admin.types';
 import { PageHeader } from '@/components/shared/PageHeader';
 
 const UserManagement: React.FC = () => {
@@ -226,10 +226,10 @@ const UserManagement: React.FC = () => {
                     {/* Total Users Card */}
                     <button
                         onClick={() => { setRoleFilter('All'); setStatusFilter('All'); }}
-                        className={`glass-card dark:!bg-slate-800/80 p-5 ambient-shadow rounded-2xl border transition-all duration-300 flex items-center justify-between hover:scale-[1.02] active:scale-95 text-left
+                        className={`dashboard-card p-5 rounded-2xl transition-all duration-300 flex items-center justify-between hover:scale-[1.02] active:scale-95 text-left
                             ${roleFilter === 'All' && statusFilter === 'All'
-                                ? 'border-blue-500 ring-2 ring-blue-500/20 shadow-lg bg-blue-50/10'
-                                : 'border-white/40 dark:border-white/10'}`}
+                                ? 'ring-2 ring-blue-500/20'
+                                : ''}`}
                     >
                         <div>
                             <p className="text-[10px] font-medium uppercase tracking-[0.2em] text-slate-500 mb-1">Total Users</p>
@@ -243,10 +243,10 @@ const UserManagement: React.FC = () => {
                     {/* Active Users Card */}
                     <button
                         onClick={() => { setRoleFilter('All'); setStatusFilter('Active'); }}
-                        className={`glass-card dark:!bg-slate-800/80 p-5 ambient-shadow rounded-2xl border transition-all duration-300 flex items-center justify-between hover:scale-[1.02] active:scale-95 text-left
+                        className={`dashboard-card p-5 rounded-2xl transition-all duration-300 flex items-center justify-between hover:scale-[1.02] active:scale-95 text-left
                             ${statusFilter === 'Active'
-                                ? 'border-emerald-500 ring-2 ring-emerald-500/20 shadow-lg bg-emerald-50/10'
-                                : 'border-white/40 dark:border-white/10'}`}
+                                ? 'ring-2 ring-emerald-500/20'
+                                : ''}`}
                     >
                         <div>
                             <p className="text-[10px] font-medium uppercase tracking-[0.2em] text-emerald-500 mb-1">Active</p>
@@ -260,10 +260,10 @@ const UserManagement: React.FC = () => {
                     {/* Technicians Card */}
                     <button
                         onClick={() => { setRoleFilter('Technician'); setStatusFilter('All'); }}
-                        className={`glass-card dark:!bg-slate-800/80 p-5 ambient-shadow rounded-2xl border transition-all duration-300 flex items-center justify-between hover:scale-[1.02] active:scale-95 text-left
+                        className={`dashboard-card p-5 rounded-2xl transition-all duration-300 flex items-center justify-between hover:scale-[1.02] active:scale-95 text-left
                             ${roleFilter === 'Technician'
-                                ? 'border-amber-500 ring-2 ring-amber-500/20 shadow-lg bg-amber-50/10'
-                                : 'border-white/40 dark:border-white/10'}`}
+                                ? 'ring-2 ring-amber-500/20'
+                                : ''}`}
                     >
                         <div>
                             <p className="text-[10px] font-medium uppercase tracking-[0.2em] text-slate-500 mb-1">Technicians</p>
@@ -279,10 +279,10 @@ const UserManagement: React.FC = () => {
                     {/* Inactive Users Card */}
                     <button
                         onClick={() => { setRoleFilter('All'); setStatusFilter('Inactive'); }}
-                        className={`glass-card dark:!bg-slate-800/80 p-5 ambient-shadow rounded-2xl border transition-all duration-300 flex items-center justify-between hover:scale-[1.02] active:scale-95 text-left
+                        className={`dashboard-card p-5 rounded-2xl transition-all duration-300 flex items-center justify-between hover:scale-[1.02] active:scale-95 text-left
                             ${statusFilter === 'Inactive'
-                                ? 'border-red-500 ring-2 ring-red-500/20 shadow-lg bg-red-50/10'
-                                : 'border-red-200 dark:border-red-900/40 bg-red-50/50'}`}
+                                ? 'ring-2 ring-red-500/20'
+                                : ''}`}
                     >
                         <div>
                             <p className="text-[10px] font-medium uppercase tracking-[0.2em] text-red-500 mb-1">Inactive</p>
@@ -294,7 +294,7 @@ const UserManagement: React.FC = () => {
                     </button>
                 </div>
 
-                <div className="bg-white/40 dark:bg-slate-800/60 p-8 ambient-shadow rounded-[32px] border border-white/40 dark:border-white/10 backdrop-blur-xl transition-all duration-300">
+                <div className="dashboard-card p-8 rounded-4xl transition-all duration-300">
                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
                         <div className="relative max-w-sm w-full bg-white/60 dark:bg-slate-700/50 rounded-2xl border border-white/80 dark:border-slate-600 p-0.5">
                             <div className="relative flex items-center">
@@ -309,7 +309,7 @@ const UserManagement: React.FC = () => {
                             </div>
                         </div>
 
-                        <div className="glass-card !rounded-[1.5rem] flex items-center gap-0 p-1">
+                        <div className="dashboard-card rounded-3xl! flex items-center gap-0 p-1">
                             <CustomDropdown
                                 value={roleFilter}
                                 options={[

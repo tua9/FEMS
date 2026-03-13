@@ -4,6 +4,7 @@ import {
   MODAL_OVERLAY, MODAL_CARD, CLOSE_BTN,
   BTN_PRIMARY, SECTION_LABEL, CHIP,
 } from '@/components/technician/common/modalStyles';
+import ModalPortal from '@/components/technician/common/ModalPortal';
 
 // ── Unified record shape ──────────────────────────────────────────────────────
 export interface HandoverDetailRecord {
@@ -41,6 +42,7 @@ const Section: React.FC<{ title: string; icon: string; children: React.ReactNode
 );
 
 const HandoverDetailModal: React.FC<Props> = ({ record, onClose }) => (
+  <ModalPortal>
   <div className={MODAL_OVERLAY} onClick={onClose}>
     <div
       className={`${MODAL_CARD} max-w-xl`}
@@ -172,6 +174,7 @@ const HandoverDetailModal: React.FC<Props> = ({ record, onClose }) => (
       </div>
     </div>
   </div>
+  </ModalPortal>
 );
 
 export default HandoverDetailModal;

@@ -70,7 +70,7 @@ export const AnimatedSection: React.FC<AnimatedSectionProps> = ({
       initial="hidden"
       whileInView="visible"
       viewport={{ once, margin: "-40px" }}
-      className={clsx("will-change-transform", className)}
+      className={clsx(className)}
     >
       {children}
     </motion.section>

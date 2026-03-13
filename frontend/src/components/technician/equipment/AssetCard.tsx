@@ -12,7 +12,7 @@ const AssetCard: React.FC<Props> = ({ asset, onClick }) => {
   return (
     <div
       onClick={() => onClick?.(asset)}
-      className="tech-card rounded-3xl border shadow-sm hover:shadow-md transition-all group relative cursor-pointer overflow-hidden flex flex-col"
+      className="dashboard-card rounded-3xl overflow-hidden flex flex-col hover:shadow-lg hover:-translate-y-0.5 transition-all group relative cursor-pointer"
     >
       {/* Image / Icon area */}
       {asset.imageUrl ? (

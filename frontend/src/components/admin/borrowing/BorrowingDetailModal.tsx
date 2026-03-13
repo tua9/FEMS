@@ -1,6 +1,6 @@
 import React from 'react';
 import { createPortal } from 'react-dom';
-import { BorrowRecord } from '../../../types/admin.types';
+import type { BorrowRecord } from '../../../types/admin.types';
 
 interface BorrowingDetailModalProps {
     isOpen: boolean;
@@ -36,7 +36,7 @@ const BorrowingDetailModal: React.FC<BorrowingDetailModalProps> = ({
 
     return (
         createPortal(
-            <div className="fixed inset-0 z-[100] flex items-center justify-center px-4 py-6 bg-black/30 backdrop-blur-sm">
+            <div className="fixed inset-0 z-100 flex items-center justify-center px-4 py-6 bg-black/30 backdrop-blur-sm">
                 <style dangerouslySetInnerHTML={{
                     __html: `
                     .no-scrollbar::-webkit-scrollbar { display: none; }
@@ -49,7 +49,7 @@ const BorrowingDetailModal: React.FC<BorrowingDetailModalProps> = ({
                 ></div>
 
                 {/* Modal Content */}
-                <div className="relative w-full max-w-2xl glass-card rounded-[2rem] shadow-2xl shadow-[#1E2B58]/20 overflow-hidden flex flex-col max-h-[90vh] animate-in fade-in zoom-in-95 duration-200">
+                <div className="relative w-full max-w-2xl dashboard-card rounded-4xl shadow-2xl shadow-[#1E2B58]/20 overflow-hidden flex flex-col max-h-[90vh] animate-in fade-in zoom-in-95 duration-200">
 
                     {/* Header Section */}
                     <div className="px-10 pt-8 pb-6 relative border-b border-black/8 dark:border-white/10">
@@ -107,7 +107,7 @@ const BorrowingDetailModal: React.FC<BorrowingDetailModalProps> = ({
                         </div>
 
                         {/* Schedule & Timing */}
-                        <div className="p-8 rounded-[32px] bg-slate-50/50 dark:bg-slate-900/20 border-2 border-slate-100 dark:border-slate-800">
+                        <div className="p-8 rounded-4xl bg-slate-50/50 dark:bg-slate-900/20 border-2 border-slate-100 dark:border-slate-800">
                             <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                                 <div className="space-y-1">
                                     <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Scheduled Due Date</p>
@@ -155,7 +155,7 @@ const BorrowingDetailModal: React.FC<BorrowingDetailModalProps> = ({
 
                         {/* Important Warning if Overdue */}
                         {record.status === 'Overdue' && (
-                            <div className="p-6 rounded-[32px] bg-red-50/50 dark:bg-red-900/10 border-2 border-red-200 dark:border-red-900/30 flex gap-4">
+                            <div className="p-6 rounded-4xl bg-red-50/50 dark:bg-red-900/10 border-2 border-red-200 dark:border-red-900/30 flex gap-4">
                                 <span className="material-symbols-outlined text-red-500">warning</span>
                                 <div>
                                     <p className="text-sm font-bold text-red-700 dark:text-red-400">Compliance Warning</p>

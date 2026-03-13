@@ -1,6 +1,6 @@
 import React from 'react';
 import { createPortal } from 'react-dom';
-import { DamageReport } from '../../../types/admin.types';
+import type { DamageReport } from '../../../types/admin.types';
 
 interface DamageReportDetailModalProps {
     isOpen: boolean;
@@ -56,7 +56,7 @@ const DamageReportDetailModal: React.FC<DamageReportDetailModalProps> = ({
             ></div>
 
             {/* Modal Content */}
-            <div className="relative w-full max-w-2xl glass-card rounded-[2rem] shadow-2xl shadow-[#1E2B58]/20 overflow-hidden flex flex-col max-h-[90vh] animate-in fade-in zoom-in-95 duration-200">
+            <div className="relative w-full max-w-2xl dashboard-card rounded-4xl shadow-2xl shadow-[#1E2B58]/20 overflow-hidden flex flex-col max-h-[90vh] animate-in fade-in zoom-in-95 duration-200">
 
                 {/* Header Section */}
                 <div className="px-10 pt-8 pb-6 relative border-b border-black/8 dark:border-white/10">

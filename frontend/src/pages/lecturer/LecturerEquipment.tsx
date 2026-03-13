@@ -10,7 +10,7 @@ const LecturerEquipment: React.FC = () => {
         subtitle="Explore and reserve university resources with our enhanced Lecturer Portal."
       />
 
-      <section className="extreme-glass mb-8 flex flex-wrap items-center gap-4 rounded-full px-6 py-2.5">
+      <section className="dashboard-card mb-8 flex flex-wrap items-center gap-4 rounded-full px-6 py-2.5">
         <div className="flex min-w-[300px] flex-1 items-center gap-3">
           <span className="material-symbols-outlined text-[#1E2B58] opacity-40 dark:text-white">
             search
@@ -37,7 +37,7 @@ const LecturerEquipment: React.FC = () => {
       <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
         {EQUIPMENT.map((item) => (
           <div key={item.id} className="flex flex-col gap-6">
-            <div className="glass-card group relative flex aspect-[4/3] items-center justify-center overflow-hidden rounded-[32px] p-8">
+            <div className="dashboard-card group relative flex aspect-4/3 items-center justify-center overflow-hidden rounded-4xl p-8">
               <span
                 className={`absolute top-6 right-6 rounded-full px-3 py-1 text-[9px] font-black tracking-widest uppercase ${
                   item.status === "AVAILABLE"

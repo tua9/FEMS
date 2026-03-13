@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { HandoverTab as HandoverTabType } from '@/data/technician/mockHandover';
+import type { HandoverTab as HandoverTabType } from '@/data/technician/mockHandover';
 import HandoverTabBar from '@/components/technician/handover/HandoverTabBar';
 import RequestsTab from '@/components/technician/handover/RequestsTab';
 import HandoverTab from '@/components/technician/handover/HandoverTab';

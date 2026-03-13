@@ -64,7 +64,7 @@ const PerformanceInsights: React.FC = () => {
             <div className="relative" ref={dropdownRef}>
               <button
                 onClick={() => setDropdownOpen((v) => !v)}
-                className="px-5 py-3 bg-white/80 dark:bg-slate-800/80 glass-card border border-white/40 dark:border-white/5 rounded-2xl text-sm font-bold text-[#232F58] dark:text-white shadow-sm flex items-center gap-2 hover:shadow-md transition-shadow"
+                className="px-5 py-3 dashboard-card rounded-2xl text-sm font-bold text-[#232F58] dark:text-white shadow-sm flex items-center gap-2 hover:shadow-md transition-shadow"
               >
                 <span className="material-symbols-outlined text-lg text-slate-500">calendar_today</span>
                 {selectedLabel}

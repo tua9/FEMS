@@ -6,7 +6,7 @@ import ReturnCalendar from '../../components/admin/borrowing/ReturnCalendar';
 import NewBorrowModal from '../../components/admin/borrowing/NewBorrowModal';
 import BorrowingDetailModal from '../../components/admin/borrowing/BorrowingDetailModal';
 import { adminApi } from '../../services/api/adminApi';
-import { BorrowRecord } from '../../types/admin.types';
+import type { BorrowRecord } from '../../types/admin.types';
 import { useLocation } from 'react-router-dom';
 import { PageHeader } from '@/components/shared/PageHeader';
 
@@ -134,7 +134,7 @@ const BorrowingManagement: React.FC = () => {
                     {/* Active Loans Card */}
                     <button
                         onClick={() => setStatusFilter(statusFilter === 'Approved' ? 'All' : 'Approved')}
-                        className="group relative p-6 ambient-shadow flex items-center justify-between rounded-[24px] border transition-all duration-300 hover:scale-[1.02] active:scale-95 text-left w-full backdrop-blur-xl bg-white/60 dark:bg-slate-800/60 border-white/60 dark:border-white/10"
+                        className="group relative p-6 dashboard-card flex items-center justify-between rounded-3xl transition-all duration-300 hover:scale-[1.02] active:scale-95 text-left w-full"
                     >
                         <div>
                             <p className="text-[10px] font-medium uppercase tracking-[0.2em] text-slate-500 mb-1">Active Loans</p>
@@ -148,7 +148,7 @@ const BorrowingManagement: React.FC = () => {
                     {/* Pending Approvals Card */}
                     <button
                         onClick={() => setStatusFilter(statusFilter === 'Pending' ? 'All' : 'Pending')}
-                        className="group relative p-6 ambient-shadow flex items-center justify-between rounded-[24px] border transition-all duration-300 hover:scale-[1.02] active:scale-95 text-left w-full backdrop-blur-xl bg-white/60 dark:bg-slate-800/60 border-white/60 dark:border-white/10"
+                        className="group relative p-6 dashboard-card flex items-center justify-between rounded-3xl transition-all duration-300 hover:scale-[1.02] active:scale-95 text-left w-full"
                     >
                         <div>
                             <p className="text-[10px] font-medium uppercase tracking-[0.2em] text-slate-500 mb-1">Pending Approvals</p>
@@ -162,7 +162,7 @@ const BorrowingManagement: React.FC = () => {
                     {/* Overdue Returns Card */}
                     <button
                         onClick={() => setStatusFilter(statusFilter === 'Overdue' ? 'All' : 'Overdue')}
-                        className="group relative p-6 ambient-shadow flex items-center justify-between rounded-[24px] border transition-all duration-300 hover:scale-[1.02] active:scale-95 text-left w-full backdrop-blur-xl bg-white/60 dark:bg-slate-800/60 border-white/60 dark:border-white/10"
+                        className="group relative p-6 dashboard-card flex items-center justify-between rounded-3xl transition-all duration-300 hover:scale-[1.02] active:scale-95 text-left w-full"
                     >
                         <div>
                             <p className="text-[10px] font-medium uppercase tracking-[0.2em] text-slate-500 mb-1">Overdue Returns</p>
@@ -183,7 +183,7 @@ const BorrowingManagement: React.FC = () => {
                 <div className="grid grid-cols-1 xl:grid-cols-3 gap-8 items-start">
                     {/* Main Table Area */}
                     <div className="xl:col-span-2 space-y-8">
-                        <div className="bg-white/40 dark:bg-slate-800/60 p-8 ambient-shadow rounded-[32px] border border-white/40 dark:border-white/10 backdrop-blur-xl transition-all duration-300">
+                        <div className="dashboard-card p-8 rounded-4xl transition-all duration-300">
                             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
                                 <h4 className="font-extrabold text-[#1A2B56] dark:text-white text-lg">Loan Requests & Active Borrowings</h4>
 
@@ -208,7 +208,7 @@ const BorrowingManagement: React.FC = () => {
                                             )}
                                         </div>
                                     </div>
-                                    <div className="glass-card !rounded-[1.25rem] flex items-center">
+                                    <div className="dashboard-card rounded-[1.25rem]! flex items-center">
                                         <CustomDropdown
                                             value={statusFilter as string}
                                             options={[

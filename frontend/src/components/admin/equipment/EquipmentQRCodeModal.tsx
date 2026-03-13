@@ -1,6 +1,6 @@
 import React from 'react';
 import { createPortal } from 'react-dom';
-import { Asset } from '../../../types/admin.types';
+import type { Asset } from '../../../types/admin.types';
 
 interface EquipmentQRCodeModalProps {
     isOpen: boolean;
@@ -15,7 +15,7 @@ const EquipmentQRCodeModal: React.FC<EquipmentQRCodeModalProps> = ({ isOpen, onC
         <div className="fixed inset-0 z-[100] flex items-center justify-center px-4 py-6 bg-black/30 backdrop-blur-sm">
             <div className="absolute inset-0" onClick={onClose}></div>
 
-            <div className="relative w-full max-w-sm glass-card rounded-[2rem] shadow-2xl shadow-[#1E2B58]/20 p-8 animate-in fade-in zoom-in-95 duration-200">
+            <div className="relative w-full max-w-sm dashboard-card rounded-4xl shadow-2xl shadow-[#1E2B58]/20 p-8 animate-in fade-in zoom-in-95 duration-200">
                 <button
                     onClick={onClose}
                     className="absolute top-5 right-5 w-8 h-8 rounded-full flex items-center justify-center text-[#1E2B58]/50 hover:text-[#1E2B58] hover:bg-[#1E2B58]/8 dark:text-white/50 dark:hover:text-white dark:hover:bg-white/10 transition-colors"
