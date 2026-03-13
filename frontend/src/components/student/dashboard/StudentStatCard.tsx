@@ -59,32 +59,6 @@ const StudentStatCard: React.FC = () => {
   ];
 
   return (
-<<<<<<< HEAD
-    <Link
-      to={card.route}
-      className="dashboard-card group relative flex min-h-42.5 flex-col justify-between gap-4 rounded-4xl p-6 transition-all"
-    >
-      {/* Status dot */}
-      <div className={`absolute top-5 right-5 h-2 w-2 rounded-full ${card.dot} ${card.glow}`} />
-
-      {/* Icon */}
-      <div
-        className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl ${card.color} text-white shadow-xl ${card.iconShadow}`}
-      >
-        <Icon className="h-6 w-6" />
-      </div>
-
-      {/* Texts */}
-      <div>
-        <p className="text-xs font-black tracking-widest text-[#1E2B58]/40 uppercase dark:text-white/40">
-          {card.title}
-        </p>
-        <h3 className="mt-1 text-3xl font-black text-[#1E2B58] dark:text-white">
-          {card.value}
-        </h3>
-      </div>
-    </Link>
-=======
     <AnimatedList className="mb-12 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4 lg:gap-7">
       {statCards.map((card) => {
         const Icon = card.icon;
@@ -115,7 +89,6 @@ const StudentStatCard: React.FC = () => {
         );
       })}
     </AnimatedList>
->>>>>>> 827992c66364d33a73b13d8a6f021304265cc9e1
   );
 };
 

@@ -4,34 +4,10 @@ import { useNavigate } from "react-router-dom";
 import { useEquipmentStore } from "@/stores/useEquipmentStore";
 import { useBorrowRequestStore } from "@/stores/useBorrowRequestStore";
 
-<<<<<<< HEAD
-import {
-  EquipmentFilter,
-  EquipmentCategories,
-  EquipmentGrid,
-  BorrowedEquipmentGrid,
-} from "@/components/shared/equipment";
-import type {
-  EquipmentItem,
-  EquipmentType,
-  LocationKey,
-} from "@/components/shared/equipment";
-import { BorrowModal } from "@/components/student/equipment";
-import {
-  STUDENT_ALL_EQUIPMENT as ALL_EQUIPMENT,
-  ITEMS_PER_PAGE,
-} from "@/data/student/mockStudentData";
-import {
-  CATEGORY_TO_TYPE,
-  TYPE_TO_CATEGORY,
-} from "@/data/student/mockStudentEquipment";
-import { PageHeader } from "@/components/shared/PageHeader";
-=======
 import { EquipmentGrid } from "@/components/shared/equipment/EquipmentGrid";
 import { BorrowedEquipmentGrid } from "@/components/shared/equipment/BorrowedEquipmentGrid";
 import { EquipmentCategories } from "@/components/shared/equipment/EquipmentCategories";
 import { EquipmentFilter } from "@/components/shared/equipment/EquipmentFilter";
->>>>>>> 827992c66364d33a73b13d8a6f021304265cc9e1
 
 const EquipmentPage: React.FC = () => {
   const navigate = useNavigate();
@@ -116,33 +92,8 @@ const EquipmentPage: React.FC = () => {
   };
 
   return (
-<<<<<<< HEAD
-    <div className="w-full">
-      <main className="mx-auto flex w-full max-w-[90vw] flex-1 flex-col px-4 pt-6 sm:pt-8 pb-10 sm:px-6 xl:max-w-7xl">
-        <PageHeader
-          title="Equipment Catalog"
-          subtitle="Explore and reserve university resources with our enhanced Student Portal."
-        />
-
-        <EquipmentFilter
-          searchText={searchText}
-          onSearchChange={(val) => {
-            setSearchText(val);
-            setCurrentPage(1);
-          }}
-          typeFilter={typeFilter}
-          onTypeChange={handleTypeChange}
-          locationFilter={locationFilter}
-          onLocationChange={(val) => {
-            setLocationFilter(val);
-            setCurrentPage(1);
-          }}
-          onFilter={() => setCurrentPage(1)}
-        />
-=======
     <PageShell topPadding="pt-32" className="pb-20 px-4 sm:px-6">
       <div className="mx-auto w-full max-w-7xl">
->>>>>>> 827992c66364d33a73b13d8a6f021304265cc9e1
 
         {/* Categories */}
         <EquipmentCategories
