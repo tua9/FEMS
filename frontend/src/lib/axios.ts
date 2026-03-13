@@ -32,9 +32,10 @@ api.interceptors.response.use(
       }
     }
 
-    // 401 / 403 → logout luôn, nhưng tránh chuyển hướng nếu đang ở trang login
+    // 401 / 403 → logout luôn, nhưng tránh chuyển hướng nếu đang ở trang login hoặc trang public
+    const publicPaths = ["/login", "/report-issue"];
     if (error.response?.status === 401 || error.response?.status === 403) {
-      if (window.location.pathname !== "/login") {
+      if (!publicPaths.includes(window.location.pathname)) {
         await authService.signOut();
         window.location.href = "/login";
       }

@@ -41,8 +41,7 @@ export default function BorrowHistoryPage() {
   } = actions;
 
   return (
-    <div className="student-layout transition-colors duration-300">
-      <main className="mx-auto flex w-full max-w-350 flex-1 flex-col px-4 pt-32 pb-10 sm:px-6 md:pt-36">
+    <div className="w-full">        <main className="mx-auto flex w-full max-w-350 flex-1 flex-col px-4 pt-6 sm:pt-8 pb-10 sm:px-6">
         <HistoryHeader />
         <HistoryTabs activeTab={activeTab} onTabChange={handleTabChange} />
         <HistoryFilterBar

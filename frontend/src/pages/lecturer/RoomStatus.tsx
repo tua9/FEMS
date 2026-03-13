@@ -1,5 +1,6 @@
 
 import React from 'react';
+import { PageHeader } from '@/components/shared/PageHeader';
 
 interface Room {
   id: string;
@@ -47,15 +48,11 @@ const ROOMS: Room[] = [
 
 const RoomStatus: React.FC = () => {
   return (
-    <div className="pt-32 pb-10 px-6 max-w-[1400px] mx-auto animate-in fade-in duration-500">
-      <header className="mb-12">
-        <h2 className="text-4xl md:text-5xl font-black text-[#1E2B58] dark:text-white tracking-tight">
-          Room Status Center
-        </h2>
-        <p className="mt-3 text-slate-500 dark:text-slate-400 font-medium max-w-2xl">
-          Live room status and real-time monitoring of facility conditions for faculty and maintenance staff.
-        </p>
-      </header>
+    <div className="pt-6 sm:pt-8 pb-10 px-6 max-w-350 mx-auto animate-in fade-in duration-500">
+      <PageHeader
+        title="Room Status Center"
+        subtitle="Live room status and real-time monitoring of facility conditions for faculty and maintenance staff."
+      />
 
       <div className="glass-card !rounded-[24px] p-2 mb-12 flex flex-wrap gap-2 items-center">
         {['All Buildings', 'All Floors', 'Device Status: All'].map((filter) => (

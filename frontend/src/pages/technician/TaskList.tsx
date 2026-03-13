@@ -8,6 +8,7 @@ import {
   MOCK_TICKETS,
 } from '@/data/technician/mockTickets';
 import TicketTable from '@/components/technician/tickets/TicketTable';
+import { PageHeader } from '@/components/shared/PageHeader';
 import TicketViewModal from '@/components/technician/tickets/TicketViewModal';
 import TicketApproveModal from '@/components/technician/tickets/TicketApproveModal';
 import TicketRejectModal from '@/components/technician/tickets/TicketRejectModal';
@@ -213,13 +214,14 @@ const TicketCenter: React.FC = () => {
   const findTicket = (id: string) => tickets.find((t) => t.id === id)!;
 
   return (
-    <div className="pt-32 pb-16 px-6 max-w-7xl mx-auto space-y-8">
+    <div className="pt-6 sm:pt-8 pb-16 px-6 max-w-7xl mx-auto space-y-8">
       {/* ── Page header ── */}
-      <section className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-        <div className="space-y-1">
-          <h1 className="text-4xl font-extrabold text-[#232F58] dark:text-white tracking-tight">Ticket Center</h1>
-          <p className="text-slate-600 dark:text-slate-400 font-medium">Manage and process facility maintenance requests</p>
-        </div>
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+        <PageHeader
+          title="Ticket Center"
+          subtitle="Manage and process facility maintenance requests"
+          className="items-start! text-left! mb-0!"
+        />
         <div className="flex items-center gap-3">
           {/* Search */}
           <div className="relative w-full md:w-80">
@@ -243,7 +245,7 @@ const TicketCenter: React.FC = () => {
             Export Log
           </button>
         </div>
-      </section>
+      </div>
 
       {/* ── Main card ── */}
       <section className="tech-card rounded-3xl overflow-hidden flex flex-col border min-h-[600px]">

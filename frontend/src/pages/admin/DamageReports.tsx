@@ -6,6 +6,7 @@ import DamageReportDetailModal from '../../components/admin/reports/DamageReport
 import TechnicianAssignmentModal from '../../components/admin/reports/TechnicianAssignmentModal';
 import { adminApi } from '../../services/api/adminApi';
 import { DamageReport, AdminUser } from '../../types/admin.types';
+import { PageHeader } from '@/components/shared/PageHeader';
 
 const DamageReports: React.FC = () => {
     const [reports, setReports] = useState<DamageReport[]>([]);
@@ -168,16 +169,17 @@ const DamageReports: React.FC = () => {
     };
 
     return (
-        <div className="max-w-7xl mx-auto px-6 pb-16 relative">
-            <div className="mb-8 px-2 flex flex-col md:flex-row md:items-end justify-between gap-6 mt-6">
-                <div>
-                    <h2 className="text-3xl font-extrabold text-[#1A2B56] dark:text-white tracking-tight">Damage Reports & Issues</h2>
-                    <p className="text-slate-700 dark:text-slate-300 mt-1 font-medium">Track equipment issues, track maintenance and assign technicians.</p>
-                </div>
+        <div className="max-w-7xl mx-auto px-6 pt-6 sm:pt-8 pb-16 relative">
+            <div className="mb-8 px-2 flex flex-col md:flex-row md:items-center justify-between gap-6 mt-2">
+                <PageHeader
+                    title="Damage Reports & Issues"
+                    subtitle="Track equipment issues, maintenance status and assign technicians."
+                    className="items-start! text-left! mb-0!"
+                />
                 <button
                     onClick={handleExportData}
                     disabled={isExporting || reports.length === 0}
-                    className="flex items-center gap-2 px-6 py-3 bg-white hover:bg-slate-50 dark:bg-slate-800 dark:hover:bg-slate-700 text-[#1A2B56] dark:text-white rounded-2xl font-bold text-sm shadow-md transition-all border border-slate-200 dark:border-slate-600 disabled:opacity-50 disabled:cursor-not-allowed active:scale-95"
+                    className="flex items-center gap-2 px-6 py-3 bg-white hover:bg-slate-50 dark:bg-slate-800 dark:hover:bg-slate-700 text-[#1A2B56] dark:text-white rounded-2xl font-bold text-sm shadow-md transition-all border border-slate-200 dark:border-slate-600 disabled:opacity-50 disabled:cursor-not-allowed active:scale-95 shrink-0"
                 >
                     <span className={`material-symbols-outlined text-lg ${isExporting ? 'animate-bounce' : ''}`}>
                         {isExporting ? 'hourglass_top' : 'download'}

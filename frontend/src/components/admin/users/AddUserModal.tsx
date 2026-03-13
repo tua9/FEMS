@@ -69,24 +69,27 @@ const AddUserModal: React.FC<AddUserModalProps> = ({ isOpen, onClose, AdminUser,
     if (!isOpen) return null;
 
     return createPortal(
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-            <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm transition-opacity" onClick={onClose}></div>
+        <div className="fixed inset-0 z-[100] flex items-center justify-center px-4 py-6 bg-black/30 backdrop-blur-sm">
+            <div className="absolute inset-0" onClick={onClose}></div>
 
-            <div className="relative w-full max-w-2xl hover:transform-none dark:!bg-slate-800/70 rounded-[32px] border border-white/50 dark:border-white/10 shadow-2xl bg-white/70 backdrop-blur-xl overflow-hidden flex flex-col max-h-[90vh]">
+            <div className="relative w-full max-w-2xl glass-card rounded-[2rem] shadow-2xl shadow-[#1E2B58]/20 overflow-hidden flex flex-col max-h-[90vh] animate-in fade-in zoom-in-95 duration-200">
 
                 {/* Header */}
-                <div className="flex items-center justify-between p-6 border-b border-slate-200/50 dark:border-slate-700/50">
+                <div className="flex items-center justify-between px-8 py-6 border-b border-black/8 dark:border-white/10">
                     <div>
-                        <h3 className="text-xl font-extrabold text-[#1A2B56] dark:text-white">
-                            {isEdit ? 'Edit AdminUser Profile' : 'Add New AdminUser'}
+                        <p className="text-[0.625rem] font-black uppercase tracking-widest text-[#1E2B58]/50 dark:text-white/40 mb-0.5">
+                            {isEdit ? 'Edit Record' : 'New User'}
+                        </p>
+                        <h3 className="text-xl font-extrabold text-[#1E2B58] dark:text-white">
+                            {isEdit ? 'Edit User Profile' : 'Add New User'}
                         </h3>
-                        <p className="text-xs text-slate-500 font-semibold mt-1">
+                        <p className="text-xs text-slate-400 font-medium mt-0.5">
                             {isEdit ? 'Update account information and permissions.' : 'Create a new account and assign roles.'}
                         </p>
                     </div>
                     <button
                         onClick={onClose}
-                        className="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors rounded-full hover:bg-slate-100 dark:hover:bg-slate-700"
+                        className="w-8 h-8 rounded-full flex items-center justify-center text-[#1E2B58]/50 hover:text-[#1E2B58] hover:bg-[#1E2B58]/8 dark:text-white/50 dark:hover:text-white dark:hover:bg-white/10 transition-colors"
                     >
                         <span className="material-symbols-outlined">close</span>
                     </button>
@@ -196,10 +199,10 @@ const AddUserModal: React.FC<AddUserModalProps> = ({ isOpen, onClose, AdminUser,
                 </div>
 
                 {/* Footer */}
-                <div className="p-6 border-t border-slate-200/50 dark:border-slate-700/50 flex items-center justify-end gap-3 bg-slate-50/50 dark:bg-slate-800/50">
+                <div className="px-8 py-5 border-t border-black/8 dark:border-white/10 flex items-center justify-end gap-3 bg-black/3 dark:bg-white/3">
                     <button
                         onClick={onClose}
-                        className="px-6 py-2.5 rounded-xl font-bold text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
+                        className="px-6 py-3 rounded-[1.25rem] font-bold text-sm border border-[#1E2B58]/15 dark:border-white/15 text-[#1E2B58]/70 dark:text-white/70 hover:bg-[#1E2B58]/5 dark:hover:bg-white/5 transition-all"
                     >
                         Cancel
                     </button>
@@ -207,10 +210,10 @@ const AddUserModal: React.FC<AddUserModalProps> = ({ isOpen, onClose, AdminUser,
                         type="submit"
                         form="userForm"
                         disabled={isSubmitting}
-                        className={`px-8 py-2.5 rounded-xl font-bold text-sm bg-[#1A2B56] hover:bg-[#2A3B66] text-white shadow-lg transition-colors flex items-center gap-2 ${isSubmitting ? 'animate-pulse' : ''}`}
+                        className={`px-8 py-3 rounded-[1.25rem] font-bold text-sm bg-[#1E2B58] hover:bg-[#151f40] hover:scale-[1.02] active:scale-95 text-white shadow-lg shadow-[#1E2B58]/20 transition-all flex items-center gap-2 ${isSubmitting ? 'animate-pulse' : ''}`}
                     >
                         <span className="material-symbols-outlined text-sm">{isSubmitting ? 'hourglass_top' : (isEdit ? 'save' : 'person_add')}</span>
-                        {isSubmitting ? 'Saving...' : (isEdit ? 'Update AdminUser' : 'Create AdminUser')}
+                        {isSubmitting ? 'Saving...' : (isEdit ? 'Update User' : 'Create User')}
                     </button>
                 </div>
             </div>

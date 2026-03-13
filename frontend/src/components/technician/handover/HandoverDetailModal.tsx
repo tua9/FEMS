@@ -1,8 +1,8 @@
 import React from 'react';
-import { HandoverItem, TimelineEvent } from '@/data/technician/mockHandover';
+import type { HandoverItem, TimelineEvent } from '@/data/technician/mockHandover';
 import {
   MODAL_OVERLAY, MODAL_CARD, CLOSE_BTN,
-  BTN_PRIMARY, SECTION_LABEL, INFO_CARD, CHIP,
+  BTN_PRIMARY, SECTION_LABEL, CHIP,
 } from '@/components/technician/common/modalStyles';
 
 // ── Unified record shape ──────────────────────────────────────────────────────
@@ -52,16 +52,16 @@ const HandoverDetailModal: React.FC<Props> = ({ record, onClose }) => (
         <div className="flex items-center gap-4">
           <div
             className={`w-14 h-14 rounded-xl flex items-center justify-center font-extrabold text-lg shrink-0 ${
-              record.person.avatarBg ?? 'bg-[#1A2B56]/10'
-            } ${record.person.avatarColor ?? 'text-[#1A2B56]'}`}
+              record.person.avatarBg ?? 'bg-[#1E2B58]/10'
+            } ${record.person.avatarColor ?? 'text-[#1E2B58]'}`}
           >
             {record.person.initials}
           </div>
           <div>
-            <h2 className="text-base font-extrabold text-[#1A2B56] leading-tight">{record.person.name}</h2>
-            <p className="text-xs text-slate-500 mt-0.5">{record.person.sub}</p>
+            <h2 className="text-base font-extrabold text-[#1E2B58] dark:text-white leading-tight">{record.person.name}</h2>
+            <p className="text-xs text-[#1E2B58]/50 dark:text-white/40 font-medium mt-0.5">{record.person.sub}</p>
             {record.person.email && (
-              <p className="text-[10px] text-slate-400 mt-0.5 flex items-center gap-1">
+              <p className="text-[10px] text-[#1E2B58]/40 dark:text-white/30 mt-0.5 flex items-center gap-1">
                 <span className="material-symbols-outlined text-[12px]">mail</span>
                 {record.person.email}
               </p>
@@ -72,7 +72,7 @@ const HandoverDetailModal: React.FC<Props> = ({ record, onClose }) => (
           {record.badge && (
             <span className={`${CHIP} ${record.badge.className}`}>{record.badge.label}</span>
           )}
-          <button onClick={onClose} className={CLOSE_BTN}>
+          <button onClick={onClose} className={CLOSE_BTN} aria-label="Close">
             <span className="material-symbols-outlined text-lg">close</span>
           </button>
         </div>
@@ -80,10 +80,10 @@ const HandoverDetailModal: React.FC<Props> = ({ record, onClose }) => (
 
       {/* Reference ID chip */}
       <div className="px-7 pb-4">
-        <span className={`${CHIP} bg-slate-100 text-slate-500 font-mono`}>{record.id}</span>
+        <span className={`${CHIP} bg-[#1E2B58]/8 dark:bg-white/8 text-[#1E2B58]/60 dark:text-white/40 font-mono`}>{record.id}</span>
       </div>
 
-      <div className="mx-7 border-t border-slate-100" />
+      <div className="mx-7 border-t border-black/8 dark:border-white/10" />
 
       {/* ── Scrollable body ── */}
       <div className="px-7 py-6 overflow-y-auto flex-1 space-y-6">
@@ -93,12 +93,12 @@ const HandoverDetailModal: React.FC<Props> = ({ record, onClose }) => (
           <Section title="Details" icon="info">
             <div className="grid grid-cols-2 gap-3">
               {record.meta.map((m) => (
-                <div key={m.label} className={INFO_CARD}>
-                  <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1 flex items-center gap-1">
+                <div key={m.label} className="bg-white/40 dark:bg-slate-800/40 rounded-[1rem] p-3.5">
+                  <p className="text-[9px] font-black uppercase tracking-widest text-[#1E2B58]/40 dark:text-white/40 mb-1 flex items-center gap-1">
                     {m.icon && <span className="material-symbols-outlined text-[11px]">{m.icon}</span>}
                     {m.label}
                   </p>
-                  <p className="text-sm font-bold text-slate-800 leading-tight">{m.value}</p>
+                  <p className="text-sm font-bold text-[#1E2B58] dark:text-white leading-tight">{m.value}</p>
                 </div>
               ))}
             </div>
@@ -110,16 +110,16 @@ const HandoverDetailModal: React.FC<Props> = ({ record, onClose }) => (
           <Section title={`Equipment Items (${record.items.length})`} icon="inventory_2">
             <div className="space-y-2">
               {record.items.map((item, i) => (
-                <div key={i} className="flex items-center gap-3 p-3.5 rounded-xl bg-slate-50 border border-slate-100">
-                  <div className="w-10 h-10 rounded-lg bg-white border border-slate-200 flex items-center justify-center shrink-0">
-                    <span className="material-symbols-outlined text-slate-500 text-xl">{item.icon}</span>
+                <div key={i} className="flex items-center gap-3 p-3.5 rounded-[1rem] bg-white/40 dark:bg-slate-800/40 border border-black/5 dark:border-white/8">
+                  <div className="w-10 h-10 rounded-xl bg-[#1E2B58]/8 dark:bg-white/8 flex items-center justify-center shrink-0">
+                    <span className="material-symbols-outlined text-[#1E2B58]/70 dark:text-white/60 text-xl">{item.icon}</span>
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-bold text-slate-900 truncate">{item.name}</p>
-                    <p className="text-[10px] text-slate-500 font-mono">SN: {item.serial}</p>
+                    <p className="text-sm font-bold text-[#1E2B58] dark:text-white truncate">{item.name}</p>
+                    <p className="text-[10px] text-[#1E2B58]/40 dark:text-white/30 font-mono">SN: {item.serial}</p>
                   </div>
                   {item.condition && (
-                    <span className={`${CHIP} bg-white border border-slate-200 text-slate-500 shrink-0`}>
+                    <span className={`${CHIP} bg-white/60 dark:bg-white/8 border border-black/8 dark:border-white/10 text-[#1E2B58]/60 dark:text-white/50 shrink-0`}>
                       {item.condition}
                     </span>
                   )}
@@ -133,19 +133,19 @@ const HandoverDetailModal: React.FC<Props> = ({ record, onClose }) => (
         {record.timeline && record.timeline.length > 0 && (
           <Section title="Activity Timeline" icon="timeline">
             <div className="relative pl-5">
-              <div className="absolute left-2 top-2 bottom-2 w-px bg-slate-200" />
+              <div className="absolute left-2 top-2 bottom-2 w-px bg-black/8 dark:bg-white/10" />
               <div className="space-y-5">
                 {record.timeline.map((ev, i) => (
                   <div key={i} className="relative flex items-start gap-3">
                     <div
-                      className={`absolute -left-3 w-3 h-3 rounded-full border-2 border-white mt-0.5 shrink-0 ${
-                        ev.done ? 'bg-[#1A2B56]' : 'bg-slate-200'
+                      className={`absolute -left-3 w-3 h-3 rounded-full border-2 border-white dark:border-slate-900 mt-0.5 shrink-0 ${
+                        ev.done ? 'bg-[#1E2B58]' : 'bg-slate-200 dark:bg-slate-700'
                       }`}
                     />
                     <div className="pl-2">
-                      <p className={`text-xs font-bold ${ev.done ? 'text-slate-800' : 'text-slate-400'}`}>{ev.label}</p>
-                      {ev.sub && <p className="text-[10px] text-slate-400 mt-0.5">{ev.sub}</p>}
-                      <p className="text-[10px] text-slate-400 font-mono mt-0.5">{ev.date}</p>
+                      <p className={`text-xs font-bold ${ev.done ? 'text-[#1E2B58] dark:text-white' : 'text-[#1E2B58]/40 dark:text-white/30'}`}>{ev.label}</p>
+                      {ev.sub && <p className="text-[10px] text-[#1E2B58]/40 dark:text-white/30 mt-0.5">{ev.sub}</p>}
+                      <p className="text-[10px] text-[#1E2B58]/30 dark:text-white/20 font-mono mt-0.5">{ev.date}</p>
                     </div>
                   </div>
                 ))}
@@ -157,15 +157,15 @@ const HandoverDetailModal: React.FC<Props> = ({ record, onClose }) => (
         {/* Notes */}
         {record.notes && (
           <Section title="Notes" icon="sticky_note_2">
-            <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
-              <p className="text-sm text-slate-700 leading-relaxed">{record.notes}</p>
+            <div className="bg-amber-500/8 border border-amber-500/20 rounded-[1rem] p-4">
+              <p className="text-sm text-[#1E2B58] dark:text-white/80 leading-relaxed">{record.notes}</p>
             </div>
           </Section>
         )}
       </div>
 
       {/* ── Footer ── */}
-      <div className="px-7 py-5 border-t border-slate-100">
+      <div className="px-7 py-5 border-t border-black/8 dark:border-white/10">
         <button onClick={onClose} className={BTN_PRIMARY}>
           Close
         </button>

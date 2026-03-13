@@ -7,6 +7,7 @@ import DeleteConfirmationModal from '../../components/admin/common/DeleteConfirm
 import ActionConfirmationModal from '../../components/admin/common/ActionConfirmationModal';
 import { adminApi } from '../../services/api/adminApi';
 import { AdminUser } from '../../types/admin.types';
+import { PageHeader } from '@/components/shared/PageHeader';
 
 const UserManagement: React.FC = () => {
     const [users, setUsers] = useState<AdminUser[]>([]);
@@ -178,15 +179,16 @@ const UserManagement: React.FC = () => {
     const isBlurred = isAddModalOpen || isDetailModalOpen || !!userToDelete || !!userToToggle;
 
     return (
-        <div className="max-w-7xl mx-auto px-6 pb-16 relative">
+        <div className="max-w-7xl mx-auto px-6 pt-6 sm:pt-8 pb-16 relative">
             {/* Background Blur for Modals */}
             <div className={`transition-all duration-300 ${isBlurred ? 'filter blur-sm opacity-50 pointer-events-none' : ''}`}>
-                <div className="mb-8 px-2 flex flex-col md:flex-row md:items-end justify-between gap-6 mt-6">
-                    <div>
-                        <h2 className="text-3xl font-extrabold text-[#1A2B56] dark:text-white tracking-tight">System Users</h2>
-                        <p className="text-slate-700 dark:text-slate-300 mt-1 font-medium">Manage staff, students and administrative accounts.</p>
-                    </div>
-                    <div className="flex items-center gap-3">
+                <div className="mb-8 px-2 flex flex-col md:flex-row md:items-center justify-between gap-6 mt-2">
+                    <PageHeader
+                        title="System Users"
+                        subtitle="Manage staff, students and administrative accounts."
+                        className="items-start! text-left! mb-0!"
+                    />
+                    <div className="flex items-center gap-3 shrink-0">
                         <input
                             type="file"
                             ref={fileInputRef}

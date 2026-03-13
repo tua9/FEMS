@@ -3,8 +3,9 @@
  * Dùng chung cho tất cả role.
  */
 import React, { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { AnimatePresence, motion } from "framer-motion";
-import { Bell, CheckCheck, X } from "lucide-react";
+import { Bell, CheckCheck } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuthStore } from "@/stores/useAuthStore";
 
@@ -131,8 +132,8 @@ const NotificationItem: React.FC<ItemProps> = ({
     <button
       type="button"
       onClick={handleClick}
-      className={`w-full px-5 py-4 text-left transition-colors hover:bg-slate-50 dark:hover:bg-slate-700/20 border-b border-slate-100 dark:border-slate-700/40 last:border-0 group ${
-        !notification.read ? "bg-blue-50/60 dark:bg-blue-900/10" : ""
+      className={`w-full px-5 py-4 text-left transition-colors hover:bg-black/5 dark:hover:bg-white/10 border-b border-black/8 dark:border-white/12 last:border-0 group ${
+        !notification.read ? "bg-blue-500/6 dark:bg-blue-400/10" : ""
       }`}
     >
       <div className="flex items-start gap-3">
@@ -151,8 +152,8 @@ const NotificationItem: React.FC<ItemProps> = ({
             <p
               className={`text-[0.8125rem] font-bold leading-snug ${
                 notification.read
-                  ? "text-slate-600 dark:text-slate-300"
-                  : "text-slate-800 dark:text-slate-100"
+                  ? "text-slate-500 dark:text-slate-400"
+                  : "text-slate-900 dark:text-slate-100"
               }`}
             >
               {notification.title}
@@ -175,43 +176,85 @@ const NotificationItem: React.FC<ItemProps> = ({
 
 // ── NavNotificationBell ───────────────────────────────────────────────────────
 
-const dropdownVariants = {
-  hidden: { opacity: 0, y: -8, scale: 0.97 },
+// NOTE: Only `y` on the outer motion.div — opacity is intentionally
+// kept OFF the wrapper. When opacity < 1 is set on a parent, the browser
+// composites the whole subtree into a separate GPU layer which makes
+// backdrop-filter invisible until the animation finishes (~0.5 s delay).
+// Instead we animate opacity on the inner glass <div> via `wrapperVariants`
+// so the stacking context is never broken during the fade-in.
+const wrapperVariants = {
+  hidden: { y: -8 },
   visible: {
-    opacity: 1,
     y: 0,
-    scale: 1,
     transition: { duration: 0.2, ease: [0.16, 1, 0.3, 1] as [number, number, number, number] },
   },
   exit: {
-    opacity: 0,
     y: -6,
-    scale: 0.97,
     transition: { duration: 0.15 },
   },
+};
+
+const glassVariants = {
+  hidden: { opacity: 0 },
+  visible: { opacity: 1, transition: { duration: 0.18, ease: "easeOut" } },
+  exit: { opacity: 0, transition: { duration: 0.12 } },
 };
 
 const NavNotificationBell: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [notifications, setNotifications] =
     useState<Notification[]>(MOCK_NOTIFICATIONS);
-  const containerRef = useRef<HTMLDivElement>(null);
+  // buttonRef: anchor point for positioning the portal dropdown
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
   const { user } = useAuthStore();
   const navigate = useNavigate();
 
   const unreadCount = notifications.filter((n) => !n.read).length;
   const role = user?.role ?? "student";
 
+  // ── Compute dropdown position from button's bounding rect ─────────────────
+  const [dropdownPos, setDropdownPos] = useState<{ top: number; right: number }>({ top: 0, right: 0 });
+
+  const updatePos = () => {
+    if (!buttonRef.current) return;
+    const rect = buttonRef.current.getBoundingClientRect();
+    // Anchor below the navbar pill (fixed top-4 + h-[4.25rem] = 84px), with 8px gap
+    const navbar = document.querySelector("header[class*='fixed'][class*='rounded-full']");
+    const navbarBottom = navbar
+      ? navbar.getBoundingClientRect().bottom
+      : rect.bottom;
+    setDropdownPos({
+      top: navbarBottom + 8,
+      right: window.innerWidth - rect.right,
+    });
+  };
+
+  const handleToggle = () => {
+    if (!isOpen) updatePos();
+    setIsOpen((p) => !p);
+  };
+
+  // Re-calculate on resize/scroll
+  useEffect(() => {
+    if (!isOpen) return;
+    window.addEventListener("resize", updatePos);
+    window.addEventListener("scroll", updatePos, true);
+    return () => {
+      window.removeEventListener("resize", updatePos);
+      window.removeEventListener("scroll", updatePos, true);
+    };
+  }, [isOpen]);
+
   // Close on outside click
   useEffect(() => {
     if (!isOpen) return;
     const handler = (e: MouseEvent) => {
       if (
-        containerRef.current &&
-        !containerRef.current.contains(e.target as Node)
-      ) {
-        setIsOpen(false);
-      }
+        buttonRef.current?.contains(e.target as Node) ||
+        dropdownRef.current?.contains(e.target as Node)
+      ) return;
+      setIsOpen(false);
     };
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
@@ -226,10 +269,11 @@ const NavNotificationBell: React.FC = () => {
     setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
 
   return (
-    <div ref={containerRef} className="relative">
+    <>
       {/* ── Bell button ── */}
       <button
-        onClick={() => setIsOpen((p) => !p)}
+        ref={buttonRef}
+        onClick={handleToggle}
         aria-label="Notifications"
         className="relative flex h-9 w-9 items-center justify-center rounded-full border border-[#1E2B58]/20 transition-all hover:bg-white/60 dark:border-white/20 dark:hover:bg-white/10"
       >
@@ -247,91 +291,120 @@ const NavNotificationBell: React.FC = () => {
         )}
       </button>
 
-      {/* ── Dropdown panel ── */}
-      <AnimatePresence>
-        {isOpen && (
-          <motion.div
-            variants={dropdownVariants}
-            initial="hidden"
-            animate="visible"
-            exit="exit"
-            className="absolute right-0 z-50 mt-3 w-88 overflow-hidden rounded-3xl border border-slate-200/60 bg-white shadow-2xl shadow-[#1E2B58]/15 dark:border-slate-700/50 dark:bg-slate-900 dark:shadow-black/40"
-          >
-            {/* Header */}
-            <div className="flex items-center justify-between border-b border-slate-100 px-5 py-4 dark:border-slate-700/50">
-              <div className="flex items-center gap-2.5">
-                <Bell className="h-4 w-4 text-[#1E2B58] dark:text-white" />
-                <h3 className="text-[0.9375rem] font-extrabold text-slate-800 dark:text-slate-100">
-                  Notifications
-                </h3>
-                {unreadCount > 0 && (
-                  <span className="rounded-full bg-blue-500 px-1.5 py-0.5 text-[0.625rem] font-black leading-none text-white">
-                    {unreadCount}
-                  </span>
-                )}
-              </div>
-              <div className="flex items-center gap-1">
-                {unreadCount > 0 && (
-                  <button
-                    onClick={handleMarkAllRead}
-                    className="flex items-center gap-1 rounded-lg px-2 py-1 text-[0.6875rem] font-bold text-blue-500 transition-colors hover:bg-blue-50 hover:text-blue-600 dark:text-blue-400 dark:hover:bg-blue-900/20 dark:hover:text-blue-300"
-                  >
-                    <CheckCheck className="h-3.5 w-3.5" />
-                    Mark all read
-                  </button>
-                )}
-                <button
-                  onClick={() => setIsOpen(false)}
-                  aria-label="Close"
-                  className="ml-1 rounded-lg p-1.5 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-slate-700/40 dark:hover:text-slate-200"
-                >
-                  <X className="h-4 w-4" />
-                </button>
-              </div>
-            </div>
-
-            {/* List */}
-            <div className="max-h-88 overflow-y-auto">
-              {notifications.length > 0 ? (
-                notifications.map((n) => (
-                  <NotificationItem
-                    key={n.id}
-                    notification={n}
-                    onRead={handleMarkRead}
-                    onClose={() => setIsOpen(false)}
-                    role={role}
-                  />
-                ))
-              ) : (
-                <div className="flex flex-col items-center gap-3 px-6 py-14 text-center">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-100 dark:bg-slate-700/40">
-                    <Bell className="h-6 w-6 text-slate-400" />
+      {/* ── Dropdown portal — rendered to document.body to escape all
+              stacking contexts (will-change-transform, filters, etc.)        ── */}
+      {createPortal(
+        <AnimatePresence>
+          {isOpen && (
+            // Outer wrapper: only y-translate, NO opacity — opacity on a
+            // parent creates a GPU compositing layer that breaks
+            // backdrop-filter (causes ~0.5 s blur delay on open).
+            <motion.div
+              ref={dropdownRef}
+              variants={wrapperVariants}
+              initial="hidden"
+              animate="visible"
+              exit="exit"
+              style={{
+                position: "fixed",
+                top: dropdownPos.top,
+                right: dropdownPos.right,
+                zIndex: 9999,
+                width: "22rem",
+              }}
+            >
+              {/* Glass surface: opacity is animated HERE so backdrop-filter
+                  is always active, even during the fade-in.              */}
+              <motion.div
+                variants={glassVariants}
+                initial="hidden"
+                animate="visible"
+                exit="exit"
+                className={[
+                  "overflow-hidden rounded-2xl",
+                  "bg-white/30 backdrop-saturate-150",
+                  "border border-white/60",
+                  "shadow-[0_8px_32px_0_rgba(0,0,0,0.12)]",
+                  "dark:bg-slate-900/40",
+                  "dark:border-white/15",
+                  "dark:shadow-[0_10px_40px_-10px_rgba(0,0,0,0.7)]",
+                ].join(" ")}
+                style={{
+                  WebkitBackdropFilter: "blur(20px) saturate(160%)",
+                  backdropFilter: "blur(20px) saturate(160%)",
+                }}
+              >
+                {/* Header */}
+                <div className="flex items-center justify-between border-b border-black/10 bg-black/3 px-5 py-4 dark:border-white/15 dark:bg-white/5">
+                  <div className="flex items-center gap-2.5">
+                    <Bell className="h-4 w-4 text-[#1E2B58] dark:text-white" />
+                    <h3 className="text-[0.9375rem] font-extrabold text-slate-900 dark:text-slate-100">
+                      Notifications
+                    </h3>
+                    {unreadCount > 0 && (
+                      <span className="rounded-full bg-blue-500 px-1.5 py-0.5 text-[0.625rem] font-black leading-none text-white">
+                        {unreadCount}
+                      </span>
+                    )}
                   </div>
-                  <p className="text-sm font-semibold text-slate-400 dark:text-slate-500">
-                    No notifications
-                  </p>
+                  <div className="flex items-center gap-1">
+                    {unreadCount > 0 && (
+                      <button
+                        onClick={handleMarkAllRead}
+                        className="flex items-center gap-1 rounded-lg px-2 py-1 text-[0.6875rem] font-bold text-blue-500 transition-colors hover:bg-blue-500/8 hover:text-blue-600 dark:text-blue-400 dark:hover:bg-blue-400/10 dark:hover:text-blue-300"
+                      >
+                        <CheckCheck className="h-3.5 w-3.5" />
+                        Mark all read
+                      </button>
+                    )}
+                  </div>
                 </div>
-              )}
-            </div>
 
-            {/* Footer */}
-            {notifications.length > 0 && (
-              <div className="border-t border-slate-100 px-5 py-3.5 text-center dark:border-slate-700/50">
-                <button
-                  onClick={() => {
-                    setIsOpen(false);
-                    navigate(`/${role}/notifications`);
-                  }}
-                  className="text-[0.8125rem] font-bold text-[#1E2B58] transition-colors hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300"
-                >
-                  View All Notifications →
-                </button>
-              </div>
-            )}
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
+                {/* List */}
+                <div className="max-h-88 overflow-y-auto">
+                  {notifications.length > 0 ? (
+                    notifications.map((n) => (
+                      <NotificationItem
+                        key={n.id}
+                        notification={n}
+                        onRead={handleMarkRead}
+                        onClose={() => setIsOpen(false)}
+                        role={role}
+                      />
+                    ))
+                  ) : (
+                    <div className="flex flex-col items-center gap-3 px-6 py-14 text-center">
+                      <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-black/5 dark:bg-white/8">
+                        <Bell className="h-6 w-6 text-slate-400 dark:text-slate-500" />
+                      </div>
+                      <p className="text-sm font-semibold text-slate-400 dark:text-slate-500">
+                        No notifications
+                      </p>
+                    </div>
+                  )}
+                </div>
+
+                {/* Footer */}
+                {notifications.length > 0 && (
+                  <div className="border-t border-black/10 bg-black/3 px-5 py-3.5 text-center dark:border-white/15 dark:bg-white/5">
+                    <button
+                      onClick={() => {
+                        setIsOpen(false);
+                        navigate(`/${role}/notifications`);
+                      }}
+                      className="text-[0.8125rem] font-bold text-[#1E2B58] transition-colors hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300"
+                    >
+                      View All Notifications →
+                    </button>
+                  </div>
+                )}
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>,
+        document.body
+      )}
+    </>
   );
 };
 

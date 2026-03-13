@@ -59,7 +59,7 @@ const UserDetailModal: React.FC<UserDetailModalProps> = ({ isOpen, AdminUser, on
     };
 
     return createPortal(
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center px-4 py-6 bg-black/30 backdrop-blur-sm">
             <style dangerouslySetInnerHTML={{
                 __html: `
                 .no-scrollbar::-webkit-scrollbar { display: none; }
@@ -67,12 +67,12 @@ const UserDetailModal: React.FC<UserDetailModalProps> = ({ isOpen, AdminUser, on
             ` }} />
             {/* Backdrop */}
             <div
-                className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm transition-opacity"
+                className="absolute inset-0"
                 onClick={onClose}
             ></div>
 
             {/* Modal Content */}
-            <div className="relative w-full max-w-3xl bg-white/95 dark:bg-slate-800/95 backdrop-blur-2xl rounded-[48px] border-2 border-white/60 dark:border-white/20 shadow-3xl overflow-hidden flex flex-col max-h-[92vh] animate-in fade-in zoom-in duration-300">
+            <div className="relative w-full max-w-3xl glass-card rounded-[2rem] shadow-2xl shadow-[#1E2B58]/20 overflow-hidden flex flex-col max-h-[92vh] animate-in fade-in zoom-in-95 duration-200">
 
                 {/* Header Profile Section with Blended background */}
                 <div className="relative min-h-[220px] overflow-hidden">

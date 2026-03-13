@@ -74,7 +74,7 @@ const AdminDashboard: React.FC = () => {
         <PageShell
             title="Admin Dashboard"
             subtitle="Overview of equipment, borrowings and damage reports"
-            topPadding="pt-0"
+            topPadding="pt-6"
             className="px-6 pb-16"
         >
             {/* ── Stat Cards ── */}
