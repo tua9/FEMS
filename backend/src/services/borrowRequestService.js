@@ -145,8 +145,9 @@ const cancelBorrowRequest = async (id, userId) => {
       'Only pending requests can be cancelled',
     )
   }
-  await request.deleteOne()
-  return { message: 'Borrow request cancelled' }
+  request.status = 'cancelled'
+  await request.save()
+  return { message: 'Borrow request cancelled', request }
 }
 
 const approveBorrowRequest = async (id, approverId) => {

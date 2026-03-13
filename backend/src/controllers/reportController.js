@@ -44,3 +44,11 @@ export const updateReportStatus = asyncHandler(async (req, res) => {
   )
   res.status(StatusCodes.OK).json(result)
 })
+
+export const cancelReport = asyncHandler(async (req, res) => {
+  const result = await reportService.cancelReport(
+    req.params.id,
+    req.user._id,
+  )
+  res.status(StatusCodes.OK).json(result)
+})

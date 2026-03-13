@@ -82,6 +82,22 @@ const getPersonalReports = async (userId) => {
     .populate('approved_by', 'displayName')
 }
 
+const cancelReport = async (id, userId) => {
+  const report = await Report.findOne({ _id: id, user_id: userId })
+  if (!report) {
+    throw new ApiError(StatusCodes.NOT_FOUND, 'Report not found')
+  }
+  if (report.status !== 'pending') {
+    throw new ApiError(
+      StatusCodes.BAD_REQUEST,
+      'Only pending reports can be cancelled',
+    )
+  }
+  report.status = 'cancelled'
+  await report.save()
+  return { message: 'Report cancelled successfully', report }
+}
+
 const updateReportStatus = async (id, status, approverId) => {
   const allowedStatuses = [
     'pending',
@@ -115,5 +131,6 @@ export const reportService = {
   updateReport,
   deleteReport,
   getPersonalReports,
+  cancelReport,
   updateReportStatus,
 }
