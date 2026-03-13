@@ -35,6 +35,16 @@ const statusConfig: Record<
     color:
       "bg-[#D1FAE5] text-[#059669] dark:bg-[#059669]/20 dark:text-[#34D399]",
   },
+  approved: {
+    label: "Approved",
+    color:
+      "bg-[#E0F2FE] text-[#0369A1] dark:bg-[#0369A1]/20 dark:text-[#7DD3FC]",
+  },
+  handed_over: {
+    label: "Borrowed",
+    color:
+      "bg-[#FEF3C7] text-[#D97706] dark:bg-[#D97706]/20 dark:text-[#FBBF24]",
+  },
 };
 
 export const BorrowedEquipmentGrid: React.FC<

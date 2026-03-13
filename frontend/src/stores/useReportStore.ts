@@ -12,6 +12,7 @@ type ReportStore = {
   fetchMyReports: () => Promise<void>;
   createReport: (payload: CreateReportPayload) => Promise<void>;
   updateReportStatus: (id: string, status: ReportStatus) => Promise<void>;
+  cancelMyReport: (id: string) => Promise<void>;
 };
 
 export const useReportStore = create<ReportStore>((set) => ({
@@ -72,6 +73,24 @@ export const useReportStore = create<ReportStore>((set) => ({
       }));
     } catch (error: any) {
       set({ error: error?.response?.data?.message || "Cannot update report status" });
+      throw error;
+    } finally {
+      set({ loading: false });
+    }
+  },
+
+  cancelMyReport: async (id: string) => {
+    try {
+      set({ loading: true, error: null });
+      await reportService.cancelReport(id);
+      // Update status in-place so the row stays visible with status 'cancelled'
+      set((state) => ({
+        myReports: state.myReports.map((r) =>
+          r._id === id ? { ...r, status: 'cancelled' as ReportStatus } : r
+        ),
+      }));
+    } catch (error: any) {
+      set({ error: error?.response?.data?.message || "Cannot cancel report" });
       throw error;
     } finally {
       set({ loading: false });

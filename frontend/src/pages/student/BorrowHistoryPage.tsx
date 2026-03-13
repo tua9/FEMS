@@ -7,6 +7,7 @@ import {
   BorrowHistoryTable,
 } from "@/components/shared/history";
 import HistoryDetailModal from "@/components/student/history/HistoryDetailModal";
+import BorrowCancelModal from "@/components/student/history/BorrowCancelModal";
 import { useHistoryController } from "@/hooks/student/useHistoryController";
 
 export default function BorrowHistoryPage() {
@@ -20,6 +21,7 @@ export default function BorrowHistoryPage() {
     reportPage,
     borrowPage,
     modal,
+    cancelTargetItem,
     filteredReports,
     filteredBorrow,
     reportPages,
@@ -37,7 +39,11 @@ export default function BorrowHistoryPage() {
     setReportPage,
     setBorrowPage,
     setModal,
-    handleClearFilters
+    setCancelTargetItem,
+    handleClearFilters,
+    handleOpenCancelModal,
+    handleConfirmCancel,
+    handleCancelReport,
   } = actions;
 
   return (
@@ -77,6 +83,7 @@ export default function BorrowHistoryPage() {
               totalItems={filteredReports.length}
               onPageChange={setReportPage}
               onViewDetail={(item) => setModal({ type: "report", item: item as any })}
+              onCancel={handleCancelReport}
             />
           ) : (
             <BorrowHistoryTable
@@ -86,6 +93,7 @@ export default function BorrowHistoryPage() {
               totalItems={filteredBorrow.length}
               onPageChange={setBorrowPage}
               onViewDetail={(item) => setModal({ type: "borrow", item: item as any })}
+              onCancel={handleOpenCancelModal}
             />
           )}
         </div>
@@ -93,6 +101,13 @@ export default function BorrowHistoryPage() {
 
       {modal && (
         <HistoryDetailModal modal={modal} onClose={() => setModal(null)} />
+      )}
+      {cancelTargetItem && (
+        <BorrowCancelModal
+          item={cancelTargetItem}
+          onClose={() => setCancelTargetItem(null)}
+          onConfirm={handleConfirmCancel}
+        />
       )}
     </div>
   );

@@ -22,8 +22,11 @@ export const borrowRequestService = {
     return res.data;
   },
 
-  async cancelBorrowRequest(id: string): Promise<{ message?: string }> {
-    const res = await api.delete(`/requests/${id}`);
+  async cancelBorrowRequest(id: string, decisionNote: string): Promise<{ message?: string }> {
+    console.log('🚀 [FRONTEND SERVICE] cancelBorrowRequest ID:', id);
+    console.log('🚀 [FRONTEND SERVICE] cancelBorrowRequest decisionNote:', decisionNote);
+    const res = await api.patch(`/requests/${id}/cancel`, { decision_note: decisionNote });
+    console.log('✅ [FRONTEND SERVICE] cancelBorrowRequest result:', res.data);
     return res.data;
   },
 

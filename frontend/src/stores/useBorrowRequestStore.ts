@@ -14,7 +14,7 @@ type BorrowRequestStore = {
   fetchMyBorrowRequests: () => Promise<void>;
   fetchBorrowRequestById: (id: string) => Promise<void>;
   createMyBorrowRequest: (payload: CreateBorrowRequestPayload) => Promise<void>;
-  cancelMyBorrowRequest: (id: string) => Promise<void>;
+  cancelMyBorrowRequest: (id: string, decisionNote: string) => Promise<void>;
   fetchAllBorrowRequests: () => Promise<void>;
   approveBorrowRequest: (id: string) => Promise<void>;
   rejectBorrowRequest: (id: string) => Promise<void>;
@@ -81,16 +81,19 @@ export const useBorrowRequestStore = create<BorrowRequestStore>((set) => ({
     }
   },
 
-  cancelMyBorrowRequest: async (id: string) => {
+  cancelMyBorrowRequest: async (id: string, decisionNote: string) => {
+    console.log('🏪 [STORE] cancelMyBorrowRequest started for ID:', id);
     try {
       set({ loading: true, error: null });
-      await borrowRequestService.cancelBorrowRequest(id);
-
+      await borrowRequestService.cancelBorrowRequest(id, decisionNote);
+      // Update status in-place — record stays visible in history with status 'cancelled'
       set((state) => ({
-        borrowRequests: state.borrowRequests.filter((item) => item._id !== id),
+        borrowRequests: state.borrowRequests.map((item) =>
+          item._id === id ? { ...item, status: 'cancelled' } : item
+        ),
         selectedBorrowRequest:
           state.selectedBorrowRequest?._id === id
-            ? null
+            ? { ...state.selectedBorrowRequest, status: 'cancelled' }
             : state.selectedBorrowRequest,
       }));
     } catch (error: any) {

@@ -12,8 +12,8 @@ export type Tab = "report" | "borrow";
 export function useHistoryController(ITEMS_PER_PAGE: number = 6) {
   // Stores
   const { user } = useAuthStore();
-  const { borrowRequests, loading: borrowLoading, fetchMyBorrowRequests } = useBorrowRequestStore();
-  const { myReports, loading: reportLoading, fetchMyReports } = useReportStore();
+  const { borrowRequests, loading: borrowLoading, fetchMyBorrowRequests, cancelMyBorrowRequest } = useBorrowRequestStore();
+  const { myReports, loading: reportLoading, fetchMyReports, cancelMyReport } = useReportStore();
   const [searchParams, setSearchParamsUrl] = useSearchParams();
 
   // State
@@ -26,6 +26,7 @@ export function useHistoryController(ITEMS_PER_PAGE: number = 6) {
   const [reportPage, setReportPage] = useState(1);
   const [borrowPage, setBorrowPage] = useState(1);
   const [modal, setModal] = useState<ModalItem | null>(null);
+  const [cancelTargetItem, setCancelTargetItem] = useState<BorrowRequest | null>(null);
 
   // Initial Fetch
   useEffect(() => {
@@ -50,6 +51,28 @@ export function useHistoryController(ITEMS_PER_PAGE: number = 6) {
   const handleClearFilters = () => {
     setSearchTerm("");
     setStatusFilter("All");
+  };
+
+  // Open cancel modal for a specific borrow request
+  const handleOpenCancelModal = (item: BorrowRequest) => {
+    setCancelTargetItem(item);
+  };
+
+  // Called when user confirms with a reason from BorrowCancelModal
+  const handleConfirmCancel = async (decisionNote: string): Promise<void> => {
+    if (!cancelTargetItem) return;
+    // Re-throw so BorrowCancelModal can catch and display the error
+    await cancelMyBorrowRequest(cancelTargetItem._id, decisionNote);
+    setCancelTargetItem(null);
+  };
+
+  const handleCancelReport = async (item: Report) => {
+    if (!window.confirm(`Bạn có chắc muốn hủy báo cáo #${item._id.slice(-6).toUpperCase()}?`)) return;
+    try {
+      await cancelMyReport(item._id);
+    } catch {
+      // Error already stored in store
+    }
   };
 
   const getEquipmentName = (eq: any) => eq ? (typeof eq === 'string' ? eq : eq.name) : '';
@@ -105,6 +128,7 @@ export function useHistoryController(ITEMS_PER_PAGE: number = 6) {
       reportPage,
       borrowPage,
       modal,
+      cancelTargetItem,
       filteredReports,
       filteredBorrow,
       reportPages,
@@ -121,7 +145,11 @@ export function useHistoryController(ITEMS_PER_PAGE: number = 6) {
       setReportPage,
       setBorrowPage,
       setModal,
-      handleClearFilters
+      setCancelTargetItem,
+      handleClearFilters,
+      handleOpenCancelModal,
+      handleConfirmCancel,
+      handleCancelReport,
     }
   };
 }

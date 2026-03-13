@@ -129,28 +129,50 @@ const updateBorrowRequest = async (id, body) => {
 
 const getPersonalBorrowRequests = async (userId) => {
   return await BorrowRequest.find({ user_id: userId })
-    .populate('equipment_id', 'name category')
+    .populate('equipment_id', '_id name category status available')
     .populate('room_id', 'name type')
     .populate('approved_by', 'displayName')
 }
 
-const cancelBorrowRequest = async (id, userId) => {
-  const request = await BorrowRequest.findOne({ _id: id, user_id: userId })
+const cancelBorrowRequest = async (id, userId, decisionNote) => {
+  if (!decisionNote || !decisionNote.trim()) {
+    throw new ApiError(
+      StatusCodes.UNPROCESSABLE_ENTITY,
+      'Lý do hủy (decision_note) là bắt buộc',
+    )
+  }
+
+  console.log(`🔍 [CANCEL SERVICE] Attempting findById with ID: "${id}" (length: ${id?.length})`)
+  const request = await BorrowRequest.findById(id?.trim())
+  console.log('🔍 [CANCEL SERVICE] findById result:', request ? `found _id=${request._id}` : 'NOT FOUND')
   if (!request) {
     throw new ApiError(StatusCodes.NOT_FOUND, 'Borrow request not found')
   }
+
+  // Ownership check using string comparison to avoid ObjectId type mismatch
+  console.log('🔍 [CANCEL SERVICE] request.user_id:', request.user_id?.toString(), '| incoming userId:', userId?.toString())
+  console.log('🔍 [CANCEL SERVICE] match:', request.user_id?.toString() === userId?.toString())
+  if (request.user_id.toString() !== userId.toString()) {
+    throw new ApiError(StatusCodes.FORBIDDEN, 'You can only cancel your own requests')
+  }
+
+  console.log('🔍 [CANCEL SERVICE] request.status:', request.status)
   if (request.status !== 'pending') {
     throw new ApiError(
       StatusCodes.BAD_REQUEST,
       'Only pending requests can be cancelled',
     )
   }
+
   request.status = 'cancelled'
+  request.decision_note = decisionNote.trim()
+  request.cancelled_at = new Date()
+  request.cancelled_by = userId
   await request.save()
   return { message: 'Borrow request cancelled', request }
 }
 
-const approveBorrowRequest = async (id, approverId) => {
+const approveBorrowRequest = async (id, approverId, decisionNote) => {
   const request = await BorrowRequest.findById(id)
   if (!request) {
     throw new ApiError(StatusCodes.NOT_FOUND, 'Borrow request not found')
@@ -161,6 +183,9 @@ const approveBorrowRequest = async (id, approverId) => {
 
   request.status = 'approved'
   request.approved_by = approverId
+  request.processed_at = new Date()
+  request.processed_by = approverId
+  if (decisionNote) request.decision_note = decisionNote.trim()
   await request.save()
   return { message: 'Borrow request approved', request }
 }

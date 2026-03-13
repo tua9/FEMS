@@ -52,6 +52,21 @@ const borrowRequestSchema = new mongoose.Schema(
       type: String,
       default: null,
     },
+
+    // ── Decision / Audit fields ──────────────────────────────────────────────
+    // Shared field for: user's cancel reason, admin's approve/reject note
+    decision_note: {
+      type: String,
+      default: null,
+    },
+
+    // Timestamps + actor for cancel
+    cancelled_at: { type: Date, default: null },
+    cancelled_by: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
+
+    // Timestamps + actor for admin approve/reject
+    processed_at: { type: Date, default: null },
+    processed_by: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
   },
   { timestamps: true },
 )

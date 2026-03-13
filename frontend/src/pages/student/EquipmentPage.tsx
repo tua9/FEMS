@@ -33,14 +33,18 @@ const EquipmentPage: React.FC = () => {
     fetchBorrowRequests();
   }, [fetchEquipments, fetchBorrowRequests]);
 
-  // Map trạng thái borrow request
+  // Map trạng thái borrow request (robust lowercase scoring)
   const borrowStatusMap = useMemo(() => {
     const map: Record<string, string> = {};
 
+    // Process all requests, newer first (backend returns DESC)
     borrowRequests.forEach((r) => {
-      const eqIdStr = r.equipment_id && typeof r.equipment_id !== 'string' ? r.equipment_id._id : r.equipment_id;
-      if (eqIdStr && typeof eqIdStr === 'string') {
-        map[eqIdStr] = r.status;
+      const eqData = r.equipment_id;
+      if (!eqData) return;
+      
+      const eqIdStr = typeof eqData === 'string' ? eqData : eqData._id?.toString();
+      if (eqIdStr && !map[eqIdStr]) {
+        map[eqIdStr] = (r.status || "").trim().toLowerCase();
       }
     });
 
@@ -75,13 +79,40 @@ const EquipmentPage: React.FC = () => {
       });
   }, [equipments, searchText, typeFilter, locationFilter, activeCategory]);
 
-  // Equipment đang borrow
+  // Equipment đang borrow (Ultra-robust with fallback)
   const borrowedEquipment = useMemo(() => {
-    const borrowedIds = borrowRequests
-      .map((r) => r.equipment_id && typeof r.equipment_id !== 'string' ? r.equipment_id._id : r.equipment_id)
-      .filter(Boolean) as string[];
+    const activeRequests = borrowRequests.filter((r) => {
+      const s = (r.status || "").trim().toLowerCase();
+      return ["approved", "handed_over", "borrowed"].includes(s);
+    });
 
-    return equipments.filter((e) => borrowedIds.includes(e._id));
+    const borrowedItems: any[] = [];
+    const seenIds = new Set<string>();
+
+    activeRequests.forEach((r) => {
+      const eqData = r.equipment_id;
+      if (!eqData) return;
+
+      const id = typeof eqData === "string" ? eqData : eqData._id?.toString();
+      if (!id || seenIds.has(id)) return;
+
+      // Case 1: Tìm trong danh sách equipment chính
+      const fullEquipment = equipments.find((e) => e._id.toString() === id);
+      if (fullEquipment) {
+        borrowedItems.push(fullEquipment);
+      } else if (typeof eqData !== "string") {
+        // Case 2: Fallback sử dụng data được populate từ chính request
+        borrowedItems.push({
+          ...eqData,
+          _id: id,
+          status: (eqData as any).status || "good",
+          available: false,
+        });
+      }
+      seenIds.add(id);
+    });
+
+    return borrowedItems;
   }, [equipments, borrowRequests]);
 
   // Pagination Logic (8 items per page = 2 rows x 4)
@@ -104,8 +135,10 @@ const EquipmentPage: React.FC = () => {
   const borrowRequestMap = useMemo(() => {
     const map: Record<string, any> = {};
     borrowRequests.forEach((r) => {
-      const eqIdStr = r.equipment_id && typeof r.equipment_id !== 'string' ? r.equipment_id._id : r.equipment_id;
-      if (eqIdStr && typeof eqIdStr === 'string') {
+      const eqData = r.equipment_id;
+      if (!eqData) return;
+      const eqIdStr = typeof eqData === "string" ? eqData : eqData._id?.toString();
+      if (eqIdStr && !map[eqIdStr]) {
         map[eqIdStr] = r;
       }
     });

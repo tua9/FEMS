@@ -21,4 +21,9 @@ export const reportService = {
     const res = await api.patch(`/tickets/${id}/status`, { status });
     return res.data.report || res.data;
   },
+
+  cancelReport: async (id: string): Promise<Report> => {
+    const res = await api.delete(`/tickets/history/${id}`);
+    return res.data.report || res.data;
+  },
 };

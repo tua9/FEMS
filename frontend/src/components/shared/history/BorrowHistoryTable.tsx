@@ -1,4 +1,4 @@
-import { AlertTriangle, Cable, ChevronLeft, ChevronRight, Eye, Laptop, Mic, Microchip, Projector, Router } from 'lucide-react';
+import { AlertTriangle, Ban, Cable, ChevronLeft, ChevronRight, Eye, Laptop, Mic, Microchip, Projector, Router } from 'lucide-react';
 import React from 'react';
 import { StatusBadge } from '@/components/shared/ui/StatusBadge';
 import type { BorrowRequest } from '@/types/borrowRequest';
@@ -26,12 +26,13 @@ interface BorrowHistoryTableProps {
     totalItems:   number;
     onPageChange: (page: number) => void;
     onViewDetail: (item: BorrowRequest) => void;
+    onCancel?:    (item: BorrowRequest) => void;
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export const BorrowHistoryTable: React.FC<BorrowHistoryTableProps> = ({
-    items, currentPage, totalPages, totalItems, onPageChange, onViewDetail,
+    items, currentPage, totalPages, totalItems, onPageChange, onViewDetail, onCancel,
 }) => {
     // Helper function to map category to an icon
     const getIcon = (category?: string) => {
@@ -118,13 +119,24 @@ export const BorrowHistoryTable: React.FC<BorrowHistoryTableProps> = ({
                                         </span>
                                     </td>
                                     <td className="px-[2rem] py-[1.5rem] text-right">
-                                        <button
-                                            onClick={e => { e.stopPropagation(); onViewDetail(item); }}
-                                            className="p-[0.5rem] rounded-full hover:bg-[#1E2B58]/10 dark:hover:bg-white/10 transition-all hover:scale-110 active:scale-90"
-                                            title="View Details"
-                                        >
-                                            <Eye className="w-[1rem] h-[1rem] text-[#1E2B58] dark:text-slate-300" strokeWidth={2.5} />
-                                        </button>
+                                        <div className="flex items-center justify-end gap-[0.25rem]">
+                                            {item.status === 'pending' && onCancel && (
+                                                <button
+                                                    onClick={e => { e.stopPropagation(); onCancel(item); }}
+                                                    className="p-[0.5rem] rounded-full hover:bg-red-100 dark:hover:bg-red-900/30 transition-all hover:scale-110 active:scale-90"
+                                                    title="Cancel Request"
+                                                >
+                                                    <Ban className="w-[1rem] h-[1rem] text-red-400 dark:text-red-400" strokeWidth={2.5} />
+                                                </button>
+                                            )}
+                                            <button
+                                                onClick={e => { e.stopPropagation(); onViewDetail(item); }}
+                                                className="p-[0.5rem] rounded-full hover:bg-[#1E2B58]/10 dark:hover:bg-white/10 transition-all hover:scale-110 active:scale-90"
+                                                title="View Details"
+                                            >
+                                                <Eye className="w-[1rem] h-[1rem] text-[#1E2B58] dark:text-slate-300" strokeWidth={2.5} />
+                                            </button>
+                                        </div>
                                     </td>
                                 </tr>
                             );

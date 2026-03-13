@@ -1,4 +1,4 @@
-import { Armchair, ChevronLeft, ChevronRight, Computer, Eye, Zap } from 'lucide-react';
+import { Armchair, Ban, ChevronLeft, ChevronRight, Computer, Eye, Zap } from 'lucide-react';
 import React from 'react';
 import { StatusBadge } from '@/components/shared/ui/StatusBadge';
 import type { Report } from '@/types/report';
@@ -35,12 +35,13 @@ interface ReportHistoryTableProps {
     totalItems:    number;
     onPageChange:  (page: number) => void;
     onViewDetail:  (item: Report) => void;
+    onCancel?:     (item: Report) => void;
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export const ReportHistoryTable: React.FC<ReportHistoryTableProps> = ({
-    items, currentPage, totalPages, totalItems, onPageChange, onViewDetail,
+    items, currentPage, totalPages, totalItems, onPageChange, onViewDetail, onCancel,
 }) => {
     const showing = items.length;
 
@@ -121,13 +122,24 @@ export const ReportHistoryTable: React.FC<ReportHistoryTableProps> = ({
                                         </span>
                                     </td>
                                     <td className="px-[2rem] py-[1.5rem] text-right">
-                                        <button
-                                            onClick={e => { e.stopPropagation(); onViewDetail(item); }}
-                                            className="p-[0.5rem] rounded-full hover:bg-[#1E2B58]/10 dark:hover:bg-white/10 transition-all hover:scale-110 active:scale-90"
-                                            title="View Details"
-                                        >
-                                            <Eye className="w-[1rem] h-[1rem] text-[#1E2B58] dark:text-slate-300" strokeWidth={2.5} />
-                                        </button>
+                                        <div className="flex items-center justify-end gap-[0.25rem]">
+                                            {item.status === 'pending' && onCancel && (
+                                                <button
+                                                    onClick={e => { e.stopPropagation(); onCancel(item); }}
+                                                    className="p-[0.5rem] rounded-full hover:bg-red-100 dark:hover:bg-red-900/30 transition-all hover:scale-110 active:scale-90"
+                                                    title="Cancel Report"
+                                                >
+                                                    <Ban className="w-[1rem] h-[1rem] text-red-400" strokeWidth={2.5} />
+                                                </button>
+                                            )}
+                                            <button
+                                                onClick={e => { e.stopPropagation(); onViewDetail(item); }}
+                                                className="p-[0.5rem] rounded-full hover:bg-[#1E2B58]/10 dark:hover:bg-white/10 transition-all hover:scale-110 active:scale-90"
+                                                title="View Details"
+                                            >
+                                                <Eye className="w-[1rem] h-[1rem] text-[#1E2B58] dark:text-slate-300" strokeWidth={2.5} />
+                                            </button>
+                                        </div>
                                     </td>
                                 </tr>
                             );
