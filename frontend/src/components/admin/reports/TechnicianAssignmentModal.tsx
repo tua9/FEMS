@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
-import type { AdminUser } from '../../../types/admin.types';
+import type { User } from '../../../types/user';
 
 interface TechnicianAssignmentModalProps {
     isOpen: boolean;
-    technicians: AdminUser[];
+    technicians: User[];
     onClose: () => void;
-    onAssign: (technician: AdminUser) => void;
+    onAssign: (technician: User) => void;
     equipmentName: string;
 }
 
@@ -21,10 +21,12 @@ const TechnicianAssignmentModal: React.FC<TechnicianAssignmentModalProps> = ({
 
     if (!isOpen) return null;
 
-    const filteredTechnicians = technicians.filter(tech =>
-        tech.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        tech.email.toLowerCase().includes(searchQuery.toLowerCase())
-    );
+    const filteredTechnicians = technicians.filter(tech => {
+        const name = tech.displayName || tech.username || '';
+        const email = tech.email || '';
+        return name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+               email.toLowerCase().includes(searchQuery.toLowerCase());
+    });
 
     const getWorkloadStyle = (count: number = 0) => {
         if (count >= 5) return 'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 border-red-200 dark:border-red-800/50';
@@ -82,27 +84,25 @@ const TechnicianAssignmentModal: React.FC<TechnicianAssignmentModalProps> = ({
                     {filteredTechnicians.length > 0 ? (
                         filteredTechnicians.map((tech) => (
                             <button
-                                key={tech.id}
+                                key={tech._id}
                                 onClick={() => onAssign(tech)}
                                 className="w-full flex items-center justify-between p-4 rounded-3xl hover:bg-blue-50/50 dark:hover:bg-blue-900/10 border-2 border-transparent hover:border-blue-100/50 dark:hover:border-blue-800/20 transition-all group"
                             >
                                 <div className="flex items-center gap-4">
-                                    {tech.avatar ? (
-                                        <img src={tech.avatar} alt={tech.name} className="w-12 h-12 rounded-2xl object-cover border-2 border-white dark:border-slate-700 shadow-sm" />
-                                    ) : (
-                                        <div className="w-12 h-12 rounded-2xl bg-[#1A2B56] text-white flex items-center justify-center font-bold text-lg">
-                                            {tech.name.charAt(0)}
-                                        </div>
-                                    )}
+                                    <div className="w-12 h-12 rounded-2xl bg-[#1A2B56] text-white flex items-center justify-center font-bold text-lg">
+                                        {(tech.displayName || tech.username || 'T').charAt(0)}
+                                    </div>
                                     <div className="text-left">
-                                        <p className="font-black text-slate-800 dark:text-white leading-tight transition-colors group-hover:text-blue-600 dark:group-hover:text-blue-400">{tech.name}</p>
+                                        <p className="font-black text-slate-800 dark:text-white leading-tight transition-colors group-hover:text-blue-600 dark:group-hover:text-blue-400">
+                                            {tech.displayName || tech.username}
+                                        </p>
                                         <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 mt-1 uppercase tracking-widest">{tech.email}</p>
                                     </div>
                                 </div>
-                                <div className={`px-4 py-1.5 rounded-xl border-2 text-[10px] font-black uppercase tracking-widest shadow-sm ${getWorkloadStyle(tech.assignedTasks)}`}>
+                                <div className={`px-4 py-1.5 rounded-xl border-2 text-[10px] font-black uppercase tracking-widest shadow-sm ${getWorkloadStyle(0)}`}>
                                     <div className="flex flex-col items-center">
-                                        <span>{getWorkloadText(tech.assignedTasks)}</span>
-                                        <span className="opacity-70 mt-0.5">{tech.assignedTasks || 0} tasks</span>
+                                        <span>{getWorkloadText(0)}</span>
+                                        <span className="opacity-70 mt-0.5">0 tasks</span>
                                     </div>
                                 </div>
                             </button>

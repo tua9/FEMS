@@ -3,6 +3,7 @@ export type BorrowRequestStatus =
   | "approved"
   | "rejected"
   | "handed_over"
+  | "overdue"
   | "returned"
   | string;
 

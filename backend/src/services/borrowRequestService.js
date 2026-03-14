@@ -195,6 +195,22 @@ const returnBorrowRequest = async (id) => {
   return { message: 'Equipment returned', request }
 }
 
+const remindBorrowRequest = async (id) => {
+  const request = await BorrowRequest.findById(id).populate('user_id', 'displayName email')
+  if (!request) {
+    throw new ApiError(StatusCodes.NOT_FOUND, 'Borrow request not found')
+  }
+
+  if (!request.user_id) {
+    throw new ApiError(StatusCodes.NOT_FOUND, 'Borrower information not found')
+  }
+
+  // Logic to send notification (email/push/system notification) would go here
+  console.log(`🔔 Reminder sent to ${request.user_id.displayName} (${request.user_id.email}) for request ${id}`)
+
+  return { message: 'Reminder sent successfully' }
+}
+
 export const borrowRequestService = {
   createBorrowRequest,
   getAllBorrowRequests,
@@ -205,4 +221,5 @@ export const borrowRequestService = {
   approveBorrowRequest,
   handoverBorrowRequest,
   returnBorrowRequest,
+  remindBorrowRequest,
 }

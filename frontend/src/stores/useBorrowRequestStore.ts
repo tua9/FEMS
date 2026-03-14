@@ -8,7 +8,8 @@ import type {
 type BorrowRequestStore = {
   borrowRequests: BorrowRequest[];
   selectedBorrowRequest: BorrowRequest | null;
-  loading: boolean;
+  loading: boolean;       // fetch toàn bộ danh sách
+  actionLoading: string | null; // ID của record đang xử lý action
   error: string | null;
 
   fetchMyBorrowRequests: () => Promise<void>;
@@ -20,6 +21,7 @@ type BorrowRequestStore = {
   rejectBorrowRequest: (id: string) => Promise<void>;
   handoverBorrowRequest: (id: string) => Promise<void>;
   returnBorrowRequest: (id: string) => Promise<void>;
+  remindBorrowRequest: (id: string) => Promise<void>;
   clearBorrowRequests: () => void;
   clearSelectedBorrowRequest: () => void;
 };
@@ -28,6 +30,7 @@ export const useBorrowRequestStore = create<BorrowRequestStore>((set) => ({
   borrowRequests: [],
   selectedBorrowRequest: null,
   loading: false,
+  actionLoading: null,
   error: null,
 
   fetchMyBorrowRequests: async () => {
@@ -121,82 +124,134 @@ export const useBorrowRequestStore = create<BorrowRequestStore>((set) => ({
   },
 
   approveBorrowRequest: async (id: string) => {
+    // Optimistic update: cập nhật status ngay lập tức trước khi chờ API
+    set((state) => ({
+      borrowRequests: state.borrowRequests.map((item) =>
+        item._id === id ? { ...item, status: 'approved' } : item
+      ),
+    }));
     try {
-      set({ loading: true, error: null });
+      set({ actionLoading: id, error: null });
       const updated = await borrowRequestService.approveBorrowRequest(id);
+      // Nếu API trả về đúng BorrowRequest thì sync lại với data thực tế từ server
+      if (updated && updated._id) {
+        set((state) => ({
+          borrowRequests: state.borrowRequests.map((item) =>
+            item._id === id ? updated : item
+          ),
+        }));
+      }
+    } catch (error: any) {
+      // Rollback nếu lỗi
       set((state) => ({
         borrowRequests: state.borrowRequests.map((item) =>
-          item._id === id ? updated : item
+          item._id === id ? { ...item, status: 'pending' } : item
         ),
+        error: error?.response?.data?.message || "Không duyệt được borrow request",
       }));
-    } catch (error: any) {
-      set({
-        error:
-          error?.response?.data?.message || "Không duyệt được borrow request",
-      });
       throw error;
     } finally {
-      set({ loading: false });
+      set({ actionLoading: null });
     }
   },
 
   rejectBorrowRequest: async (id: string) => {
+    set((state) => ({
+      borrowRequests: state.borrowRequests.map((item) =>
+        item._id === id ? { ...item, status: 'rejected' } : item
+      ),
+    }));
     try {
-      set({ loading: true, error: null });
+      set({ actionLoading: id, error: null });
       const updated = await borrowRequestService.rejectBorrowRequest(id);
+      if (updated && updated._id) {
+        set((state) => ({
+          borrowRequests: state.borrowRequests.map((item) =>
+            item._id === id ? updated : item
+          ),
+        }));
+      }
+    } catch (error: any) {
       set((state) => ({
         borrowRequests: state.borrowRequests.map((item) =>
-          item._id === id ? updated : item
+          item._id === id ? { ...item, status: 'pending' } : item
         ),
+        error: error?.response?.data?.message || "Không từ chối được borrow request",
       }));
-    } catch (error: any) {
-      set({
-        error:
-          error?.response?.data?.message || "Không từ chối được borrow request",
-      });
       throw error;
     } finally {
-      set({ loading: false });
+      set({ actionLoading: null });
     }
   },
 
   handoverBorrowRequest: async (id: string) => {
+    set((state) => ({
+      borrowRequests: state.borrowRequests.map((item) =>
+        item._id === id ? { ...item, status: 'handed_over' } : item
+      ),
+    }));
     try {
-      set({ loading: true, error: null });
+      set({ actionLoading: id, error: null });
       const updated = await borrowRequestService.handoverBorrowRequest(id);
+      if (updated && updated._id) {
+        set((state) => ({
+          borrowRequests: state.borrowRequests.map((item) =>
+            item._id === id ? updated : item
+          ),
+        }));
+      }
+    } catch (error: any) {
       set((state) => ({
         borrowRequests: state.borrowRequests.map((item) =>
-          item._id === id ? updated : item
+          item._id === id ? { ...item, status: 'approved' } : item
         ),
+        error: error?.response?.data?.message || "Không bàn giao được thiết bị",
       }));
-    } catch (error: any) {
-      set({
-        error:
-          error?.response?.data?.message || "Không bàn giao được thiết bị",
-      });
       throw error;
     } finally {
-      set({ loading: false });
+      set({ actionLoading: null });
     }
   },
 
   returnBorrowRequest: async (id: string) => {
+    set((state) => ({
+      borrowRequests: state.borrowRequests.map((item) =>
+        item._id === id ? { ...item, status: 'returned' } : item
+      ),
+    }));
     try {
-      set({ loading: true, error: null });
+      set({ actionLoading: id, error: null });
       const updated = await borrowRequestService.returnBorrowRequest(id);
+      if (updated && updated._id) {
+        set((state) => ({
+          borrowRequests: state.borrowRequests.map((item) =>
+            item._id === id ? updated : item
+          ),
+        }));
+      }
+    } catch (error: any) {
       set((state) => ({
         borrowRequests: state.borrowRequests.map((item) =>
-          item._id === id ? updated : item
+          item._id === id ? { ...item, status: 'handed_over' } : item
         ),
+        error: error?.response?.data?.message || "Không hoàn trả được thiết bị",
       }));
+      throw error;
+    } finally {
+      set({ actionLoading: null });
+    }
+  },
+  remindBorrowRequest: async (id: string) => {
+    try {
+      set({ actionLoading: id, error: null });
+      await borrowRequestService.remindBorrowRequest(id);
     } catch (error: any) {
       set({
-        error:
-          error?.response?.data?.message || "Không hoàn trả được thiết bị",
+        error: error?.response?.data?.message || "Không gửi được lời nhắc",
       });
       throw error;
     } finally {
-      set({ loading: false });
+      set({ actionLoading: null });
     }
   },
 

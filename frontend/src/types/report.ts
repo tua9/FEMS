@@ -1,5 +1,6 @@
 export type ReportType = 'equipment' | 'infrastructure' | 'other';
 export type ReportStatus = 'pending' | 'approved' | 'rejected' | 'processing' | 'fixed';
+export type ReportPriority = 'low' | 'medium' | 'high';
 
 export interface Report {
   _id: string;
@@ -20,6 +21,7 @@ export interface Report {
   } | string | null;
   type: ReportType;
   status: ReportStatus;
+  priority: ReportPriority;
   approved_by?: {
     _id: string;
     username: string;
@@ -35,6 +37,7 @@ export interface CreateReportPayload {
   equipment_id?: string | null;
   room_id?: string | null;
   type: ReportType;
+  priority?: ReportPriority;
   img?: string | null;
   description?: string | null;
 }

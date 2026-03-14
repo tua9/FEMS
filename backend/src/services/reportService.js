@@ -2,8 +2,16 @@ import { StatusCodes } from 'http-status-codes'
 import Report from '../models/Report.js'
 import ApiError from '../utils/ApiError.js'
 
+const populateReport = (query) => {
+  return query
+    .populate('user_id', 'displayName email username')
+    .populate('equipment_id', 'name category')
+    .populate('room_id', 'name type')
+    .populate('approved_by', 'displayName username')
+}
+
 const createReport = async (body) => {
-  const { user_id, equipment_id, room_id, description, imageUrl, imageId } =
+  const { user_id, equipment_id, room_id, description, imageUrl, imageId, priority } =
     body
 
   const newReport = await Report.create({
@@ -13,28 +21,24 @@ const createReport = async (body) => {
     description,
     imageUrl,
     imageId,
+    priority: priority || 'medium'
   })
+
+  // Return full report populated
+  const populated = await populateReport(Report.findById(newReport._id))
 
   return {
     message: 'Create report success',
-    report_id: newReport._id,
+    report: populated,
   }
 }
 
 const getAllReports = async () => {
-  return await Report.find()
-    .populate('user_id', 'displayName email')
-    .populate('equipment_id', 'name category')
-    .populate('room_id', 'name type')
-    .populate('approved_by', 'displayName')
+  return await populateReport(Report.find())
 }
 
 const getReportById = async (id) => {
-  const report = await Report.findById(id)
-    .populate('user_id', 'displayName email')
-    .populate('equipment_id', 'name category')
-    .populate('room_id', 'name type')
-    .populate('approved_by', 'displayName')
+  const report = await populateReport(Report.findById(id))
 
   if (!report) {
     throw new ApiError(StatusCodes.NOT_FOUND, 'Report not found')
@@ -51,7 +55,10 @@ const updateReport = async (id, body) => {
   if (!report) {
     throw new ApiError(StatusCodes.NOT_FOUND, 'Report not found')
   }
-  return { message: 'Update success', report }
+
+  const populated = await populateReport(Report.findById(report._id))
+
+  return { message: 'Update success', report: populated }
 }
 
 const deleteReport = async (id) => {
@@ -63,10 +70,7 @@ const deleteReport = async (id) => {
 }
 
 const getPersonalReports = async (userId) => {
-  return await Report.find({ user_id: userId })
-    .populate('equipment_id', 'name category')
-    .populate('room_id', 'name type')
-    .populate('approved_by', 'displayName')
+  return await populateReport(Report.find({ user_id: userId }))
 }
 
 const updateReportStatus = async (id, status, approverId) => {
@@ -92,7 +96,11 @@ const updateReportStatus = async (id, status, approverId) => {
   }
 
   await report.save()
-  return { message: 'Status updated successfully', report }
+
+  // Re-fetch populated
+  const populated = await populateReport(Report.findById(id))
+
+  return { message: 'Status updated successfully', report: populated }
 }
 
 export const reportService = {
