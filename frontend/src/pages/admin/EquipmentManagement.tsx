@@ -6,6 +6,7 @@ import AddEquipmentModal from '../../components/admin/equipment/AddEquipmentModa
 import EquipmentQRCodeModal from '../../components/admin/equipment/EquipmentQRCodeModal';
 import DeviceDetailsModal from '../../components/admin/equipment/DeviceDetailsModal';
 import DeleteConfirmationModal from '../../components/admin/common/DeleteConfirmationModal';
+import Pagination from '../../components/shared/Pagination';
 import { useEquipmentStore } from '../../stores/useEquipmentStore';
 import type { Equipment } from '../../types/equipment';
 import { useLocation } from 'react-router-dom';
@@ -200,33 +201,11 @@ const EquipmentManagement: React.FC = () => {
                         <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                             Showing {Math.min(filteredEquipments.length, (currentPage - 1) * ITEMS_PER_PAGE + 1)} - {Math.min(filteredEquipments.length, currentPage * ITEMS_PER_PAGE)} of {filteredEquipments.length} assets
                         </p>
-                        <div className="flex items-center gap-2">
-                            <button
-                                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-                                disabled={currentPage === 1}
-                                className={`w-10 h-10 flex items-center justify-center rounded-xl bg-white/40 dark:bg-slate-700 border border-white dark:border-slate-600 text-slate-600 dark:text-slate-300 transition-opacity ${currentPage === 1 ? 'opacity-30 cursor-not-allowed' : 'hover:bg-white dark:hover:bg-slate-600'}`}
-                            >
-                                <span className="material-symbols-outlined text-lg">chevron_left</span>
-                            </button>
-
-                            {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
-                                <button
-                                    key={page}
-                                    onClick={() => setCurrentPage(page)}
-                                    className={`w-10 h-10 flex items-center justify-center rounded-xl font-semibold text-sm transition-all ${currentPage === page ? 'bg-[#1A2B56] text-white shadow-md' : 'bg-white/40 dark:bg-slate-700 border border-white dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-600'}`}
-                                >
-                                    {page}
-                                </button>
-                            ))}
-
-                            <button
-                                onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-                                disabled={currentPage === totalPages || totalPages === 0}
-                                className={`w-10 h-10 flex items-center justify-center rounded-xl bg-white/40 dark:bg-slate-700 border border-white dark:border-slate-600 text-slate-600 dark:text-slate-300 transition-opacity ${currentPage === totalPages || totalPages === 0 ? 'opacity-30 cursor-not-allowed' : 'hover:bg-white dark:hover:bg-slate-600'}`}
-                            >
-                                <span className="material-symbols-outlined text-lg">chevron_right</span>
-                            </button>
-                        </div>
+                        <Pagination
+                            currentPage={currentPage}
+                            totalPages={totalPages}
+                            onPageChange={setCurrentPage}
+                        />
                     </div>
                 </div>
 

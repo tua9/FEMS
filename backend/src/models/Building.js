@@ -20,9 +20,8 @@ const buildingSchema = new mongoose.Schema(
 )
 
 // Default sort by newest first
-buildingSchema.pre('find', function (next) {
+buildingSchema.pre('find', function () {
   this.sort({ createdAt: -1 })
-  next()
 })
 
 const Building = mongoose.model('Building', buildingSchema)

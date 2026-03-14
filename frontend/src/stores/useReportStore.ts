@@ -6,6 +6,7 @@ type ReportStore = {
   reports: Report[];
   myReports: Report[];
   loading: boolean;
+  actionLoading: boolean;
   error: string | null;
 
   fetchAllReports: () => Promise<void>;
@@ -18,6 +19,7 @@ export const useReportStore = create<ReportStore>((set) => ({
   reports: [],
   myReports: [],
   loading: false,
+  actionLoading: false,
   error: null,
 
   fetchAllReports: async () => {
@@ -46,9 +48,11 @@ export const useReportStore = create<ReportStore>((set) => ({
 
   createReport: async (payload: CreateReportPayload) => {
     try {
-      set({ loading: true, error: null });
-      const newReport = await reportService.create(payload);
-      set((state) => ({ 
+      set({ actionLoading: true, error: null });
+      const response = await reportService.create(payload);
+      // Ensure we extract the report object if backend returns a wrapper
+      const newReport = (response as any).report || response;
+      set((state) => ({
         reports: [newReport, ...state.reports],
         myReports: [newReport, ...state.myReports]
       }));
@@ -56,14 +60,17 @@ export const useReportStore = create<ReportStore>((set) => ({
       set({ error: error?.response?.data?.message || "Cannot create report" });
       throw error;
     } finally {
-      set({ loading: false });
+      set({ actionLoading: false });
     }
   },
 
   updateReportStatus: async (id: string, status: ReportStatus) => {
     try {
-      set({ loading: true, error: null });
-      const updated = await reportService.updateStatus(id, status);
+      // Use actionLoading instead of loading to avoid full-page spinner
+      set({ actionLoading: true, error: null });
+      const response = await reportService.updateStatus(id, status);
+      // Ensure we extract the report object if backend returns a wrapper
+      const updated = (response as any).report || response;
       set((state) => ({
         reports: state.reports.map((r) => (r._id === id ? updated : r)),
         myReports: state.myReports.map((r) => (r._id === id ? updated : r))
@@ -72,7 +79,7 @@ export const useReportStore = create<ReportStore>((set) => ({
       set({ error: error?.response?.data?.message || "Cannot update report status" });
       throw error;
     } finally {
-      set({ loading: false });
+      set({ actionLoading: false });
     }
   },
 }));

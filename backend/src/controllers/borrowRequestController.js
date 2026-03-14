@@ -62,3 +62,8 @@ export const returnBorrowRequest = asyncHandler(async (req, res) => {
   const result = await borrowRequestService.returnBorrowRequest(req.params.id)
   res.status(StatusCodes.OK).json(result)
 })
+
+export const remindBorrowRequest = asyncHandler(async (req, res) => {
+  const result = await borrowRequestService.remindBorrowRequest(req.params.id)
+  res.status(StatusCodes.OK).json(result)
+})

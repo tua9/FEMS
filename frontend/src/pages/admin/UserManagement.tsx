@@ -4,6 +4,7 @@ import UserTable from '../../components/admin/users/UserTable';
 import AddUserModal from '../../components/admin/users/AddUserModal';
 import UserDetailModal from '../../components/admin/users/UserDetailModal';
 import DeleteConfirmationModal from '../../components/admin/common/DeleteConfirmationModal';
+import Pagination from '../../components/shared/Pagination';
 import ActionConfirmationModal from '../../components/admin/common/ActionConfirmationModal';
 import { useUserStore } from '../../stores/useUserStore';
 import type { User } from '../../types/user';
@@ -222,9 +223,9 @@ const UserManagement: React.FC = () => {
                     >
                         <div>
                             <p className="text-[10px] font-medium uppercase tracking-[0.2em] text-slate-500 mb-1">Technicians</p>
-                            <p className="text-sm font-black text-slate-800 dark:text-white">
+                            <h3 className="text-3xl font-bold text-[#1A2B56] dark:text-white tracking-tight">
                                 {users.filter(u => u.role === 'technician').length}
-                            </p>
+                            </h3>
                         </div>
                         <div className="w-10 h-10 rounded-full flex items-center justify-center bg-slate-50 dark:bg-slate-700/30 text-slate-400 dark:text-slate-500 transition-all duration-300">
                             <span className="material-symbols-outlined">engineering</span>
@@ -305,38 +306,11 @@ const UserManagement: React.FC = () => {
                             <p className="text-xs font-bold text-slate-500 dark:text-slate-400">
                                 Showing <span className="text-[#1A2B56] dark:text-white">{(currentPage - 1) * ITEMS_PER_PAGE + 1}</span> to <span className="text-[#1A2B56] dark:text-white">{Math.min(currentPage * ITEMS_PER_PAGE, filteredUsers.length)}</span> of <span className="text-[#1A2B56] dark:text-white">{filteredUsers.length}</span> users
                             </p>
-                            <div className="flex items-center gap-2">
-                                <button
-                                    onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-                                    disabled={currentPage === 1}
-                                    className="p-2 flex items-center justify-center rounded-xl bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm"
-                                >
-                                    <span className="material-symbols-outlined text-sm">chevron_left</span>
-                                </button>
-
-                                <div className="flex items-center gap-1.5 mx-2">
-                                    {Array.from({ length: totalPages }).map((_, i) => (
-                                        <button
-                                            key={i + 1}
-                                            onClick={() => setCurrentPage(i + 1)}
-                                            className={`w-8 h-8 flex items-center justify-center rounded-xl text-xs font-bold transition-all shadow-sm
-                                                ${currentPage === i + 1
-                                                    ? 'bg-[#1A2B56] text-white'
-                                                    : 'bg-white dark:bg-slate-700 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-600'}`}
-                                        >
-                                            {i + 1}
-                                        </button>
-                                    ))}
-                                </div>
-
-                                <button
-                                    onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-                                    disabled={currentPage === totalPages}
-                                    className="p-2 flex items-center justify-center rounded-xl bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm"
-                                >
-                                    <span className="material-symbols-outlined text-sm">chevron_right</span>
-                                </button>
-                            </div>
+                            <Pagination
+                                currentPage={currentPage}
+                                totalPages={totalPages}
+                                onPageChange={setCurrentPage}
+                            />
                         </div>
                     )}
                 </div>
