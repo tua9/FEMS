@@ -35,6 +35,7 @@ export interface CreateReportPayload {
   equipment_id?: string | null;
   room_id?: string | null;
   type: ReportType;
+  severity?: 'low' | 'medium' | 'high' | 'critical';
   img?: string | null;
   description?: string | null;
 }

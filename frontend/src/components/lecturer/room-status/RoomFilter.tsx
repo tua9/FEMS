@@ -17,26 +17,32 @@ interface RoomFilterProps {
     onReset: () => void;
     resultCount: number;
     totalCount: number;
+    buildingOptions?: DropdownOption[];
+    floorOptions?: DropdownOption[];
 }
 
-// ─── Static options ───────────────────────────────────────────────────────────
+// ─── Default static options ───────────────────────────────────────────────────
 
-const BUILDINGS: DropdownOption[] = [
-    { value: 'all-buildings', label: 'All Buildings'  },
-    { value: 'gamma',         label: 'Gamma Building' },
-    { value: 'alpha',         label: 'Alpha Building' },
+const DEFAULT_BUILDINGS: DropdownOption[] = [
+    { value: 'all-buildings', label: 'All Buildings' },
+    { value: 'gamma', label: 'Gamma Building' },
+    { value: 'beta', label: 'Beta Building' },
+    { value: 'alpha', label: 'Alpha Building' },
 ];
 
-const FLOORS: DropdownOption[] = [
+const DEFAULT_FLOORS: DropdownOption[] = [
     { value: 'all-floors', label: 'All Floors' },
-    { value: '1st',        label: '1st Floor'  },
-    { value: '4th',        label: '4th Floor'  },
+    { value: '1st', label: '1st Floor' },
+    { value: '2nd', label: '2nd Floor' },
+    { value: '3rd', label: '3rd Floor' },
+    { value: '4th', label: '4th Floor' },
+    { value: '5th', label: '5th Floor' },
 ];
 
 const STATUSES: DropdownOption[] = [
-    { value: 'all-status',  label: 'Device Status: All' },
-    { value: 'operational', label: 'Fully Operational'  },
-    { value: 'maintenance', label: 'Needs Attention'    },
+    { value: 'all-status', label: 'Device Status: All' },
+    { value: 'operational', label: 'Fully Operational' },
+    { value: 'maintenance', label: 'Needs Attention' },
 ];
 
 // ─── Custom Dropdown — portal-based, immune to parent overflow:hidden ─────────
@@ -55,7 +61,7 @@ const CustomDropdown: React.FC<CustomDropdownProps> = ({
     align = 'left',
     className = '',
 }) => {
-    const [open, setOpen]     = useState(false);
+    const [open, setOpen] = useState(false);
     const [coords, setCoords] = useState<{ top: number; left?: number; right?: number }>({ top: 0 });
     const triggerRef = useRef<HTMLButtonElement>(null);
 
@@ -112,8 +118,8 @@ const CustomDropdown: React.FC<CustomDropdownProps> = ({
             data-dd-panel=""
             style={{
                 position: 'fixed',
-                top:   coords.top,
-                left:  coords.left,
+                top: coords.top,
+                left: coords.left,
                 right: coords.right,
                 zIndex: 9999,
             }}
@@ -125,11 +131,10 @@ const CustomDropdown: React.FC<CustomDropdownProps> = ({
                     type="button"
                     onMouseDown={e => e.stopPropagation()}
                     onClick={() => { onChange(opt.value); setOpen(false); }}
-                    className={`w-full flex items-center justify-between gap-6 px-5 py-2.5 text-sm font-bold whitespace-nowrap transition-colors ${
-                        opt.value === value
-                            ? 'bg-[#1E2B58]/[0.06] text-[#1E2B58] dark:bg-white/10 dark:text-white'
-                            : 'text-[#1E2B58]/75 dark:text-white/75 hover:bg-[#1E2B58]/[0.04] dark:hover:bg-white/[0.04]'
-                    }`}
+                    className={`w-full flex items-center justify-between gap-6 px-5 py-2.5 text-sm font-bold whitespace-nowrap transition-colors ${opt.value === value
+                        ? 'bg-[#1E2B58]/[0.06] text-[#1E2B58] dark:bg-white/10 dark:text-white'
+                        : 'text-[#1E2B58]/75 dark:text-white/75 hover:bg-[#1E2B58]/[0.04] dark:hover:bg-white/[0.04]'
+                        }`}
                 >
                     {opt.label}
                     {opt.value === value
@@ -162,15 +167,17 @@ const CustomDropdown: React.FC<CustomDropdownProps> = ({
 
 export const RoomFilter: React.FC<RoomFilterProps> = ({
     building, onBuildingChange,
-    floor,    onFloorChange,
-    status,   onStatusChange,
+    floor, onFloorChange,
+    status, onStatusChange,
     onSearch, onReset,
     resultCount, totalCount,
+    buildingOptions,
+    floorOptions,
 }) => {
     const isFiltered =
         building !== 'all-buildings' ||
-        floor    !== 'all-floors'    ||
-        status   !== 'all-status';
+        floor !== 'all-floors' ||
+        status !== 'all-status';
 
     return (
         <div className="mb-8 md:mb-12">
@@ -178,14 +185,14 @@ export const RoomFilter: React.FC<RoomFilterProps> = ({
 
                 {/* Building */}
                 <div className="flex-1 min-w-0">
-                    <CustomDropdown value={building} options={BUILDINGS} onChange={onBuildingChange} align="left" className="w-full" />
+                    <CustomDropdown value={building} options={buildingOptions || DEFAULT_BUILDINGS} onChange={onBuildingChange} align="left" className="w-full" />
                 </div>
 
                 <div className="h-6 w-px bg-[#1E2B58]/10 dark:bg-white/10 hidden md:block self-center mx-1" />
 
                 {/* Floor */}
                 <div className="flex-1 min-w-0">
-                    <CustomDropdown value={floor} options={FLOORS} onChange={onFloorChange} align="left" className="w-full" />
+                    <CustomDropdown value={floor} options={floorOptions || DEFAULT_FLOORS} onChange={onFloorChange} align="left" className="w-full" />
                 </div>
 
                 <div className="h-6 w-px bg-[#1E2B58]/10 dark:bg-white/10 hidden md:block self-center mx-1" />

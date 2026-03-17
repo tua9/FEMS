@@ -8,15 +8,19 @@ import type {
 type BorrowRequestStore = {
   borrowRequests: BorrowRequest[];
   pendingBorrowRequests: BorrowRequest[];
+  approvedByMe: BorrowRequest[];
   selectedBorrowRequest: BorrowRequest | null;
   loading: boolean;
   error: string | null;
 
   fetchMyBorrowRequests: () => Promise<void>;
   fetchPendingBorrowRequests: () => Promise<void>;
+  fetchApprovedByMe: () => Promise<void>;
   fetchBorrowRequestById: (id: string) => Promise<void>;
   createMyBorrowRequest: (payload: CreateBorrowRequestPayload) => Promise<void>;
   cancelMyBorrowRequest: (id: string) => Promise<void>;
+  approveBorrowRequest: (id: string) => Promise<void>;
+  rejectBorrowRequest: (id: string, reason?: string) => Promise<void>;
   clearBorrowRequests: () => void;
   clearSelectedBorrowRequest: () => void;
 };
@@ -24,6 +28,7 @@ type BorrowRequestStore = {
 export const useBorrowRequestStore = create<BorrowRequestStore>((set) => ({
   borrowRequests: [],
   pendingBorrowRequests: [],
+  approvedByMe: [],
   selectedBorrowRequest: null,
   loading: false,
   error: null,
@@ -38,6 +43,21 @@ export const useBorrowRequestStore = create<BorrowRequestStore>((set) => ({
         error:
           error?.response?.data?.message ||
           "Không tải được danh sách borrow request",
+      });
+    } finally {
+      set({ loading: false });
+    }
+  },
+
+  fetchApprovedByMe: async () => {
+    try {
+      set({ loading: true, error: null });
+      const data = await borrowRequestService.getApprovedByMe();
+      set({ approvedByMe: data });
+    } catch (error: any) {
+      set({
+        error:
+          error?.response?.data?.message || "Không tải được lịch sử phê duyệt",
       });
     } finally {
       set({ loading: false });
@@ -79,11 +99,8 @@ export const useBorrowRequestStore = create<BorrowRequestStore>((set) => ({
   createMyBorrowRequest: async (payload: CreateBorrowRequestPayload) => {
     try {
       set({ loading: true, error: null });
-      const created = await borrowRequestService.createBorrowRequest(payload);
-
-      set((state) => ({
-        borrowRequests: [created, ...state.borrowRequests],
-      }));
+      await borrowRequestService.createBorrowRequest(payload);
+      // Do NOT refetch here — caller (component) is responsible for refreshing
     } catch (error: any) {
       set({
         error:
@@ -111,6 +128,46 @@ export const useBorrowRequestStore = create<BorrowRequestStore>((set) => ({
       set({
         error:
           error?.response?.data?.message || "Không hủy được borrow request",
+      });
+      throw error;
+    } finally {
+      set({ loading: false });
+    }
+  },
+
+  approveBorrowRequest: async (id: string) => {
+    try {
+      set({ loading: true, error: null });
+      await borrowRequestService.approveBorrowRequest(id);
+
+      set((state) => ({
+        pendingBorrowRequests: state.pendingBorrowRequests.filter(
+          (item) => item._id !== id
+        ),
+      }));
+    } catch (error: any) {
+      set({
+        error: error?.response?.data?.message || "Không thể phê duyệt yêu cầu",
+      });
+      throw error;
+    } finally {
+      set({ loading: false });
+    }
+  },
+
+  rejectBorrowRequest: async (id: string, reason?: string) => {
+    try {
+      set({ loading: true, error: null });
+      await borrowRequestService.rejectBorrowRequest(id, reason);
+
+      set((state) => ({
+        pendingBorrowRequests: state.pendingBorrowRequests.filter(
+          (item) => item._id !== id
+        ),
+      }));
+    } catch (error: any) {
+      set({
+        error: error?.response?.data?.message || "Không thể từ chối yêu cầu",
       });
       throw error;
     } finally {

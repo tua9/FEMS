@@ -31,4 +31,17 @@ export const equipmentService = {
     const res = await api.get(`/equipments/qr/${qrCode}`);
     return res.data;
   },
+
+  getInventory: async (params?: any): Promise<{
+    items: Equipment[];
+    pagination: {
+      totalItems: number;
+      currentPage: number;
+      totalPages: number;
+      limit: number;
+    }
+  }> => {
+    const res = await api.get("/equipments/inventory", { params });
+    return res.data;
+  },
 };

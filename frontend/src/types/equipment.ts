@@ -1,4 +1,6 @@
 export type EquipmentStatus = 'good' | 'broken' | 'maintenance' | string;
+export type EquipmentType = 'laptop' | 'projector' | 'tablet' | 'monitor' | 'camera' | 'audio' | 'all-types';
+export type LocationKey = 'gamma' | 'beta' | 'alpha' | 'all-locations';
 
 export interface Equipment {
   _id: string;

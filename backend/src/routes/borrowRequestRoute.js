@@ -7,8 +7,11 @@ import {
   getPersonalBorrowRequests,
   cancelBorrowRequest,
   approveBorrowRequest,
+  rejectBorrowRequest,
   handoverBorrowRequest,
   returnBorrowRequest,
+  getPendingBorrowRequests,
+  getApprovedByMe,
 } from '../controllers/borrowRequestController.js'
 import { restrictTo, protectedRoute } from '../middlewares/authMiddlewares.js'
 
@@ -18,41 +21,60 @@ router.use(protectedRoute)
 
 router.get(
   '/me',
-  restrictTo('student', 'Teacher', 'Tech', 'Admin'),
+  restrictTo('student', 'lecturer', 'technician', 'admin'),
   getPersonalBorrowRequests,
 )
+
+router.get(
+  '/approved-by-me',
+  restrictTo('lecturer', 'technician', 'admin'),
+  getApprovedByMe,
+)
+
+router.get(
+  '/pending',
+  restrictTo('lecturer', 'technician', 'admin'),
+  getPendingBorrowRequests,
+)
+
 router.post(
   '/',
-  restrictTo('student', 'Teacher', 'Tech', 'Admin'),
+  restrictTo('student', 'lecturer', 'technician', 'admin'),
   createBorrowRequest,
 ) // Student specific
 router.delete(
   '/:id',
-  restrictTo('Student', 'Teacher', 'Tech', 'Admin'),
+  restrictTo('student', 'lecturer', 'technician', 'admin'),
   cancelBorrowRequest,
 )
 
 router.patch(
   '/:id/approve',
-  restrictTo('Teacher', 'Tech', 'Admin'),
+  restrictTo('lecturer', 'technician', 'admin'),
   approveBorrowRequest,
+)
+
+router.patch(
+  '/:id/reject',
+  restrictTo('lecturer', 'technician', 'admin'),
+  rejectBorrowRequest,
 )
 router.patch(
   '/:id/handover',
-  restrictTo('Tech', 'Student', 'Admin'),
+  restrictTo('technician', 'student', 'admin'),
   handoverBorrowRequest,
 )
 router.patch(
   '/:id/return',
-  restrictTo('Student', 'Tech', 'Admin'),
+  restrictTo('student', 'technician', 'admin'),
   returnBorrowRequest,
 )
 
-router.get('/', restrictTo('Tech', 'Teacher', 'Admin'), getAllBorrowRequests)
-router.get('/:id', restrictTo('Tech', 'Teacher', 'Admin'), getBorrowRequestById)
+router.get('/', restrictTo('technician', 'lecturer', 'admin'), getAllBorrowRequests)
+router.get('/:id', restrictTo('technician', 'lecturer', 'admin'), getBorrowRequestById)
 router.patch(
   '/:id',
-  restrictTo('Tech', 'Teacher', 'Admin'),
+  restrictTo('technician', 'lecturer', 'admin'),
   updateBorrowRequest,
 )
 

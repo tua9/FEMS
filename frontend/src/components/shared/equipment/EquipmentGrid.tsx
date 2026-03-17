@@ -1,5 +1,5 @@
 import React, { useMemo } from "react";
-import { ArrowRight, Laptop } from "lucide-react";
+import { ArrowRight, Laptop, Monitor, TabletSmartphone, Projector, Camera, Mic, HelpCircle } from "lucide-react";
 import type { Equipment } from "@/types/equipment";
 
 interface EquipmentGridProps {
@@ -26,6 +26,15 @@ const statusConfig = {
   },
 };
 
+const categoryIcons: Record<string, any> = {
+  laptop: Laptop,
+  tablet: TabletSmartphone,
+  projector: Projector,
+  monitor: Monitor,
+  camera: Camera,
+  audio: Mic,
+};
+
 const statusMap: Record<string, keyof typeof statusConfig> = {
   good: "Available",
   broken: "Maintenance",
@@ -41,7 +50,7 @@ export const EquipmentGrid: React.FC<EquipmentGridProps> = ({
   const filteredItems = useMemo(() => {
     if (!showOnlyAvailable) return items;
 
-    return items.filter((item) => item.status === "good");
+    return items.filter((item: Equipment) => item.status === "good");
   }, [items, showOnlyAvailable]);
 
   return (
@@ -50,7 +59,8 @@ export const EquipmentGrid: React.FC<EquipmentGridProps> = ({
         {filteredItems.map((item) => {
           const mappedStatus = statusMap[item.status] || "Available";
           const cfg = statusConfig[mappedStatus];
-          const Icon = Laptop;
+          const itemCategory = (item.category || "").toLowerCase();
+          const Icon = categoryIcons[itemCategory] || HelpCircle;
 
           return (
             <div key={item._id} className="flex flex-col gap-[1.5rem]">
@@ -62,9 +72,8 @@ export const EquipmentGrid: React.FC<EquipmentGridProps> = ({
                 </span>
 
                 <Icon
-                  className={`w-[6rem] h-[6rem] text-[#1E2B58] dark:text-white opacity-20 transition-transform duration-300 ${
-                    !cfg.disabled ? "group-hover:scale-110" : ""
-                  }`}
+                  className={`w-[6rem] h-[6rem] text-[#1E2B58] dark:text-white opacity-20 transition-transform duration-300 ${!cfg.disabled ? "group-hover:scale-110" : ""
+                    }`}
                   strokeWidth={1}
                 />
               </div>
@@ -75,18 +84,17 @@ export const EquipmentGrid: React.FC<EquipmentGridProps> = ({
                 </h4>
 
                 <p className="text-[0.6875rem] font-bold uppercase tracking-widest opacity-60 text-[#1E2B58] dark:text-white">
-                  {_idToSku(item._id)} • {item.room_id?.name || "No Room"}
+                  {_idToSku(item._id)} • {(item.room_id as any)?.name || "No Room"}
                 </p>
               </div>
 
               <button
                 disabled={cfg.disabled}
                 onClick={() => !cfg.disabled && onBorrowRequest(item)}
-                className={`py-[1.25rem] rounded-[1.5rem] font-bold flex items-center justify-center gap-[0.5rem] transition-all duration-300 w-full text-[1rem] ${
-                  cfg.disabled
-                    ? "bg-white/40 dark:bg-slate-800/40 text-[#1E2B58]/40 dark:text-white/40 cursor-not-allowed"
-                    : "bg-[#1E2B58] text-white hover:shadow-xl hover:shadow-[#1E2B58]/30 hover:scale-[1.02] active:scale-95"
-                }`}
+                className={`py-[1.25rem] rounded-[1.5rem] font-bold flex items-center justify-center gap-[0.5rem] transition-all duration-300 w-full text-[1rem] ${cfg.disabled
+                  ? "bg-white/40 dark:bg-slate-800/40 text-[#1E2B58]/40 dark:text-white/40 cursor-not-allowed"
+                  : "bg-[#1E2B58] text-white hover:shadow-xl hover:shadow-[#1E2B58]/30 hover:scale-[1.02] active:scale-95"
+                  }`}
               >
                 {cfg.label}
                 {!cfg.disabled && (

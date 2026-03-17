@@ -27,3 +27,8 @@ export const deleteRoom = asyncHandler(async (req, res) => {
   const result = await roomService.deleteRoom(req.params.id)
   res.status(StatusCodes.OK).json(result)
 })
+
+export const getRoomStatusCenter = asyncHandler(async (req, res) => {
+  const result = await roomService.getRoomStatusCenter(req.query)
+  res.status(StatusCodes.OK).json(result)
+})

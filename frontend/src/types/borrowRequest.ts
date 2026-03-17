@@ -19,6 +19,7 @@ export interface BorrowRequestEquipment {
   _id: string;
   name: string;
   category?: string;
+  qr_code?: string;
 }
 
 export interface BorrowRequestRoom {

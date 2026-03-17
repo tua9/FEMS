@@ -1,34 +1,34 @@
-import { AlertTriangle, Cable, ChevronLeft, ChevronRight, Eye, Laptop, Mic, Microchip, Projector, Router } from 'lucide-react';
+import { Cable, ChevronLeft, ChevronRight, Eye, Laptop, Mic, Microchip, Projector, Router } from 'lucide-react';
 import React from 'react';
 import { StatusBadge } from '@/components/shared/ui/StatusBadge';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-export type BorrowStatus = 'RETURNED' | 'BORROWED' | 'OVERDUE';
+export type BorrowStatus = 'RETURNED' | 'BORROWED' | 'OVERDUE' | 'PENDING' | 'APPROVED' | 'REJECTED';
 
 export interface BorrowHistoryItem {
-    id:            string;
-    course:        string;
-    group:         string;
+    id: string;
+    course: string;
+    group: string;
     equipmentName: string;
-    icon:          React.ElementType;
-    period:        string;
-    returnDate:    string;
-    status:        BorrowStatus;
+    icon: React.ElementType;
+    period: string;
+    returnDate: string;
+    status: BorrowStatus;
 }
 
 // ─── Mock data ────────────────────────────────────────────────────────────────
 
 export const ALL_BORROW_HISTORY: BorrowHistoryItem[] = [
-    { id: '#REQ-2024-892', course: 'CS-405 Adv. AI',    group: 'Group A',      equipmentName: 'MacBook Pro 16" (x2)', icon: Laptop,    period: 'Oct 24, 09:00–12:00', returnDate: 'Oct 24, 2023', status: 'RETURNED' },
-    { id: '#REQ-2024-885', course: 'ENG-101 Basics',    group: 'Lab 3',        equipmentName: 'HDMI Cables (x5)',     icon: Cable,     period: 'Oct 22, 14:00–16:00', returnDate: '-',            status: 'BORROWED' },
-    { id: '#REQ-2024-870', course: 'CS-302 Networks',   group: 'Lab 1',        equipmentName: 'Cisco Router',         icon: Router,    period: 'Oct 20, 10:00–11:30', returnDate: '-',            status: 'OVERDUE'  },
-    { id: '#REQ-2024-865', course: 'PHY-201 Quantum',   group: 'Lecture Hall', equipmentName: 'Projector 4K',         icon: Projector, period: 'Oct 18, 13:00–15:00', returnDate: 'Oct 18, 2023', status: 'RETURNED' },
-    { id: '#REQ-2024-850', course: 'CS-405 Adv. AI',    group: 'Group B',      equipmentName: 'Raspberry Pi Kit',     icon: Microchip, period: 'Oct 15, 09:00–17:00', returnDate: 'Oct 15, 2023', status: 'RETURNED' },
-    { id: '#REQ-2024-842', course: 'MAT-101 Algebra',   group: 'Room 204',     equipmentName: 'Wireless Mic Set',     icon: Mic,       period: 'Oct 12, 08:30–10:30', returnDate: 'Oct 12, 2023', status: 'RETURNED' },
-    { id: '#REQ-2024-835', course: 'CS-302 Networks',   group: 'Group C',      equipmentName: 'Network Switch',       icon: Router,    period: 'Oct 10, 09:00–11:00', returnDate: 'Oct 10, 2023', status: 'RETURNED' },
-    { id: '#REQ-2024-821', course: 'PHY-201 Quantum',   group: 'Lab 2',        equipmentName: 'Oscilloscope',         icon: Microchip, period: 'Oct 08, 13:00–16:00', returnDate: 'Oct 08, 2023', status: 'RETURNED' },
-    { id: '#REQ-2024-810', course: 'ENG-101 Basics',    group: 'Room 301',     equipmentName: 'USB Webcam',           icon: Laptop,    period: 'Oct 05, 10:00–12:00', returnDate: 'Oct 05, 2023', status: 'RETURNED' },
+    { id: '#REQ-2024-892', course: 'CS-405 Adv. AI', group: 'Group A', equipmentName: 'MacBook Pro 16" (x2)', icon: Laptop, period: 'Oct 24, 09:00–12:00', returnDate: 'Oct 24, 2023', status: 'RETURNED' },
+    { id: '#REQ-2024-885', course: 'ENG-101 Basics', group: 'Lab 3', equipmentName: 'HDMI Cables (x5)', icon: Cable, period: 'Oct 22, 14:00–16:00', returnDate: '-', status: 'BORROWED' },
+    { id: '#REQ-2024-870', course: 'CS-302 Networks', group: 'Lab 1', equipmentName: 'Cisco Router', icon: Router, period: 'Oct 20, 10:00–11:30', returnDate: '-', status: 'OVERDUE' },
+    { id: '#REQ-2024-865', course: 'PHY-201 Quantum', group: 'Lecture Hall', equipmentName: 'Projector 4K', icon: Projector, period: 'Oct 18, 13:00–15:00', returnDate: 'Oct 18, 2023', status: 'RETURNED' },
+    { id: '#REQ-2024-850', course: 'CS-405 Adv. AI', group: 'Group B', equipmentName: 'Raspberry Pi Kit', icon: Microchip, period: 'Oct 15, 09:00–17:00', returnDate: 'Oct 15, 2023', status: 'RETURNED' },
+    { id: '#REQ-2024-842', course: 'MAT-101 Algebra', group: 'Room 204', equipmentName: 'Wireless Mic Set', icon: Mic, period: 'Oct 12, 08:30–10:30', returnDate: 'Oct 12, 2023', status: 'RETURNED' },
+    { id: '#REQ-2024-835', course: 'CS-302 Networks', group: 'Group C', equipmentName: 'Network Switch', icon: Router, period: 'Oct 10, 09:00–11:00', returnDate: 'Oct 10, 2023', status: 'RETURNED' },
+    { id: '#REQ-2024-821', course: 'PHY-201 Quantum', group: 'Lab 2', equipmentName: 'Oscilloscope', icon: Microchip, period: 'Oct 08, 13:00–16:00', returnDate: 'Oct 08, 2023', status: 'RETURNED' },
+    { id: '#REQ-2024-810', course: 'ENG-101 Basics', group: 'Room 301', equipmentName: 'USB Webcam', icon: Laptop, period: 'Oct 05, 10:00–12:00', returnDate: 'Oct 05, 2023', status: 'RETURNED' },
 ];
 
 // ─── Pagination helper ────────────────────────────────────────────────────────
@@ -43,10 +43,10 @@ function pageRange(current: number, total: number): (number | '...')[] {
 // ─── Props ────────────────────────────────────────────────────────────────────
 
 interface BorrowHistoryTableProps {
-    items:        BorrowHistoryItem[];
-    currentPage:  number;
-    totalPages:   number;
-    totalItems:   number;
+    items: BorrowHistoryItem[];
+    currentPage: number;
+    totalPages: number;
+    totalItems: number;
     onPageChange: (page: number) => void;
     onViewDetail: (item: BorrowHistoryItem) => void;
 }
@@ -62,7 +62,7 @@ export const BorrowHistoryTable: React.FC<BorrowHistoryTableProps> = ({
                 <table className="w-full border-collapse min-w-[1000px]">
                     <thead>
                         <tr className="thead-tint">
-                            {['Request ID', 'Course / Class', 'Equipment', 'Borrow Period', 'Return Date', 'Status', 'Actions'].map((h, i) => (
+                            {['Asset ID', 'Class / Course', 'Equipment', 'Borrow Period', 'Purpose', 'Status', 'Actions'].map((h, i) => (
                                 <th key={h} className={`px-[2rem] py-[1.5rem] text-[0.625rem] font-black uppercase tracking-[0.2em] text-[#1E2B58]/50 dark:text-slate-400 ${i === 5 ? 'text-center' : i === 6 ? 'text-right' : 'text-left'}`}>
                                     {h}
                                 </th>
@@ -101,8 +101,7 @@ export const BorrowHistoryTable: React.FC<BorrowHistoryTableProps> = ({
                                         <span className="text-[0.75rem] font-bold text-[#1E2B58] dark:text-slate-300">{item.period}</span>
                                     </td>
                                     <td className="px-[2rem] py-[1.5rem]">
-                                        <span className={`text-[0.75rem] font-medium ${item.status === 'OVERDUE' ? 'text-red-500 font-bold flex items-center gap-1' : 'text-slate-600 dark:text-slate-400'}`}>
-                                            {item.status === 'OVERDUE' && <AlertTriangle className="w-3.5 h-3.5 shrink-0" />}
+                                        <span className="text-[0.75rem] font-medium text-slate-600 dark:text-slate-400">
                                             {item.returnDate}
                                         </span>
                                     </td>
@@ -148,11 +147,10 @@ export const BorrowHistoryTable: React.FC<BorrowHistoryTableProps> = ({
                                 <button
                                     key={p}
                                     onClick={() => onPageChange(p as number)}
-                                    className={`w-[2rem] h-[2rem] rounded-full flex items-center justify-center font-bold text-[0.875rem] transition-colors ${
-                                        currentPage === p
+                                    className={`w-[2rem] h-[2rem] rounded-full flex items-center justify-center font-bold text-[0.875rem] transition-colors ${currentPage === p
                                             ? 'bg-[#1E2B58] text-white shadow-sm shadow-[#1E2B58]/20'
                                             : 'border border-[#1E2B58]/10 dark:border-white/10 hover:bg-black/5 dark:hover:bg-white/10 text-[#1E2B58] dark:text-slate-300'
-                                    }`}
+                                        }`}
                                 >
                                     {p}
                                 </button>

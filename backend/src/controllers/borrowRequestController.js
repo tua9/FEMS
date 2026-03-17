@@ -53,6 +53,16 @@ export const approveBorrowRequest = asyncHandler(async (req, res) => {
   res.status(StatusCodes.OK).json(result)
 })
 
+export const rejectBorrowRequest = asyncHandler(async (req, res) => {
+  const { reason } = req.body
+  const result = await borrowRequestService.rejectBorrowRequest(
+    req.params.id,
+    req.user._id,
+    reason,
+  )
+  res.status(StatusCodes.OK).json(result)
+})
+
 export const handoverBorrowRequest = asyncHandler(async (req, res) => {
   const result = await borrowRequestService.handoverBorrowRequest(req.params.id)
   res.status(StatusCodes.OK).json(result)
@@ -60,5 +70,14 @@ export const handoverBorrowRequest = asyncHandler(async (req, res) => {
 
 export const returnBorrowRequest = asyncHandler(async (req, res) => {
   const result = await borrowRequestService.returnBorrowRequest(req.params.id)
+  res.status(StatusCodes.OK).json(result)
+})
+
+export const getPendingBorrowRequests = asyncHandler(async (req, res) => {
+  const result = await borrowRequestService.getPendingBorrowRequests()
+  res.status(StatusCodes.OK).json(result)
+})
+export const getApprovedByMe = asyncHandler(async (req, res) => {
+  const result = await borrowRequestService.getApprovedByMe(req.user._id)
   res.status(StatusCodes.OK).json(result)
 })

@@ -32,6 +32,12 @@ const reportSchema = new mongoose.Schema(
       default: 'pending',
     },
 
+    severity: {
+      type: String,
+      enum: ['low', 'medium', 'high', 'critical'],
+      default: 'medium',
+    },
+
     approved_by: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
@@ -52,9 +58,8 @@ const reportSchema = new mongoose.Schema(
 )
 
 // Default sort by newest first
-reportSchema.pre('find', function (next) {
+reportSchema.pre('find', function () {
   this.sort({ createdAt: -1 })
-  next()
 })
 
 const Report = mongoose.model('Report', reportSchema)

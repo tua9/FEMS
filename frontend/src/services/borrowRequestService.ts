@@ -37,6 +37,11 @@ export const borrowRequestService = {
     return res.data;
   },
 
+  async rejectBorrowRequest(id: string, reason?: string): Promise<BorrowRequest> {
+    const res = await api.patch(`/requests/${id}/reject`, { reason });
+    return res.data;
+  },
+
   async handoverBorrowRequest(id: string): Promise<BorrowRequest> {
     const res = await api.patch(`/requests/${id}/handover`);
     return res.data;
@@ -49,6 +54,11 @@ export const borrowRequestService = {
 
   async getPendingBorrowRequests(): Promise<BorrowRequest[]> {
     const res = await api.get("/requests/pending");
+    return res.data;
+  },
+
+  async getApprovedByMe(): Promise<BorrowRequest[]> {
+    const res = await api.get("/requests/approved-by-me");
     return res.data;
   },
 };

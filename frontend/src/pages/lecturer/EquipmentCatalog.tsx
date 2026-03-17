@@ -1,175 +1,54 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  Laptop,
-  Video,
-  TabletSmartphone,
-  Monitor,
-  Camera,
-  Mic,
   X,
   ArrowRight,
   CalendarDays,
   FileText,
+  Loader2
 } from "lucide-react";
+import { toast } from "sonner";
 
 import { EquipmentFilter } from "../../components/lecturer/equipment/EquipmentFilter";
 import { EquipmentCategories } from "../../components/lecturer/equipment/EquipmentCategories";
-import {
-  EquipmentGrid,
-  EquipmentItem,
-  EquipmentType,
-  LocationKey,
-  EquipmentStatus,
-} from "../../components/lecturer/equipment/EquipmentGrid";
+import { EquipmentGrid } from "../../components/lecturer/equipment/EquipmentGrid";
 import { BorrowedEquipmentGrid } from "../../components/lecturer/equipment/BorrowedEquipmentGrid";
-
-// ─── Static Equipment Data ────────────────────────────────────────────────────
-
-const ALL_EQUIPMENT: EquipmentItem[] = [
-  {
-    id: "1",
-    title: "MacBook Pro M2",
-    sku: "FPT-LAP-082",
-    location: "Lab Room 402",
-    locationKey: "gamma",
-    type: "laptop",
-    status: "Available",
-    icon: Laptop,
-  },
-  {
-    id: "2",
-    title: "4K Laser Projector",
-    sku: "FPT-PJ-014",
-    location: "Resource Desk",
-    locationKey: "gamma",
-    type: "projector",
-    status: "Available",
-    icon: Video,
-  },
-  {
-    id: "3",
-    title: "iPad Air 5th Gen",
-    sku: "FPT-TAB-055",
-    location: "Library A",
-    locationKey: "alpha",
-    type: "tablet",
-    status: "In Use",
-    icon: TabletSmartphone,
-  },
-  {
-    id: "4",
-    title: "UltraWide Monitor",
-    sku: "FPT-MN-033",
-    location: "Room 205",
-    locationKey: "gamma",
-    type: "monitor",
-    status: "Available",
-    icon: Monitor,
-  },
-  {
-    id: "5",
-    title: "Sony A7 IV Camera",
-    sku: "FPT-CAM-011",
-    location: "Media Lab",
-    locationKey: "alpha",
-    type: "camera",
-    status: "Available",
-    icon: Camera,
-  },
-  {
-    id: "6",
-    title: "Focusrite Interface",
-    sku: "FPT-AUD-007",
-    location: "Studio B",
-    locationKey: "alpha",
-    type: "audio",
-    status: "Available",
-    icon: Mic,
-  },
-  {
-    id: "7",
-    title: "Dell XPS 15",
-    sku: "FPT-LAP-097",
-    location: "Lab Room 408",
-    locationKey: "gamma",
-    type: "laptop",
-    status: "Maintenance",
-    icon: Laptop,
-  },
-  {
-    id: "8",
-    title: "Epson Smart Projector",
-    sku: "FPT-PJ-022",
-    location: "Seminar Room A",
-    locationKey: "alpha",
-    type: "projector",
-    status: "Available",
-    icon: Video,
-  },
-  {
-    id: "9",
-    title: "Samsung Galaxy Tab S9",
-    sku: "FPT-TAB-061",
-    location: "Library B",
-    locationKey: "alpha",
-    type: "tablet",
-    status: "Available",
-    icon: TabletSmartphone,
-  },
-  {
-    id: "10",
-    title: "LG 4K Display",
-    sku: "FPT-MN-044",
-    location: "Room 301",
-    locationKey: "gamma",
-    type: "monitor",
-    status: "In Use",
-    icon: Monitor,
-  },
-  {
-    id: "11",
-    title: "Canon EOS R6",
-    sku: "FPT-CAM-019",
-    location: "Media Lab",
-    locationKey: "alpha",
-    type: "camera",
-    status: "In Use",
-    icon: Camera,
-  },
-  {
-    id: "12",
-    title: "Shure MV7 Mic",
-    sku: "FPT-AUD-013",
-    location: "Podcast Room",
-    locationKey: "gamma",
-    type: "audio",
-    status: "Available",
-    icon: Mic,
-  },
-];
-
-const ITEMS_PER_PAGE = 4;
+import { useEquipmentStore } from "@/stores/useEquipmentStore";
+import { useBuildingStore } from "@/stores/useBuildingStore";
+import { useBorrowRequestStore } from "@/stores/useBorrowRequestStore";
+import { useRoomStore } from "@/stores/useRoomStore";
+import type { Equipment } from "@/types/equipment";
 
 // Category id → EquipmentType (or 'all')
+// Must match the `category` values stored in MongoDB
 const CATEGORY_TO_TYPE: Record<string, string> = {
-  all: "all-types",
-  laptop: "laptop",
-  projector: "projector",
-  tablet: "tablet",
-  monitor: "monitor",
-  camera: "camera",
-  audio: "audio",
+  all:     "all-types",
+  laptop:  "laptop",
+  iot_kit: "iot_kit",
+  tablet:  "tablet",
+  pc_lab:  "pc_lab",
+  camera:  "camera",
+  audio:   "audio",
 };
 
 const TYPE_TO_CATEGORY: Record<string, string> = Object.fromEntries(
   Object.entries(CATEGORY_TO_TYPE).map(([k, v]) => [v, k]),
 );
 
+// Categories that are fixed to a specific room (auto-assigned)
+const FIXED_ROOM_CATEGORY: Record<string, string> = {
+  pc_lab:  "Computer Lab",
+  iot_kit: "Lab211",
+};
+
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export const EquipmentCatalog: React.FC = () => {
   const navigate = useNavigate();
+  const { inventoryData, fetchInventory, loading: equipmentLoading } = useEquipmentStore();
+  const { buildings, fetchAll: fetchBuildings } = useBuildingStore();
+  const { rooms, fetchAll: fetchRooms } = useRoomStore();
+  const { createMyBorrowRequest, fetchMyBorrowRequests, loading: borrowLoading } = useBorrowRequestStore();
 
   // ── Filter state ──────────────────────────────────────────────────────────
   const [searchText, setSearchText] = useState("");
@@ -179,12 +58,42 @@ export const EquipmentCatalog: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
 
   // ── Borrow modal state ────────────────────────────────────────────────────
-  const [borrowingItem, setBorrowingItem] = useState<EquipmentItem | null>(
-    null,
-  );
+  const [borrowingItem, setBorrowingItem] = useState<Equipment | null>(null);
   const [returnDate, setReturnDate] = useState("");
   const [purpose, setPurpose] = useState("");
+  const [selectedRoomId, setSelectedRoomId] = useState("");
   const [formError, setFormError] = useState("");
+
+  const ITEMS_PER_PAGE = 12;
+
+  // ── Initial Fetch ─────────────────────────────────────────────────────────
+  useEffect(() => {
+    fetchBuildings();
+    fetchRooms();
+  }, [fetchBuildings, fetchRooms]);
+
+  useEffect(() => {
+    const params: any = {
+      page: currentPage,
+      limit: ITEMS_PER_PAGE,
+      search: searchText,
+    };
+
+    if (typeFilter !== "all-types") {
+      params.category = typeFilter;
+    } else if (activeCategory !== "all") {
+      params.category = activeCategory;
+    }
+
+    if (locationFilter !== "all-locations") {
+      // Find building ID by name (case insensitive slug)
+      const slug = locationFilter.toLowerCase();
+      const building = buildings.find(b => b.name.toLowerCase().includes(slug));
+      if (building) params.building_id = building._id;
+    }
+
+    fetchInventory(params);
+  }, [currentPage, searchText, typeFilter, activeCategory, locationFilter, fetchInventory, buildings]);
 
   // ── Sync category ↔ type dropdown ─────────────────────────────────────────
   const handleTypeChange = (val: string) => {
@@ -203,40 +112,10 @@ export const EquipmentCatalog: React.FC = () => {
     setCurrentPage(1);
   };
 
-  // ── Filter logic ──────────────────────────────────────────────────────────
-  const filteredEquipment = useMemo(() => {
-    return ALL_EQUIPMENT.filter((item) => {
-      const q = searchText.toLowerCase();
-      if (
-        q &&
-        !item.title.toLowerCase().includes(q) &&
-        !item.sku.toLowerCase().includes(q)
-      )
-        return false;
-      if (
-        typeFilter !== "all-types" &&
-        item.type !== (typeFilter as EquipmentType)
-      )
-        return false;
-      if (
-        locationFilter !== "all-locations" &&
-        item.locationKey !== (locationFilter as LocationKey)
-      )
-        return false;
-      return true;
-    });
-  }, [searchText, typeFilter, locationFilter]);
-
   // ── Pagination ────────────────────────────────────────────────────────────
-  const totalPages = Math.max(
-    1,
-    Math.ceil(filteredEquipment.length / ITEMS_PER_PAGE),
-  );
+  const totalPages = inventoryData?.pagination.totalPages || 1;
   const safePage = Math.min(currentPage, totalPages);
-  const pagedItems = filteredEquipment.slice(
-    (safePage - 1) * ITEMS_PER_PAGE,
-    safePage * ITEMS_PER_PAGE,
-  );
+  const pagedItems = inventoryData?.items || [];
 
   const handlePageChange = (page: number) => {
     if (page < 1 || page > totalPages) return;
@@ -245,16 +124,29 @@ export const EquipmentCatalog: React.FC = () => {
   };
 
   // ── Borrow modal ──────────────────────────────────────────────────────────
-  const today = new Date().toISOString().split("T")[0];
-  const tomorrow = new Date(Date.now() + 86_400_000)
-    .toISOString()
-    .split("T")[0];
+  const tomorrow = new Date(Date.now() + 86_400_000).toISOString().split("T")[0];
 
-  const openBorrowModal = (item: EquipmentItem) => {
+  const openBorrowModal = (item: Equipment) => {
     setBorrowingItem(item);
     setReturnDate(tomorrow);
     setPurpose("");
     setFormError("");
+
+    // Auto-assign room for fixed-location equipment
+    const fixedRoomName = FIXED_ROOM_CATEGORY[item.category];
+    if (fixedRoomName) {
+      // Equipment already has room_id populated — use it directly
+      const roomIdFromItem = (item.room_id as any)?._id || (item.room_id as any);
+      if (roomIdFromItem) {
+        setSelectedRoomId(String(roomIdFromItem));
+      } else {
+        // Fallback: find by name from rooms store
+        const found = rooms.find(r => r.name === fixedRoomName);
+        setSelectedRoomId(found?._id || "");
+      }
+    } else {
+      setSelectedRoomId("");
+    }
   };
 
   const closeBorrowModal = () => {
@@ -262,7 +154,7 @@ export const EquipmentCatalog: React.FC = () => {
     setFormError("");
   };
 
-  const handleSubmitBorrow = (e: React.FormEvent) => {
+  const handleSubmitBorrow = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!returnDate) {
       setFormError("Please select a return date.");
@@ -273,19 +165,37 @@ export const EquipmentCatalog: React.FC = () => {
       return;
     }
 
-    navigate("/lecturer/approval", {
-      state: {
-        newBorrowRequest: {
-          equipmentId: borrowingItem!.id,
-          equipmentTitle: borrowingItem!.title,
-          equipmentSku: borrowingItem!.sku,
-          location: borrowingItem!.location,
-          returnDate,
-          purpose: purpose.trim(),
-          requestedAt: new Date().toISOString(),
-        },
-      },
-    });
+    try {
+      const now = new Date();
+      // Set borrow date to tomorrow at 8:00 AM for consistency
+      const tomorrowDate = new Date(now);
+      tomorrowDate.setDate(now.getDate() + 1);
+      tomorrowDate.setHours(8, 0, 0, 0);
+
+      // For fixed-location categories (pc_lab, iot_kit), send room_id
+      // For all other categories, DO NOT send room_id (leave as null)
+      const isFixed = !!FIXED_ROOM_CATEGORY[borrowingItem?.category || ""];
+
+      await createMyBorrowRequest({
+        equipment_id: borrowingItem!._id,
+        ...(isFixed && selectedRoomId ? { room_id: selectedRoomId } : {}),
+        type: "equipment",
+        borrow_date: tomorrowDate.toISOString(),
+        return_date: new Date(returnDate).toISOString(),
+        note: purpose.trim(),
+      });
+
+      toast.success(`Request submitted successfully!`, {
+        description: `Your request for "${borrowingItem!.name}" is pending review.`,
+      });
+
+      // Component is responsible for refreshing data after creation (not the store)
+      await fetchMyBorrowRequests();
+
+      closeBorrowModal();
+    } catch (err: any) {
+      setFormError(err?.response?.data?.message || "Failed to submit request. Please try again.");
+    }
   };
 
   // ── Render page buttons ───────────────────────────────────────────────────
@@ -298,11 +208,7 @@ export const EquipmentCatalog: React.FC = () => {
     } else {
       pages.push(1);
       if (safePage > 3) pages.push("...");
-      for (
-        let i = Math.max(2, safePage - 1);
-        i <= Math.min(totalPages - 1, safePage + 1);
-        i++
-      )
+      for (let i = Math.max(2, safePage - 1); i <= Math.min(totalPages - 1, safePage + 1); i++)
         pages.push(i);
       if (safePage < totalPages - 2) pages.push("...");
       pages.push(totalPages);
@@ -315,28 +221,20 @@ export const EquipmentCatalog: React.FC = () => {
           disabled={safePage === 1}
           className="flex h-[2.75rem] w-[2.75rem] items-center justify-center rounded-full transition hover:bg-white/40 disabled:cursor-not-allowed disabled:opacity-30 dark:hover:bg-slate-800/40"
         >
-          <span className="material-symbols-outlined text-[1.125rem]">
-            chevron_left
-          </span>
+          <span className="material-symbols-outlined text-[1.125rem]">chevron_left</span>
         </button>
 
         {pages.map((p, idx) =>
           p === "..." ? (
-            <span
-              key={`ellipsis-${idx}`}
-              className="flex h-[2.75rem] w-[2.75rem] items-center justify-center text-[1rem] text-[#1E2B58] opacity-40 dark:text-white"
-            >
-              ...
-            </span>
+            <span key={`ellipsis-${idx}`} className="flex h-[2.75rem] w-[2.75rem] items-center justify-center text-[1rem] text-[#1E2B58] opacity-40 dark:text-white">...</span>
           ) : (
             <button
               key={p}
               onClick={() => handlePageChange(p as number)}
-              className={`flex h-[2.75rem] w-[2.75rem] items-center justify-center rounded-full text-[1rem] font-bold transition-all hover:scale-105 active:scale-95 ${
-                safePage === p
-                  ? "bg-[#1E2B58] text-white shadow-lg shadow-[#1E2B58]/20"
-                  : "text-[#1E2B58] hover:bg-white/40 dark:text-white dark:hover:bg-slate-800/40"
-              }`}
+              className={`flex h-[2.75rem] w-[2.75rem] items-center justify-center rounded-full text-[1rem] font-bold transition-all hover:scale-105 active:scale-95 ${safePage === p
+                ? "bg-[#1E2B58] text-white shadow-lg shadow-[#1E2B58]/20"
+                : "text-[#1E2B58] hover:bg-white/40 dark:text-white dark:hover:bg-slate-800/40"
+                }`}
             >
               {p}
             </button>
@@ -348,15 +246,11 @@ export const EquipmentCatalog: React.FC = () => {
           disabled={safePage === totalPages}
           className="flex h-[2.75rem] w-[2.75rem] items-center justify-center rounded-full transition hover:bg-white/40 disabled:cursor-not-allowed disabled:opacity-30 dark:hover:bg-slate-800/40"
         >
-          <span className="material-symbols-outlined text-[1.125rem]">
-            chevron_right
-          </span>
+          <span className="material-symbols-outlined text-[1.125rem]">chevron_right</span>
         </button>
       </nav>
     );
   };
-
-  // ─────────────────────────────────────────────────────────────────────────
 
   return (
     <div className="w-full">
@@ -367,8 +261,7 @@ export const EquipmentCatalog: React.FC = () => {
             Equipment Catalog
           </h2>
           <p className="max-w-2xl text-[1rem] font-medium text-[#1E2B58]/60 sm:text-[1.125rem] dark:text-white/60">
-            Explore and reserve university resources with our enhanced Lecturer
-            Portal.
+            Explore and reserve university resources with our enhanced Lecturer Portal.
           </p>
         </section>
 
@@ -395,15 +288,23 @@ export const EquipmentCatalog: React.FC = () => {
           onCategoryChange={handleCategoryChange}
         />
 
-        {/* Equipment grid */}
-        <EquipmentGrid
-          items={pagedItems}
-          totalCount={filteredEquipment.length}
-          onBorrowRequest={openBorrowModal}
-        />
+        {/* Loading indicator integration */}
+        {equipmentLoading ? (
+          <div className="flex justify-center py-20">
+            <Loader2 className="w-10 h-10 animate-spin text-[#1E2B58] opacity-20" />
+          </div>
+        ) : (
+          /* Equipment grid */
+          <EquipmentGrid
+            items={pagedItems}
+            onBorrowRequest={openBorrowModal}
+            showOnlyAvailable={false}
+          />
+        )}
 
         {/* Borrowed equipment */}
         <BorrowedEquipmentGrid
+          items={[]} // This would eventually come from a store too
           onViewHistory={() => navigate("/lecturer/history")}
           onItemClick={() => navigate("/lecturer/history")}
         />
@@ -435,10 +336,10 @@ export const EquipmentCatalog: React.FC = () => {
                 Borrow Request
               </p>
               <h3 className="text-2xl leading-tight font-black text-[#1E2B58] dark:text-white">
-                {borrowingItem.title}
+                {borrowingItem.name}
               </h3>
               <p className="mt-1 text-xs font-bold tracking-widest text-[#1E2B58]/50 uppercase dark:text-white/40">
-                {borrowingItem.sku} • {borrowingItem.location}
+                {borrowingItem._id.slice(-6).toUpperCase()} • {(borrowingItem.room_id as any)?.name || "N/A"}
               </p>
             </div>
 
@@ -459,6 +360,19 @@ export const EquipmentCatalog: React.FC = () => {
                   className="w-full rounded-[1rem] border border-white/40 bg-white/40 px-4 py-3 text-sm font-bold text-[#1E2B58] transition-all outline-none focus:ring-2 focus:ring-[#1E2B58]/30 dark:border-slate-700/50 dark:bg-slate-800/50 dark:text-white"
                 />
               </div>
+
+              {/* Room Section: only show for fixed-room categories (pc_lab / iot_kit) */}
+              {FIXED_ROOM_CATEGORY[borrowingItem?.category || ""] && (
+                <div className="flex items-center gap-3 rounded-[1rem] border border-emerald-400/30 bg-emerald-50/60 dark:bg-emerald-900/20 px-4 py-3">
+                  <span className="material-symbols-outlined text-emerald-600 dark:text-emerald-400 text-[1.25rem]">location_on</span>
+                  <div>
+                    <p className="text-[0.625rem] font-black uppercase tracking-widest text-emerald-700/60 dark:text-emerald-400/60">Fixed Location</p>
+                    <p className="text-sm font-black text-emerald-700 dark:text-emerald-300">
+                      {FIXED_ROOM_CATEGORY[borrowingItem?.category || ""]}
+                    </p>
+                  </div>
+                </div>
+              )}
 
               {/* Purpose */}
               <div className="flex flex-col gap-2">
@@ -494,10 +408,17 @@ export const EquipmentCatalog: React.FC = () => {
                 </button>
                 <button
                   type="submit"
-                  className="flex flex-[2] items-center justify-center gap-2 rounded-[1.25rem] bg-[#1E2B58] py-3.5 text-sm font-bold text-white transition-all hover:scale-[1.02] hover:shadow-xl hover:shadow-[#1E2B58]/30 active:scale-95"
+                  disabled={borrowLoading}
+                  className="flex flex-[2] items-center justify-center gap-2 rounded-[1.25rem] bg-[#1E2B58] py-3.5 text-sm font-bold text-white transition-all hover:scale-[1.02] hover:shadow-xl hover:shadow-[#1E2B58]/30 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Submit Request
-                  <ArrowRight className="h-4 w-4" strokeWidth={3} />
+                  {borrowLoading ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <>
+                      Submit Request
+                      <ArrowRight className="h-4 w-4" strokeWidth={3} />
+                    </>
+                  )}
                 </button>
               </div>
             </form>

@@ -32,3 +32,8 @@ export const getEquipmentByQrCode = asyncHandler(async (req, res) => {
   const result = await equipmentService.getEquipmentByQrCode(req.params.qrCode)
   res.status(StatusCodes.OK).json(result)
 })
+
+export const getEquipmentInventory = asyncHandler(async (req, res) => {
+  const result = await equipmentService.getEquipmentInventory(req.query)
+  res.status(StatusCodes.OK).json(result)
+})

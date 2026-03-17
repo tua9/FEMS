@@ -2,25 +2,29 @@ import React, { useState, useRef, useCallback, useEffect } from 'react';
 import {
     Zap, Droplet, Monitor, Armchair, MoreHorizontal,
     MapPin, ChevronDown, Camera, ImagePlus, ArrowRight,
-    X, Loader2,
+    X, Loader2, Info, AlertTriangle, AlertOctagon, Flame
 } from 'lucide-react';
+import { useRoomStore } from '@/stores/useRoomStore';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 export type IssueCategory = 'electrical' | 'plumbing' | 'it' | 'furniture' | 'other';
+export type ReportSeverity = 'low' | 'medium' | 'high' | 'critical';
 
 export interface ReportFormData {
-    category: IssueCategory;
-    location: string;
+    category:    IssueCategory;
+    room_id:     string;   // MongoDB _id of the selected room
+    location:    string;   // display label (building + room name)
     description: string;
-    files: File[];
+    files:       File[];
+    severity:    ReportSeverity;
 }
 
 interface ReportManualFormProps {
-    prefillCategory?: IssueCategory;
-    prefillLocation?: string;
+    prefillCategory?:    IssueCategory;
+    prefillLocation?:    string;
     prefillDescription?: string;
-    onSubmit: (data: ReportFormData) => void;
+    onSubmit:  (data: ReportFormData) => void;
     isSubmitting?: boolean;
 }
 
@@ -34,16 +38,11 @@ const CATEGORIES = [
     { id: 'other'      as IssueCategory, icon: MoreHorizontal, label: 'Other'      },
 ];
 
-const LOCATIONS = [
-    { group: 'Gamma Building', options: [
-        'Room G402', 'Room G405', 'Room G408', 'Room G410', 'Room G412', 'Room G415', 'Room G420',
-    ]},
-    { group: 'Alpha Building', options: [
-        'Room A101', 'Room A102', 'Room A105', 'Room A108', 'Room A110', 'Room A112', 'Room A115',
-    ]},
-    { group: 'Common Areas', options: [
-        'Library Floor 1', 'Library Floor 2', 'Cafeteria', 'Lobby Gamma', 'Lobby Alpha', 'Parking Area',
-    ]},
+const SEVERITIES = [
+    { id: 'low'      as ReportSeverity, icon: Info,          label: 'Low',      colorClass: 'text-blue-500',   bgActive: 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800'     },
+    { id: 'medium'   as ReportSeverity, icon: AlertTriangle, label: 'Medium',   colorClass: 'text-yellow-500', bgActive: 'bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800' },
+    { id: 'high'     as ReportSeverity, icon: AlertOctagon,  label: 'High',     colorClass: 'text-orange-500', bgActive: 'bg-orange-50 dark:bg-orange-900/20 border-orange-200 dark:border-orange-800' },
+    { id: 'critical' as ReportSeverity, icon: Flame,         label: 'Critical', colorClass: 'text-red-500',    bgActive: 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800'          },
 ];
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -56,18 +55,32 @@ export const ReportManualForm: React.FC<ReportManualFormProps> = ({
     isSubmitting = false,
 }) => {
     const [category,    setCategory]    = useState<IssueCategory>(prefillCategory ?? 'electrical');
+    const [roomId,      setRoomId]      = useState('');
     const [location,    setLocation]    = useState(prefillLocation ?? '');
+    const [severity,    setSeverity]    = useState<ReportSeverity>('medium');
     const [description, setDescription] = useState(prefillDescription ?? '');
     const [files,       setFiles]       = useState<File[]>([]);
     const [dragOver,    setDragOver]    = useState(false);
-    const [errors,      setErrors]      = useState<Partial<Record<keyof ReportFormData | 'files', string>>>({});
+    const [errors,      setErrors]      = useState<Partial<Record<'room_id' | 'description', string>>>({});
+
+    // Load rooms from store
+    const { rooms, fetchAll: fetchRooms } = useRoomStore();
+    useEffect(() => { fetchRooms(); }, []);
 
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     // Sync if props change (from QR scan)
-    useEffect(() => { if (prefillCategory) setCategory(prefillCategory); }, [prefillCategory]);
-    useEffect(() => { if (prefillLocation) setLocation(prefillLocation); }, [prefillLocation]);
+    useEffect(() => { if (prefillCategory)    setCategory(prefillCategory); },    [prefillCategory]);
+    useEffect(() => { if (prefillLocation)    setLocation(prefillLocation); },    [prefillLocation]);
     useEffect(() => { if (prefillDescription) setDescription(prefillDescription); }, [prefillDescription]);
+
+    // Group rooms by building name
+    const roomGroups = rooms.reduce<Record<string, typeof rooms>>((acc, room) => {
+        const bldg = (room as any).building_id?.name ?? 'Other';
+        if (!acc[bldg]) acc[bldg] = [];
+        acc[bldg].push(room);
+        return acc;
+    }, {});
 
     // ── File handling ──────────────────────────────────────────────────────────
     const addFiles = useCallback((incoming: FileList | null) => {
@@ -75,11 +88,7 @@ export const ReportManualForm: React.FC<ReportManualFormProps> = ({
         const valid = Array.from(incoming).filter(f =>
             f.type.startsWith('image/') && f.size <= 10 * 1024 * 1024
         );
-        setFiles(prev => {
-            const combined = [...prev, ...valid];
-            return combined.slice(0, 5); // max 5 files
-        });
-        setErrors(prev => ({ ...prev, files: undefined }));
+        setFiles(prev => [...prev, ...valid].slice(0, 5)); // max 5 files
     }, []);
 
     const removeFile = (index: number) =>
@@ -95,11 +104,11 @@ export const ReportManualForm: React.FC<ReportManualFormProps> = ({
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         const newErrors: typeof errors = {};
-        if (!location)           newErrors.location    = 'Please select an incident location.';
-        if (description.length < 10) newErrors.description = 'Description must be at least 10 characters.';
+        if (!roomId)                     newErrors.room_id     = 'Please select an incident location.';
+        if (description.length < 10)     newErrors.description = 'Description must be at least 10 characters.';
         if (Object.keys(newErrors).length > 0) { setErrors(newErrors); return; }
         setErrors({});
-        onSubmit({ category, location, description, files });
+        onSubmit({ category, room_id: roomId, location, description, files, severity });
     };
 
     // ── Render ────────────────────────────────────────────────────────────────
@@ -125,7 +134,7 @@ export const ReportManualForm: React.FC<ReportManualFormProps> = ({
                                     name="category"
                                     className="hidden"
                                     checked={isSelected}
-                                    onChange={() => { setCategory(cat.id); setErrors(p => ({ ...p, category: undefined })); }}
+                                    onChange={() => { setCategory(cat.id); }}
                                 />
                                 <div className={`flex flex-col items-center justify-center gap-[0.75rem] p-[1.5rem] rounded-[1.5rem] border transition-all aspect-square hover:bg-white/80 dark:hover:bg-white/10 hover:scale-[1.03] active:scale-95 hover:shadow-sm ${
                                     isSelected
@@ -150,22 +159,31 @@ export const ReportManualForm: React.FC<ReportManualFormProps> = ({
                 </h3>
                 <div className="relative">
                     <div className="absolute inset-y-0 left-[1.25rem] flex items-center pointer-events-none">
-                        <MapPin className={`w-[1.25rem] h-[1.25rem] ${errors.location ? 'text-red-400' : 'text-slate-400'}`} />
+                        <MapPin className={`w-[1.25rem] h-[1.25rem] ${errors.room_id ? 'text-red-400' : 'text-slate-400'}`} />
                     </div>
                     <select
-                        value={location}
-                        onChange={e => { setLocation(e.target.value); setErrors(p => ({ ...p, location: undefined })); }}
+                        value={roomId}
+                        onChange={e => {
+                            const selectedId = e.target.value;
+                            setRoomId(selectedId);
+                            const room = rooms.find(r => r._id === selectedId);
+                            const bldg = (room as any)?.building_id?.name ?? '';
+                            setLocation(room ? `${bldg ? bldg + ' — ' : ''}${room.name}` : '');
+                            setErrors(p => ({ ...p, room_id: undefined }));
+                        }}
                         className={`w-full h-[3.5rem] bg-white/40 dark:bg-white/5 border rounded-[1.5rem] pl-[3rem] pr-[3rem] appearance-none text-[#1E2B58] dark:text-white font-medium focus:ring-2 focus:border-[#1E2B58]/30 outline-none transition-all cursor-pointer shadow-sm ${
-                            errors.location
+                            errors.room_id
                                 ? 'border-red-400/60 focus:ring-red-400/20'
                                 : 'border-white/50 dark:border-white/10 focus:ring-[#1E2B58]/10'
                         }`}
                     >
                         <option value="">Search or select location (e.g. Block A, Room 402)</option>
-                        {LOCATIONS.map(group => (
-                            <optgroup key={group.group} label={group.group}>
-                                {group.options.map(opt => (
-                                    <option key={opt} value={opt}>{opt}</option>
+                        {Object.entries(roomGroups).map(([bldg, bldgRooms]) => (
+                            <optgroup key={bldg} label={bldg}>
+                                {bldgRooms.map(room => (
+                                    <option key={room._id} value={room._id}>
+                                        {room.name}
+                                    </option>
                                 ))}
                             </optgroup>
                         ))}
@@ -174,13 +192,47 @@ export const ReportManualForm: React.FC<ReportManualFormProps> = ({
                         <ChevronDown className="text-slate-400 w-[1.25rem] h-[1.25rem]" />
                     </div>
                 </div>
-                {errors.location && <p className="mt-2 text-xs font-bold text-red-500 dark:text-red-400 pl-1">{errors.location}</p>}
+                {errors.room_id && <p className="mt-2 text-xs font-bold text-red-500 dark:text-red-400 pl-1">{errors.room_id}</p>}
             </div>
 
-            {/* 3. Description ───────────────────────────────────────────────── */}
+            {/* 3. Severity ──────────────────────────────────────────────────── */}
+            <div>
+                <h3 className="text-[0.6875rem] font-bold text-slate-500 dark:text-slate-400 mb-[1.5rem] uppercase tracking-[0.15em]">
+                    3. Severity Level
+                </h3>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-[1rem]">
+                    {SEVERITIES.map(sev => {
+                        const Icon = sev.icon;
+                        const isSelected = severity === sev.id;
+                        return (
+                            <label key={sev.id} className="cursor-pointer group">
+                                <input
+                                    type="radio"
+                                    name="severity"
+                                    className="hidden"
+                                    checked={isSelected}
+                                    onChange={() => setSeverity(sev.id)}
+                                />
+                                <div className={`flex items-center gap-[0.75rem] p-[1.25rem] rounded-[1.25rem] border transition-all hover:bg-white/80 dark:hover:bg-white/10 hover:scale-[1.02] active:scale-95 ${
+                                    isSelected
+                                        ? `${sev.bgActive} shadow-sm ring-1 ring-black/5 dark:ring-white/10 scale-[1.01]`
+                                        : 'bg-white/40 dark:bg-slate-800/40 border-white/60 dark:border-white/5'
+                                }`}>
+                                    <Icon className={`w-5 h-5 ${isSelected ? sev.colorClass : 'text-slate-400'}`} strokeWidth={2} />
+                                    <span className={`text-xs font-bold uppercase tracking-wider ${isSelected ? 'text-[#1E2B58] dark:text-white' : 'text-slate-500 dark:text-slate-400'}`}>
+                                        {sev.label}
+                                    </span>
+                                </div>
+                            </label>
+                        );
+                    })}
+                </div>
+            </div>
+
+            {/* 4. Description ───────────────────────────────────────────────── */}
             <div>
                 <h3 className="text-[0.6875rem] font-bold text-slate-500 dark:text-slate-400 mb-[1rem] uppercase tracking-[0.15em]">
-                    3. Issue Description
+                    4. Issue Description
                 </h3>
                 <textarea
                     value={description}
@@ -203,13 +255,12 @@ export const ReportManualForm: React.FC<ReportManualFormProps> = ({
                 </div>
             </div>
 
-            {/* 4. Evidence ──────────────────────────────────────────────────── */}
+            {/* 5. Evidence ──────────────────────────────────────────────────── */}
             <div>
                 <h3 className="text-[0.6875rem] font-bold text-slate-500 dark:text-slate-400 mb-[1rem] uppercase tracking-[0.15em]">
-                    4. Upload Evidence <span className="normal-case font-medium opacity-60">(optional, max 5 files)</span>
+                    5. Upload Evidence <span className="normal-case font-medium opacity-60">(optional, max 5 files)</span>
                 </h3>
 
-                {/* Hidden file input */}
                 <input
                     ref={fileInputRef}
                     type="file"
@@ -219,7 +270,6 @@ export const ReportManualForm: React.FC<ReportManualFormProps> = ({
                     onChange={e => addFiles(e.target.files)}
                 />
 
-                {/* Dropzone */}
                 <div
                     onDragOver={e => { e.preventDefault(); setDragOver(true); }}
                     onDragLeave={() => setDragOver(false)}
@@ -231,7 +281,7 @@ export const ReportManualForm: React.FC<ReportManualFormProps> = ({
                             : 'border-white/60 dark:border-slate-600 bg-white/40 dark:bg-white/5 hover:bg-white/50 dark:hover:bg-slate-800/50'
                     }`}
                 >
-                    <div className="w-[3rem] h-[3rem] bg-white dark:bg-slate-700/50 rounded-full flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform">
+                    <div className="w-[3rem] h-[3rem] bg-white dark:bg-slate-700/50 rounded-full flex items-center justify-center shadow-sm">
                         <Camera className="text-slate-500 dark:text-slate-400 w-[1.5rem] h-[1.5rem]" />
                     </div>
                     <div className="text-center">
@@ -243,7 +293,6 @@ export const ReportManualForm: React.FC<ReportManualFormProps> = ({
                         </p>
                     </div>
 
-                    {/* Action buttons inside dropzone */}
                     <div
                         className="absolute bottom-[1rem] right-[1rem] flex gap-[0.5rem]"
                         onClick={e => e.stopPropagation()}
@@ -252,7 +301,7 @@ export const ReportManualForm: React.FC<ReportManualFormProps> = ({
                             type="button"
                             onClick={() => fileInputRef.current?.click()}
                             className="p-[0.5rem] bg-white/40 dark:bg-white/10 rounded-xl hover:bg-white/60 dark:hover:bg-white/20 text-slate-600 dark:text-slate-300 transition-all hover:scale-110 active:scale-95"
-                            title="Take Photo / Upload from Camera"
+                            title="Upload from Camera"
                         >
                             <Camera className="w-[1.25rem] h-[1.25rem]" />
                         </button>
@@ -267,7 +316,6 @@ export const ReportManualForm: React.FC<ReportManualFormProps> = ({
                     </div>
                 </div>
 
-                {/* File previews */}
                 {files.length > 0 && (
                     <div className="mt-3 flex flex-wrap gap-2">
                         {files.map((file, i) => (

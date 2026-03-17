@@ -1,26 +1,40 @@
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { CheckCircle2, X, ArrowRight, ClipboardList } from 'lucide-react';
+import { toast } from 'sonner';
 
-import { ReportHeader } from '../../components/lecturer/report/ReportHeader';
-import { QuickScanReport, QRResult } from '../../components/lecturer/report/QuickScanReport';
-import { ReportManualForm, ReportFormData, IssueCategory } from '../../components/lecturer/report/ReportManualForm';
-import { RecentReports, ReportEntry } from '../../components/lecturer/report/RecentReports';
+import { ReportHeader }     from '../../components/lecturer/report/ReportHeader';
+import { QuickScanReport, type QRResult } from '../../components/lecturer/report/QuickScanReport';
+import { ReportManualForm, type ReportFormData, type IssueCategory } from '../../components/lecturer/report/ReportManualForm';
+import { RecentReports }    from '../../components/shared/report/RecentReports';
+
+import { useReportStore }   from '../../stores/useReportStore';
+import type { ReportType }  from '../../types/report';
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+// Map frontend UI category → DB Report.type
+const CATEGORY_TO_TYPE: Record<IssueCategory, ReportType> = {
+    electrical: 'infrastructure',
+    plumbing:   'infrastructure',
+    furniture:  'infrastructure',
+    it:         'equipment',
+    other:      'other',
+};
+
+// Convert File to base64 string
+const fileToBase64 = (file: File): Promise<string> =>
+    new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload  = () => resolve(reader.result as string);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+    });
 
 // ─── Navigation state from Room Status ────────────────────────────────────────
 interface NavState {
     prefillRoom?:     string;
     prefillBuilding?: string;
-}
-
-// ─── Submitted report (for success modal + recent list) ───────────────────────
-interface SubmittedReport {
-    id:          string;
-    subject:     string;
-    location:    string;
-    category:    IssueCategory;
-    description: string;
-    date:        string;
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -29,17 +43,19 @@ export const ReportIssueCenter: React.FC = () => {
     const navigate   = useNavigate();
     const routeState = (useLocation().state ?? {}) as NavState;
 
+    const { createReport, fetchMyReports } = useReportStore();
+
     // ── Prefill from Room Status / QR scan ────────────────────────────────────
-    const [prefillLocation,    setPrefillLocation]    = useState<string>(
-        routeState.prefillRoom ?? ''
-    );
+    const [prefillLocation,    setPrefillLocation]    = useState<string>(routeState.prefillRoom ?? '');
     const [prefillCategory,    setPrefillCategory]    = useState<IssueCategory | undefined>(undefined);
     const [prefillDescription, setPrefillDescription] = useState<string>('');
 
     // ── Submission state ──────────────────────────────────────────────────────
-    const [isSubmitting,    setIsSubmitting]    = useState(false);
-    const [submittedReport, setSubmittedReport] = useState<SubmittedReport | null>(null);
-    const [showSuccess,     setShowSuccess]     = useState(false);
+    const [isSubmitting,  setIsSubmitting]  = useState(false);
+    const [reportId,      setReportId]      = useState<string | null>(null);
+    const [reportSubject, setReportSubject] = useState('');
+    const [reportDate,    setReportDate]    = useState('');
+    const [showSuccess,   setShowSuccess]   = useState(false);
 
     // ── QR Scan handler ───────────────────────────────────────────────────────
     const handleQRDetected = (result: QRResult) => {
@@ -48,13 +64,29 @@ export const ReportIssueCenter: React.FC = () => {
         setPrefillDescription(result.description);
     };
 
-    // ── Form submit ───────────────────────────────────────────────────────────
-    const handleFormSubmit = (data: ReportFormData) => {
+    // ── Form submit — REAL API CALL ───────────────────────────────────────────
+    const handleFormSubmit = async (data: ReportFormData) => {
         setIsSubmitting(true);
+        try {
+            // 1. Optional: encode first image as base64
+            let imgBase64: string | null = null;
+            if (data.files.length > 0) {
+                imgBase64 = await fileToBase64(data.files[0]);
+            }
 
-        // Simulate API call (1.5 s)
-        setTimeout(() => {
-            const reportId = `#REP-${Math.floor(7800 + Math.random() * 200)}`;
+            // 2. Build JSON payload
+            const payload = {
+                room_id:     data.room_id,
+                type:        CATEGORY_TO_TYPE[data.category],
+                description: data.description,
+                severity:    data.severity,
+                img:         imgBase64,
+            };
+
+            // 3. Call store → service → POST /tickets/report (JSON)
+            await createReport(payload);
+
+            // 4. Build success display data
             const categoryLabels: Record<IssueCategory, string> = {
                 electrical: 'Electrical',
                 plumbing:   'Plumbing',
@@ -65,39 +97,35 @@ export const ReportIssueCenter: React.FC = () => {
             const subject = `${categoryLabels[data.category]} Issue — ${data.location}`;
             const today   = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
 
-            const report: SubmittedReport = {
-                id:          reportId,
-                subject,
-                location:    data.location,
-                category:    data.category,
-                description: data.description,
-                date:        today,
-            };
-            setSubmittedReport(report);
-            setIsSubmitting(false);
+            setReportId(`#REP-${Date.now().toString().slice(-6)}`);
+            setReportSubject(subject);
+            setReportDate(today);
             setShowSuccess(true);
-        }, 1500);
+
+            // 5. Refresh recent reports list
+            await fetchMyReports();
+
+        } catch (err: any) {
+            toast.error('Failed to submit report', {
+                description: err?.response?.data?.message || 'Please try again.',
+            });
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
-    // ── Success modal: view history ───────────────────────────────────────────
+    // ── Success modal actions ─────────────────────────────────────────────────
     const handleViewHistory = () => {
         setShowSuccess(false);
         navigate('/lecturer/history');
     };
 
-    // ── Success modal: submit another ─────────────────────────────────────────
     const handleSubmitAnother = () => {
         setShowSuccess(false);
         setPrefillLocation('');
         setPrefillCategory(undefined);
         setPrefillDescription('');
-        // The form will auto-reset because keys will change (or we can leave prefills empty)
     };
-
-    // ── Recent list entry ─────────────────────────────────────────────────────
-    const newReportEntry: ReportEntry | null = submittedReport
-        ? { id: submittedReport.id, subject: submittedReport.subject, date: submittedReport.date, status: 'Pending' }
-        : null;
 
     // ─────────────────────────────────────────────────────────────────────────
 
@@ -121,7 +149,7 @@ export const ReportIssueCenter: React.FC = () => {
 
                     {/* Manual form */}
                     <ReportManualForm
-                        key={`${prefillLocation}-${prefillCategory}`}   // re-mount on QR scan
+                        key={`${prefillLocation}-${prefillCategory}`}
                         prefillLocation={prefillLocation}
                         prefillCategory={prefillCategory}
                         prefillDescription={prefillDescription}
@@ -129,13 +157,13 @@ export const ReportIssueCenter: React.FC = () => {
                         isSubmitting={isSubmitting}
                     />
 
-                    {/* Recent reports */}
-                    <RecentReports newReport={newReportEntry} />
+                    {/* Recent reports — real data from store */}
+                    <RecentReports />
                 </div>
             </main>
 
             {/* ── Success Modal ─────────────────────────────────────────────── */}
-            {showSuccess && submittedReport && (
+            {showSuccess && reportId && (
                 <div
                     className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm px-4"
                     onClick={e => { if (e.target === e.currentTarget) setShowSuccess(false); }}
@@ -162,19 +190,19 @@ export const ReportIssueCenter: React.FC = () => {
                             Your issue has been logged successfully.
                         </p>
 
-                        {/* Report details card */}
+                        {/* Report details */}
                         <div className="bg-white/40 dark:bg-slate-800/40 rounded-[1.25rem] p-4 mb-6 space-y-2.5">
                             <div className="flex justify-between text-xs">
                                 <span className="text-[#1E2B58]/60 dark:text-white/50 font-medium">Report ID</span>
-                                <span className="font-black text-[#1E2B58] dark:text-white">{submittedReport.id}</span>
+                                <span className="font-black text-[#1E2B58] dark:text-white">{reportId}</span>
                             </div>
                             <div className="flex justify-between text-xs">
                                 <span className="text-[#1E2B58]/60 dark:text-white/50 font-medium">Subject</span>
-                                <span className="font-bold text-[#1E2B58] dark:text-white text-right ml-4 truncate max-w-[11rem]">{submittedReport.subject}</span>
+                                <span className="font-bold text-[#1E2B58] dark:text-white text-right ml-4 truncate max-w-[11rem]">{reportSubject}</span>
                             </div>
                             <div className="flex justify-between text-xs">
                                 <span className="text-[#1E2B58]/60 dark:text-white/50 font-medium">Date</span>
-                                <span className="font-bold text-[#1E2B58] dark:text-white">{submittedReport.date}</span>
+                                <span className="font-bold text-[#1E2B58] dark:text-white">{reportDate}</span>
                             </div>
                             <div className="flex justify-between text-xs items-center pt-1 border-t border-[#1E2B58]/10 dark:border-white/10">
                                 <span className="text-[#1E2B58]/60 dark:text-white/50 font-medium">Status</span>

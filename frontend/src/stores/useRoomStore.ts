@@ -1,15 +1,17 @@
 import { create } from "zustand";
-import type { Room } from "@/types/room";
+import type { Room, BuildingGroup } from "@/types/room";
 import { roomService, CreateRoomPayload } from "@/services/roomService";
 
 type RoomStore = {
   rooms: Room[];
   currentRoom: Room | null;
+  statusCenterData: BuildingGroup[];
   loading: boolean;
   error: string | null;
 
   fetchAll: () => Promise<void>;
   fetchById: (id: string) => Promise<void>;
+  fetchStatusCenter: (params?: any) => Promise<void>;
   createRoom: (payload: CreateRoomPayload) => Promise<void>;
   updateRoom: (id: string, payload: Partial<CreateRoomPayload>) => Promise<void>;
   deleteRoom: (id: string) => Promise<void>;
@@ -18,6 +20,7 @@ type RoomStore = {
 export const useRoomStore = create<RoomStore>((set) => ({
   rooms: [],
   currentRoom: null,
+  statusCenterData: [],
   loading: false,
   error: null,
 
@@ -28,6 +31,18 @@ export const useRoomStore = create<RoomStore>((set) => ({
       set({ rooms: data });
     } catch (error: any) {
       set({ error: error?.response?.data?.message || "Cannot fetch rooms" });
+    } finally {
+      set({ loading: false });
+    }
+  },
+
+  fetchStatusCenter: async (params?: any) => {
+    try {
+      set({ loading: true, error: null });
+      const data = await roomService.getStatusCenter(params);
+      set({ statusCenterData: data });
+    } catch (error: any) {
+      set({ error: error?.response?.data?.message || "Cannot fetch room status center" });
     } finally {
       set({ loading: false });
     }

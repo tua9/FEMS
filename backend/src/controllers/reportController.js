@@ -7,6 +7,7 @@ export const createReport = asyncHandler(async (req, res) => {
   if (req.user) {
     data.user_id = req.user._id
   }
+
   const result = await reportService.createReport(data)
   res.status(StatusCodes.CREATED).json(result)
 })

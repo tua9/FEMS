@@ -3,21 +3,28 @@ import Report from '../models/Report.js'
 import ApiError from '../utils/ApiError.js'
 
 const createReport = async (body) => {
-  const { user_id, equipment_id, room_id, description, imageUrl, imageId } =
-    body
+  const { user_id, equipment_id, room_id, type, severity, description, img } = body
 
   const newReport = await Report.create({
-    user_id,
-    equipment_id,
-    room_id,
-    description,
-    imageUrl,
-    imageId,
+    user_id:      user_id      || null,
+    equipment_id: equipment_id || null,
+    room_id:      room_id      || null,
+    type:         type         || 'other',
+    severity:     severity     || 'medium',
+    description:  description  || null,
+    img:          img          || null,
   })
 
+  // Populate so frontend gets full room/equipment data immediately
+  const populated = await Report.findById(newReport._id)
+    .populate('user_id',      'displayName username email')
+    .populate('equipment_id', 'name category qr_code')
+    .populate('room_id',      'name type')
+
   return {
-    message: 'Create report success',
+    message:   'Create report success',
     report_id: newReport._id,
+    report:    populated,
   }
 }
 
@@ -64,8 +71,9 @@ const deleteReport = async (id) => {
 
 const getPersonalReports = async (userId) => {
   return await Report.find({ user_id: userId })
-    .populate('equipment_id', 'name category')
-    .populate('room_id', 'name type')
+    .populate('user_id', 'displayName email')
+    .populate('equipment_id', 'name category qr_code')
+    .populate({ path: 'room_id', select: 'name type floor', populate: { path: 'building_id', select: 'name' } })
     .populate('approved_by', 'displayName')
 }
 

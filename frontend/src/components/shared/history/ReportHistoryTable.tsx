@@ -8,14 +8,16 @@ export type ReportSeverity = 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW';
 export type ReportStatus   = 'RESOLVED' | 'IN PROGRESS' | 'PENDING';
 
 export interface ReportHistoryItem {
-    id:       string;
-    date:     string;
-    category: string;
-    icon:     React.ElementType;
-    location: string;
-    block:    string;
-    severity: ReportSeverity;
-    status:   ReportStatus;
+    id:          string;
+    date:        string;
+    category:    string;
+    icon:        React.ElementType;
+    location:    string;
+    block:       string;
+    severity:    ReportSeverity;
+    status:      ReportStatus;
+    description?: string;
+    img?:        string;
 }
 
 // ─── Mock data (exported for use in parent) ───────────────────────────────────

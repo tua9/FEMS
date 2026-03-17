@@ -1,5 +1,5 @@
 import React from "react";
-import { LayoutGrid, Laptop, Projector, TabletSmartphone, Monitor, Camera, Mic } from "lucide-react";
+import { LayoutGrid, Laptop, Cpu, TabletSmartphone, MonitorCog, Camera, Mic } from "lucide-react";
 
 interface EquipmentCategoriesProps {
   activeCategory: string;
@@ -7,13 +7,13 @@ interface EquipmentCategoriesProps {
 }
 
 const categories = [
-  { id: "all", label: "All", icon: LayoutGrid },
-  { id: "laptop", label: "Laptop", icon: Laptop },
-  { id: "projector", label: "Projector", icon: Projector },
-  { id: "tablet", label: "Tablet", icon: TabletSmartphone },
-  { id: "monitor", label: "Monitor", icon: Monitor },
-  { id: "camera", label: "Camera", icon: Camera },
-  { id: "audio", label: "Audio", icon: Mic },
+  { id: "all",     label: "All",       icon: LayoutGrid },
+  { id: "laptop",  label: "Laptop",    icon: Laptop },
+  { id: "iot_kit", label: "IoT Kit",   icon: Cpu },
+  { id: "tablet",  label: "Tablet",    icon: TabletSmartphone },
+  { id: "pc_lab",  label: "PC Lab",    icon: MonitorCog },
+  { id: "camera",  label: "Camera",    icon: Camera },
+  { id: "audio",   label: "Audio",     icon: Mic },
 ];
 
 export const EquipmentCategories: React.FC<EquipmentCategoriesProps> = ({

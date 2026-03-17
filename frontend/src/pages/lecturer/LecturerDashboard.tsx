@@ -1,11 +1,9 @@
-import React from "react";
+import React, { useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import {
-  LECTURER_STAT_CARDS as STAT_CARDS,
-  LECTURER_ACTIVITIES as ACTIVITIES,
-  UPCOMING_CLASSES,
-} from "@/data/lecturer/mockLecturerData";
 import { PageShell, AnimatedList, AnimatedListItem, AnimatedSection } from "@/components/motion";
+import { useDashboardStore } from "@/stores/useDashboardStore";
+import { useScheduleStore } from "@/stores/useScheduleStore";
+import { formatDistanceToNow } from 'date-fns';
 
 // ── Map activity type to destination route ─────────────────────────────────
 const ACTIVITY_ROUTE: Record<string, string> = {
@@ -36,6 +34,70 @@ const ACTIVITY_BADGE: Record<string, { label: string; color: string }> = {
 
 const LecturerDashboard: React.FC = () => {
   const navigate = useNavigate();
+  const { stats, activities, fetchStats, fetchActivities } = useDashboardStore();
+  const { schedules, fetchSchedules } = useScheduleStore();
+
+  useEffect(() => {
+    fetchStats();
+    fetchActivities();
+    fetchSchedules(); // Fetch all for now, or could pass today's date
+  }, [fetchStats, fetchActivities, fetchSchedules]);
+
+  // Map backend stats to the UI structure expected by STAT_CARDS
+  const displayStats = useMemo(() => {
+    if (!stats) return [];
+    return [
+      {
+        label: 'Equipment Borrowed',
+        value: String(stats.equipmentBorrowed),
+        icon: 'laptop_mac',
+        route: '/lecturer/equipment',
+        hint: 'View Equipment',
+        dot: 'bg-blue-400',
+        glow: 'glow-blue',
+      },
+      {
+        label: 'Pending Requests',
+        value: String(stats.pendingRequests).padStart(2, '0'),
+        icon: 'pending_actions',
+        route: '/lecturer/approval',
+        hint: 'Review Requests',
+        dot: 'bg-amber-400',
+        glow: 'glow-amber',
+      },
+      {
+        label: 'Reports Sent',
+        value: String(stats.reportsSent),
+        icon: 'assignment_turned_in',
+        route: '/lecturer/history',
+        hint: 'View History',
+        dot: 'bg-emerald-400',
+        glow: 'glow-emerald',
+      },
+      {
+        label: 'Assigned Rooms',
+        value: String(stats.assignedRooms).padStart(2, '0'),
+        icon: 'meeting_room',
+        route: '/lecturer/room-status',
+        hint: 'View Rooms',
+        dot: 'bg-violet-400',
+        glow: 'glow-violet',
+      },
+    ];
+  }, [stats]);
+
+  // Map backend classes to UI
+  const upcomingClasses = useMemo(() => {
+    return schedules.slice(0, 3).map(s => ({
+      id: s._id,
+      timeRange: `${s.startTime} - ${s.endTime}`,
+      title: s.title,
+      location: s.location,
+      status: s.status
+    }));
+  }, [schedules]);
+
+  const finalStats = displayStats.length > 0 ? displayStats : [];
 
   return (
     <PageShell
@@ -47,7 +109,7 @@ const LecturerDashboard: React.FC = () => {
     >
       {/* ── Stat Cards ── */}
       <AnimatedList className="mb-12 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
-        {STAT_CARDS.map((stat) => (
+        {finalStats.map((stat) => (
           <AnimatedListItem key={stat.label}>
             <button
               onClick={() => navigate(stat.route)}
@@ -80,9 +142,10 @@ const LecturerDashboard: React.FC = () => {
               </button>
             </div>
             <div className="relative space-y-6 before:absolute before:top-2 before:bottom-2 before:left-2.75 before:w-0.5 before:bg-[#1E2B58]/5 dark:before:bg-white/5">
-              {ACTIVITIES.map((activity) => {
+              {activities.map((activity) => {
                 const badge = ACTIVITY_BADGE[activity.type];
                 const dest = ACTIVITY_ROUTE[activity.type] ?? "/lecturer/history";
+                const timeLabel = activity.time ? formatDistanceToNow(new Date(activity.time), { addSuffix: true }) : 'Just now';
                 return (
                   <div key={activity.id} onClick={() => navigate(dest)} className="group relative cursor-pointer pl-10">
                     <div className={`absolute top-1.5 left-0 z-10 h-5.5 w-5.5 rounded-full border-4 bg-white shadow-sm transition-colors dark:bg-slate-800 ${activity.type === "access" ? "border-[#1E2B58] dark:border-white" : "border-slate-300 dark:border-slate-600"}`} />
@@ -91,7 +154,7 @@ const LecturerDashboard: React.FC = () => {
                         <p className="text-sm font-bold text-[#1E2B58] transition-colors group-hover:text-[#4f75ff] dark:text-white dark:group-hover:text-[#4f75ff]">{activity.title}</p>
                         {badge && <span className={`rounded-full px-2 py-0.5 text-[9px] font-black tracking-wider uppercase ${badge.color}`}>{badge.label}</span>}
                       </div>
-                      <p className="text-xs text-slate-500">{activity.subject} • {activity.time}</p>
+                      <p className="text-xs text-slate-500">{activity.subject} • {timeLabel}</p>
                       {activity.type === "access" && activity.description && <div className="mt-2 rounded-xl border border-[#1E2B58]/10 bg-[#1E2B58]/5 p-3 text-xs dark:border-white/10 dark:bg-white/5">{activity.description}</div>}
                       {activity.type === "return" && activity.description && <p className="mt-1 text-xs text-slate-400 italic">{activity.description}</p>}
                       {activity.type === "report" && activity.description && <p className="mt-1 text-xs text-slate-500">{activity.description}</p>}
@@ -116,8 +179,8 @@ const LecturerDashboard: React.FC = () => {
               <span className="h-2 w-2 animate-pulse rounded-full bg-green-500" />
             </div>
             <div className="flex-1 space-y-3">
-              {UPCOMING_CLASSES.map((session, index) => (
-                <button key={session.id} onClick={() => navigate("/lecturer/calendar")} className={`glass-btn group w-full rounded-2xl p-4 text-left transition-all hover:shadow-md ${index === UPCOMING_CLASSES.length - 1 ? "opacity-60" : ""}`}>
+              {upcomingClasses.map((session, index) => (
+                <button key={session.id} onClick={() => navigate("/lecturer/calendar")} className={`glass-btn group w-full rounded-2xl p-4 text-left transition-all hover:shadow-md ${index === upcomingClasses.length - 1 && upcomingClasses.length > 2 ? "opacity-60" : ""}`}>
                   <p className="mb-1.5 text-[10px] font-black tracking-widest text-[#1E2B58]/40 uppercase dark:text-white/40">{session.timeRange}</p>
                   <h4 className="font-bold text-[#1E2B58] transition-colors group-hover:text-[#4f75ff] dark:text-white">{session.title}</h4>
                   <div className="mt-3 flex items-center justify-between">

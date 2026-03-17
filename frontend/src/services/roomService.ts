@@ -1,5 +1,5 @@
 import api from "@/lib/axios";
-import type { Room, RoomStatus, RoomType } from "@/types/room";
+import type { Room, RoomStatus, RoomType, BuildingGroup } from "@/types/room";
 
 export interface CreateRoomPayload {
   name: string;
@@ -16,6 +16,11 @@ export const roomService = {
 
   getById: async (id: string): Promise<Room> => {
     const res = await api.get(`/rooms/${id}`);
+    return res.data;
+  },
+
+  getStatusCenter: async (params?: any): Promise<BuildingGroup[]> => {
+    const res = await api.get("/rooms/status-center", { params });
     return res.data;
   },
 
