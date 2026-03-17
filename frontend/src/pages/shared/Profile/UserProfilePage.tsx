@@ -14,6 +14,7 @@ import {
   ROLE_STATS_CONFIG,
   getInfoFields,
 } from "./profileConfig";
+import ProfileEditModal from "./ProfileEditModal";
 
 // ─── InfoField Component ────────────────────────────────────────────────────────
 interface InfoFieldProps {
@@ -38,6 +39,7 @@ const InfoField: React.FC<InfoFieldProps> = ({ label, value, icon: Icon }) => (
 const UserProfilePage: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuthStore();
+  const [showEditModal, setShowEditModal] = React.useState(false);
   
   // Data stores
   const { borrowRequests, fetchMyBorrowRequests, fetchAllBorrowRequests } = useBorrowRequestStore();
@@ -184,18 +186,20 @@ const UserProfilePage: React.FC = () => {
               </button>
               <button
                 type="button"
-                disabled
-                className="glass-card flex cursor-not-allowed items-center justify-center gap-2.5 !rounded-2xl px-8 py-3.5 text-[0.875rem] font-extrabold text-[#1E2B58]/40 dark:text-white/30"
-                title="Coming soon"
+                onClick={() => setShowEditModal(true)}
+                className="glass-card flex items-center justify-center gap-2.5 !rounded-2xl px-8 py-3.5 text-[0.875rem] font-extrabold text-[#1E2B58] transition-all hover:scale-[1.02] active:scale-95 dark:text-white"
               >
                 <Pencil className="h-4 w-4" />
                 Edit Profile
-                <span className="rounded-md bg-[#1E2B58]/[0.06] px-1.5 py-0.5 text-[0.5625rem] font-black tracking-wider uppercase">Soon</span>
               </button>
             </div>
           </div>
         </div>
       </main>
+
+      {showEditModal && (
+        <ProfileEditModal onClose={() => setShowEditModal(false)} />
+      )}
     </div>
   );
 };
