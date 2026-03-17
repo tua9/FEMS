@@ -32,6 +32,20 @@ export function toLocalDateString(date: Date): string {
 }
 
 /**
+ * Trả về thời điểm hiện tại dạng "YYYY-MM-DDTHH:mm" theo giờ local.
+ * Dùng cho input type="datetime-local".
+ */
+export function getNowLocalDateTime(): string {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const day = String(now.getDate()).padStart(2, '0');
+  const hours = String(now.getHours()).padStart(2, '0');
+  const minutes = String(now.getMinutes()).padStart(2, '0');
+  return `${year}-${month}-${day}T${hours}:${minutes}`;
+}
+
+/**
  * Format ngày cho hiển thị UI, ví dụ: "Mar 14, 2026"
  */
 export function formatDisplayDate(dateStr?: string | null): string {

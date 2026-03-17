@@ -91,7 +91,7 @@ export const TECH_EQUIPMENT_SUMMARY: TechEquipmentSummary[] = MOCK_EQUIPMENT.map
   return {
     id: eq._id,
     name: eq.name,
-    qrCode: eq.qr_code ?? eq._id,
+    qrCode: eq.code ?? eq._id,
     status: eq.status,
     room: room?.name ?? 'Unassigned',
     building: building?.name ?? '—',

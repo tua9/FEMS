@@ -27,8 +27,8 @@ export const equipmentService = {
     return res.data;
   },
 
-  getByQrCode: async (qrCode: string): Promise<Equipment> => {
-    const res = await api.get(`/equipments/qr/${qrCode}`);
+  getByCode: async (code: string): Promise<Equipment> => {
+    const res = await api.get(`/equipments/code/${code}`);
     return res.data;
   },
 };

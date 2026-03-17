@@ -10,7 +10,7 @@ import { EquipmentCategories } from "@/components/shared/equipment/EquipmentCate
 import { EquipmentFilter } from "@/components/shared/equipment/EquipmentFilter";
 import BorrowModal from "@/components/student/equipment/BorrowModal";
 import HistoryDetailModal, { type ModalItem } from "@/components/student/history/HistoryDetailModal";
-import { getTodayLocal } from "@/utils/dateUtils";
+import { toast } from "sonner";
 
 const EquipmentPage: React.FC = () => {
   const navigate = useNavigate();
@@ -83,7 +83,7 @@ const EquipmentPage: React.FC = () => {
   const borrowedEquipment = useMemo(() => {
     const activeRequests = borrowRequests.filter((r) => {
       const s = (r.status || "").trim().toLowerCase();
-      return ["approved", "handed_over", "borrowed"].includes(s);
+      return ["approved", "handed_over"].includes(s);
     });
 
     const borrowedItems: any[] = [];
@@ -158,22 +158,24 @@ const EquipmentPage: React.FC = () => {
     });
   };
 
-  const handleSubmitBorrow = async (returnDate: string, purpose: string) => {
+  const handleSubmitBorrow = async (borrowDate: string, returnDate: string, purpose: string) => {
     if (!borrowModalItem) return;
 
     try {
       await createMyBorrowRequest({
         equipment_id: borrowModalItem._id,
         type: 'equipment',
-        borrow_date: getTodayLocal(),
+        borrow_date: borrowDate,
         return_date: returnDate,
         note: purpose,
       });
       // Refresh requests to update grid
       fetchBorrowRequests();
       setBorrowModalItem(null);
+      toast.success("Borrow request submitted successfully!");
     } catch (e) {
       console.error(e);
+      toast.error("Failed to submit borrow request.");
     }
   };
 

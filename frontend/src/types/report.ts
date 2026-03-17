@@ -24,11 +24,12 @@ export interface Report {
   } | string | null;
   type: ReportType;
   status: ReportStatus;
-  approved_by?: {
+  processed_by?: {
     _id: string;
     username: string;
     displayName?: string;
   } | string | null;
+  processed_at?: string | null;
   img?: string | null;
   description?: string | null;
   createdAt?: string;

@@ -86,7 +86,7 @@ const DeviceDetailsModal: React.FC<DeviceDetailsModalProps> = ({ isOpen, device,
                                     <span className={`px-4 py-1.5 rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-sm border-2 border-transparent ${getStatusColor(device.status)}`}>
                                         {device.status}
                                     </span>
-                                    <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">{device.category} • ID: {device._id}</span>
+                                    <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">{device.category} • CODE: {device.code || 'N/A'}</span>
                                 </div>
                             </div>
                         </div>

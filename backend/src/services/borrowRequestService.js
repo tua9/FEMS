@@ -97,7 +97,7 @@ const getAllBorrowRequests = async () => {
     .populate('user_id', 'username displayName email')
     .populate('equipment_id')
     .populate('room_id')
-    .populate('approved_by', 'username displayName')
+    .populate('processed_by', 'username displayName')
 }
 
 const getBorrowRequestById = async (id) => {
@@ -105,7 +105,7 @@ const getBorrowRequestById = async (id) => {
     .populate('user_id', 'username displayName email')
     .populate('equipment_id')
     .populate('room_id')
-    .populate('approved_by', 'username displayName')
+    .populate('processed_by', 'username displayName')
 
   if (!borrowRequest) {
     throw new ApiError(StatusCodes.NOT_FOUND, 'Borrow request not found')
@@ -114,10 +114,10 @@ const getBorrowRequestById = async (id) => {
 }
 
 const updateBorrowRequest = async (id, body) => {
-  const { status, approved_by, note, return_date } = body
+  const { status, processed_by, note, return_date } = body
   const borrowRequest = await BorrowRequest.findByIdAndUpdate(
     id,
-    { status, approved_by, note, return_date },
+    { status, processed_by, note, return_date },
     { new: true, runValidators: true },
   )
 
@@ -131,7 +131,7 @@ const getPersonalBorrowRequests = async (userId) => {
   return await BorrowRequest.find({ user_id: userId })
     .populate('equipment_id', '_id name category status available')
     .populate('room_id', 'name type')
-    .populate('approved_by', 'displayName')
+    .populate('processed_by', 'displayName')
 }
 
 const cancelBorrowRequest = async (id, userId, decisionNote) => {
@@ -182,7 +182,6 @@ const approveBorrowRequest = async (id, approverId, decisionNote) => {
   }
 
   request.status = 'approved'
-  request.approved_by = approverId
   request.processed_at = new Date()
   request.processed_by = approverId
   if (decisionNote) request.decision_note = decisionNote.trim()
@@ -200,6 +199,25 @@ const handoverBorrowRequest = async (id) => {
       StatusCodes.BAD_REQUEST,
       'Request must be approved first',
     )
+  }
+
+  // Handle equipment status if this is an equipment-type request
+  if (request.type === 'equipment' && request.equipment_id) {
+    const equipment = await Equipment.findById(request.equipment_id)
+    if (!equipment) {
+      throw new ApiError(StatusCodes.NOT_FOUND, 'Equipment not found')
+    }
+    if (!equipment.available) {
+      throw new ApiError(
+        StatusCodes.BAD_REQUEST,
+        'Equipment is already borrowed or unavailable',
+      )
+    }
+
+    // Update equipment availability
+    equipment.available = false
+    equipment.borrowed_by = request.user_id
+    await equipment.save()
   }
 
   request.status = 'handed_over'

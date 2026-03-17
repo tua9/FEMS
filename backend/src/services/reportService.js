@@ -31,7 +31,7 @@ const getAllReports = async () => {
       select: 'name type building_id',
       populate: { path: 'building_id', select: 'name' }
     })
-    .populate('approved_by', 'displayName')
+    .populate('processed_by', 'displayName')
 }
 
 const getReportById = async (id) => {
@@ -43,7 +43,7 @@ const getReportById = async (id) => {
       select: 'name type building_id',
       populate: { path: 'building_id', select: 'name' }
     })
-    .populate('approved_by', 'displayName')
+    .populate('processed_by', 'displayName')
 
   if (!report) {
     throw new ApiError(StatusCodes.NOT_FOUND, 'Report not found')
@@ -79,7 +79,7 @@ const getPersonalReports = async (userId) => {
       select: 'name type building_id',
       populate: { path: 'building_id', select: 'name' }
     })
-    .populate('approved_by', 'displayName')
+    .populate('processed_by', 'displayName')
 }
 
 const cancelReport = async (id, userId) => {
@@ -117,7 +117,8 @@ const updateReportStatus = async (id, status, approverId) => {
 
   report.status = status
   if (approverId) {
-    report.approved_by = approverId
+    report.processed_by = approverId
+    report.processed_at = new Date()
   }
 
   await report.save()

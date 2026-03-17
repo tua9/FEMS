@@ -21,6 +21,7 @@ const AddEquipmentModal: React.FC<AddEquipmentModalProps> = ({ isOpen, onClose, 
     const [description, setDescription] = useState('');
     const [warranty, setWarranty] = useState('');
     const [purchaseDate, setPurchaseDate] = useState('');
+    const [code, setCode] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     const createEquipment = useEquipmentStore(state => state.createEquipment);
@@ -35,6 +36,7 @@ const AddEquipmentModal: React.FC<AddEquipmentModalProps> = ({ isOpen, onClose, 
             setDescription((equipment as any).description || '');
             setWarranty(equipment.updatedAt || ''); // Placeholder if warranty is not in new type
             setPurchaseDate(equipment.createdAt || ''); // Placeholder
+            setCode(equipment.code || '');
         } else {
             setName('');
             setCategory('');
@@ -42,6 +44,7 @@ const AddEquipmentModal: React.FC<AddEquipmentModalProps> = ({ isOpen, onClose, 
             setDescription('');
             setWarranty('');
             setPurchaseDate('');
+            setCode('');
         }
     }, [equipment, isOpen]);
 
@@ -54,7 +57,8 @@ const AddEquipmentModal: React.FC<AddEquipmentModalProps> = ({ isOpen, onClose, 
                 name,
                 category,
                 status: (equipment?.status as any) || 'good',
-                room_id: null // Placeholder, should be selected from a room list
+                room_id: null, // Placeholder, should be selected from a room list
+                code: code || undefined
             };
 
             if (isEdit && equipment) {
@@ -117,6 +121,17 @@ const AddEquipmentModal: React.FC<AddEquipmentModalProps> = ({ isOpen, onClose, 
                                     className="w-full bg-white/50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-[#1A2B56] dark:focus:ring-blue-500 outline-none transition-all dark:text-white"
                                     placeholder="e.g. MacBook Pro M3"
                                     required
+                                />
+                            </div>
+
+                            <div className="space-y-1.5">
+                                <label className="text-xs font-bold text-slate-700 dark:text-slate-300 ml-1">Asset Code (Optional)</label>
+                                <input
+                                    type="text"
+                                    value={code}
+                                    onChange={e => setCode(e.target.value)}
+                                    className="w-full bg-white/50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-[#1A2B56] dark:focus:ring-blue-500 outline-none transition-all dark:text-white"
+                                    placeholder="e.g. FPT-LAP-082"
                                 />
                             </div>
 

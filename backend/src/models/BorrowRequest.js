@@ -32,11 +32,6 @@ const borrowRequestSchema = new mongoose.Schema(
       default: 'pending',
     },
 
-    approved_by: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'User',
-      default: null,
-    },
 
     borrow_date: {
       type: Date,

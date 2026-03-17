@@ -4,7 +4,7 @@ import Equipment from '../models/Equipment.js'
 import ApiError from '../utils/ApiError.js'
 
 const createEquipment = async (body) => {
-  const { name, category, available, status, room_id, qr_code } = body
+  const { name, category, available, status, room_id, code } = body
 
   if (!name) {
     throw new ApiError(StatusCodes.BAD_REQUEST, 'Name is required')
@@ -16,7 +16,7 @@ const createEquipment = async (body) => {
     available,
     status,
     room_id,
-    qr_code: qr_code || crypto.randomUUID(),
+    code: code || crypto.randomUUID(),
   })
 
   return {
@@ -38,10 +38,10 @@ const getEquipmentById = async (id) => {
 }
 
 const updateEquipment = async (id, body) => {
-  const { name, category, available, status, room_id, qr_code } = body
+  const { name, category, available, status, room_id, code } = body
   const equipment = await Equipment.findByIdAndUpdate(
     id,
-    { name, category, available, status, room_id, qr_code },
+    { name, category, available, status, room_id, code },
     { new: true, runValidators: true },
   )
   if (!equipment) {
@@ -58,8 +58,8 @@ const deleteEquipment = async (id) => {
   return { message: 'Delete success' }
 }
 
-const getEquipmentByQrCode = async (qrCode) => {
-  const equipment = await Equipment.findOne({ qr_code: qrCode }).populate(
+const getEquipmentByCode = async (code) => {
+  const equipment = await Equipment.findOne({ code: code }).populate(
     'room_id',
   )
   if (!equipment) {
@@ -72,7 +72,7 @@ export const equipmentService = {
   createEquipment,
   getAllEquipment,
   getEquipmentById,
-  getEquipmentByQrCode,
+  getEquipmentByCode,
   updateEquipment,
   deleteEquipment,
 }
