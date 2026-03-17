@@ -7,7 +7,22 @@ import type { BorrowRequest } from "@/types/borrowRequest";
 import type { Report } from "@/types/report";
 import type { ModalItem } from "@/components/student/history/HistoryDetailModal";
 
+import { Laptop, Cable, Router, Mic, Microchip, Projector } from 'lucide-react';
+import { formatDisplayDate } from "@/utils/dateUtils";
+import type { BorrowHistoryItem } from "@/components/shared/history/BorrowHistoryTable";
+
 export type Tab = "report" | "borrow";
+
+const getIcon = (category?: string) => {
+  if (!category) return Projector;
+  const normalized = category.toLowerCase();
+  if (normalized.includes('laptop') || normalized.includes('computer')) return Laptop;
+  if (normalized.includes('cable')) return Cable;
+  if (normalized.includes('network') || normalized.includes('router')) return Router;
+  if (normalized.includes('audio') || normalized.includes('mic')) return Mic;
+  if (normalized.includes('component') || normalized.includes('kit')) return Microchip;
+  return Projector;
+};
 
 export function useHistoryController(ITEMS_PER_PAGE: number = 6) {
   // Stores
@@ -117,7 +132,30 @@ export function useHistoryController(ITEMS_PER_PAGE: number = 6) {
   const borrowPages = Math.max(1, Math.ceil(filteredBorrow.length / ITEMS_PER_PAGE));
 
   const currentReportItems = filteredReports.slice((reportPage - 1) * ITEMS_PER_PAGE, reportPage * ITEMS_PER_PAGE);
-  const currentBorrowItems = filteredBorrow.slice((borrowPage - 1) * ITEMS_PER_PAGE, borrowPage * ITEMS_PER_PAGE);
+  const pagedBorrowItems = filteredBorrow.slice((borrowPage - 1) * ITEMS_PER_PAGE, borrowPage * ITEMS_PER_PAGE);
+
+  // Final mapping for UI
+  const currentBorrowItems = useMemo(() => {
+    return pagedBorrowItems.map((b): BorrowHistoryItem => {
+        const equipment = b.equipment_id && typeof b.equipment_id !== 'string' ? b.equipment_id : null;
+        const room = b.room_id && typeof b.room_id !== 'string' ? b.room_id : null;
+        
+        const isOverdue = b.status === 'approved' && new Date(b.return_date) < new Date();
+        const displayStatus = (isOverdue ? 'OVERDUE' : (b.status || 'PENDING')).toUpperCase() as any;
+
+        return {
+            id: `#${b._id.substring(b._id.length - 6).toUpperCase()}`,
+            course: room ? room.name : 'Unknown Room',
+            group: room ? (room.type || '') : '',
+            equipmentName: equipment ? equipment.name : 'Infrastructure',
+            icon: getIcon(equipment?.category),
+            period: formatDisplayDate(b.borrow_date),
+            returnDate: formatDisplayDate(b.return_date),
+            status: displayStatus,
+            original: b
+        };
+    });
+  }, [pagedBorrowItems]);
 
   return {
     state: {

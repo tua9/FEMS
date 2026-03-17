@@ -3,14 +3,15 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { CheckCircle2, X, ArrowRight, ClipboardList } from 'lucide-react';
 import { toast } from 'sonner';
 
-import { ReportHeader }     from '../../components/lecturer/report/ReportHeader';
-import { QuickScanReport, type QRResult } from '../../components/lecturer/report/QuickScanReport';
-import { ReportManualForm, type ReportFormData, type IssueCategory } from '../../components/lecturer/report/ReportManualForm';
-import { RecentReports }    from '../../components/shared/report/RecentReports';
+import { ReportHeader }     from '@/components/shared/report/ReportHeader';
+import { QuickScanReport, type QRResult } from '@/components/shared/report/QuickScanReport';
+import { ReportManualForm, type ReportFormData, type IssueCategory } from '@/components/shared/report/ReportManualForm';
+import { RecentReports }    from '@/components/shared/report/RecentReports';
 
-import { useReportStore }   from '../../stores/useReportStore';
-import { useRoomStore }     from '../../stores/useRoomStore';
-import type { ReportType }  from '../../types/report';
+import { useReportStore }   from '@/stores/useReportStore';
+import { useRoomStore }     from '@/stores/useRoomStore';
+import { useAuthStore }     from '@/stores/useAuthStore';
+import type { ReportType }  from '@/types/report';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -38,9 +39,11 @@ interface NavState {
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
-export const ReportIssueCenter: React.FC = () => {
+export const ReportIssuePage: React.FC = () => {
     const navigate   = useNavigate();
-    const routeState = (useLocation().state ?? {}) as NavState;
+    const location   = useLocation();
+    const routeState = (location.state ?? {}) as NavState;
+    const { user }   = useAuthStore();
 
     const { createReport, fetchMyReports } = useReportStore();
     const { rooms, fetchAll: fetchRooms } = useRoomStore();
@@ -123,7 +126,7 @@ export const ReportIssueCenter: React.FC = () => {
     // ── Success modal actions ─────────────────────────────────────────────────
     const handleViewHistory = () => {
         setShowSuccess(false);
-        navigate('/lecturer/history');
+        navigate(`/${user?.role}/history`);
     };
 
     const handleSubmitAnother = () => {
@@ -137,7 +140,7 @@ export const ReportIssueCenter: React.FC = () => {
 
     return (
         <div className="w-full">
-            <main className="pt-6 sm:pt-8 pb-10 px-4 sm:px-6 w-full max-w-[90vw] xl:max-w-4xl mx-auto flex-1 flex flex-col overflow-hidden">
+            <main className="pt-6 sm:pt-24 pb-10 px-4 sm:px-6 w-full max-w-[90vw] xl:max-w-4xl mx-auto flex-1 flex flex-col overflow-hidden">
                 <div className="w-full">
                     <ReportHeader />
 
@@ -243,3 +246,5 @@ export const ReportIssueCenter: React.FC = () => {
         </div>
     );
 };
+
+export default ReportIssuePage;

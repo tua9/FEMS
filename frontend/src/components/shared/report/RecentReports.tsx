@@ -67,7 +67,7 @@ export const RecentReports: React.FC<RecentReportsProps> = ({ newReport }) => {
         } else {
             // Fallback navigation based on URL
             const isLecturer = window.location.pathname.includes('/lecturer');
-            navigate(isLecturer ? '/lecturer/history' : '/student/borrow-history?tab=report');
+            navigate(isLecturer ? '/lecturer/history' : '/student/history');
         }
     };
 
@@ -79,7 +79,7 @@ export const RecentReports: React.FC<RecentReportsProps> = ({ newReport }) => {
                 <button
                     onClick={() => {
                         const isLecturer = window.location.pathname.includes('/lecturer');
-                        navigate(isLecturer ? '/lecturer/history' : '/student/borrow-history?tab=report');
+                        navigate(isLecturer ? '/lecturer/history' : '/student/history');
                     }}
                     className="text-[0.6875rem] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest hover:text-[#1E2B58] dark:hover:text-white transition-colors flex items-center gap-1"
                 >

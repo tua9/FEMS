@@ -18,6 +18,7 @@ import { useEquipmentStore } from "@/stores/useEquipmentStore";
 import { useBuildingStore } from "@/stores/useBuildingStore";
 import { useBorrowRequestStore } from "@/stores/useBorrowRequestStore";
 import { useRoomStore } from "@/stores/useRoomStore";
+import { useAuthStore } from "@/stores/useAuthStore";
 import type { Equipment } from "@/types/equipment";
 import { getTomorrowLocal } from "@/utils/dateUtils";
 
@@ -47,6 +48,10 @@ const FIXED_ROOM_CATEGORY: Record<string, string> = {
 
 export const EquipmentCatalog: React.FC = () => {
   const navigate = useNavigate();
+  const { user } = useAuthStore();
+  const role = user?.role || 'student';
+  const historyPath = `/${role}/history`;
+
   const { inventoryData, fetchInventory, loading: equipmentLoading } = useEquipmentStore();
   const { buildings, fetchAll: fetchBuildings } = useBuildingStore();
   const { rooms, fetchAll: fetchRooms } = useRoomStore();
@@ -256,11 +261,11 @@ export const EquipmentCatalog: React.FC = () => {
 
   return (
     <div className="w-full">
-      <main className="mx-auto flex w-full max-w-[90vw] flex-1 flex-col px-4 pt-6 sm:pt-8 pb-10 sm:px-6 xl:max-w-7xl">
+      <main className="mx-auto flex w-full max-w-[90vw] flex-1 flex-col px-4 pt-6 sm:pt-24 pb-10 sm:px-6 xl:max-w-7xl">
         {/* Header */}
         <PageHeader
           title="Equipment Catalog"
-          subtitle="Explore and reserve university resources with our enhanced Lecturer Portal."
+          subtitle="Explore and reserve university resources with our enhanced Portal."
         />
 
         {/* Filter bar */}
@@ -303,8 +308,8 @@ export const EquipmentCatalog: React.FC = () => {
         {/* Borrowed equipment */}
         <BorrowedEquipmentGrid
           items={[]} // This would eventually come from a store too
-          onViewHistory={() => navigate("/lecturer/history")}
-          onItemClick={() => navigate("/lecturer/history")}
+          onViewHistory={() => navigate(historyPath)}
+          onItemClick={() => navigate(historyPath)}
         />
 
         {/* Pagination */}
@@ -426,3 +431,5 @@ export const EquipmentCatalog: React.FC = () => {
     </div>
   );
 };
+
+export default EquipmentCatalog;

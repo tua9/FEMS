@@ -22,9 +22,9 @@ interface Notification {
 
 const getMockNotifications = (role: string): Notification[] => {
     const isStudent = role === 'student';
-    const historyPath  = isStudent ? '/student/borrow-history' : '/lecturer/history';
+    const historyPath  = isStudent ? '/student/history' : '/lecturer/history';
     const equipPath    = isStudent ? '/student/equipment'      : '/lecturer/equipment';
-    const approvalPath = isStudent ? '/student/borrow-history' : '/lecturer/approval';
+    const approvalPath = isStudent ? '/student/history' : '/lecturer/approval';
 
     return [
         {

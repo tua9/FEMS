@@ -1,7 +1,8 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { Laptop, Monitor, CheckCircle2, X, AlertTriangle, Loader2 } from 'lucide-react';
 
-import { ApprovalFilter, StatusFilter, TypeFilter } from '../../components/lecturer/approval/ApprovalFilter';
+import { ApprovalFilter } from '../../components/lecturer/approval/ApprovalFilter';
+import type { StatusFilter, TypeFilter } from '../../components/lecturer/approval/ApprovalFilter';
 import { ApprovalTable } from '../../components/lecturer/approval/ApprovalTable';
 import type { ApprovalTableItem, RequestStatus } from '../../components/lecturer/approval/ApprovalTable';
 import { useBorrowRequestStore } from '../../stores/useBorrowRequestStore';

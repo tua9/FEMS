@@ -94,7 +94,7 @@ const MENU_ITEMS: Record<string, MenuItem[]> = {
       iconColor: "text-amber-500 dark:text-amber-400",
     },
     {
-      to: "/student/borrow-history",
+      to: "/student/history",
       icon: "history",
       label: "My History",
       description: "Borrow & report records",

@@ -1,8 +1,7 @@
-import { Armchair, Ban, ChevronLeft, ChevronRight, Computer, Eye, Zap, Wind, Lightbulb, Droplets } from 'lucide-react';
+import { Ban, ChevronLeft, ChevronRight, Eye } from 'lucide-react';
 import React from 'react';
 import { StatusBadge } from '@/components/shared/ui/StatusBadge';
 import type { Report } from '@/types/report';
-import { formatDisplayDate } from '@/utils/dateUtils';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -20,21 +19,12 @@ export interface ReportHistoryItem {
     status: ReportStatus;
     description?: string;
     img?: string;
+    original: Report;
 }
 
 // ─── Mock data (exported for use in parent) ───────────────────────────────────
 
-export const ALL_REPORT_HISTORY: ReportHistoryItem[] = [
-    { id: '#REP-2024-102', date: 'Oct 25, 2023', category: 'Electrical', icon: Zap, location: 'Room 405', block: 'Block A', severity: 'CRITICAL', status: 'RESOLVED' },
-    { id: '#REP-2024-098', date: 'Oct 24, 2023', category: 'IT Device', icon: Computer, location: 'Lab 3', block: 'West Wing', severity: 'HIGH', status: 'IN PROGRESS' },
-    { id: '#REP-2024-095', date: 'Oct 22, 2023', category: 'HVAC', icon: Wind, location: 'Hall 2', block: 'Main Complex', severity: 'MEDIUM', status: 'PENDING' },
-    { id: '#REP-2024-089', date: 'Oct 20, 2023', category: 'Furniture', icon: Armchair, location: 'Room 102', block: 'Block B', severity: 'LOW', status: 'RESOLVED' },
-    { id: '#REP-2024-082', date: 'Oct 18, 2023', category: 'IT Device', icon: Computer, location: 'Lab 1', block: 'Block A', severity: 'HIGH', status: 'RESOLVED' },
-    { id: '#REP-2024-075', date: 'Oct 15, 2023', category: 'Lighting', icon: Lightbulb, location: 'Faculty Office', block: 'Level 4', severity: 'LOW', status: 'RESOLVED' },
-    { id: '#REP-2024-068', date: 'Oct 12, 2023', category: 'Electrical', icon: Zap, location: 'Server Room', block: 'Block B2', severity: 'CRITICAL', status: 'RESOLVED' },
-    { id: '#REP-2024-061', date: 'Oct 10, 2023', category: 'IT Device', icon: Computer, location: 'Lab 5', block: 'East Wing', severity: 'HIGH', status: 'RESOLVED' },
-    { id: '#REP-2024-055', date: 'Oct 07, 2023', category: 'Plumbing', icon: Droplets, location: 'Restroom B1', block: 'Block C', severity: 'MEDIUM', status: 'RESOLVED' },
-];
+export const ALL_REPORT_HISTORY: ReportHistoryItem[] = [];
 
 // ─── Severity style helper ────────────────────────────────────────────────────
 
@@ -57,13 +47,13 @@ function pageRange(current: number, total: number): (number | '...')[] {
 // ─── Props ────────────────────────────────────────────────────────────────────
 
 interface ReportHistoryTableProps {
-    items: Report[];
+    items: ReportHistoryItem[];
     currentPage: number;
     totalPages: number;
     totalItems: number;
     onPageChange: (page: number) => void;
-    onViewDetail: (item: Report) => void;
-    onCancel?: (item: Report) => void;
+    onViewDetail: (item: ReportHistoryItem) => void;
+    onCancel?: (item: ReportHistoryItem) => void;
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -72,13 +62,6 @@ export const ReportHistoryTable: React.FC<ReportHistoryTableProps> = ({
     items, currentPage, totalPages, totalItems, onPageChange, onViewDetail, onCancel,
 }) => {
     const showing = items.length;
-
-    const getIcon = (type: string) => {
-        if (type === 'equipment') return Computer;
-        if (type === 'infrastructure') return Zap;
-        return Armchair;
-    };
-
 
     return (
         <div className="dashboard-card rounded-[1.5rem] sm:rounded-[2rem] overflow-hidden mb-[4rem]">
@@ -100,58 +83,51 @@ export const ReportHistoryTable: React.FC<ReportHistoryTableProps> = ({
                                     No records found for the selected filters.
                                 </td>
                             </tr>
-                        ) : items.map((item: Report) => {
-                            const Icon = getIcon(item.type);
-                            const equipment = item.equipment_id && typeof item.equipment_id !== 'string' ? item.equipment_id : null;
-                            const room = item.room_id && typeof item.room_id !== 'string' ? item.room_id : null;
-                            const building: any = room && room.building_id && typeof room.building_id !== 'string' ? room.building_id : null;
-                            const locationStr = room ? (building ? `${building.name}, ${room.name}` : room.name) : 'Unknown';
-
-                            // Mock severity based on type for visual purposes 
-                            const severity = item.type === 'equipment' ? 'HIGH' : 'MEDIUM';
+                        ) : items.map((item: ReportHistoryItem) => {
+                            const Icon = item.icon;
 
                             return (
                                 <tr
-                                    key={item._id}
+                                    key={item.original._id}
                                     className="transition-all duration-200 hover:bg-white/70 dark:hover:bg-white/5 group cursor-pointer"
                                     onClick={() => onViewDetail(item)}
                                 >
                                     <td className="px-[2rem] py-[1.5rem]">
                                         <span className="text-[0.625rem] font-bold text-[#1E2B58] dark:text-slate-300">
-                                            #{item._id.substring(item._id.length - 6).toUpperCase()}
+                                            {item.id}
                                         </span>
                                     </td>
                                     <td className="px-[2rem] py-[1.5rem]">
                                         <span className="text-[0.875rem] font-bold text-[#1E2B58] dark:text-white">
-                                            {formatDisplayDate(item.createdAt)}
+                                            {item.date}
                                         </span>
                                     </td>
                                     <td className="px-[2rem] py-[1.5rem]">
                                         <div className="flex items-center gap-[0.75rem]">
                                             <Icon className="w-[1.25rem] h-[1.25rem] text-slate-400 dark:text-slate-500" strokeWidth={2} />
                                             <span className="font-bold text-[#1E2B58] dark:text-white text-[0.875rem] capitalize">
-                                                {equipment ? equipment.name : item.type}
+                                                {item.category}
                                             </span>
                                         </div>
                                     </td>
                                     <td className="px-[2rem] py-[1.5rem]">
                                         <p className="font-bold text-[#1E2B58] dark:text-white text-[0.875rem] leading-none mb-[0.25rem]">
-                                            {locationStr}
+                                            {item.location}
                                         </p>
                                     </td>
                                     <td className="px-[2rem] py-[1.5rem] text-center">
-                                        <span className={`inline-block min-w-[5.5rem] text-center text-[0.625rem] font-bold px-[0.75rem] py-[0.25rem] rounded-[0.5rem] border uppercase tracking-wider leading-none ${SEVERITY_CLASSES[severity]}`}>
-                                            {severity}
+                                        <span className={`inline-block min-w-[5.5rem] text-center text-[0.625rem] font-bold px-[0.75rem] py-[0.25rem] rounded-[0.5rem] border uppercase tracking-wider leading-none ${SEVERITY_CLASSES[item.severity]}`}>
+                                            {item.severity}
                                         </span>
                                     </td>
                                     <td className="px-[2rem] py-[1.5rem] text-center">
                                         <span className="inline-block">
-                                            <StatusBadge status={item.status} />
+                                            <StatusBadge status={item.status.toLowerCase() as any} />
                                         </span>
                                     </td>
                                     <td className="px-[2rem] py-[1.5rem] text-right">
                                         <div className="flex items-center justify-end gap-[0.25rem]">
-                                            {item.status === 'pending' && onCancel && (
+                                            {item.original.status === 'pending' && onCancel && (
                                                 <button
                                                     onClick={e => { e.stopPropagation(); onCancel(item); }}
                                                     className="p-[0.5rem] rounded-full hover:bg-red-100 dark:hover:bg-red-900/30 transition-all hover:scale-110 active:scale-90"

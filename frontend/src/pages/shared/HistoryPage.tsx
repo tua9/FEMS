@@ -2,30 +2,33 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { X, FileText, Laptop, CheckCircle2, XCircle, AlertTriangle, ArrowRight, Monitor, Cable, Router, Cpu, Mic, Camera, TabletSmartphone, MonitorCog } from 'lucide-react';
 
-import { HistoryHeader } from '../../components/lecturer/history/HistoryHeader';
-import { HistoryTabs } from '../../components/lecturer/history/HistoryTabs';
-import { HistoryFilterBar } from '../../components/lecturer/history/HistoryFilterBar';
+import { HistoryHeader } from '../../components/shared/history/HistoryHeader';
+import { HistoryTabs } from '../../components/shared/history/HistoryTabs';
+import { HistoryFilterBar } from '../../components/shared/history/HistoryFilterBar';
 
 import {
     ReportHistoryTable,
     type ReportHistoryItem,
     type ReportSeverity,
-} from '../../components/lecturer/history/ReportHistoryTable';
+} from '../../components/shared/history/ReportHistoryTable';
 
 import {
     BorrowHistoryTable,
     type BorrowHistoryItem,
     type BorrowStatus,
-} from '../../components/lecturer/history/BorrowHistoryTable';
+} from '../../components/shared/history/BorrowHistoryTable';
 
 import {
     ApprovalHistoryTable,
     type ApprovalHistoryItem,
-} from '../../components/lecturer/history/ApprovalHistoryTable';
+} from '../../components/shared/history/ApprovalHistoryTable';
+
+import BorrowCancelModal from '@/components/student/history/BorrowCancelModal';
 
 import { useBorrowRequestStore } from '../../stores/useBorrowRequestStore';
 import { useReportStore } from '../../stores/useReportStore';
-import type { BorrowRequestEquipment, BorrowRequestRoom, BorrowRequestUser } from '@/types/borrowRequest';
+import { useAuthStore } from '../../stores/useAuthStore';
+import type { BorrowRequest, BorrowRequestEquipment, BorrowRequestRoom, BorrowRequestUser } from '@/types/borrowRequest';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -65,20 +68,24 @@ type ModalItem =
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
-export const MyHistory: React.FC = () => {
+export const HistoryPage: React.FC = () => {
     const navigate = useNavigate();
     const location  = useLocation();
+    const { user } = useAuthStore();
+    const isStudent = user?.role === 'student';
 
     // ── Stores ────────────────────────────────────────────────────────────────
-    const { borrowRequests, approvedByMe, fetchMyBorrowRequests, fetchApprovedByMe, loading: borrowLoading, error: borrowError } = useBorrowRequestStore();
-    const { myReports, fetchMyReports, loading: reportLoading, error: reportError } = useReportStore();
+    const { borrowRequests, approvedByMe, fetchMyBorrowRequests, fetchApprovedByMe, loading: borrowLoading, error: borrowError, cancelMyBorrowRequest } = useBorrowRequestStore();
+    const { myReports, fetchMyReports, loading: reportLoading, error: reportError, cancelMyReport } = useReportStore();
 
     // Re-fetch every time the user navigates to this page
     useEffect(() => {
         fetchMyBorrowRequests();
         fetchMyReports();
-        fetchApprovedByMe();
-    }, [location.pathname]);
+        if (!isStudent) {
+            fetchApprovedByMe();
+        }
+    }, [location.pathname, isStudent]);
 
     // ── Tab ────────────────────────────────────────────────────────────────────
     const [activeTab, setActiveTab] = useState<Tab>('report');
@@ -95,18 +102,17 @@ export const MyHistory: React.FC = () => {
 
     // ── Detail modal ───────────────────────────────────────────────────────────
     const [modal, setModal] = useState<ModalItem | null>(null);
+    const [cancelTargetItem, setCancelTargetItem] = useState<BorrowRequest | null>(null);
 
     // ── Mapping Data ──────────────────────────────────────────────────────────
     const mappedReports = useMemo<ReportHistoryItem[]>(() => {
         if (!myReports) return [];
 
-        // DB type → display label
         const TYPE_LABEL: Record<string, string> = {
             'equipment':      'Equipment',
             'infrastructure': 'Infrastructure',
             'other':          'Other',
         };
-        // DB type → icon
         const TYPE_ICON: Record<string, any> = {
             'equipment':      Laptop,
             'infrastructure': AlertTriangle,
@@ -131,6 +137,7 @@ export const MyHistory: React.FC = () => {
                 icon:     TYPE_ICON[type] ?? FileText,
                 description: r.description,
                 img:      r.img,
+                original: r
             };
         });
     }, [myReports]);
@@ -143,7 +150,8 @@ export const MyHistory: React.FC = () => {
                 'approved': 'APPROVED' as any,
                 'handed_over': 'BORROWED',
                 'returned': 'RETURNED',
-                'rejected': 'REJECTED' as any
+                'rejected': 'REJECTED' as any,
+                'cancelled': 'REJECTED' as any // Display cancelled as rejected/grey for now or add CANCELLED
             };
 
             let status = statusMap[b.status] || 'BORROWED';
@@ -180,21 +188,22 @@ export const MyHistory: React.FC = () => {
                 icon: CATEGORY_ICONS[(eq?.category || '').toLowerCase()] || (b.room_id ? Monitor : Laptop),
                 period: `${b.borrow_date ? new Date(b.borrow_date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }) : '?'} – ${b.return_date ? new Date(b.return_date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }) : '?'}`,
                 returnDate: b.note || '-',
-                status: status as BorrowStatus
+                status: status as BorrowStatus,
+                original: b
             };
         });
     }, [borrowRequests]);
 
     const mappedApproval = useMemo<ApprovalHistoryItem[]>(() => {
         return approvedByMe.map(a => {
-            const user = a.user_id as BorrowRequestUser;
+            const userRef = a.user_id as BorrowRequestUser;
             const equipment = a.equipment_id as BorrowRequestEquipment;
             const room = a.room_id as BorrowRequestRoom;
 
             return {
                 id: `#APP-${(a._id as string).substring(18).toUpperCase()}`,
-                studentName: user?.displayName || 'User',
-                studentId: (user?._id as string || '').substring(18).toUpperCase(),
+                studentName: userRef?.displayName || 'User',
+                studentId: (userRef?._id as string || '').substring(18).toUpperCase(),
                 equipment: equipment?.name || room?.name || 'Asset',
                 requestDate: a.borrow_date ? new Date(a.borrow_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '?',
                 decidedDate: a.updatedAt ? new Date(a.updatedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '?',
@@ -299,15 +308,36 @@ export const MyHistory: React.FC = () => {
         URL.revokeObjectURL(url);
     };
 
+    const handleConfirmCancelBorrow = async (id: string, note: string) => {
+        try {
+            await cancelMyBorrowRequest(id, note);
+            setCancelTargetItem(null);
+            fetchMyBorrowRequests();
+        } catch (error) {
+            console.error(error);
+        }
+    };
+
+    const handleCancelReport = async (item: any) => {
+        try {
+            if (window.confirm('Are you sure you want to cancel this report?')) {
+                await cancelMyReport(item.original._id);
+                fetchMyReports();
+            }
+        } catch (error) {
+            console.error(error);
+        }
+    };
+
     const cfg = FILTER_CONFIG[activeTab];
 
     return (
         <div className="w-full">
-            <main className="pt-6 sm:pt-8 pb-10 px-4 sm:px-6 w-full max-w-[90vw] xl:max-w-7xl mx-auto flex-1 flex flex-col overflow-hidden">
+            <main className="pt-6 sm:pt-24 pb-10 px-4 sm:px-6 w-full max-w-[90vw] xl:max-w-7xl mx-auto flex-1 flex flex-col overflow-hidden">
                 <div className="w-full">
                     <HistoryHeader />
 
-                    <HistoryTabs activeTab={activeTab} onTabChange={handleTabChange} />
+                    <HistoryTabs activeTab={activeTab} onTabChange={handleTabChange} hideApproval={isStudent} />
 
                     <HistoryFilterBar
                         searchPlaceholder={cfg.placeholder}
@@ -336,7 +366,7 @@ export const MyHistory: React.FC = () => {
                                 <p className="text-sm font-bold text-red-500 uppercase tracking-widest">Failed to load data</p>
                                 <p className="text-xs text-red-400/80">{borrowError || reportError}</p>
                                 <button
-                                    onClick={() => { fetchMyBorrowRequests(); fetchMyReports(); fetchApprovedByMe(); }}
+                                    onClick={() => { fetchMyBorrowRequests(); fetchMyReports(); if(!isStudent) fetchApprovedByMe(); }}
                                     className="mt-2 px-6 py-2 rounded-full bg-[#1E2B58] text-white text-xs font-bold hover:scale-105 transition"
                                 >
                                     Retry
@@ -352,6 +382,7 @@ export const MyHistory: React.FC = () => {
                                         totalItems={filteredReports.length}
                                         onPageChange={setReportPage}
                                         onViewDetail={item => setModal({ type: 'report', item })}
+                                        onCancel={handleCancelReport}
                                     />
                                 )}
 
@@ -363,10 +394,11 @@ export const MyHistory: React.FC = () => {
                                         totalItems={filteredBorrow.length}
                                         onPageChange={setBorrowPage}
                                         onViewDetail={item => setModal({ type: 'borrow', item })}
+                                        onCancel={item => setCancelTargetItem(item.original)}
                                     />
                                 )}
 
-                                {activeTab === 'approval' && (
+                                {activeTab === 'approval' && !isStudent && (
                                     <ApprovalHistoryTable
                                         items={pagedApproval}
                                         currentPage={approvalPage}
@@ -450,7 +482,7 @@ export const MyHistory: React.FC = () => {
                                         </div>
                                     </div>
                                     <div className="flex gap-3">
-                                        <button onClick={() => { setModal(null); navigate('/lecturer/report-issue'); }} className="flex-1 py-3 rounded-[1.25rem] font-bold text-sm bg-[#1E2B58] text-white hover:bg-[#151f40] hover:scale-[1.02] active:scale-95 transition-all shadow-lg shadow-[#1E2B58]/20 flex items-center justify-center gap-2">
+                                        <button onClick={() => { setModal(null); navigate(`/${user?.role}/report-issue`); }} className="flex-1 py-3 rounded-[1.25rem] font-bold text-sm bg-[#1E2B58] text-white hover:bg-[#151f40] hover:scale-[1.02] active:scale-95 transition-all shadow-lg shadow-[#1E2B58]/20 flex items-center justify-center gap-2">
                                             <FileText className="w-4 h-4" /> Report Again <ArrowRight className="w-3.5 h-3.5" />
                                         </button>
                                         <button onClick={() => setModal(null)} className="flex-1 py-3 rounded-[1.25rem] font-bold text-sm border border-[#1E2B58]/20 dark:border-white/20 text-[#1E2B58]/70 dark:text-white/70 hover:bg-[#1E2B58]/5 transition-all">
@@ -505,7 +537,7 @@ export const MyHistory: React.FC = () => {
                                         </div>
                                     </div>
                                     <div className="flex gap-3">
-                                        <button onClick={() => { setModal(null); navigate('/lecturer/equipment'); }} className="flex-1 py-3 rounded-[1.25rem] font-bold text-sm bg-[#1E2B58] text-white hover:bg-[#151f40] hover:scale-[1.02] active:scale-95 transition-all shadow-lg shadow-[#1E2B58]/20 flex items-center justify-center gap-2">
+                                        <button onClick={() => { setModal(null); navigate(`/${user?.role}/equipment`); }} className="flex-1 py-3 rounded-[1.25rem] font-bold text-sm bg-[#1E2B58] text-white hover:bg-[#151f40] hover:scale-[1.02] active:scale-95 transition-all shadow-lg shadow-[#1E2B58]/20 flex items-center justify-center gap-2">
                                             <Laptop className="w-4 h-4" /> Borrow Again <ArrowRight className="w-3.5 h-3.5" />
                                         </button>
                                         <button onClick={() => setModal(null)} className="flex-1 py-3 rounded-[1.25rem] font-bold text-sm border border-[#1E2B58]/20 dark:border-white/20 text-[#1E2B58]/70 dark:text-white/70 hover:bg-[#1E2B58]/5 transition-all">
@@ -559,7 +591,7 @@ export const MyHistory: React.FC = () => {
                                         )}
                                     </div>
                                     <div className="flex gap-3">
-                                        <button onClick={() => { setModal(null); navigate('/lecturer/approval'); }} className="flex-1 py-3 rounded-[1.25rem] font-bold text-sm bg-[#1E2B58] text-white hover:bg-[#151f40] hover:scale-[1.02] active:scale-95 transition-all shadow-lg shadow-[#1E2B58]/20 flex items-center justify-center gap-2">
+                                        <button onClick={() => { setModal(null); navigate(`/${user?.role}/approval`); }} className="flex-1 py-3 rounded-[1.25rem] font-bold text-sm bg-[#1E2B58] text-white hover:bg-[#151f40] hover:scale-[1.02] active:scale-95 transition-all shadow-lg shadow-[#1E2B58]/20 flex items-center justify-center gap-2">
                                             View Student Requests <ArrowRight className="w-3.5 h-3.5" />
                                         </button>
                                         <button onClick={() => setModal(null)} className="flex-1 py-3 rounded-[1.25rem] font-bold text-sm border border-[#1E2B58]/20 dark:border-white/20 text-[#1E2B58]/70 dark:text-white/70 hover:bg-[#1E2B58]/5 transition-all">
@@ -572,6 +604,16 @@ export const MyHistory: React.FC = () => {
                     </div>
                 </div>
             )}
+
+            {cancelTargetItem && (
+                <BorrowCancelModal
+                    item={cancelTargetItem}
+                    onClose={() => setCancelTargetItem(null)}
+                    onConfirm={(note) => handleConfirmCancelBorrow(cancelTargetItem._id, note)}
+                />
+            )}
         </div>
     );
 };
+
+export default HistoryPage;
