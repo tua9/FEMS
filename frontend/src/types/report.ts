@@ -17,14 +17,19 @@ export interface Report {
   room_id?: {
     _id: string;
     name: string;
+    building_id?: {
+      _id: string;
+      name: string;
+    } | string | null;
   } | string | null;
   type: ReportType;
   status: ReportStatus;
-  approved_by?: {
+  processed_by?: {
     _id: string;
     username: string;
     displayName?: string;
   } | string | null;
+  processed_at?: string | null;
   img?: string | null;
   description?: string | null;
   createdAt?: string;

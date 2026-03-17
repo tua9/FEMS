@@ -3,8 +3,9 @@ import { Laptop, Monitor, CheckCircle2, X, AlertTriangle, Loader2 } from 'lucide
 
 import { ApprovalFilter, StatusFilter, TypeFilter } from '../../components/lecturer/approval/ApprovalFilter';
 import { ApprovalTable } from '../../components/lecturer/approval/ApprovalTable';
-import type { BorrowRequest, RequestStatus } from '../../components/lecturer/approval/ApprovalTable';
+import type { ApprovalTableItem, RequestStatus } from '../../components/lecturer/approval/ApprovalTable';
 import { useBorrowRequestStore } from '../../stores/useBorrowRequestStore';
+import { PageHeader } from '@/components/shared/PageHeader';
 
 const ROWS_PER_PAGE = 10;
 
@@ -16,11 +17,15 @@ export const ApprovalCenter: React.FC = () => {
     const fetchPendingBorrowRequests = useBorrowRequestStore(state => state.fetchPendingBorrowRequests);
     const loading = useBorrowRequestStore(state => state.loading);
 
+    const fetchApprovedByMe = useBorrowRequestStore(state => state.fetchApprovedByMe);
+    const approvedByMe = useBorrowRequestStore(state => state.approvedByMe);
+
     useEffect(() => {
         fetchPendingBorrowRequests();
-    }, [fetchPendingBorrowRequests]);
+        fetchApprovedByMe();
+    }, [fetchPendingBorrowRequests, fetchApprovedByMe]);
 
-    const mappedRequests = useMemo<BorrowRequest[]>(() => {
+    const mappedRequests = useMemo<ApprovalTableItem[]>(() => {
         return pendingBorrowRequests
             .filter((r: any) => r.user_id?.role === 'student') // Only show student requests
             .map((r: any) => ({
@@ -56,8 +61,8 @@ export const ApprovalCenter: React.FC = () => {
     const [currentPage, setCurrentPage] = useState(1);
 
     // ── Modal state ───────────────────────────────────────────────────────────
-    const [approvingReq, setApprovingReq] = useState<BorrowRequest | null>(null);
-    const [rejectingReq, setRejectingReq] = useState<BorrowRequest | null>(null);
+    const [approvingReq, setApprovingReq] = useState<ApprovalTableItem | null>(null);
+    const [rejectingReq, setRejectingReq] = useState<ApprovalTableItem | null>(null);
     const [rejectReason, setRejectReason] = useState('');
     const [rejectError, setRejectError] = useState('');
 
@@ -110,7 +115,7 @@ export const ApprovalCenter: React.FC = () => {
     const rejectAction = useBorrowRequestStore(state => state.rejectBorrowRequest);
 
     // ── Approve logic ─────────────────────────────────────────────────────────
-    const handleApprove = (req: BorrowRequest) => setApprovingReq(req);
+    const handleApprove = (req: ApprovalTableItem) => setApprovingReq(req);
 
     const confirmApprove = async () => {
         if (!approvingReq) return;
@@ -125,7 +130,7 @@ export const ApprovalCenter: React.FC = () => {
     };
 
     // ── Reject logic ──────────────────────────────────────────────────────────
-    const handleReject = (req: BorrowRequest) => {
+    const handleReject = (req: ApprovalTableItem) => {
         setRejectingReq(req);
         setRejectReason('');
         setRejectError('');
@@ -172,7 +177,7 @@ export const ApprovalCenter: React.FC = () => {
 
     return (
         <div className="w-full">
-            <main className="pt-32 md:pt-36 pb-10 px-4 sm:px-6 w-full max-w-[90vw] xl:max-w-7xl mx-auto flex-1 flex flex-col overflow-hidden">
+            <main className="pt-6 sm:pt-8 pb-10 px-4 sm:px-6 w-full max-w-[90vw] xl:max-w-7xl mx-auto flex-1 flex flex-col overflow-hidden">
                 <div className="w-full">
 
                     {/* ── Toast notification ──────────────────────────────────── */}
@@ -193,35 +198,31 @@ export const ApprovalCenter: React.FC = () => {
                     )}
 
                     {/* ── Header ──────────────────────────────────────────────── */}
-                    <header className="mb-[2rem] md:mb-[3rem]">
-                        <div className="flex flex-col md:flex-row md:items-end justify-between gap-[1.5rem]">
-                            <div>
-                                <h2 className="text-[2.25rem] sm:text-[2.5rem] md:text-[3.5rem] font-extrabold text-[#1E2B58] dark:text-white tracking-tight leading-tight">
-                                    Student Request <span className="opacity-50 font-light">/</span>{' '}
-                                    <span className="text-slate-600 dark:text-slate-400">Approval Center</span>
-                                </h2>
-                                <p className="mt-[1rem] text-slate-600 dark:text-slate-400 max-w-2xl text-[1rem] sm:text-[1.125rem] leading-relaxed">
-                                    Review pending equipment and facility borrow requests from students. All approvals are logged for academic compliance.
-                                </p>
-                            </div>
+                    <div className="mb-8 md:mb-12">
+                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+                            <PageHeader
+                                title="Approval Center"
+                                subtitle="Review pending equipment and facility borrow requests. All approvals are logged for academic compliance."
+                                className="items-start! text-left! md:mb-0 mb-0"
+                            />
 
                             {/* Stats */}
-                            <div className="flex flex-row items-center gap-[1rem] mt-[1.5rem] md:mt-0">
-                                <div className="glass-card bg-white/60 dark:bg-slate-800/60 border border-white/60 dark:border-white/10 px-[1.5rem] md:px-[2.5rem] py-[1.25rem] md:py-[1.75rem] rounded-[1.5rem] md:rounded-[2rem] flex flex-col items-center justify-center min-w-[8rem] md:min-w-[10rem] flex-1 md:flex-none">
-                                    <span className="text-[2.25rem] md:text-[2.5rem] font-black text-[#1E2B58] dark:text-white leading-none mb-[0.375rem]">
+                            <div className="flex flex-row items-center gap-4 shrink-0">
+                                <div className="dashboard-card px-6 md:px-10 py-5 md:py-7 rounded-3xl md:rounded-4xl flex flex-col items-center justify-center min-w-32 md:min-w-40">
+                                    <span className="text-4xl md:text-5xl font-black text-[#1E2B58] dark:text-white leading-none mb-1.5">
                                         {pendingCount}
                                     </span>
                                     <span className="text-[0.625rem] font-bold uppercase tracking-[0.2em] text-[#1E2B58]/50 dark:text-white/50">Pending</span>
                                 </div>
-                                <div className="glass-card bg-white/60 dark:bg-slate-800/60 border border-white/60 dark:border-white/10 px-[1.5rem] md:px-[2.5rem] py-[1.25rem] md:py-[1.75rem] rounded-[1.5rem] md:rounded-[2rem] flex flex-col items-center justify-center min-w-[8rem] md:min-w-[10rem] flex-1 md:flex-none">
-                                    <span className="text-[2.25rem] md:text-[2.5rem] font-black text-slate-500 dark:text-slate-300 leading-none mb-[0.375rem]">
-                                        {requests.length}
+                                <div className="dashboard-card px-6 md:px-10 py-5 md:py-7 rounded-3xl md:rounded-4xl flex flex-col items-center justify-center min-w-32 md:min-w-40">
+                                    <span className="text-4xl md:text-5xl font-black text-slate-500 dark:text-slate-300 leading-none mb-1.5">
+                                        {approvedByMe.length}
                                     </span>
-                                    <span className="text-[0.625rem] font-bold uppercase tracking-[0.2em] text-slate-500/70 dark:text-slate-400/70">Total History</span>
+                                    <span className="text-[0.625rem] font-bold uppercase tracking-[0.2em] text-slate-500/70 dark:text-slate-400/70">My History</span>
                                 </div>
                             </div>
                         </div>
-                    </header>
+                    </div>
 
                     {/* ── Filter bar ──────────────────────────────────────────── */}
                     <ApprovalFilter
@@ -259,7 +260,7 @@ export const ApprovalCenter: React.FC = () => {
                     className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm px-4"
                     onClick={e => { if (e.target === e.currentTarget) setApprovingReq(null); }}
                 >
-                    <div className="glass-card rounded-[2rem] p-8 w-full max-w-md shadow-2xl shadow-[#1E2B58]/20 relative animate-in fade-in zoom-in-95 duration-200">
+                    <div className="dashboard-card rounded-4xl p-8 w-full max-w-md shadow-2xl shadow-[#1E2B58]/20 relative animate-in fade-in zoom-in-95 duration-200">
                         <button
                             onClick={() => setApprovingReq(null)}
                             className="absolute top-5 right-5 w-8 h-8 flex items-center justify-center rounded-full hover:bg-[#1E2B58]/10 dark:hover:bg-white/10 transition"
@@ -318,7 +319,7 @@ export const ApprovalCenter: React.FC = () => {
                     className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm px-4"
                     onClick={e => { if (e.target === e.currentTarget) setRejectingReq(null); }}
                 >
-                    <div className="glass-card rounded-[2rem] p-8 w-full max-w-md shadow-2xl shadow-[#1E2B58]/20 relative animate-in fade-in zoom-in-95 duration-200">
+                    <div className="dashboard-card rounded-4xl p-8 w-full max-w-md shadow-2xl shadow-[#1E2B58]/20 relative animate-in fade-in zoom-in-95 duration-200">
                         <button
                             onClick={() => setRejectingReq(null)}
                             className="absolute top-5 right-5 w-8 h-8 flex items-center justify-center rounded-full hover:bg-[#1E2B58]/10 dark:hover:bg-white/10 transition"

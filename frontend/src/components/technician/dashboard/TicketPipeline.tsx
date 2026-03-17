@@ -1,4 +1,6 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
+import { createPortal } from 'react-dom';
+import { motion, AnimatePresence } from 'framer-motion';
 import { MOCK_TICKETS } from '@/data/technician/mockTickets';
 
 // ─── Filter options ──────────────────────────────────────────────────────────
@@ -66,18 +68,47 @@ const TicketPipeline: React.FC = () => {
   const [customYear,  setCustomYear]  = useState(now.getFullYear());
   const [customMonthYear, setCustomMonthYear] = useState(now.getFullYear());
 
+  const buttonRef  = useRef<HTMLButtonElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Portal position — computed from button bounding rect
+  const [dropPos, setDropPos] = useState<{ top: number; right: number }>({ top: 0, right: 0 });
+
+  const computePos = () => {
+    if (!buttonRef.current) return;
+    const r = buttonRef.current.getBoundingClientRect();
+    setDropPos({ top: r.bottom + 8, right: window.innerWidth - r.right });
+  };
+
+  const handleToggle = () => {
+    if (!dropdownOpen) computePos();
+    setDropdownOpen((o) => !o);
+  };
+
+  // Re-calculate on resize/scroll
+  useEffect(() => {
+    if (!dropdownOpen) return;
+    window.addEventListener('resize', computePos);
+    window.addEventListener('scroll', computePos, true);
+    return () => {
+      window.removeEventListener('resize', computePos);
+      window.removeEventListener('scroll', computePos, true);
+    };
+  }, [dropdownOpen]);
 
   // Close dropdown on outside click
   useEffect(() => {
+    if (!dropdownOpen) return;
     const handler = (e: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
-        setDropdownOpen(false);
-      }
+      if (
+        buttonRef.current?.contains(e.target as Node) ||
+        dropdownRef.current?.contains(e.target as Node)
+      ) return;
+      setDropdownOpen(false);
     };
     document.addEventListener('mousedown', handler);
     return () => document.removeEventListener('mousedown', handler);
-  }, []);
+  }, [dropdownOpen]);
 
   // Build the predicate based on current mode
   const predicate = useMemo(() => {
@@ -116,7 +147,7 @@ const TicketPipeline: React.FC = () => {
   const YEAR_RANGE  = Array.from({ length: 6 }, (_, i) => now.getFullYear() - 5 + i);
 
   return (
-    <div className="glass-card p-8 rounded-3xl shadow-sm h-full">
+    <div className="dashboard-card p-8 rounded-3xl h-full">
       {/* Header */}
       <div className="flex justify-between items-center mb-10">
         <h3 className="text-sm font-bold text-[#1A2B56] dark:text-white uppercase tracking-widest">
@@ -124,9 +155,10 @@ const TicketPipeline: React.FC = () => {
         </h3>
 
         {/* Filter dropdown trigger */}
-        <div className="relative" ref={dropdownRef}>
+        <div className="relative">
           <button
-            onClick={() => setDropdownOpen((o) => !o)}
+            ref={buttonRef}
+            onClick={handleToggle}
             className="text-[10px] font-bold text-slate-400 hover:text-[#1A2B56] dark:hover:text-white flex items-center gap-1 transition-colors uppercase tracking-wider"
           >
             {buttonLabel}
@@ -135,28 +167,54 @@ const TicketPipeline: React.FC = () => {
             </span>
           </button>
 
-          {/* Dropdown panel */}
-          {dropdownOpen && (
-            <div
-              className="absolute right-0 top-full mt-2 w-64 rounded-2xl z-50 overflow-hidden"
-              style={{
-                background: 'rgba(255, 255, 255, 0.72)',
-                backdropFilter: 'blur(20px) saturate(180%)',
-                WebkitBackdropFilter: 'blur(20px) saturate(180%)',
-                border: '1px solid rgba(255, 255, 255, 0.55)',
-                boxShadow: '0 4px 24px rgba(26, 43, 86, 0.10), 0 1.5px 6px rgba(26, 43, 86, 0.07), inset 0 1px 0 rgba(255,255,255,0.80)',
-              }}
-            >
+          {/* ── Portal dropdown — rendered to document.body to escape
+                  all stacking contexts (will-change-transform from AnimatedPage/AnimatedSection)
+                  which would otherwise make backdrop-filter invisible.       ── */}
+          {createPortal(
+            <AnimatePresence>
+              {dropdownOpen && (
+                <motion.div
+                  ref={dropdownRef}
+                  initial={{ opacity: 0, y: -6, scale: 0.97 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: -4, scale: 0.98 }}
+                  transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
+                  style={{
+                    position: 'fixed',
+                    top: dropPos.top,
+                    right: dropPos.right,
+                    zIndex: 9999,
+                    width: '16rem',
+                  }}
+                >
+                  {/* Glass surface — overflow-hidden is safe here because
+                      backdrop-filter is on this element itself, not a parent */}
+                  <div
+                    className="overflow-hidden rounded-2xl"
+                    style={{
+                      background: 'linear-gradient(135deg, rgba(255,255,255,0.82) 0%, rgba(220,232,255,0.72) 100%)',
+                      backdropFilter: 'blur(40px) saturate(220%)',
+                      WebkitBackdropFilter: 'blur(40px) saturate(220%)',
+                      border: '1.5px solid rgba(255,255,255,0.92)',
+                      boxShadow: [
+                        'inset 0 1.5px 0 rgba(255,255,255,0.98)',
+                        'inset 1.5px 0 0 rgba(255,255,255,0.65)',
+                        '0 8px 40px -8px rgba(26,43,86,0.26)',
+                        '0 24px 64px -16px rgba(99,130,220,0.28)',
+                        '0 2px 8px rgba(26,43,86,0.12)',
+                      ].join(', '),
+                    }}
+                  >
               {/* Tabs: Preset / Day / Month / Year */}
-              <div className="flex border-b border-white/40 dark:border-white/10">
+              <div className="flex border-b border-black/8 dark:border-white/10">
                 {(['preset','day','month','year'] as FilterMode[]).map((m) => (
                   <button
                     key={m}
                     onClick={() => setMode(m)}
                     className={`flex-1 py-2.5 text-[10px] font-extrabold uppercase tracking-wider transition-colors ${
                       mode === m
-                        ? 'text-[#1A2B56] dark:text-blue-200 border-b-2 border-[#1A2B56] dark:border-blue-300'
-                        : 'text-slate-400 hover:text-slate-600'
+                        ? 'text-[#1A2B56] border-b-2 border-[#1A2B56]'
+                        : 'text-slate-400 hover:text-[#1A2B56]'
                     }`}
                   >
                     {m === 'preset' ? 'Quick' : m}
@@ -174,8 +232,8 @@ const TicketPipeline: React.FC = () => {
                         onClick={() => { setActivePreset(p); setDropdownOpen(false); }}
                         className={`w-full text-left px-4 py-2.5 rounded-xl text-xs font-semibold transition-all ${
                           activePreset.label === p.label
-                            ? 'bg-[#1A2B56]/90 text-white shadow-sm'
-                            : 'text-slate-700 hover:bg-white/60'
+                            ? 'bg-[#1A2B56] text-white shadow-md shadow-[#1A2B56]/20'
+                            : 'text-slate-700 hover:bg-[#1A2B56]/10 hover:text-[#1A2B56] hover:font-bold'
                         }`}
                       >
                         {p.label}
@@ -193,11 +251,11 @@ const TicketPipeline: React.FC = () => {
                       value={customDay}
                       max={now.toISOString().slice(0, 10)}
                       onChange={(e) => setCustomDay(e.target.value)}
-                      className="w-full px-3 py-2 rounded-xl border border-white/50 bg-white/50 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#1A2B56]/20 backdrop-blur-sm"
+                      className="w-full px-3 py-2 rounded-xl border border-white/60 bg-white/60 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#1A2B56]/25 backdrop-blur-sm"
                     />
                     <button
                       onClick={() => setDropdownOpen(false)}
-                      className="w-full py-2 bg-[#1A2B56]/90 text-white rounded-xl text-xs font-bold hover:bg-[#1A2B56] transition-all shadow-sm"
+                      className="w-full py-2 bg-[#1A2B56] text-white rounded-xl text-xs font-bold hover:bg-[#0f1e3d] transition-all shadow-md shadow-[#1A2B56]/20"
                     >
                       Apply
                     </button>
@@ -212,14 +270,14 @@ const TicketPipeline: React.FC = () => {
                     <div className="flex items-center justify-between gap-2">
                       <button
                         onClick={() => setCustomMonthYear((y) => y - 1)}
-                        className="w-7 h-7 rounded-lg bg-white/50 flex items-center justify-center hover:bg-white/80 transition-all text-slate-600"
+                        className="w-7 h-7 rounded-lg bg-white/60 flex items-center justify-center hover:bg-[#1A2B56]/10 hover:text-[#1A2B56] transition-all text-slate-600"
                       >
                         <span className="material-symbols-outlined text-sm">chevron_left</span>
                       </button>
                       <span className="text-sm font-extrabold text-slate-700">{customMonthYear}</span>
                       <button
                         onClick={() => setCustomMonthYear((y) => Math.min(y + 1, now.getFullYear()))}
-                        className="w-7 h-7 rounded-lg bg-white/50 flex items-center justify-center hover:bg-white/80 transition-all text-slate-600"
+                        className="w-7 h-7 rounded-lg bg-white/60 flex items-center justify-center hover:bg-[#1A2B56]/10 hover:text-[#1A2B56] transition-all text-slate-600"
                       >
                         <span className="material-symbols-outlined text-sm">chevron_right</span>
                       </button>
@@ -237,10 +295,10 @@ const TicketPipeline: React.FC = () => {
                             onClick={() => { setCustomMonth(m); setDropdownOpen(false); }}
                             className={`py-1.5 rounded-lg text-[10px] font-bold transition-all ${
                               isSelected
-                                ? 'bg-[#1A2B56]/90 text-white shadow-sm'
+                                ? 'bg-[#1A2B56] text-white shadow-md shadow-[#1A2B56]/20'
                                 : isFuture
                                   ? 'text-slate-300 cursor-not-allowed'
-                                  : 'text-slate-600 hover:bg-white/60'
+                                  : 'text-slate-600 hover:bg-[#1A2B56]/10 hover:text-[#1A2B56] hover:font-bold'
                             }`}
                           >
                             {name}
@@ -262,8 +320,8 @@ const TicketPipeline: React.FC = () => {
                           onClick={() => { setCustomYear(yr); setDropdownOpen(false); }}
                           className={`py-2 rounded-xl text-xs font-bold transition-all ${
                             customYear === yr
-                              ? 'bg-[#1A2B56]/90 text-white shadow-sm'
-                              : 'text-slate-600 hover:bg-white/60'
+                              ? 'bg-[#1A2B56] text-white shadow-md shadow-[#1A2B56]/20'
+                              : 'text-slate-600 hover:bg-[#1A2B56]/10 hover:text-[#1A2B56] hover:font-bold'
                           }`}
                         >
                           {yr}
@@ -273,7 +331,11 @@ const TicketPipeline: React.FC = () => {
                   </div>
                 )}
               </div>
-            </div>
+                  </div>{/* ── end glass surface div ── */}
+                </motion.div>
+              )}
+            </AnimatePresence>,
+            document.body
           )}
         </div>
       </div>

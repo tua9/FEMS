@@ -48,7 +48,7 @@ const TopPerformers: React.FC<Props> = ({ dateRangeDays }) => {
 
   return (
     <>
-      <div className="tech-card p-8 rounded-3xl border border-white/20 dark:border-white/6 shadow-sm">
+      <div className="dashboard-card p-8 rounded-3xl">
         <h3 className="text-lg font-bold text-[#232F58] dark:text-white mb-6">Top Performers</h3>
 
         <div className="space-y-6">

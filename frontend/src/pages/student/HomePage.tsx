@@ -3,6 +3,7 @@ import React, { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { PageShell, AnimatedSection } from "@/components/motion";
 import { useBorrowRequestStore } from "@/stores/useBorrowRequestStore";
+import { useReportStore } from "@/stores/useReportStore";
 import { useAuthStore } from "@/stores/useAuthStore";
 
 import StudentStatCard from "@/components/student/dashboard/StudentStatCard";
@@ -18,12 +19,16 @@ const HomePage: React.FC = () => {
     (state) => state.fetchMyBorrowRequests
   );
 
+  // fetch reports khi vào HomePage
+  const fetchMyReports = useReportStore((state) => state.fetchMyReports);
+
   useEffect(() => {
     fetchMyBorrowRequests();
-  }, [fetchMyBorrowRequests]);
+    fetchMyReports();
+  }, [fetchMyBorrowRequests, fetchMyReports]);
 
   return (
-    <PageShell topPadding="pt-32" className="pb-20 px-4 sm:px-6">
+    <PageShell className="pb-20 px-4 sm:px-6">
       <div className="mx-auto w-full max-w-350">
         {/* Welcome Header */}
         <AnimatedSection variant="curtain" delay={0} className="mb-12">

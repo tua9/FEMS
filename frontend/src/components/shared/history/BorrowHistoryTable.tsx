@@ -1,6 +1,8 @@
-import { Cable, ChevronLeft, ChevronRight, Eye, Laptop, Mic, Microchip, Projector, Router } from 'lucide-react';
+import { Ban, Cable, ChevronLeft, ChevronRight, Eye, Laptop, Mic, Microchip, Projector, Router } from 'lucide-react';
 import React from 'react';
 import { StatusBadge } from '@/components/shared/ui/StatusBadge';
+import type { BorrowRequest } from '@/types/borrowRequest';
+import { formatDisplayDate } from '@/utils/dateUtils';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -48,16 +50,30 @@ interface BorrowHistoryTableProps {
     totalPages: number;
     totalItems: number;
     onPageChange: (page: number) => void;
-    onViewDetail: (item: BorrowHistoryItem) => void;
+    onViewDetail: (item: BorrowRequest) => void;
+    onCancel?: (item: BorrowRequest) => void;
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export const BorrowHistoryTable: React.FC<BorrowHistoryTableProps> = ({
-    items, currentPage, totalPages, totalItems, onPageChange, onViewDetail,
+    items, currentPage, totalPages, totalItems, onPageChange, onViewDetail, onCancel,
 }) => {
+    // Helper function to map category to an icon
+    const getIcon = (category?: string) => {
+        if (!category) return Projector;
+        const normalized = category.toLowerCase();
+        if (normalized.includes('laptop') || normalized.includes('computer')) return Laptop;
+        if (normalized.includes('cable')) return Cable;
+        if (normalized.includes('network') || normalized.includes('router')) return Router;
+        if (normalized.includes('audio') || normalized.includes('mic')) return Mic;
+        if (normalized.includes('component') || normalized.includes('kit')) return Microchip;
+        return Projector;
+    };
+
+
     return (
-        <div className="glass-card bg-white/60 dark:bg-slate-900/40 rounded-[1.5rem] sm:rounded-[2rem] overflow-hidden shadow-[0_10px_30px_-5px_rgba(30,43,88,0.1)] mb-[4rem] border border-white dark:border-white/10">
+        <div className="dashboard-card rounded-[1.5rem] sm:rounded-[2rem] overflow-hidden mb-[4rem]">
             <div className="overflow-x-auto hide-scrollbar">
                 <table className="w-full border-collapse min-w-[1000px]">
                     <thead>
@@ -76,29 +92,45 @@ export const BorrowHistoryTable: React.FC<BorrowHistoryTableProps> = ({
                                     No records found for the selected filters.
                                 </td>
                             </tr>
-                        ) : items.map(item => {
-                            const Icon = item.icon;
+                        ) : items.map((item: BorrowRequest) => {
+                            const equipment = item.equipment_id && typeof item.equipment_id !== 'string' ? item.equipment_id : null;
+                            const room = item.room_id && typeof item.room_id !== 'string' ? item.room_id : null;
+                            const Icon = getIcon(equipment?.category);
+
+                            const isOverdue = item.status === 'approved' && new Date(item.return_date) < new Date();
+                            const displayStatus = isOverdue ? 'overdue' : item.status;
+
                             return (
                                 <tr
-                                    key={item.id}
+                                    key={item._id}
                                     className="transition-all duration-200 hover:bg-white/70 dark:hover:bg-white/5 group cursor-pointer"
                                     onClick={() => onViewDetail(item)}
                                 >
                                     <td className="px-[2rem] py-[1.5rem]">
-                                        <span className="text-[0.625rem] font-bold text-[#1E2B58] dark:text-slate-300">{item.id}</span>
+                                        <span className="text-[0.625rem] font-bold text-[#1E2B58] dark:text-slate-300">
+                                            #{item._id.substring(item._id.length - 6).toUpperCase()}
+                                        </span>
                                     </td>
                                     <td className="px-[2rem] py-[1.5rem]">
-                                        <p className="font-bold text-[#1E2B58] dark:text-white text-[0.875rem] leading-none mb-[0.25rem]">{item.course}</p>
-                                        <p className="text-[0.625rem] text-slate-500 font-medium">{item.group}</p>
+                                        <p className="font-bold text-[#1E2B58] dark:text-white text-[0.875rem] leading-none mb-[0.25rem]">
+                                            {room ? room.name : 'Unknown Room'}
+                                        </p>
+                                        <p className="text-[0.625rem] text-slate-500 font-medium">
+                                            {room ? room.type : ''}
+                                        </p>
                                     </td>
                                     <td className="px-[2rem] py-[1.5rem]">
                                         <div className="flex items-center gap-[0.75rem]">
                                             <Icon className="w-[1.25rem] h-[1.25rem] text-slate-400 dark:text-slate-500" />
-                                            <span className="font-bold text-[#1E2B58] dark:text-white text-[0.875rem]">{item.equipmentName}</span>
+                                            <span className="font-bold text-[#1E2B58] dark:text-white text-[0.875rem]">
+                                                {equipment ? equipment.name : 'Infrastructure'}
+                                            </span>
                                         </div>
                                     </td>
                                     <td className="px-[2rem] py-[1.5rem]">
-                                        <span className="text-[0.75rem] font-bold text-[#1E2B58] dark:text-slate-300">{item.period}</span>
+                                        <span className="text-[0.75rem] font-bold text-[#1E2B58] dark:text-slate-300">
+                                            {formatDisplayDate(item.borrow_date)}
+                                        </span>
                                     </td>
                                     <td className="px-[2rem] py-[1.5rem]">
                                         <span className="text-[0.75rem] font-medium text-slate-600 dark:text-slate-400">
@@ -107,17 +139,28 @@ export const BorrowHistoryTable: React.FC<BorrowHistoryTableProps> = ({
                                     </td>
                                     <td className="px-[2rem] py-[1.5rem] text-center">
                                         <span className="inline-block">
-                                            <StatusBadge status={item.status} />
+                                            <StatusBadge status={displayStatus} />
                                         </span>
                                     </td>
                                     <td className="px-[2rem] py-[1.5rem] text-right">
-                                        <button
-                                            onClick={e => { e.stopPropagation(); onViewDetail(item); }}
-                                            className="p-[0.5rem] rounded-full hover:bg-[#1E2B58]/10 dark:hover:bg-white/10 transition-all hover:scale-110 active:scale-90"
-                                            title="View Details"
-                                        >
-                                            <Eye className="w-[1rem] h-[1rem] text-[#1E2B58] dark:text-slate-300" strokeWidth={2.5} />
-                                        </button>
+                                        <div className="flex items-center justify-end gap-[0.25rem]">
+                                            {item.status === 'pending' && onCancel && (
+                                                <button
+                                                    onClick={e => { e.stopPropagation(); onCancel(item); }}
+                                                    className="p-[0.5rem] rounded-full hover:bg-red-100 dark:hover:bg-red-900/30 transition-all hover:scale-110 active:scale-90"
+                                                    title="Cancel Request"
+                                                >
+                                                    <Ban className="w-[1rem] h-[1rem] text-red-400 dark:text-red-400" strokeWidth={2.5} />
+                                                </button>
+                                            )}
+                                            <button
+                                                onClick={e => { e.stopPropagation(); onViewDetail(item); }}
+                                                className="p-[0.5rem] rounded-full hover:bg-[#1E2B58]/10 dark:hover:bg-white/10 transition-all hover:scale-110 active:scale-90"
+                                                title="View Details"
+                                            >
+                                                <Eye className="w-[1rem] h-[1rem] text-[#1E2B58] dark:text-slate-300" strokeWidth={2.5} />
+                                            </button>
+                                        </div>
                                     </td>
                                 </tr>
                             );
@@ -148,8 +191,8 @@ export const BorrowHistoryTable: React.FC<BorrowHistoryTableProps> = ({
                                     key={p}
                                     onClick={() => onPageChange(p as number)}
                                     className={`w-[2rem] h-[2rem] rounded-full flex items-center justify-center font-bold text-[0.875rem] transition-colors ${currentPage === p
-                                            ? 'bg-[#1E2B58] text-white shadow-sm shadow-[#1E2B58]/20'
-                                            : 'border border-[#1E2B58]/10 dark:border-white/10 hover:bg-black/5 dark:hover:bg-white/10 text-[#1E2B58] dark:text-slate-300'
+                                        ? 'bg-[#1E2B58] text-white shadow-sm shadow-[#1E2B58]/20'
+                                        : 'border border-[#1E2B58]/10 dark:border-white/10 hover:bg-black/5 dark:hover:bg-white/10 text-[#1E2B58] dark:text-slate-300'
                                         }`}
                                 >
                                     {p}

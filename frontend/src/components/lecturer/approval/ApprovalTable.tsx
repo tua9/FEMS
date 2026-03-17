@@ -6,7 +6,7 @@ import React from 'react';
 export type RequestStatus  = 'pending' | 'approved' | 'rejected';
 export type EquipmentType  = 'laptop' | 'projector' | 'tablet' | 'camera' | 'audio' | 'other';
 
-export interface BorrowRequest {
+export interface ApprovalTableItem {
     id: string;
     status: RequestStatus;
     student: {
@@ -31,13 +31,13 @@ export interface BorrowRequest {
 }
 
 interface ApprovalTableProps {
-    items: BorrowRequest[];
+    items: ApprovalTableItem[];
     totalPending: number;
     currentPage: number;
     totalPages: number;
     onPageChange: (page: number) => void;
-    onApprove: (request: BorrowRequest) => void;
-    onReject:  (request: BorrowRequest) => void;
+    onApprove: (request: ApprovalTableItem) => void;
+    onReject:  (request: ApprovalTableItem) => void;
 }
 
 // ─── Status badge helper ──────────────────────────────────────────────────────
@@ -72,7 +72,7 @@ export const ApprovalTable: React.FC<ApprovalTableProps> = ({
     onReject,
 }) => {
     return (
-        <div className="glass-card rounded-[1.5rem] sm:rounded-[2rem] overflow-hidden shadow-sm mb-[4rem] bg-white/40 dark:bg-slate-900/40 border border-white/60 dark:border-white/10">
+        <div className="dashboard-card rounded-3xl sm:rounded-4xl overflow-hidden mb-16">
             <div className="overflow-x-auto hide-scrollbar">
                 {items.length === 0 ? (
                     <div className="py-[4rem] flex flex-col items-center gap-3 text-center px-6">

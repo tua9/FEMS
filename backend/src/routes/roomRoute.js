@@ -6,6 +6,7 @@ import {
   updateRoom,
   deleteRoom,
   getRoomStatusCenter,
+  getRoomsByBuilding,
 } from '../controllers/roomController.js'
 import { protectedRoute, restrictTo } from '../middlewares/authMiddlewares.js'
 
@@ -21,6 +22,7 @@ router.get(
 
 router.post('/', restrictTo('admin'), createRoom)
 router.get('/', getAllRooms)
+router.get('/building/:buildingId', getRoomsByBuilding)
 router.get('/:id', getRoomById)
 router.patch('/:id', restrictTo('admin'), updateRoom)
 router.delete('/:id', restrictTo('admin'), deleteRoom)

@@ -71,7 +71,7 @@ export const AnimatedListItem: React.FC<AnimatedListItemProps> = ({
   return (
     <motion.div
       variants={staggerItem}
-      className={clsx("will-change-transform", className)}
+      className={clsx(className)}
     >
       {children}
     </motion.div>

@@ -74,7 +74,6 @@ export const MyHistory: React.FC = () => {
     const { myReports, fetchMyReports, loading: reportLoading, error: reportError } = useReportStore();
 
     // Re-fetch every time the user navigates to this page
-    // NOTE: Do NOT clear state before fetch — it causes blank flash
     useEffect(() => {
         fetchMyBorrowRequests();
         fetchMyReports();
@@ -139,7 +138,6 @@ export const MyHistory: React.FC = () => {
     const mappedBorrow = useMemo<BorrowHistoryItem[]>(() => {
         if (!borrowRequests) return [];
         return borrowRequests.map(b => {
-            // Step 1: Fix mapping logic
             const statusMap: Record<string, BorrowStatus> = {
                 'pending': 'PENDING' as any,
                 'approved': 'APPROVED' as any,
@@ -150,31 +148,23 @@ export const MyHistory: React.FC = () => {
 
             let status = statusMap[b.status] || 'BORROWED';
 
-            // Check if overdue
             if (status === 'BORROWED' && b.return_date && new Date(b.return_date) < new Date()) {
                 status = 'OVERDUE';
             }
 
-            // Helper to extract course/class info from note (Enhanced for Vietnamese)
             const extractClassInfo = (note: string) => {
                 if (!note) return null;
-                // Pattern 1: Match standard course codes (SE1501, IA1402)
                 const coursePattern = /([A-Z]{2,3}\d{4})/i;
-                // Pattern 2: Match "Phòng A1", "Lớp 10A", "Room 101"
                 const roomPattern = /(?:Phòng|Room|Lớp|Class)\s*([A-Z]*\d+[A-Z]*)/i;
-                
                 const courseMatch = note.match(coursePattern);
                 const roomMatch = note.match(roomPattern);
-                
                 if (courseMatch) return courseMatch[0];
                 if (roomMatch) return roomMatch[0];
-                
                 return null;
             };
 
             const eq = b.equipment_id as any;
             const rm = b.room_id as any;
-
             const roomName = (rm && typeof rm === 'object' ? rm.name : null);
             const smartClassInfo = roomName || extractClassInfo(b.note || '') || 'Academic Use';
 
@@ -182,22 +172,14 @@ export const MyHistory: React.FC = () => {
                 id: (eq && typeof eq === 'object' ? eq.qr_code : null) 
                     || (rm && typeof rm === 'object' ? rm.name : null) 
                     || `#REQ-${(b._id as string)?.substring(18).toUpperCase() || '....'}`,
-                
                 course: smartClassInfo,
                 group: b.type === 'equipment' ? 'Equipment Request' : (b.type || 'Infrastructure'),
                 equipmentName: (eq && typeof eq === 'object' ? eq.name : null)
                                || (rm && typeof rm === 'object' ? rm.name : null)
                                || 'Asset',
-
                 icon: CATEGORY_ICONS[(eq?.category || '').toLowerCase()] || (b.room_id ? Monitor : Laptop),
-
-                // Borrow Period
                 period: `${b.borrow_date ? new Date(b.borrow_date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }) : '?'} – ${b.return_date ? new Date(b.return_date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }) : '?'}`,
-
-                // Purpose replacing Return Date in the table mapping if we want to show it in that slot
-                // However, the BorrowHistoryItem interface has 'returnDate'. We will use 'returnDate' to store 'Purpose' text for display.
                 returnDate: b.note || '-',
-
                 status: status as BorrowStatus
             };
         });
@@ -222,7 +204,6 @@ export const MyHistory: React.FC = () => {
         });
     }, [approvedByMe]);
 
-    // ── Tab change resets filters + page ──────────────────────────────────────
     const handleTabChange = (tab: Tab) => {
         setActiveTab(tab);
         setSearchTerm('');
@@ -250,7 +231,6 @@ export const MyHistory: React.FC = () => {
         resetPage();
     };
 
-    // ── Filter + paginate: Report History ─────────────────────────────────────
     const filteredReports = useMemo(() => {
         const q = searchTerm.toLowerCase();
         return mappedReports.filter(r => {
@@ -263,7 +243,6 @@ export const MyHistory: React.FC = () => {
     const reportPages = Math.max(1, Math.ceil(filteredReports.length / ITEMS_PER_PAGE));
     const pagedReports = filteredReports.slice((reportPage - 1) * ITEMS_PER_PAGE, reportPage * ITEMS_PER_PAGE);
 
-    // ── Filter + paginate: Borrow History ─────────────────────────────────────
     const filteredBorrow = useMemo(() => {
         const q = searchTerm.toLowerCase();
         return mappedBorrow.filter(b => {
@@ -276,7 +255,6 @@ export const MyHistory: React.FC = () => {
     const borrowPages = Math.max(1, Math.ceil(filteredBorrow.length / ITEMS_PER_PAGE));
     const pagedBorrow = filteredBorrow.slice((borrowPage - 1) * ITEMS_PER_PAGE, borrowPage * ITEMS_PER_PAGE);
 
-    // ── Filter + paginate: Approval History ───────────────────────────────────
     const filteredApproval = useMemo(() => {
         const q = searchTerm.toLowerCase();
         return mappedApproval.filter(a => {
@@ -289,17 +267,14 @@ export const MyHistory: React.FC = () => {
     const approvalPages = Math.max(1, Math.ceil(filteredApproval.length / ITEMS_PER_PAGE));
     const pagedApproval = filteredApproval.slice((approvalPage - 1) * ITEMS_PER_PAGE, approvalPage * ITEMS_PER_PAGE);
 
-    // ── hasActiveFilters ───────────────────────────────────────────────────────
     const hasActiveFilters = searchTerm !== '' || statusFilter !== 'All' || dateFilter !== 'Last 30 Days';
 
-    // ── Per-tab filter config ─────────────────────────────────────────────────
     const FILTER_CONFIG: Record<Tab, { label: string; options: string[]; placeholder: string }> = {
         report: { label: 'Severity', options: ['All', 'Critical', 'High', 'Medium', 'Low'], placeholder: 'Search by Report ID, category, or location…' },
         borrow: { label: 'Status', options: ['All', 'Pending', 'Approved', 'Borrowed', 'Returned', 'Overdue'], placeholder: 'Search by ID, course, or equipment…' },
         approval: { label: 'Decision', options: ['All', 'Approved', 'Rejected'], placeholder: 'Search by ID, student name, or equipment…' },
     };
 
-    // ── Export CSV ─────────────────────────────────────────────────────────────
     const handleExportCsv = () => {
         let headers = '';
         let rows = '';
@@ -308,7 +283,7 @@ export const MyHistory: React.FC = () => {
             headers = 'Report ID,Date,Category,Location,Block,Severity,Status\n';
             rows = filteredReports.map(r => `"${r.id}","${r.date}","${r.category}","${r.location}","${r.block}","${r.severity}","${r.status}"`).join('\n');
         } else if (activeTab === 'borrow') {
-            headers = 'Asset ID,Class,Equipment,Borrow Period,Purpose,Status\n'; // Corrected headers
+            headers = 'Asset ID,Class,Equipment,Borrow Period,Purpose,Status\n';
             rows = filteredBorrow.map(b => `"${b.id}","${b.course}","${b.equipmentName}","${b.period}","${b.returnDate}","${b.status}"`).join('\n');
         } else {
             headers = 'Request ID,Student Name,Student ID,Equipment,Request Date,Decided Date,Decision,Reason\n';
@@ -324,21 +299,16 @@ export const MyHistory: React.FC = () => {
         URL.revokeObjectURL(url);
     };
 
-    // ── Filter config for current tab ─────────────────────────────────────────
     const cfg = FILTER_CONFIG[activeTab];
-
-    // ─────────────────────────────────────────────────────────────────────────
 
     return (
         <div className="w-full">
-            <main className="pt-32 md:pt-36 pb-10 px-4 sm:px-6 w-full max-w-[90vw] xl:max-w-7xl mx-auto flex-1 flex flex-col overflow-hidden">
+            <main className="pt-6 sm:pt-8 pb-10 px-4 sm:px-6 w-full max-w-[90vw] xl:max-w-7xl mx-auto flex-1 flex flex-col overflow-hidden">
                 <div className="w-full">
                     <HistoryHeader />
 
-                    {/* Tabs */}
                     <HistoryTabs activeTab={activeTab} onTabChange={handleTabChange} />
 
-                    {/* Filter bar */}
                     <HistoryFilterBar
                         searchPlaceholder={cfg.placeholder}
                         searchTerm={searchTerm}
@@ -354,7 +324,6 @@ export const MyHistory: React.FC = () => {
                         onExportCsv={handleExportCsv}
                     />
 
-                    {/* Tables */}
                     <div className="transition-all duration-300">
                         {(borrowLoading || reportLoading) ? (
                             <div className="py-20 flex flex-col items-center justify-center gap-4">
@@ -413,14 +382,12 @@ export const MyHistory: React.FC = () => {
                 </div>
             </main>
 
-            {/* ── Detail Modals ─────────────────────────────────────────────── */}
             {modal && (
                 <div
-                    className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm px-4"
+                    className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm px-4"
                     onClick={e => { if (e.target === e.currentTarget) setModal(null); }}
                 >
                     <div className="glass-card rounded-[2rem] p-8 w-full max-w-md shadow-2xl shadow-[#1E2B58]/20 relative animate-in fade-in zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-                        {/* Close */}
                         <button
                             onClick={() => setModal(null)}
                             className="absolute top-5 right-5 w-8 h-8 flex items-center justify-center rounded-full hover:bg-[#1E2B58]/10 dark:hover:bg-white/10 transition"
@@ -428,7 +395,6 @@ export const MyHistory: React.FC = () => {
                             <X className="w-4 h-4 text-[#1E2B58]/60 dark:text-white/60" />
                         </button>
 
-                        {/* ── Report detail ─────────────────────────────────── */}
                         {modal.type === 'report' && (() => {
                             const r = modal.item;
                             const Icon = r.icon || FileText;
@@ -455,7 +421,6 @@ export const MyHistory: React.FC = () => {
                                             </div>
                                         ))}
 
-                                        {/* Description */}
                                         {r.description && (
                                             <div className="pt-2 border-t border-[#1E2B58]/10 dark:border-white/10">
                                                 <span className="text-[#1E2B58]/60 dark:text-white/50 font-medium text-sm block mb-1">Description</span>
@@ -463,7 +428,6 @@ export const MyHistory: React.FC = () => {
                                             </div>
                                         )}
 
-                                        {/* Image */}
                                         {r.img && (
                                             <div className="pt-2 border-t border-[#1E2B58]/10 dark:border-white/10">
                                                 <span className="text-[#1E2B58]/60 dark:text-white/50 font-medium text-sm block mb-2">Evidence Image</span>
@@ -497,7 +461,6 @@ export const MyHistory: React.FC = () => {
                             );
                         })()}
 
-                        {/* ── Borrow detail ─────────────────────────────────── */}
                         {modal.type === 'borrow' && (() => {
                             const b = modal.item;
                             const Icon = b.icon || Laptop;
@@ -553,7 +516,6 @@ export const MyHistory: React.FC = () => {
                             );
                         })()}
 
-                        {/* ── Approval detail ───────────────────────────────── */}
                         {modal.type === 'approval' && (() => {
                             const a = modal.item;
                             return (

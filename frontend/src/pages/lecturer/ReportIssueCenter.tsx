@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { CheckCircle2, X, ArrowRight, ClipboardList } from 'lucide-react';
 import { toast } from 'sonner';
@@ -9,16 +9,15 @@ import { ReportManualForm, type ReportFormData, type IssueCategory } from '../..
 import { RecentReports }    from '../../components/shared/report/RecentReports';
 
 import { useReportStore }   from '../../stores/useReportStore';
+import { useRoomStore }     from '../../stores/useRoomStore';
 import type { ReportType }  from '../../types/report';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 // Map frontend UI category → DB Report.type
 const CATEGORY_TO_TYPE: Record<IssueCategory, ReportType> = {
-    electrical: 'infrastructure',
-    plumbing:   'infrastructure',
-    furniture:  'infrastructure',
-    it:         'equipment',
+    equipment: 'equipment',
+    infrastructure: 'infrastructure',
     other:      'other',
 };
 
@@ -44,9 +43,14 @@ export const ReportIssueCenter: React.FC = () => {
     const routeState = (useLocation().state ?? {}) as NavState;
 
     const { createReport, fetchMyReports } = useReportStore();
+    const { rooms, fetchAll: fetchRooms } = useRoomStore();
+
+    useEffect(() => {
+        fetchRooms();
+    }, [fetchRooms]);
 
     // ── Prefill from Room Status / QR scan ────────────────────────────────────
-    const [prefillLocation,    setPrefillLocation]    = useState<string>(routeState.prefillRoom ?? '');
+    const [prefillRoomId,    setPrefillRoomId]    = useState<string>(routeState.prefillRoom ?? '');
     const [prefillCategory,    setPrefillCategory]    = useState<IssueCategory | undefined>(undefined);
     const [prefillDescription, setPrefillDescription] = useState<string>('');
 
@@ -59,7 +63,7 @@ export const ReportIssueCenter: React.FC = () => {
 
     // ── QR Scan handler ───────────────────────────────────────────────────────
     const handleQRDetected = (result: QRResult) => {
-        setPrefillLocation(result.location);
+        setPrefillRoomId(result.roomId);
         setPrefillCategory(result.category);
         setPrefillDescription(result.description);
     };
@@ -77,6 +81,7 @@ export const ReportIssueCenter: React.FC = () => {
             // 2. Build JSON payload
             const payload = {
                 room_id:     data.room_id,
+                equipment_id: data.equipment_id,
                 type:        CATEGORY_TO_TYPE[data.category],
                 description: data.description,
                 severity:    data.severity,
@@ -88,13 +93,14 @@ export const ReportIssueCenter: React.FC = () => {
 
             // 4. Build success display data
             const categoryLabels: Record<IssueCategory, string> = {
-                electrical: 'Electrical',
-                plumbing:   'Plumbing',
-                it:         'IT Device',
-                furniture:  'Furniture',
+                equipment: 'Equipment',
+                infrastructure: 'Infrastructure',
                 other:      'Other',
             };
-            const subject = `${categoryLabels[data.category]} Issue — ${data.location}`;
+            
+            const room = rooms.find(r => r._id === data.room_id);
+            const locationStr = room ? room.name : 'Unknown Location';
+            const subject = `${categoryLabels[data.category]} Issue — ${locationStr}`;
             const today   = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
 
             setReportId(`#REP-${Date.now().toString().slice(-6)}`);
@@ -122,7 +128,7 @@ export const ReportIssueCenter: React.FC = () => {
 
     const handleSubmitAnother = () => {
         setShowSuccess(false);
-        setPrefillLocation('');
+        setPrefillRoomId('');
         setPrefillCategory(undefined);
         setPrefillDescription('');
     };
@@ -131,7 +137,7 @@ export const ReportIssueCenter: React.FC = () => {
 
     return (
         <div className="w-full">
-            <main className="pt-32 md:pt-36 pb-10 px-4 sm:px-6 w-full max-w-[90vw] xl:max-w-4xl mx-auto flex-1 flex flex-col overflow-hidden">
+            <main className="pt-6 sm:pt-8 pb-10 px-4 sm:px-6 w-full max-w-[90vw] xl:max-w-4xl mx-auto flex-1 flex flex-col overflow-hidden">
                 <div className="w-full">
                     <ReportHeader />
 
@@ -139,22 +145,23 @@ export const ReportIssueCenter: React.FC = () => {
                     <QuickScanReport onQRDetected={handleQRDetected} />
 
                     {/* Divider */}
-                    <div className="flex items-center gap-[1rem] mb-[2rem]">
-                        <div className="flex-grow h-px bg-slate-300 dark:bg-slate-700/50" />
-                        <span className="text-[0.625rem] font-bold text-slate-400 uppercase tracking-widest px-[0.5rem]">
+                    <div className="flex items-center gap-4 mb-8">
+                        <div className="grow h-px bg-slate-300 dark:bg-slate-700/50" />
+                        <span className="text-[0.625rem] font-bold text-slate-400 uppercase tracking-widest px-2">
                             Or create manual request
                         </span>
-                        <div className="flex-grow h-px bg-slate-300 dark:bg-slate-700/50" />
+                        <div className="grow h-px bg-slate-300 dark:bg-slate-700/50" />
                     </div>
 
                     {/* Manual form */}
                     <ReportManualForm
-                        key={`${prefillLocation}-${prefillCategory}`}
-                        prefillLocation={prefillLocation}
+                        key={`${prefillRoomId}-${prefillCategory}`}
+                        prefillRoomId={prefillRoomId}
                         prefillCategory={prefillCategory}
                         prefillDescription={prefillDescription}
                         onSubmit={handleFormSubmit}
                         isSubmitting={isSubmitting}
+                        rooms={rooms}
                     />
 
                     {/* Recent reports — real data from store */}
@@ -162,13 +169,14 @@ export const ReportIssueCenter: React.FC = () => {
                 </div>
             </main>
 
+
             {/* ── Success Modal ─────────────────────────────────────────────── */}
             {showSuccess && reportId && (
                 <div
-                    className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm px-4"
+                    className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm px-4"
                     onClick={e => { if (e.target === e.currentTarget) setShowSuccess(false); }}
                 >
-                    <div className="glass-card rounded-[2rem] p-8 w-full max-w-sm shadow-2xl shadow-[#1E2B58]/20 relative animate-in fade-in zoom-in-95 duration-200">
+                    <div className="dashboard-card rounded-4xl p-8 w-full max-w-sm shadow-2xl shadow-[#1E2B58]/20 relative animate-in fade-in zoom-in-95 duration-200">
                         {/* Close */}
                         <button
                             onClick={() => setShowSuccess(false)}

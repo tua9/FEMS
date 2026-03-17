@@ -1,5 +1,6 @@
 import React from 'react';
 import { Download } from 'lucide-react';
+import { PageHeader } from '@/components/shared/PageHeader';
 
 export type Period = 'week' | 'month' | 'semester';
 
@@ -17,20 +18,12 @@ interface StatsHeaderProps {
 
 export const StatsHeader: React.FC<StatsHeaderProps> = ({ activePeriod, onPeriodChange, onExport }) => {
     return (
-        <header className="mb-[2.5rem]">
-            <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
-                {/* Title */}
-                <div>
-                    <h2 className="text-[2.25rem] sm:text-[2.5rem] md:text-[3rem] lg:text-[3.5rem] font-extrabold text-[#1E2B58] dark:text-white mb-[0.5rem] tracking-tight leading-tight">
-                        Resource Efficiency by Subject
-                    </h2>
-                    <p className="text-slate-600 dark:text-slate-400 text-[1rem] sm:text-[1.125rem] leading-relaxed max-w-2xl">
-                        Analyze how resources are distributed and utilized across different course tracks.
-                    </p>
-                </div>
-
-                {/* Controls */}
-                <div className="flex flex-col sm:items-end gap-3 shrink-0 mt-1">
+        <div className="mb-10">
+            <PageHeader
+                title="Resource Efficiency by Subject"
+                subtitle="Analyze how resources are distributed and utilized across different course tracks."
+            />
+            <div className="flex flex-col sm:flex-row sm:items-center justify-center gap-3 mt-4">
                     {/* Period toggle */}
                     <div className="flex items-center bg-white/50 dark:bg-slate-800/40 border border-[#1E2B58]/10 dark:border-white/10 rounded-full p-1 gap-0.5">
                         {PERIODS.map(p => (
@@ -57,7 +50,6 @@ export const StatsHeader: React.FC<StatsHeaderProps> = ({ activePeriod, onPeriod
                         Export Report
                     </button>
                 </div>
-            </div>
-        </header>
+        </div>
     );
 };

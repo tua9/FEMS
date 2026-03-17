@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { PageHeader } from "@/components/shared/PageHeader";
 import {
   X,
   ArrowRight,
@@ -18,6 +19,7 @@ import { useBuildingStore } from "@/stores/useBuildingStore";
 import { useBorrowRequestStore } from "@/stores/useBorrowRequestStore";
 import { useRoomStore } from "@/stores/useRoomStore";
 import type { Equipment } from "@/types/equipment";
+import { getTomorrowLocal } from "@/utils/dateUtils";
 
 // Category id → EquipmentType (or 'all')
 // Must match the `category` values stored in MongoDB
@@ -124,7 +126,7 @@ export const EquipmentCatalog: React.FC = () => {
   };
 
   // ── Borrow modal ──────────────────────────────────────────────────────────
-  const tomorrow = new Date(Date.now() + 86_400_000).toISOString().split("T")[0];
+  const tomorrow = getTomorrowLocal();
 
   const openBorrowModal = (item: Equipment) => {
     setBorrowingItem(item);
@@ -254,16 +256,12 @@ export const EquipmentCatalog: React.FC = () => {
 
   return (
     <div className="w-full">
-      <main className="mx-auto flex w-full max-w-[90vw] flex-1 flex-col px-4 pt-32 pb-10 sm:px-6 md:pt-36 xl:max-w-7xl">
+      <main className="mx-auto flex w-full max-w-[90vw] flex-1 flex-col px-4 pt-6 sm:pt-8 pb-10 sm:px-6 xl:max-w-7xl">
         {/* Header */}
-        <section className="mb-[2.5rem] md:mb-[3.5rem]">
-          <h2 className="mb-[0.75rem] text-[2.25rem] leading-tight font-extrabold text-[#1E2B58] sm:text-[2.75rem] md:text-[3.5rem] dark:text-white">
-            Equipment Catalog
-          </h2>
-          <p className="max-w-2xl text-[1rem] font-medium text-[#1E2B58]/60 sm:text-[1.125rem] dark:text-white/60">
-            Explore and reserve university resources with our enhanced Lecturer Portal.
-          </p>
-        </section>
+        <PageHeader
+          title="Equipment Catalog"
+          subtitle="Explore and reserve university resources with our enhanced Lecturer Portal."
+        />
 
         {/* Filter bar */}
         <EquipmentFilter

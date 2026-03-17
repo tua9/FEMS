@@ -53,7 +53,7 @@ export const ApprovalFilter: React.FC<ApprovalFilterProps> = ({
     return (
         <div className="mb-[2rem] md:mb-[3rem]">
             {/* Search bar row */}
-            <div className="flex flex-col md:flex-row items-stretch md:items-center bg-white/50 dark:bg-slate-800/40 border border-[#1E2B58]/5 dark:border-white/10 rounded-[1.5rem] md:rounded-full pl-[1.5rem] md:pl-[2rem] pr-[0.5rem] py-[0.5rem] gap-[1rem] shadow-[0_8px_32px_0_rgba(30,43,88,0.03)] backdrop-blur-md">
+            <div className="flex flex-col md:flex-row items-stretch md:items-center dashboard-card rounded-3xl md:rounded-full pl-6 md:pl-8 pr-2 py-2 gap-4">
                 {/* Search */}
                 <div className="flex-1 flex items-center gap-[0.75rem] py-[0.5rem] md:py-0">
                     <Search className="w-[1.25rem] h-[1.25rem] text-[#1E2B58]/40 dark:text-white/40 shrink-0" />
@@ -103,7 +103,7 @@ export const ApprovalFilter: React.FC<ApprovalFilterProps> = ({
 
             {/* Filter panel */}
             {showPanel && (
-                <div className="mt-3 glass-card rounded-[1.5rem] p-5 md:p-6 flex flex-col gap-5 animate-in fade-in slide-in-from-top-2 duration-200">
+                <div className="mt-3 dashboard-card rounded-3xl p-5 md:p-6 flex flex-col gap-5 animate-in fade-in slide-in-from-top-2 duration-200">
                     {/* Status filter */}
                     <div className="flex flex-col gap-2.5">
                         <p className="text-[0.625rem] font-black uppercase tracking-[0.2em] text-[#1E2B58]/50 dark:text-white/40">

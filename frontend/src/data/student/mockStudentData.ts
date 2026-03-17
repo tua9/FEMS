@@ -151,7 +151,7 @@ export const STUDENT_UPCOMING_ITEMS: StudentUpcomingItem[] = MY_BORROW_REQUESTS
       id: idx + 1,
       title: equip?.name ?? 'Equipment',
       due: daysLeft === 1 ? 'Due tomorrow' : `Due in ${daysLeft} days`,
-      sku: equip?.qr_code ?? equip?._id ?? '',
+      sku: equip?.code ?? equip?._id ?? '',
       route: '/student/borrow-history',
     };
   });
@@ -193,7 +193,7 @@ export const STUDENT_ALL_EQUIPMENT: EquipmentItem[] = MOCK_EQUIPMENT.map(eq => {
   return {
     id: eq._id,
     title: eq.name,
-    sku: eq.qr_code ?? eq._id,
+    sku: eq.code ?? eq._id,
     location: room?.name ?? 'Storage',
     locationKey: (eq.room_id ? LOCATION_KEY_MAP[eq.room_id] : 'gamma') ?? 'gamma',
     type: eq.category as EquipmentItem['type'],

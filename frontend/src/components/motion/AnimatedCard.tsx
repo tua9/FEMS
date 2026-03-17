@@ -58,7 +58,6 @@ export const AnimatedCard: React.FC<AnimatedCardProps> = ({
       whileTap={interactive && !expanded ? { scale: 0.98 } : undefined}
       onClick={onClick}
       className={clsx(
-        "will-change-transform",
         interactive && !expanded && "cursor-pointer",
         expanded &&
           "fixed inset-0 z-50 m-auto max-h-[90vh] max-w-3xl overflow-auto rounded-3xl shadow-2xl",

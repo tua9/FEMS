@@ -1,11 +1,44 @@
 import { useTasks } from '@/hooks/technician/useTasks';
-import { MockTask } from '@/data/technician/mockTasks';
+import type { MockTask } from '@/data/technician/mockTasks';
+import type { Ticket } from '@/data/technician/mockTickets';
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import TicketDetailModal from './TicketDetailModal';
-import ConfirmRejectModal  from '@/components/technician/common/ConfirmRejectModal';
-import ConfirmApproveModal from '@/components/technician/common/ConfirmApproveModal';
+import TicketViewModal    from '@/components/technician/tickets/TicketViewModal';
+import TicketApproveModal from '@/components/technician/tickets/TicketApproveModal';
+import TicketRejectModal  from '@/components/technician/tickets/TicketRejectModal';
 
+// ── Convert MockTask → Ticket (shape expected by the shared modals) ────────────
+function taskToTicket(task: MockTask): Ticket {
+  return {
+    id:            task.id,
+    equipment:     task.title,
+    equipmentType: task.displayCategory ?? task.category,
+    room:          `${task.location.building}, ${task.location.room}`,
+    reporter:      {
+      name:     task.reportedBy.name,
+      initials: task.reportedBy.name.split(' ').slice(0, 2).map((w) => w[0]).join('').toUpperCase(),
+    },
+    priority:  task.priority as Ticket['priority'],
+    status:    task.status   as Ticket['status'],
+    createdAt: task.createdAt,
+  };
+}
+
+// ── Priority pill styling (same as TicketTable) ───────────────────────────────
+const getPriorityStyle = (priority: string) => {
+  const map: Record<string, string> = {
+    Urgent: 'bg-rose-100 text-rose-600',
+    High:   'bg-rose-100 text-rose-600',
+    Medium: 'bg-amber-100 text-amber-600',
+    Low:    'bg-emerald-100 text-emerald-600',
+  };
+  return map[priority] ?? map.Medium;
+};
+
+const getPriorityLabel = (priority: string) =>
+  priority === 'Medium' ? 'Med' : priority;
+
+// ── Category icon map ─────────────────────────────────────────────────────────
 const getCategoryDisplay = (category: string, displayCategory?: string) => {
   const label = displayCategory ?? category;
   const map: Record<string, { icon: string; color: string }> = {
@@ -22,40 +55,33 @@ const getCategoryDisplay = (category: string, displayCategory?: string) => {
   return { ...style, label };
 };
 
-const getPriorityStyle = (priority: string) => {
-  const map: Record<string, string> = {
-    Urgent: 'bg-rose-100 text-rose-600',
-    High:   'bg-rose-100 text-rose-600',
-    Medium: 'bg-amber-100 text-amber-600',
-    Low:    'bg-emerald-100 text-emerald-600',
-  };
-  return map[priority] ?? map.Medium;
-};
-
-const getPriorityLabel = (priority: string) => {
-  return priority === 'Medium' ? 'Med' : priority;
-};
+// ── Modal state type ──────────────────────────────────────────────────────────
+type ModalKind = 'view' | 'approve' | 'reject' | null;
 
 const TaskQueue: React.FC = () => {
   const navigate = useNavigate();
-  const [currentPage,   setCurrentPage]   = useState(1);
-  const [selectedTask,  setSelectedTask]  = useState<MockTask | null>(null);
-  const [rejectTarget,  setRejectTarget]  = useState<MockTask | null>(null);
-  const [approveTarget, setApproveTarget] = useState<MockTask | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [modal,        setModal]       = useState<ModalKind>(null);
+  const [selected,     setSelected]    = useState<MockTask | null>(null);
   const { tasks, loading } = useTasks({});
 
   const itemsPerPage = 3;
-  const totalCount = tasks.length;
-  const totalPages = Math.max(1, Math.ceil(totalCount / itemsPerPage));
+  const totalCount  = tasks.length;
+  const totalPages  = Math.max(1, Math.ceil(totalCount / itemsPerPage));
   const displayTasks: MockTask[] = tasks.slice(
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage,
   ) as MockTask[];
 
+  const open  = (kind: ModalKind, task: MockTask) => { setSelected(task); setModal(kind); };
+  const close = () => { setModal(null); setSelected(null); };
+
+  const ticket = selected ? taskToTicket(selected) : null;
+
   return (
     <>
-    <div className="glass-card rounded-3xl shadow-sm overflow-hidden">
-      {/* Header */}
+    <div className="dashboard-card rounded-3xl overflow-hidden">
+      {/* ── Header ── */}
       <div className="px-8 py-6 border-b border-white/20 flex justify-between items-center">
         <h3 className="text-sm font-bold text-[#1A2B56] dark:text-white uppercase tracking-widest">
           Active Work Orders
@@ -68,34 +94,30 @@ const TaskQueue: React.FC = () => {
         </button>
       </div>
 
-      {/* Table */}
+      {/* ── Table ── */}
       <div className="overflow-x-auto">
         <table className="w-full text-left table-fixed">
           <colgroup>
-            <col style={{ width: '13%' }} />  {/* Ticket ID */}
-            <col style={{ width: '26%' }} />  {/* Equipment & Location */}
-            <col style={{ width: '17%' }} />  {/* Issue */}
-            <col style={{ width: '10%' }} />  {/* Priority */}
-            <col style={{ width: '12%' }} />  {/* Status */}
-            <col style={{ width: '22%' }} />  {/* Actions */}
+            <col style={{ width: '13%' }} />
+            <col style={{ width: '26%' }} />
+            <col style={{ width: '17%' }} />
+            <col style={{ width: '10%' }} />
+            <col style={{ width: '12%' }} />
+            <col style={{ width: '22%' }} />
           </colgroup>
           <thead>
             <tr
               style={{
-                background: 'rgba(26,43,86,0.06)',
-                borderTop: '1px solid rgba(26,43,86,0.08)',
-                borderBottom: '1px solid rgba(26,43,86,0.10)',
+                background:    'rgba(26,43,86,0.06)',
+                borderTop:     '1px solid rgba(26,43,86,0.08)',
+                borderBottom:  '1px solid rgba(26,43,86,0.10)',
               }}
             >
               {[
-                { label: 'Ticket ID',            align: '' },
-                { label: 'Equipment & Location', align: '' },
-                { label: 'Issue',                align: '' },
-                { label: 'Priority',             align: '' },
-                { label: 'Status',               align: '' },
-                { label: 'Actions',              align: 'text-right' },
-              ].map(({ label, align }) => (
-                <th key={label} className={`px-8 py-4 ${align}`}>
+                'Ticket ID', 'Equipment & Location', 'Issue',
+                'Priority',  'Status',               'Actions',
+              ].map((label, i) => (
+                <th key={label} className={`px-8 py-4 ${i === 5 ? 'text-right' : ''}`}>
                   <span className="inline-flex items-center gap-1.5 text-[11px] font-extrabold text-[#1A2B56] dark:text-blue-200 uppercase tracking-[0.15em]">
                     {label}
                   </span>
@@ -103,21 +125,25 @@ const TaskQueue: React.FC = () => {
               ))}
             </tr>
           </thead>
+
           <tbody className="text-sm">
             {loading ? (
               [...Array(3)].map((_, i) => (
                 <tr key={i} className="border-b border-white/5">
                   {[...Array(6)].map((_, j) => (
                     <td key={j} className="px-8 py-5">
-                      <div className="h-4 bg-white/30 rounded-lg animate-pulse"></div>
+                      <div className="h-4 bg-white/30 rounded-lg animate-pulse" />
                     </td>
                   ))}
                 </tr>
               ))
             ) : (
               displayTasks.map((task, idx) => {
-                const cat = getCategoryDisplay(task.category, task.displayCategory);
+                const cat    = getCategoryDisplay(task.category, task.displayCategory);
                 const isLast = idx === displayTasks.length - 1;
+                const isPending   = task.status === 'Pending';
+                const isCompleted = task.status === 'Completed';
+
                 return (
                   <tr
                     key={task.id}
@@ -141,7 +167,7 @@ const TaskQueue: React.FC = () => {
                     {/* Issue */}
                     <td className="px-8 py-5">
                       <div className="flex items-center gap-2">
-                        <span className={`material-symbols-outlined text-sm flex-shrink-0 ${cat.color}`}>
+                        <span className={`material-symbols-outlined text-sm shrink-0 ${cat.color}`}>
                           {cat.icon}
                         </span>
                         <span className="font-bold text-slate-600 dark:text-slate-300 truncate">{cat.label}</span>
@@ -157,48 +183,47 @@ const TaskQueue: React.FC = () => {
 
                     {/* Status */}
                     <td className="px-8 py-5">
-                      {task.status === 'Completed' ? (
+                      {isCompleted ? (
                         <span className="flex items-center gap-1.5 text-emerald-600 font-bold text-[10px]">
-                          <span className="w-1 h-1 rounded-full bg-emerald-500"></span> COMPLETED
+                          <span className="w-1 h-1 rounded-full bg-emerald-500" /> COMPLETED
                         </span>
                       ) : (
                         <span className="flex items-center gap-1.5 font-bold text-[10px]" style={{ color: '#b45309' }}>
-                          <span className="w-1 h-1 rounded-full" style={{ background: '#f59e0b' }}></span> PENDING
+                          <span className="w-1 h-1 rounded-full" style={{ background: '#f59e0b' }} /> PENDING
                         </span>
                       )}
                     </td>
 
-                    {/* Actions */}
+                    {/* ── Actions — mirror Tickets / Pending tab exactly ── */}
                     <td className="px-8 py-5 text-right">
-                      {task.status === 'Completed' ? (
+                      <div className="flex justify-end gap-2">
+                        {/* View — always shown */}
                         <button
-                          onClick={() => setSelectedTask(task)}
-                          className="px-4 py-2 rounded-xl bg-slate-200/50 dark:bg-slate-700/50 text-slate-500 dark:text-slate-400 text-[10px] font-bold hover:bg-slate-200 dark:hover:bg-slate-700 transition-all"
+                          onClick={() => open('view', task)}
+                          className="px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300 text-xs font-bold hover:bg-white dark:hover:bg-slate-700 transition-all"
                         >
-                          Details
+                          View
                         </button>
-                      ) : (
-                        <div className="flex justify-end gap-2">
-                          <button
-                            onClick={() => setSelectedTask(task)}
-                            className="px-4 py-2 rounded-xl bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 text-[10px] font-bold hover:bg-slate-200 dark:hover:bg-slate-600 transition-all"
-                          >
-                            Details
-                          </button>
-                          <button
-                            onClick={() => setRejectTarget(task)}
-                            className="px-4 py-2 rounded-xl border border-rose-200 text-rose-500 text-[10px] font-bold hover:bg-rose-50 transition-all"
-                          >
-                            Reject
-                          </button>
-                          <button
-                            onClick={() => setApproveTarget(task)}
-                            className="px-4 py-2 rounded-xl bg-[#1A2B56] text-white text-[10px] font-bold hover:opacity-90 transition-all shadow-md shadow-[#1A2B56]/20"
-                          >
-                            Approve
-                          </button>
-                        </div>
-                      )}
+
+                        {isPending && (
+                          <>
+                            {/* Reject */}
+                            <button
+                              onClick={() => open('reject', task)}
+                              className="px-4 py-2 rounded-xl border border-rose-200 text-rose-500 text-xs font-bold hover:bg-rose-50 transition-all"
+                            >
+                              Reject
+                            </button>
+                            {/* Approve */}
+                            <button
+                              onClick={() => open('approve', task)}
+                              className="px-4 py-2 rounded-xl bg-[#232F58] text-white text-xs font-bold hover:opacity-90 shadow-sm transition-all"
+                            >
+                              Approve
+                            </button>
+                          </>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 );
@@ -208,7 +233,7 @@ const TaskQueue: React.FC = () => {
         </table>
       </div>
 
-      {/* Pagination */}
+      {/* ── Pagination ── */}
       <div className="px-8 py-5 bg-white/10 dark:bg-black/10 flex items-center justify-between text-[10px] font-bold text-slate-400 uppercase tracking-widest">
         <span>Showing {Math.min(itemsPerPage, displayTasks.length)} of {totalCount} Tickets</span>
         <div className="flex items-center gap-2">
@@ -243,36 +268,34 @@ const TaskQueue: React.FC = () => {
       </div>
     </div>
 
-    {/* Ticket detail modal */}
-    {selectedTask && (
-      <TicketDetailModal
-        task={selectedTask}
-        onClose={() => setSelectedTask(null)}
+    {/* ── Shared Ticket modals (same as Tickets / Pending tab) ── */}
+    {ticket && modal === 'view' && (
+      <TicketViewModal
+        ticket={ticket}
+        onClose={close}
+        onApprove={() => { close(); open('approve', selected!); }}
+        onReject={() =>  { close(); open('reject',  selected!); }}
       />
     )}
 
-    {/* Reject confirmation modal */}
-    {rejectTarget && (
-      <ConfirmRejectModal
-        ticketId={rejectTarget.id}
-        ticketTitle={rejectTarget.title}
-        imageUrl={rejectTarget.imageUrl}
-        onCancel={() => setRejectTarget(null)}
-        onConfirm={(_reason) => {
-          // TODO: call API with reason
-          setRejectTarget(null);
+    {ticket && modal === 'approve' && (
+      <TicketApproveModal
+        ticket={ticket}
+        onClose={close}
+        onConfirm={(_id) => {
+          // TODO: call API
+          close();
         }}
       />
     )}
 
-    {/* Approve confirmation modal */}
-    {approveTarget && (
-      <ConfirmApproveModal
-        task={approveTarget}
-        onCancel={() => setApproveTarget(null)}
-        onConfirm={() => {
-          // TODO: call API to approve
-          setApproveTarget(null);
+    {ticket && modal === 'reject' && (
+      <TicketRejectModal
+        ticket={ticket}
+        onClose={close}
+        onConfirm={(_id) => {
+          // TODO: call API
+          close();
         }}
       />
     )}

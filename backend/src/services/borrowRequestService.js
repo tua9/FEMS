@@ -105,7 +105,7 @@ const getAllBorrowRequests = async () => {
     .populate('user_id', 'username displayName email')
     .populate('equipment_id')
     .populate('room_id')
-    .populate('approved_by', 'username displayName')
+    .populate('processed_by', 'username displayName')
 }
 
 const getBorrowRequestById = async (id) => {
@@ -113,7 +113,7 @@ const getBorrowRequestById = async (id) => {
     .populate('user_id', 'username displayName email')
     .populate('equipment_id')
     .populate('room_id')
-    .populate('approved_by', 'username displayName')
+    .populate('processed_by', 'username displayName')
 
   if (!borrowRequest) {
     throw new ApiError(StatusCodes.NOT_FOUND, 'Borrow request not found')
@@ -122,10 +122,10 @@ const getBorrowRequestById = async (id) => {
 }
 
 const updateBorrowRequest = async (id, body) => {
-  const { status, approved_by, note, return_date } = body
+  const { status, processed_by, note, return_date } = body
   const borrowRequest = await BorrowRequest.findByIdAndUpdate(
     id,
-    { status, approved_by, note, return_date },
+    { status, processed_by, note, return_date },
     { new: true, runValidators: true },
   )
 
@@ -137,42 +137,50 @@ const updateBorrowRequest = async (id, body) => {
 
 const getPersonalBorrowRequests = async (userId) => {
   return await BorrowRequest.find({ user_id: userId })
-    .populate('equipment_id', 'name category qr_code')
+    .populate('equipment_id', '_id name category status available')
     .populate('room_id', 'name type')
-    .populate('approved_by', 'displayName')
+    .populate('processed_by', 'displayName')
 }
 
-const getPendingBorrowRequests = async () => {
-  return await BorrowRequest.find({ status: 'pending' })
-    .populate('user_id', 'username displayName email role')
-    .populate({
-      path: 'equipment_id',
-      select: 'name category qr_code room_id',
-      populate: { path: 'room_id', select: 'name' }
-    })
-    .populate({
-      path: 'room_id',
-      select: 'name type building_id floor',
-      populate: { path: 'building_id', select: 'name' }
-    })
-}
+const cancelBorrowRequest = async (id, userId, decisionNote) => {
+  if (!decisionNote || !decisionNote.trim()) {
+    throw new ApiError(
+      StatusCodes.UNPROCESSABLE_ENTITY,
+      'Lý do hủy (decision_note) là bắt buộc',
+    )
+  }
 
-const cancelBorrowRequest = async (id, userId) => {
-  const request = await BorrowRequest.findOne({ _id: id, user_id: userId })
+  console.log(`🔍 [CANCEL SERVICE] Attempting findById with ID: "${id}" (length: ${id?.length})`)
+  const request = await BorrowRequest.findById(id?.trim())
+  console.log('🔍 [CANCEL SERVICE] findById result:', request ? `found _id=${request._id}` : 'NOT FOUND')
   if (!request) {
     throw new ApiError(StatusCodes.NOT_FOUND, 'Borrow request not found')
   }
+
+  // Ownership check using string comparison to avoid ObjectId type mismatch
+  console.log('🔍 [CANCEL SERVICE] request.user_id:', request.user_id?.toString(), '| incoming userId:', userId?.toString())
+  console.log('🔍 [CANCEL SERVICE] match:', request.user_id?.toString() === userId?.toString())
+  if (request.user_id.toString() !== userId.toString()) {
+    throw new ApiError(StatusCodes.FORBIDDEN, 'You can only cancel your own requests')
+  }
+
+  console.log('🔍 [CANCEL SERVICE] request.status:', request.status)
   if (request.status !== 'pending') {
     throw new ApiError(
       StatusCodes.BAD_REQUEST,
       'Only pending requests can be cancelled',
     )
   }
-  await request.deleteOne()
-  return { message: 'Borrow request cancelled' }
+
+  request.status = 'cancelled'
+  request.decision_note = decisionNote.trim()
+  request.cancelled_at = new Date()
+  request.cancelled_by = userId
+  await request.save()
+  return { message: 'Borrow request cancelled', request }
 }
 
-const approveBorrowRequest = async (id, approverId) => {
+const approveBorrowRequest = async (id, approverId, decisionNote) => {
   const request = await BorrowRequest.findById(id)
   if (!request) {
     throw new ApiError(StatusCodes.NOT_FOUND, 'Borrow request not found')
@@ -198,7 +206,9 @@ const approveBorrowRequest = async (id, approverId) => {
 
   // 2. Update Request Status
   request.status = 'approved'
-  request.approved_by = approverId
+  request.processed_at = new Date()
+  request.processed_by = approverId
+  if (decisionNote) request.decision_note = decisionNote.trim()
   await request.save()
 
   return { message: 'Borrow request approved and asset locked', request }
@@ -214,6 +224,25 @@ const handoverBorrowRequest = async (id) => {
       StatusCodes.BAD_REQUEST,
       'Request must be approved first',
     )
+  }
+
+  // Handle equipment status if this is an equipment-type request
+  if (request.type === 'equipment' && request.equipment_id) {
+    const equipment = await Equipment.findById(request.equipment_id)
+    if (!equipment) {
+      throw new ApiError(StatusCodes.NOT_FOUND, 'Equipment not found')
+    }
+    if (!equipment.available) {
+      throw new ApiError(
+        StatusCodes.BAD_REQUEST,
+        'Equipment is already borrowed or unavailable',
+      )
+    }
+
+    // Update equipment availability
+    equipment.available = false
+    equipment.borrowed_by = request.user_id
+    await equipment.save()
   }
 
   request.status = 'handed_over'
@@ -268,6 +297,17 @@ const rejectBorrowRequest = async (id, approverId, reason) => {
   }
   await request.save()
   return { message: 'Borrow request rejected', request }
+}
+
+const getPendingBorrowRequests = async () => {
+  return await BorrowRequest.find({ status: 'pending' })
+    .populate('user_id', 'username displayName email')
+    .populate('equipment_id', 'name category qr_code status available')
+    .populate({
+      path: 'room_id',
+      select: 'name type building_id',
+      populate: { path: 'building_id', select: 'name' },
+    })
 }
 
 const getApprovedByMe = async (approverId) => {

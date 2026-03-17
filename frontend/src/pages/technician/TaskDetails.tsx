@@ -44,7 +44,7 @@ const TaskDetails: React.FC = () => {
   }
 
   return (
-    <div className="max-w-5xl mx-auto px-6 space-y-8">
+    <div className="max-w-5xl mx-auto px-6 pt-6 sm:pt-8 pb-16 space-y-8">
       <TaskHeader task={task} />
 
       <section className="glass-main rounded-4xl p-6 md:p-10 shadow-2xl space-y-8">

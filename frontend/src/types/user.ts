@@ -8,6 +8,8 @@ export interface User {
   displayName: string;
   avatarUrl?: string;
   avatarId?: string;
+  phone?: string;
+  dob?: string;
   createdAt?: string;
   updatedAt?: string;
 }

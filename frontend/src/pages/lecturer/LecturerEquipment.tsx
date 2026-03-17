@@ -1,20 +1,16 @@
 import React from "react";
 import { EQUIPMENT } from "./constants";
+import { PageHeader } from "@/components/shared/PageHeader";
 
 const LecturerEquipment: React.FC = () => {
   return (
-    <div className="animate-in fade-in mx-auto max-w-[1400px] px-6 pt-32 pb-10 duration-500">
-      <header className="mb-10">
-        <h2 className="mb-3 text-5xl font-extrabold text-[#1E2B58] dark:text-white">
-          Equipment Catalog
-        </h2>
-        <p className="text-lg font-medium text-slate-500 dark:text-slate-400">
-          Explore and reserve university resources with our enhanced Lecturer
-          Portal.
-        </p>
-      </header>
+    <div className="animate-in fade-in mx-auto max-w-350 px-6 pt-6 sm:pt-8 pb-10 duration-500">
+      <PageHeader
+        title="Equipment Catalog"
+        subtitle="Explore and reserve university resources with our enhanced Lecturer Portal."
+      />
 
-      <section className="extreme-glass mb-8 flex flex-wrap items-center gap-4 rounded-full px-6 py-2.5">
+      <section className="dashboard-card mb-8 flex flex-wrap items-center gap-4 rounded-full px-6 py-2.5">
         <div className="flex min-w-[300px] flex-1 items-center gap-3">
           <span className="material-symbols-outlined text-[#1E2B58] opacity-40 dark:text-white">
             search
@@ -41,7 +37,7 @@ const LecturerEquipment: React.FC = () => {
       <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
         {EQUIPMENT.map((item) => (
           <div key={item.id} className="flex flex-col gap-6">
-            <div className="glass-card group relative flex aspect-[4/3] items-center justify-center overflow-hidden rounded-[32px] p-8">
+            <div className="dashboard-card group relative flex aspect-4/3 items-center justify-center overflow-hidden rounded-4xl p-8">
               <span
                 className={`absolute top-6 right-6 rounded-full px-3 py-1 text-[9px] font-black tracking-widest uppercase ${
                   item.status === "AVAILABLE"

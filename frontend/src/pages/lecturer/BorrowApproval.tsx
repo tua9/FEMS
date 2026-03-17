@@ -1,5 +1,6 @@
 
 import React, { useState } from 'react';
+import { PageHeader } from '@/components/shared/PageHeader';
 import { PENDING_REQUESTS } from './constants';
 import { RequestStatus } from './types';
 
@@ -75,18 +76,15 @@ const BorrowApproval: React.FC = () => {
   };
 
   return (
-    <div className="pt-32 pb-10 px-6 max-w-[1400px] mx-auto animate-in fade-in duration-500">
-      <header className="mb-12 flex flex-col md:flex-row md:items-end justify-between gap-6">
-        <div>
-          <h2 className="text-4xl md:text-5xl font-extrabold text-[#1E2B58] dark:text-white tracking-tight">
-            Student Request <span className="opacity-50 font-light">/</span> <span className="text-slate-600">Approval Center</span>
-          </h2>
-          <p className="mt-4 text-slate-500 max-w-2xl text-lg leading-relaxed">
-            Review pending equipment and facility borrow requests. All approvals are logged for academic compliance.
-          </p>
-        </div>
-        <div className="flex items-center gap-4">
-          <div className="glass-card px-8 py-5 rounded-3xl flex flex-col items-center justify-center min-w-[150px]">
+    <div className="pt-6 sm:pt-8 pb-10 px-6 max-w-350 mx-auto animate-in fade-in duration-500">
+      <header className="mb-12 flex flex-col md:flex-row md:items-center justify-between gap-6">
+        <PageHeader
+          title="Approval Center"
+          subtitle="Review pending equipment and facility borrow requests. All approvals are logged for academic compliance."
+          className="items-start! text-left! mb-0!"
+        />
+        <div className="flex items-center gap-4 shrink-0">
+          <div className="glass-card px-8 py-5 rounded-3xl flex flex-col items-center justify-center min-w-38">
             <span className="text-4xl font-black text-[#1E2B58] dark:text-white">{requests.length}</span>
             <span className="text-[10px] font-bold uppercase tracking-[0.2em] opacity-50 mt-1">Pending</span>
           </div>

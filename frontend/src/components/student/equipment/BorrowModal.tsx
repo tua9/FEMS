@@ -3,28 +3,34 @@
  * Tách ra từ EquipmentPage để trang page gọn hơn.
  */
 import React, { useState } from "react";
-import { X, ArrowRight, CalendarDays, FileText } from "lucide-react";
+import { X, ArrowRight, CalendarDays, FileText, Clock } from "lucide-react";
 import type { EquipmentItem } from "@/components/shared/equipment";
+import { getNowLocalDateTime } from "@/utils/dateUtils";
 
 interface BorrowModalProps {
   item: EquipmentItem;
   onClose: () => void;
-  onSubmit: (returnDate: string, purpose: string) => void;
+  onSubmit: (borrowDate: string, returnDate: string, purpose: string) => void;
 }
 
 const BorrowModal: React.FC<BorrowModalProps> = ({ item, onClose, onSubmit }) => {
-  const tomorrow = new Date(Date.now() + 86_400_000).toISOString().split("T")[0];
-  const [returnDate, setReturnDate] = useState(tomorrow);
+  const now = getNowLocalDateTime();
+  const [borrowDate, setBorrowDate] = useState(now);
+  const [returnDate, setReturnDate] = useState("");
   const [purpose, setPurpose] = useState("");
   const [formError, setFormError] = useState("");
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!returnDate || !purpose.trim()) {
+    if (!borrowDate || !returnDate || !purpose.trim()) {
       setFormError("Please fill in all fields.");
       return;
     }
-    onSubmit(returnDate, purpose);
+    if (new Date(returnDate) <= new Date(borrowDate)) {
+      setFormError("Return date must be after borrow date.");
+      return;
+    }
+    onSubmit(borrowDate, returnDate, purpose);
   };
 
   return (
@@ -32,7 +38,7 @@ const BorrowModal: React.FC<BorrowModalProps> = ({ item, onClose, onSubmit }) =>
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 px-4 backdrop-blur-sm"
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
-      <div className="glass-card animate-in fade-in zoom-in-95 relative w-full max-w-md rounded-4xl p-8 shadow-2xl shadow-[#1E2B58]/20 duration-200">
+      <div className="dashboard-card animate-in fade-in zoom-in-95 relative w-full max-w-md rounded-4xl p-8 shadow-2xl shadow-[#1E2B58]/20 duration-200">
         {/* Close button */}
         <button
           onClick={onClose}
@@ -59,13 +65,28 @@ const BorrowModal: React.FC<BorrowModalProps> = ({ item, onClose, onSubmit }) =>
         <form onSubmit={handleSubmit} className="flex flex-col gap-5">
           <div className="flex flex-col gap-2">
             <label className="flex items-center gap-2 text-xs font-black tracking-widest text-[#1E2B58]/70 uppercase dark:text-white/60">
-              <CalendarDays className="h-3.5 w-3.5" />
-              Return Date
+              <Clock className="h-3.5 w-3.5" />
+              Borrow Date & Time
             </label>
             <input
-              type="date"
+              type="datetime-local"
               required
-              min={tomorrow}
+              min={now}
+              value={borrowDate}
+              onChange={(e) => setBorrowDate(e.target.value)}
+              className="w-full rounded-2xl border border-white/40 bg-white/40 px-4 py-3 text-sm font-bold text-[#1E2B58] outline-none transition-all focus:ring-2 focus:ring-[#1E2B58]/30 dark:border-slate-700/50 dark:bg-slate-800/50 dark:text-white"
+            />
+          </div>
+
+          <div className="flex flex-col gap-2">
+            <label className="flex items-center gap-2 text-xs font-black tracking-widest text-[#1E2B58]/70 uppercase dark:text-white/60">
+              <CalendarDays className="h-3.5 w-3.5" />
+              Return Date & Time
+            </label>
+            <input
+              type="datetime-local"
+              required
+              min={borrowDate || now}
               value={returnDate}
               onChange={(e) => setReturnDate(e.target.value)}
               className="w-full rounded-2xl border border-white/40 bg-white/40 px-4 py-3 text-sm font-bold text-[#1E2B58] outline-none transition-all focus:ring-2 focus:ring-[#1E2B58]/30 dark:border-slate-700/50 dark:bg-slate-800/50 dark:text-white"

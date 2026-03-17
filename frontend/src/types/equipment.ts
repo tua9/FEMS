@@ -18,7 +18,10 @@ export interface Equipment {
     displayName: string;
     email: string;
   } | string | null;
-  qr_code?: string | null;
+  code?: string | null;
+  imageUrl?: string;
+  description?: string;
+  issueDescription?: string;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -28,4 +31,5 @@ export interface CreateEquipmentPayload {
   category: string;
   status?: EquipmentStatus;
   room_id?: string | null;
+  code?: string | null;
 }

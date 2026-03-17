@@ -103,7 +103,7 @@ const LecturerDashboard: React.FC = () => {
     <PageShell
       title="Welcome, Dr. Alex Rivers"
       subtitle="Here's your academic facility overview for today."
-      topPadding="pt-36"
+      topPadding="pt-6"
       className="pb-20 px-6"
       contentClassName="max-w-350 mx-auto w-full"
     >
@@ -113,7 +113,7 @@ const LecturerDashboard: React.FC = () => {
           <AnimatedListItem key={stat.label}>
             <button
               onClick={() => navigate(stat.route)}
-              className="glass-card group relative flex w-full cursor-pointer items-center gap-5 rounded-4xl p-6 text-left transition-all duration-200 hover:scale-[1.02] hover:shadow-xl"
+              className="dashboard-card group relative flex w-full cursor-pointer items-center gap-5 rounded-4xl p-6 text-left transition-all duration-200 hover:scale-[1.02] hover:shadow-xl"
               title={stat.hint}
             >
               <div className={`absolute top-5 right-5 h-2 w-2 rounded-full ${stat.dot} ${stat.glow}`} />
@@ -134,7 +134,7 @@ const LecturerDashboard: React.FC = () => {
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
         {/* ── Recent Activities ── */}
         <AnimatedSection variant="fade" delay={0.1} className="lg:col-span-2">
-          <div className="glass-card h-full rounded-4xl p-8">
+          <div className="dashboard-card h-full rounded-4xl p-8">
             <div className="mb-8 flex items-center justify-between">
               <h3 className="text-xl font-extrabold text-[#1E2B58] dark:text-white">Recent Activities</h3>
               <button onClick={() => navigate("/lecturer/history")} className="flex items-center gap-1 text-xs font-bold tracking-widest text-[#4f75ff] uppercase hover:underline">
@@ -173,14 +173,14 @@ const LecturerDashboard: React.FC = () => {
 
         {/* ── Upcoming Classes ── */}
         <AnimatedSection variant="slide-up" delay={0.15}>
-          <div className="glass-card flex h-full flex-col rounded-4xl p-8">
+          <div className="dashboard-card flex h-full flex-col rounded-4xl p-8">
             <div className="mb-8 flex items-center justify-between">
               <h3 className="text-xl font-extrabold text-[#1E2B58] dark:text-white">Upcoming Classes</h3>
               <span className="h-2 w-2 animate-pulse rounded-full bg-green-500" />
             </div>
             <div className="flex-1 space-y-3">
               {upcomingClasses.map((session, index) => (
-                <button key={session.id} onClick={() => navigate("/lecturer/calendar")} className={`glass-btn group w-full rounded-2xl p-4 text-left transition-all hover:shadow-md ${index === upcomingClasses.length - 1 && upcomingClasses.length > 2 ? "opacity-60" : ""}`}>
+                <button key={session.id} onClick={() => navigate("/lecturer/calendar")} className={`dashboard-card group w-full rounded-2xl p-4 text-left transition-all hover:shadow-md ${index === upcomingClasses.length - 1 && upcomingClasses.length > 2 ? "opacity-60" : ""}`}>
                   <p className="mb-1.5 text-[10px] font-black tracking-widest text-[#1E2B58]/40 uppercase dark:text-white/40">{session.timeRange}</p>
                   <h4 className="font-bold text-[#1E2B58] transition-colors group-hover:text-[#4f75ff] dark:text-white">{session.title}</h4>
                   <div className="mt-3 flex items-center justify-between">
@@ -194,10 +194,10 @@ const LecturerDashboard: React.FC = () => {
               ))}
             </div>
             <div className="mt-6 grid grid-cols-2 gap-3">
-              <button onClick={() => navigate("/lecturer/report-issue")} className="glass-btn flex items-center justify-center gap-1.5 rounded-2xl py-3 text-[10px] font-black tracking-wider text-[#1E2B58] uppercase dark:text-white">
+              <button onClick={() => navigate("/lecturer/report-issue")} className="dashboard-card flex items-center justify-center gap-1.5 rounded-2xl py-3 text-[10px] font-black tracking-wider text-[#1E2B58] uppercase dark:text-white">
                 <span className="material-symbols-rounded text-sm">report</span> Report Issue
               </button>
-              <button onClick={() => navigate("/lecturer/equipment")} className="glass-btn flex items-center justify-center gap-1.5 rounded-2xl py-3 text-[10px] font-black tracking-wider text-[#1E2B58] uppercase dark:text-white">
+              <button onClick={() => navigate("/lecturer/equipment")} className="dashboard-card flex items-center justify-center gap-1.5 rounded-2xl py-3 text-[10px] font-black tracking-wider text-[#1E2B58] uppercase dark:text-white">
                 <span className="material-symbols-rounded text-sm">laptop_mac</span> Equipment
               </button>
             </div>

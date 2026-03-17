@@ -26,6 +26,12 @@ app.use(express.json({ limit: '50mb' }))
 app.use(cookieParser())
 app.use(cors(corsOptions))
 
+// Global Request Logger for Debugging
+app.use((req, res, next) => {
+  console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`)
+  next()
+})
+
 // API Routes
 app.use('/api/auth', authRoutes)
 app.use('/api/tickets', reportRoutes)

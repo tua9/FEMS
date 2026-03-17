@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import CustomDropdown from '../../shared/CustomDropdown';
-import { BorrowRecord } from '../../../types/admin.types';
+import type { BorrowRequest } from '../../../types/borrowRequest';
 
 interface ReturnCalendarProps {
-    records?: BorrowRecord[];
+    records?: BorrowRequest[];
     onViewDetails?: (recordId: string) => void;
 }
 
@@ -26,25 +26,25 @@ const ReturnCalendar: React.FC<ReturnCalendarProps> = ({ records = [], onViewDet
     // Derive returns from records that match the currently viewed month and year
     const derivedReturns = React.useMemo(() => {
         const map: Record<number, { id: string; name: string; borrower: string; time: string; avatar?: string; status: string }[]> = {};
-        const viewedMonthStr = monthNames[currentMonth].substring(0, 3);
 
         records.forEach(record => {
-            if (record.status === 'Returned' || record.status === 'Rejected') return;
+            if (record.status === 'returned' || record.status === 'rejected') return;
 
-            // Adjusted regex to match any month: "[Month] [Day], [Year]"
-            const regex = new RegExp(`${viewedMonthStr} (\\d+), ${currentYear}`);
-            const match = record.dueDate.match(regex);
-
-            if (match) {
-                const day = parseInt(match[1]);
+            const returnDate = new Date(record.return_date);
+            if (returnDate.getMonth() === currentMonth && returnDate.getFullYear() === currentYear) {
+                const day = returnDate.getDate();
                 if (!map[day]) map[day] = [];
+                
+                const borrower = typeof record.user_id === 'object' ? record.user_id : null;
+                const equipment = typeof record.equipment_id === 'object' ? record.equipment_id : null;
+                const isOverdue = returnDate.getTime() < new Date().getTime();
+
                 map[day].push({
-                    id: record.id,
-                    name: record.equipmentName,
-                    borrower: record.borrowerName,
+                    id: record._id,
+                    name: equipment?.name || 'Unknown Item',
+                    borrower: borrower?.displayName || 'Unknown',
                     time: '04:00 PM', // Fallback time
-                    avatar: record.borrowerAvatar,
-                    status: record.status
+                    status: isOverdue ? 'overdue' : record.status
                 });
             }
         });
@@ -84,7 +84,7 @@ const ReturnCalendar: React.FC<ReturnCalendarProps> = ({ records = [], onViewDet
     const selectedReturns = selectedDay ? derivedReturns[selectedDay] : null;
 
     return (
-        <div className="bg-white/40 dark:bg-slate-800/60 p-8 ambient-shadow border border-white/40 dark:border-white/10 rounded-[32px] backdrop-blur-xl flex flex-col transition-all duration-300">
+        <div className="dashboard-card p-8 rounded-4xl flex flex-col transition-all duration-300">
             {/* Header ... */}
             <div className="flex items-center justify-between mb-6">
                 <div>
@@ -92,7 +92,7 @@ const ReturnCalendar: React.FC<ReturnCalendarProps> = ({ records = [], onViewDet
                         <span className="material-symbols-outlined text-[#1A2B56] dark:text-blue-400">calendar_month</span>
                         Return Schedule
                     </h3>
-                    <div className="glass-card !rounded-[1.25rem] flex items-center mt-1.5">
+                    <div className="dashboard-card rounded-[1.25rem]! flex items-center mt-1.5">
                         <CustomDropdown
                             value={String(currentMonth)}
                             options={monthNames.map((name, idx) => ({ value: String(idx), label: name }))}
@@ -150,7 +150,7 @@ const ReturnCalendar: React.FC<ReturnCalendarProps> = ({ records = [], onViewDet
 
                     const dayReturns = derivedReturns[dayNumber];
                     const hasReturn = !!dayReturns;
-                    const isOverdue = hasReturn && dayReturns.some(r => r.status === 'Overdue');
+                    const isOverdue = hasReturn && dayReturns.some(r => r.status === 'overdue');
 
                     const isSelected = selectedDay === dayNumber;
 

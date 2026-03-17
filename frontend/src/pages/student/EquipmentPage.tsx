@@ -8,6 +8,9 @@ import { EquipmentGrid } from "@/components/shared/equipment/EquipmentGrid";
 import { BorrowedEquipmentGrid } from "@/components/shared/equipment/BorrowedEquipmentGrid";
 import { EquipmentCategories } from "@/components/shared/equipment/EquipmentCategories";
 import { EquipmentFilter } from "@/components/shared/equipment/EquipmentFilter";
+import BorrowModal from "@/components/student/equipment/BorrowModal";
+import HistoryDetailModal, { type ModalItem } from "@/components/student/history/HistoryDetailModal";
+import { toast } from "sonner";
 
 const EquipmentPage: React.FC = () => {
   const navigate = useNavigate();
@@ -30,13 +33,18 @@ const EquipmentPage: React.FC = () => {
     fetchBorrowRequests();
   }, [fetchEquipments, fetchBorrowRequests]);
 
-  // Map trạng thái borrow request
+  // Map trạng thái borrow request (robust lowercase scoring)
   const borrowStatusMap = useMemo(() => {
     const map: Record<string, string> = {};
 
+    // Process all requests, newer first (backend returns DESC)
     borrowRequests.forEach((r) => {
-      if (r.equipment_id?._id) {
-        map[r.equipment_id._id] = r.status;
+      const eqData = r.equipment_id;
+      if (!eqData) return;
+      
+      const eqIdStr = typeof eqData === 'string' ? eqData : eqData._id?.toString();
+      if (eqIdStr && !map[eqIdStr]) {
+        map[eqIdStr] = (r.status || "").trim().toLowerCase();
       }
     });
 
@@ -57,9 +65,10 @@ const EquipmentPage: React.FC = () => {
         if (typeFilter !== "all-types" && item.category !== typeFilter)
           return false;
 
+        const roomNameStr = item.room_id && typeof item.room_id !== 'string' ? item.room_id.name : undefined;
         if (
           locationFilter !== "all-locations" &&
-          item.room_id?.name !== locationFilter
+          roomNameStr !== locationFilter
         )
           return false;
 
@@ -70,25 +79,115 @@ const EquipmentPage: React.FC = () => {
       });
   }, [equipments, searchText, typeFilter, locationFilter, activeCategory]);
 
-  // Equipment đang borrow
+  // Equipment đang borrow (Ultra-robust with fallback)
   const borrowedEquipment = useMemo(() => {
-    const borrowedIds = borrowRequests
-      .map((r) => r.equipment_id?._id)
-      .filter(Boolean) as string[];
+    const activeRequests = borrowRequests.filter((r) => {
+      const s = (r.status || "").trim().toLowerCase();
+      return ["approved", "handed_over"].includes(s);
+    });
 
-    return equipments.filter((e) => borrowedIds.includes(e._id));
+    const borrowedItems: any[] = [];
+    const seenIds = new Set<string>();
+
+    activeRequests.forEach((r) => {
+      const eqData = r.equipment_id;
+      if (!eqData) return;
+
+      const id = typeof eqData === "string" ? eqData : eqData._id?.toString();
+      if (!id || seenIds.has(id)) return;
+
+      // Case 1: Tìm trong danh sách equipment chính
+      const fullEquipment = equipments.find((e) => e._id.toString() === id);
+      if (fullEquipment) {
+        borrowedItems.push(fullEquipment);
+      } else if (typeof eqData !== "string") {
+        // Case 2: Fallback sử dụng data được populate từ chính request
+        borrowedItems.push({
+          ...eqData,
+          _id: id,
+          status: (eqData as any).status || "good",
+          available: false,
+        });
+      }
+      seenIds.add(id);
+    });
+
+    return borrowedItems;
   }, [equipments, borrowRequests]);
 
+  // Pagination Logic (8 items per page = 2 rows x 4)
+  const ITEMS_PER_PAGE = 8;
+  const [currentPage, setCurrentPage] = useState(1);
+
+  // Reset page when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchText, typeFilter, locationFilter, activeCategory]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredEquipment.length / ITEMS_PER_PAGE));
+  const currentEquipmentItems = filteredEquipment.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
+  );
+
+
+  // Map equipment_id → BorrowRequest (for detail modal)
+  const borrowRequestMap = useMemo(() => {
+    const map: Record<string, any> = {};
+    borrowRequests.forEach((r) => {
+      const eqData = r.equipment_id;
+      if (!eqData) return;
+      const eqIdStr = typeof eqData === "string" ? eqData : eqData._id?.toString();
+      if (eqIdStr && !map[eqIdStr]) {
+        map[eqIdStr] = r;
+      }
+    });
+    return map;
+  }, [borrowRequests]);
+
+  const [detailModal, setDetailModal] = useState<ModalItem | null>(null);
+  const [borrowModalItem, setBorrowModalItem] = useState<any>(null);
+  const { createMyBorrowRequest } = useBorrowRequestStore();
+
   const handleBorrowRequest = (item: any) => {
-    navigate(`/borrow/${item._id}`);
+    setBorrowModalItem({
+      title: item.name,
+      sku: _idToSku(item._id),
+      location: item.room_id && typeof item.room_id !== 'string' ? item.room_id.name : "Unknown Location",
+      _id: item._id,
+    });
+  };
+
+  const handleSubmitBorrow = async (borrowDate: string, returnDate: string, purpose: string) => {
+    if (!borrowModalItem) return;
+
+    try {
+      await createMyBorrowRequest({
+        equipment_id: borrowModalItem._id,
+        type: 'equipment',
+        borrow_date: borrowDate,
+        return_date: returnDate,
+        note: purpose,
+      });
+      // Refresh requests to update grid
+      fetchBorrowRequests();
+      setBorrowModalItem(null);
+      toast.success("Borrow request submitted successfully!");
+    } catch (e) {
+      console.error(e);
+      toast.error("Failed to submit borrow request.");
+    }
   };
 
   const handleViewHistory = () => {
-    navigate("/borrow/history");
+    navigate("/student/borrow-history");
   };
 
   const handleItemClick = (item: any) => {
-    navigate(`/equipment/${item._id}`);
+    const borrowRequest = borrowRequestMap[item._id];
+    if (borrowRequest) {
+      setDetailModal({ type: 'borrow', item: borrowRequest });
+    }
   };
 
   return (
@@ -114,8 +213,11 @@ const EquipmentPage: React.FC = () => {
 
         {/* Available Equipment */}
         <EquipmentGrid
-          items={filteredEquipment}
+          items={currentEquipmentItems}
           onBorrowRequest={handleBorrowRequest}
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={setCurrentPage}
         />
 
         {/* Currently Borrowed */}
@@ -129,8 +231,26 @@ const EquipmentPage: React.FC = () => {
         )}
 
       </div>
+      
+      {borrowModalItem && (
+        <BorrowModal
+          item={borrowModalItem}
+          onClose={() => setBorrowModalItem(null)}
+          onSubmit={handleSubmitBorrow}
+        />
+      )}
+      {detailModal && (
+        <HistoryDetailModal
+          modal={detailModal}
+          onClose={() => setDetailModal(null)}
+        />
+      )}
     </PageShell>
   );
 };
+
+function _idToSku(_id: string) {
+  return _id.slice(-6).toUpperCase();
+}
 
 export default EquipmentPage;

@@ -57,6 +57,10 @@ const updateRoom = async (id, body) => {
   return { message: 'Update success', room }
 }
 
+const getRoomsByBuilding = async (buildingId) => {
+  return await Room.find({ building_id: buildingId }).populate('building_id')
+}
+
 const deleteRoom = async (id) => {
   const room = await Room.findByIdAndDelete(id)
   if (!room) {
@@ -197,6 +201,7 @@ const getRoomStatusCenter = async (queries) => {
 export const roomService = {
   createRoom,
   getAllRooms,
+  getRoomsByBuilding,
   getRoomById,
   updateRoom,
   deleteRoom,

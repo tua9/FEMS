@@ -6,25 +6,25 @@ const createReport = async (body) => {
   const { user_id, equipment_id, room_id, type, severity, description, img } = body
 
   const newReport = await Report.create({
-    user_id:      user_id      || null,
+    user_id: user_id || null,
     equipment_id: equipment_id || null,
-    room_id:      room_id      || null,
-    type:         type         || 'other',
-    severity:     severity     || 'medium',
-    description:  description  || null,
-    img:          img          || null,
+    room_id: room_id || null,
+    type: type || 'other',
+    severity: severity || 'medium',
+    description: description || null,
+    img: img || null,
   })
 
   // Populate so frontend gets full room/equipment data immediately
   const populated = await Report.findById(newReport._id)
-    .populate('user_id',      'displayName username email')
+    .populate('user_id', 'displayName username email')
     .populate('equipment_id', 'name category qr_code')
-    .populate('room_id',      'name type')
+    .populate('room_id', 'name type')
 
   return {
-    message:   'Create report success',
+    message: 'Create report success',
     report_id: newReport._id,
-    report:    populated,
+    report: populated,
   }
 }
 
@@ -32,16 +32,24 @@ const getAllReports = async () => {
   return await Report.find()
     .populate('user_id', 'displayName email')
     .populate('equipment_id', 'name category')
-    .populate('room_id', 'name type')
-    .populate('approved_by', 'displayName')
+    .populate({
+      path: 'room_id',
+      select: 'name type building_id',
+      populate: { path: 'building_id', select: 'name' }
+    })
+    .populate('processed_by', 'displayName')
 }
 
 const getReportById = async (id) => {
   const report = await Report.findById(id)
     .populate('user_id', 'displayName email')
     .populate('equipment_id', 'name category')
-    .populate('room_id', 'name type')
-    .populate('approved_by', 'displayName')
+    .populate({
+      path: 'room_id',
+      select: 'name type building_id',
+      populate: { path: 'building_id', select: 'name' }
+    })
+    .populate('processed_by', 'displayName')
 
   if (!report) {
     throw new ApiError(StatusCodes.NOT_FOUND, 'Report not found')
@@ -71,10 +79,29 @@ const deleteReport = async (id) => {
 
 const getPersonalReports = async (userId) => {
   return await Report.find({ user_id: userId })
-    .populate('user_id', 'displayName email')
-    .populate('equipment_id', 'name category qr_code')
-    .populate({ path: 'room_id', select: 'name type floor', populate: { path: 'building_id', select: 'name' } })
-    .populate('approved_by', 'displayName')
+    .populate('equipment_id', 'name category')
+    .populate({
+      path: 'room_id',
+      select: 'name type building_id',
+      populate: { path: 'building_id', select: 'name' }
+    })
+    .populate('processed_by', 'displayName')
+}
+
+const cancelReport = async (id, userId) => {
+  const report = await Report.findOne({ _id: id, user_id: userId })
+  if (!report) {
+    throw new ApiError(StatusCodes.NOT_FOUND, 'Report not found')
+  }
+  if (report.status !== 'pending') {
+    throw new ApiError(
+      StatusCodes.BAD_REQUEST,
+      'Only pending reports can be cancelled',
+    )
+  }
+  report.status = 'cancelled'
+  await report.save()
+  return { message: 'Report cancelled successfully', report }
 }
 
 const updateReportStatus = async (id, status, approverId) => {
@@ -96,7 +123,8 @@ const updateReportStatus = async (id, status, approverId) => {
 
   report.status = status
   if (approverId) {
-    report.approved_by = approverId
+    report.processed_by = approverId
+    report.processed_at = new Date()
   }
 
   await report.save()
@@ -110,5 +138,6 @@ export const reportService = {
   updateReport,
   deleteReport,
   getPersonalReports,
+  cancelReport,
   updateReportStatus,
 }

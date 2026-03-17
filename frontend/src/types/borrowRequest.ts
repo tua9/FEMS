@@ -35,7 +35,8 @@ export interface BorrowRequest {
   room_id?: string | BorrowRequestRoom | null;
   type: BorrowRequestType;
   status: BorrowRequestStatus;
-  approved_by?: string | BorrowRequestUser | null;
+  processed_by?: string | BorrowRequestUser | null;
+  processed_at?: string | null;
   borrow_date: string;
   return_date: string;
   note?: string | null;

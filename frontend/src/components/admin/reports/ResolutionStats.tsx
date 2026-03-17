@@ -1,5 +1,5 @@
 import React from 'react';
-import { DamageReport } from '../../../types/admin.types';
+import type { DamageReport } from '../../../types/admin.types';
 
 interface ResolutionStatsProps {
     reports: DamageReport[];
@@ -26,7 +26,7 @@ const ResolutionStats: React.FC<ResolutionStatsProps> = ({ reports }) => {
     const criticalRate = Math.round((priorities.High / total) * 100);
 
     return (
-        <div className="glass-card dark:!bg-slate-800/80 p-8 border border-white/40 dark:border-white/10 rounded-[40px] bg-white/60 backdrop-blur-[30px] h-full flex flex-col transition-all duration-500">
+        <div className="dashboard-card p-8 rounded-[40px] h-full flex flex-col transition-all duration-500">
             {/* Header */}
             <div className="mb-10">
                 <h4 className="font-extrabold text-[#1A2B56] dark:text-blue-400 text-lg tracking-tight mb-1">Live Analytics</h4>
@@ -54,7 +54,7 @@ const ResolutionStats: React.FC<ResolutionStatsProps> = ({ reports }) => {
                                     </div>
 
                                     {/* Added max-w-[44px] and mx-auto to make the columns slimmer instead of stretching the full width */}
-                                    <div className="w-full max-w-[44px] mx-auto bg-slate-100 dark:bg-slate-700/20 flex-1 flex items-end relative overflow-hidden h-full">
+                                    <div className="w-full max-w-11 mx-auto bg-slate-100 dark:bg-slate-700/20 flex-1 flex items-end relative overflow-hidden h-full">
                                         <div
                                             className={`w-full ${barColor} transition-all duration-1000 ease-out ${hoverColor}`}
                                             style={{ height: `${barHeight}%` }}

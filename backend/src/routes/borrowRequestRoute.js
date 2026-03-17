@@ -15,6 +15,8 @@ import {
 } from '../controllers/borrowRequestController.js'
 import { restrictTo, protectedRoute } from '../middlewares/authMiddlewares.js'
 
+console.log('✅ [ROUTE LOAD] Borrow Request Route Loaded')
+
 const router = express.Router()
 
 router.use(protectedRoute)
@@ -42,8 +44,8 @@ router.post(
   restrictTo('student', 'lecturer', 'technician', 'admin'),
   createBorrowRequest,
 ) // Student specific
-router.delete(
-  '/:id',
+router.patch(
+  '/:id/cancel',
   restrictTo('student', 'lecturer', 'technician', 'admin'),
   cancelBorrowRequest,
 )

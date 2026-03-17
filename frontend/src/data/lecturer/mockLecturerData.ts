@@ -106,7 +106,7 @@ export const LECTURER_ACTIVITIES: LecturerActivity[] = [
     title: 'Equipment Returned',
     subject: MOCK_USERS.find(u => u._id === 'u2')?.displayName ?? 'Student',
     time: '2 hours ago',
-    description: `Asset: ${MOCK_EQUIPMENT.find(e => e._id === 'e1')?.name} (${MOCK_EQUIPMENT.find(e => e._id === 'e1')?.qr_code}) returned in perfect condition.`,
+    description: `Asset: ${MOCK_EQUIPMENT.find(e => e._id === 'e1')?.name} (${MOCK_EQUIPMENT.find(e => e._id === 'e1')?.code}) returned in perfect condition.`,
   },
   {
     id: 'act3',
@@ -170,7 +170,7 @@ export const LECTURER_EQUIPMENT: LecturerEquipmentItem[] = MOCK_EQUIPMENT.map(eq
   if (eq.status === 'maintenance') status = 'MAINTENANCE';
   return {
     id: eq._id,
-    assetId: eq.qr_code ?? eq._id,
+    assetId: eq.code ?? eq._id,
     name: eq.name,
     category: eq.category,
     location: room ? room.name.toUpperCase() : 'STORAGE',
@@ -218,7 +218,7 @@ export const LECTURER_PENDING_REQUESTS: LecturerBorrowRequest[] = MOCK_BORROW_RE
     studentId: user?.username?.toUpperCase() ?? br.user_id,
     studentAvatar: user?.avatarUrl ?? `https://picsum.photos/100/100?random=${br._id}`,
     equipmentName: equip?.name ?? 'Unknown Equipment',
-    assetId: equip?.qr_code ?? equip?._id ?? '',
+    assetId: equip?.code ?? equip?._id ?? '',
     period: formatPeriod(br.borrow_date, br.return_date),
     category: br.type === 'equipment' ? 'Academic Project' : 'Infrastructure',
     status: mapStatus(br.status),

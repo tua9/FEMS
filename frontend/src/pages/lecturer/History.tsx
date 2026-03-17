@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useBorrowRequestStore } from '../../stores/useBorrowRequestStore';
 import { Loader2 } from 'lucide-react';
+import { PageHeader } from '@/components/shared/PageHeader';
 
 type Tab = 'report' | 'borrow' | 'approval';
 
@@ -32,15 +33,11 @@ const History: React.FC = () => {
   };
 
   return (
-    <div className="pt-32 pb-10 px-6 max-w-[1400px] mx-auto animate-in fade-in duration-500">
-      <header className="mb-10 text-center">
-        <h2 className="text-4xl md:text-5xl font-black text-[#1E2B58] dark:text-white tracking-tight">
-          My History
-        </h2>
-        <p className="mt-3 text-[#1E2B58] dark:text-[#E0EAFC] opacity-70 font-medium max-w-2xl mx-auto">
-          Track your recent activities and approvals across the portal
-        </p>
-      </header>
+    <div className="pt-6 sm:pt-8 pb-10 px-6 max-w-350 mx-auto animate-in fade-in duration-500">
+      <PageHeader
+        title="My History"
+        subtitle="Track your recent activities and approvals across the portal"
+      />
 
       <div className="flex justify-center mb-10">
         <div className="extreme-glass rounded-full p-1.5 inline-flex gap-1">

@@ -67,7 +67,7 @@ export interface Equipment {
   room?: Room;               // populated
   borrowed_by: string | null; // ref: User
   borrower?: User;            // populated
-  qr_code: string | null;
+  code: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -87,8 +87,9 @@ export interface BorrowRequest {
   room?: Room;                 // populated
   type: BorrowRequestType;
   status: BorrowRequestStatus;
-  approved_by: string | null;  // ref: User
-  approver?: User;             // populated
+  processed_by: string | null;  // ref: User
+  processed_at?: string | null;
+  processor?: User;            // populated
   borrow_date: string;
   return_date: string;
   note: string | null;
@@ -111,8 +112,9 @@ export interface Report {
   room?: Room;                 // populated
   type: ReportType;
   status: ReportStatus;
-  approved_by: string | null;  // ref: User
-  approver?: User;             // populated
+  processed_by: string | null;  // ref: User
+  processed_at?: string | null;
+  processor?: User;            // populated
   img: string | null;
   description: string | null;
   createdAt: string;
