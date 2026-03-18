@@ -76,19 +76,21 @@ const BorrowingTable: React.FC<BorrowingTableProps> = ({ records, onApprove, onH
                                 className="group cursor-pointer transition-all hover:scale-[1.002] active:scale-[0.998]"
                             >
                                 <td className={`p-3 rounded-l-lg ${rowBg}`}>
-                                    <div className="flex items-center gap-3">
+                                    <div className="flex items-center gap-3 max-w-[200px]">
                                         <div className="w-8 h-8 rounded-full bg-[#1A2B56] text-white flex items-center justify-center font-semibold text-xs flex-shrink-0">
                                             {borrowerName.charAt(0)}
                                         </div>
-                                        <div className="min-w-0">
+                                        <div className="min-w-0 flex-1">
                                             <p className="text-xs font-semibold text-slate-800 dark:text-white truncate">{borrowerName}</p>
-                                            <p className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">ID: {borrower?._id || 'N/A'}</p>
+                                            <p className="text-[10px] text-slate-500 dark:text-slate-400 font-medium truncate">ID: {borrower?._id || 'N/A'}</p>
                                         </div>
                                     </div>
                                 </td>
                                 <td className={`p-3 ${rowBg}`}>
-                                    <p className="text-xs font-semibold text-slate-800 dark:text-white truncate">{equipmentName}</p>
-                                    <p className="text-[10px] text-slate-500 dark:text-slate-400 font-medium mt-0.5">ID: {record._id.substring(0, 8)}...</p>
+                                    <div className="max-w-[200px]">
+                                        <p className="text-xs font-semibold text-slate-800 dark:text-white truncate">{equipmentName}</p>
+                                        <p className="text-[10px] text-slate-500 dark:text-slate-400 font-medium mt-0.5 truncate">ID: {record._id.substring(0, 8)}...</p>
+                                    </div>
                                 </td>
                                 <td className={`p-3 text-xs font-medium ${isOverdue ? 'text-red-500 font-bold' : 'text-slate-400 dark:text-slate-500'} ${rowBg}`}>
                                     <div>{new Date(record.return_date).toLocaleDateString()}</div>

@@ -1,6 +1,5 @@
-import { Check, ChevronDown, Search } from "lucide-react";
-import React, { useEffect, useRef, useState } from "react";
-import ReactDOM from "react-dom";
+import { Search } from "lucide-react";
+import React from "react";
 
 interface DropdownOption { value: string; label: string }
 
@@ -17,17 +16,18 @@ interface EquipmentFilterProps {
 // static options
 const TYPES: DropdownOption[] = [
   { value: "all-types", label: "All Types" },
-  { value: "laptop", label: "Laptop" },
-  { value: "projector", label: "Projector" },
-  { value: "tablet", label: "Tablet" },
-  { value: "monitor", label: "Monitor" },
-  { value: "camera", label: "Camera" },
-  { value: "audio", label: "Audio" },
+  { value: "laptop",    label: "Laptop" },
+  { value: "iot_kit",   label: "IoT Kit" },
+  { value: "tablet",    label: "Tablet" },
+  { value: "pc_lab",    label: "PC Lab" },
+  { value: "camera",    label: "Camera" },
+  { value: "audio",     label: "Audio" },
 ];
 
 const LOCATIONS: DropdownOption[] = [
   { value: "all-locations", label: "All Locations" },
   { value: "gamma", label: "Gamma Building" },
+  { value: "beta", label: "Beta Building" },
   { value: "alpha", label: "Alpha Building" },
 ];
 

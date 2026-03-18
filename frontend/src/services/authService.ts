@@ -25,4 +25,9 @@ export const authService = {
     });
     return response.data.accessToken;
   },
+  
+  updateProfile: async (payload: { phone?: string; dob?: string; displayName?: string }) => {
+    const response = await api.patch("/auth/profile", payload);
+    return response.data;
+  }
 };

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
+import CustomDropdown from '../../shared/CustomDropdown';
 import type { Equipment, CreateEquipmentPayload } from '../../../types/equipment';
 import { useEquipmentStore } from '../../../stores/useEquipmentStore';
 import { toast } from 'sonner';
@@ -17,9 +18,7 @@ const AddEquipmentModal: React.FC<AddEquipmentModalProps> = ({ isOpen, onClose, 
     const [name, setName] = useState('');
     const [category, setCategory] = useState('');
     const [quantity, setQuantity] = useState(1);
-    const [description, setDescription] = useState('');
-    const [warranty, setWarranty] = useState('');
-    const [purchaseDate, setPurchaseDate] = useState('');
+    const [code, setCode] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     const createEquipment = useEquipmentStore(state => state.createEquipment);
@@ -30,16 +29,13 @@ const AddEquipmentModal: React.FC<AddEquipmentModalProps> = ({ isOpen, onClose, 
             setName(equipment.name);
             setCategory(equipment.category);
             setQuantity(1);
-            setDescription((equipment as any).description || '');
-            setWarranty(equipment.updatedAt?.slice(0, 10) || ''); 
-            setPurchaseDate(equipment.createdAt?.slice(0, 10) || '');
+            setCode(equipment.code || '');
         } else {
             setName('');
             setCategory('');
             setQuantity(1);
-            setDescription('');
-            setWarranty('');
-            setPurchaseDate('');
+            setCode('');
+            setCode('');
         }
     }, [equipment, isOpen]);
 
@@ -52,7 +48,8 @@ const AddEquipmentModal: React.FC<AddEquipmentModalProps> = ({ isOpen, onClose, 
                 name,
                 category,
                 status: (equipment?.status as any) || 'good',
-                room_id: (equipment?.room_id as any)?._id || (equipment?.room_id as any) || null
+                room_id: (equipment?.room_id as any)?._id || (equipment?.room_id as any) || null,
+                code: code || undefined
             };
 
             if (isEdit && equipment) {
@@ -132,24 +129,40 @@ const AddEquipmentModal: React.FC<AddEquipmentModalProps> = ({ isOpen, onClose, 
                                 />
                             </div>
 
+                            <div className="space-y-1.5">
+                                <label className={labelClasses}>Asset Code (Optional)</label>
+                                <input
+                                    type="text"
+                                    value={code}
+                                    onChange={e => setCode(e.target.value)}
+                                    className={inputClasses}
+                                    placeholder="e.g. FPT-LAP-082"
+                                />
+                            </div>
+
                             <div className="space-y-1.5 relative">
                                 <label className={labelClasses}>Primary Category <span className="text-red-500">*</span></label>
-                                <select
+                                <CustomDropdown
                                     value={category}
-                                    onChange={e => setCategory(e.target.value)}
-                                    className={`${inputClasses} appearance-none cursor-pointer`}
-                                    required
-                                >
-                                    <option value="">Select Domain</option>
-                                    <option value="Laptop">Laptop & Computing</option>
-                                    <option value="Photography">Photography & Optics</option>
-                                    <option value="Peripheral">System Peripherals</option>
-                                    <option value="Tablet">Handheld Tablets</option>
-                                    <option value="Network">Network Infrastructure</option>
-                                    <option value="Electronics">IoT & Electronics</option>
-                                    <option value="Other">Miscellaneous Assets</option>
-                                </select>
-                                <span className="material-symbols-outlined absolute right-4 top-[42px] text-slate-400 pointer-events-none">expand_more</span>
+                                    options={[
+                                        { value: '', label: 'Select Category' },
+                                        { value: 'laptop', label: 'Laptop' },
+                                        { value: 'pc_lab', label: 'PC Lab' },
+                                        { value: 'photography', label: 'Photography' },
+                                        { value: 'camera', label: 'Camera' },
+                                        { value: 'audio', label: 'Audio' },
+                                        { value: 'iot_kit', label: 'IoT Kit' },
+                                        { value: 'lab', label: 'Lab Equipment' },
+                                        { value: 'tablet', label: 'Tablet' },
+                                        { value: 'network', label: 'Network Infrastructure' },
+                                        { value: 'infrastructure', label: 'Infrastructure' },
+                                        { value: 'other', label: 'Other' }
+                                    ]}
+                                    onChange={setCategory}
+                                    className="w-full"
+                                    triggerClassName={`${inputClasses} flex justify-between items-center cursor-pointer`}
+                                    fullWidth={true}
+                                />
                             </div>
 
                             {!isEdit && (
@@ -177,35 +190,6 @@ const AddEquipmentModal: React.FC<AddEquipmentModalProps> = ({ isOpen, onClose, 
                                 />
                             </div>
 
-                            <div className="space-y-1.5">
-                                <label className={labelClasses}>Acquisition Date</label>
-                                <input
-                                    type="date"
-                                    value={purchaseDate}
-                                    onChange={e => setPurchaseDate(e.target.value)}
-                                    className={inputClasses}
-                                />
-                            </div>
-
-                            <div className="space-y-1.5">
-                                <label className={labelClasses}>Warranty Termination</label>
-                                <input
-                                    type="date"
-                                    value={warranty}
-                                    onChange={e => setWarranty(e.target.value)}
-                                    className={inputClasses}
-                                />
-                            </div>
-                        </div>
-
-                        <div className="space-y-1.5">
-                            <label className={labelClasses}>Technical Specifications / Description</label>
-                            <textarea
-                                value={description}
-                                onChange={e => setDescription(e.target.value)}
-                                className={`${inputClasses} min-h-[120px] resize-none`}
-                                placeholder="Detail specific model numbers, features, or deployment notes..."
-                            ></textarea>
                         </div>
 
                         {/* Image Upload Aesthetic */}

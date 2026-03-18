@@ -9,6 +9,8 @@ import DeleteConfirmationModal from '../../components/admin/common/DeleteConfirm
 import Pagination from '../../components/shared/Pagination';
 import { useEquipmentStore } from '../../stores/useEquipmentStore';
 import type { Equipment } from '../../types/equipment';
+import { getDerivedStatus } from '../../utils/equipmentHelpers';
+import { borrowRequestService } from '../../services/borrowRequestService';
 import { useLocation } from 'react-router-dom';
 import { PageHeader } from '@/components/shared/PageHeader';
 
@@ -25,6 +27,7 @@ const EquipmentManagement: React.FC = () => {
     const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
     const [qrDevice, setQrDevice] = useState<Equipment | null>(null);
     const [deviceToDelete, setDeviceToDelete] = useState<Equipment | null>(null);
+    const [activeRequests, setActiveRequests] = useState<any[]>([]);
 
     const [searchQuery, setSearchQuery] = useState('');
     const [statusFilter, setStatusFilter] = useState('All Status');
@@ -41,6 +44,9 @@ const EquipmentManagement: React.FC = () => {
 
     useEffect(() => {
         fetchAll();
+        borrowRequestService.getAllBorrowRequests().then(reqs => {
+            setActiveRequests(reqs);
+        }).catch(console.error);
     }, [fetchAll]);
 
     // Reset to page 1 when filters change
@@ -72,21 +78,26 @@ const EquipmentManagement: React.FC = () => {
     const brokenAttention = equipments.filter(e => e.status === 'broken' || e.status === 'maintenance').slice(0, 5);
 
     const categories = Array.from(new Set(equipments.map(e => e.category)));
-    const statuses = ['good', 'broken', 'maintenance'];
+    const statuses = ['Available', 'In Use', 'Reserved', 'Broken', 'Maintenance'];
 
     const filteredEquipments = equipments
         .filter(item => {
+            const vStatus = getDerivedStatus(item, activeRequests);
             const matchesSearch =
                 item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                 item._id.toLowerCase().includes(searchQuery.toLowerCase()) ||
                 item.category.toLowerCase().includes(searchQuery.toLowerCase());
-            const matchesStatus = statusFilter === 'All Status' || item.status === statusFilter;
+            const matchesStatus = statusFilter === 'All Status' || vStatus === statusFilter;
             const matchesCategory = categoryFilter === 'All Categories' || item.category === categoryFilter;
             return matchesSearch && matchesStatus && matchesCategory;
         })
         .sort((a, b) => {
             if (sortBy === 'Name') return a.name.localeCompare(b.name);
-            if (sortBy === 'Status') return a.status.localeCompare(b.status);
+            if (sortBy === 'Status') {
+                const sA = getDerivedStatus(a, activeRequests);
+                const sB = getDerivedStatus(b, activeRequests);
+                return sA.localeCompare(sB);
+            }
             return 0;
         });
 
@@ -195,6 +206,7 @@ const EquipmentManagement: React.FC = () => {
                         onEdit={handleEditDevice}
                         onDelete={handleDeleteClick}
                         onReportDamage={(item) => handleUpdateStatus(item._id, 'broken')}
+                        activeRequests={activeRequests}
                     />
 
                     <div className="mt-8 flex items-center justify-between px-2">

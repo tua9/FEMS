@@ -64,8 +64,8 @@ const UserManagement: React.FC = () => {
 
     const confirmToggleStatus = async () => {
         if (userToToggle) {
-            const newStatus = userToToggle.avatarId === 'Inactive' ? 'Active' : 'Inactive';
-            await updateUser(userToToggle._id, { avatarId: newStatus } as any);
+            const newStatus = !userToToggle.isActive;
+            await updateUser(userToToggle._id, { isActive: newStatus } as any);
             setUserToToggle(null);
         }
     };
@@ -74,7 +74,7 @@ const UserManagement: React.FC = () => {
         setIsExporting(true);
         // Simulate CSV generation
         const headers = "ID,Name,Email,Role,Status\n";
-        const rows = users.map(u => `${u._id},${u.displayName},${u.email},${u.role},${u.avatarId === 'Inactive' ? 'Inactive' : 'Active'}`).join("\n");
+        const rows = users.map(u => `${u._id},${u.displayName},${u.email},${u.role},${u.isActive !== false ? 'Active' : 'Inactive'}`).join("\n");
         const blob = new Blob([headers + rows], { type: 'text/csv' });
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
@@ -105,7 +105,7 @@ const UserManagement: React.FC = () => {
 
         const matchesSearch = nameMatch || emailMatch || idMatch;
         const matchesRole = roleFilter === 'All' || user.role.toLowerCase() === roleFilter.toLowerCase();
-        const matchesStatus = statusFilter === 'All' || (statusFilter === 'Active' ? user.avatarId !== 'Inactive' : user.avatarId === 'Inactive');
+        const matchesStatus = statusFilter === 'All' || (statusFilter === 'Active' ? user.isActive !== false : user.isActive === false);
 
         return matchesSearch && matchesRole && matchesStatus;
     });
@@ -129,8 +129,8 @@ const UserManagement: React.FC = () => {
         );
     }
 
-    const activeUsers = users.filter(u => u.avatarId !== 'Inactive').length;
-    const inactiveUsers = users.filter(u => u.avatarId === 'Inactive').length;
+    const activeUsers = users.filter(u => u.isActive !== false).length;
+    const inactiveUsers = users.filter(u => u.isActive === false).length;
 
     const isBlurred = isAddModalOpen || isDetailModalOpen || !!userToDelete || !!userToToggle;
 
@@ -347,15 +347,15 @@ const UserManagement: React.FC = () => {
 
             <ActionConfirmationModal
                 isOpen={!!userToToggle}
-                title={userToToggle?.avatarId !== 'Inactive' ? "Deactivate User Account" : "Activate User Account"}
-                message={userToToggle?.avatarId !== 'Inactive'
+                title={userToToggle?.isActive !== false ? "Deactivate User Account" : "Activate User Account"}
+                message={userToToggle?.isActive !== false
                     ? "Are you sure you want to deactivate this account? The user will no longer be able to sign in."
                     : "Are you sure you want to reactivate this account? The user will regain access to the system."}
                 itemName={userToToggle?.displayName}
-                confirmText={userToToggle?.avatarId !== 'Inactive' ? "Deactivate" : "Activate"}
-                confirmColor={userToToggle?.avatarId !== 'Inactive' ? "bg-amber-500 hover:bg-amber-600" : "bg-emerald-500 hover:bg-emerald-600"}
-                icon={userToToggle?.avatarId !== 'Inactive' ? "person_off" : "check_circle"}
-                iconColor={userToToggle?.avatarId !== 'Inactive' ? "text-amber-500" : "text-emerald-500"}
+                confirmText={userToToggle?.isActive !== false ? "Deactivate" : "Activate"}
+                confirmColor={userToToggle?.isActive !== false ? "bg-amber-500 hover:bg-amber-600" : "bg-emerald-500 hover:bg-emerald-600"}
+                icon={userToToggle?.isActive !== false ? "person_off" : "check_circle"}
+                iconColor={userToToggle?.isActive !== false ? "text-amber-500" : "text-emerald-500"}
                 onClose={() => setUserToToggle(null)}
                 onConfirm={confirmToggleStatus}
             />

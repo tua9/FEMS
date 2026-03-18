@@ -38,7 +38,7 @@ export interface Building {
 
 // ── Room ─────────────────────────────────────────────────────────────────────
 
-export type RoomType   = 'classroom' | 'lab' | 'office' | 'meeting' | 'other';
+export type RoomType = 'classroom' | 'lab' | 'office' | 'meeting' | 'other';
 export type RoomStatus = 'available' | 'occupied' | 'maintenance';
 
 export interface Room {
@@ -54,8 +54,8 @@ export interface Room {
 
 // ── Equipment ─────────────────────────────────────────────────────────────────
 
-export type EquipmentStatus   = 'good' | 'broken' | 'maintenance';
-export type EquipmentCategory = 'laptop' | 'projector' | 'tablet' | 'monitor' | 'camera' | 'audio' | 'network' | 'printer' | 'other';
+export type EquipmentStatus = 'good' | 'broken' | 'maintenance';
+export type EquipmentCategory = string;
 
 export interface Equipment {
   _id: string;
@@ -67,15 +67,15 @@ export interface Equipment {
   room?: Room;               // populated
   borrowed_by: string | null; // ref: User
   borrower?: User;            // populated
-  qr_code: string | null;
+  code: string | null;
   createdAt: string;
   updatedAt: string;
 }
 
 // ── BorrowRequest ────────────────────────────────────────────────────────────
 
-export type BorrowRequestType   = 'equipment' | 'infrastructure';
-export type BorrowRequestStatus = 'pending' | 'approved' | 'rejected' | 'returned';
+export type BorrowRequestType = 'equipment' | 'infrastructure';
+export type BorrowRequestStatus = 'pending' | 'approved' | 'rejected' | 'handed_over' | 'returned' | 'cancelled' | 'borrowing' | 'closed';
 
 export interface BorrowRequest {
   _id: string;
@@ -87,8 +87,9 @@ export interface BorrowRequest {
   room?: Room;                 // populated
   type: BorrowRequestType;
   status: BorrowRequestStatus;
-  approved_by: string | null;  // ref: User
-  approver?: User;             // populated
+  processed_by: string | null;  // ref: User
+  processed_at?: string | null;
+  processor?: User;            // populated
   borrow_date: string;
   return_date: string;
   note: string | null;
@@ -98,7 +99,7 @@ export interface BorrowRequest {
 
 // ── Report ───────────────────────────────────────────────────────────────────
 
-export type ReportType   = 'equipment' | 'infrastructure' | 'other';
+export type ReportType = 'equipment' | 'infrastructure' | 'other';
 export type ReportStatus = 'pending' | 'approved' | 'rejected';
 
 export interface Report {
@@ -111,8 +112,9 @@ export interface Report {
   room?: Room;                 // populated
   type: ReportType;
   status: ReportStatus;
-  approved_by: string | null;  // ref: User
-  approver?: User;             // populated
+  processed_by: string | null;  // ref: User
+  processed_at?: string | null;
+  processor?: User;            // populated
   img: string | null;
   description: string | null;
   createdAt: string;

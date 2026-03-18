@@ -7,11 +7,16 @@ import {
   getPersonalBorrowRequests,
   cancelBorrowRequest,
   approveBorrowRequest,
+  rejectBorrowRequest,
   handoverBorrowRequest,
   returnBorrowRequest,
   remindBorrowRequest,
+  getPendingBorrowRequests,
+  getApprovedByMe,
 } from '../controllers/borrowRequestController.js'
 import { restrictTo, protectedRoute } from '../middlewares/authMiddlewares.js'
+
+console.log('✅ [ROUTE LOAD] Borrow Request Route Loaded')
 
 const router = express.Router()
 
@@ -22,13 +27,26 @@ router.get(
   restrictTo('student', 'lecturer', 'technician', 'admin'),
   getPersonalBorrowRequests,
 )
+
+router.get(
+  '/approved-by-me',
+  restrictTo('lecturer', 'technician', 'admin'),
+  getApprovedByMe,
+)
+
+router.get(
+  '/pending',
+  restrictTo('lecturer', 'technician', 'admin'),
+  getPendingBorrowRequests,
+)
+
 router.post(
   '/',
   restrictTo('student', 'lecturer', 'technician', 'admin'),
   createBorrowRequest,
 ) // Student specific
-router.delete(
-  '/:id',
+router.patch(
+  '/:id/cancel',
   restrictTo('student', 'lecturer', 'technician', 'admin'),
   cancelBorrowRequest,
 )
@@ -37,6 +55,12 @@ router.patch(
   '/:id/approve',
   restrictTo('lecturer', 'technician', 'admin'),
   approveBorrowRequest,
+)
+
+router.patch(
+  '/:id/reject',
+  restrictTo('lecturer', 'technician', 'admin'),
+  rejectBorrowRequest,
 )
 router.patch(
   '/:id/handover',

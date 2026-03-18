@@ -13,3 +13,27 @@ export interface Room {
   createdAt?: string;
   updatedAt?: string;
 }
+
+export interface RoomDevice {
+  name: string;
+  status: 'ACTIVE' | 'FAULTY' | 'MAINTENANCE';
+}
+
+export interface RoomStatusCenterItem {
+  _id: string;
+  name: string;
+  type: RoomType;
+  status: RoomStatus;
+  floor: number;
+  labels: string[];
+  operationalSummary: string;
+  displayDevices: RoomDevice[];
+  totalDevices: number;
+  faultyDevices: number;
+}
+
+export interface BuildingGroup {
+  _id: string;
+  buildingName: string;
+  rooms: RoomStatusCenterItem[];
+}

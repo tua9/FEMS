@@ -1,152 +1,94 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
-import { Laptop, Bot, Camera, Video, TabletSmartphone, Monitor, Mic, CheckCircle2, X, AlertTriangle } from 'lucide-react';
+import { Laptop, Monitor, CheckCircle2, X, AlertTriangle, Loader2 } from 'lucide-react';
 
-import { ApprovalFilter, StatusFilter, TypeFilter } from '../../components/lecturer/approval/ApprovalFilter';
-import { ApprovalTable, BorrowRequest, RequestStatus } from '../../components/lecturer/approval/ApprovalTable';
+import { ApprovalFilter } from '../../components/lecturer/approval/ApprovalFilter';
+import type { StatusFilter, TypeFilter } from '../../components/lecturer/approval/ApprovalFilter';
+import { ApprovalTable } from '../../components/lecturer/approval/ApprovalTable';
+import type { ApprovalTableItem, RequestStatus } from '../../components/lecturer/approval/ApprovalTable';
+import { useBorrowRequestStore } from '../../stores/useBorrowRequestStore';
 import { PageHeader } from '@/components/shared/PageHeader';
 
-// ─── Mock Data ────────────────────────────────────────────────────────────────
-
-const INITIAL_REQUESTS: BorrowRequest[] = [
-    {
-        id: '1', status: 'pending',
-        student: { name: 'Johnathan Chen',  id: 'SE160942', initials: 'JC', statusColor: 'bg-green-500',  avatar: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCfuRg14RB8L82_FoAlVQA_zqV5d9SHL4U-S7gWG1p9SasteiZbFIkYYxMz0W8L7A3ZOa55oq3vIh3VKfC7cQnOcp8nC8aI0XPhICNvmfbLuc7Ja3PCFR4yogzq_7_xmSNQmQ-sQ_eG1BCyrhXEO41yAjIPampX7AdK9YoWWoWPaK1GgAYTamgWoTuzUxABad5ceGIjNJkCSaiEzD0KNWCpmx0-7xXUN3EQ1aOnf5fRef4CAwWnK6gnsv5aVSYvu-aajEmVTugkvH1P' },
-        equipment: { name: 'MacBook Pro M2',       asset: 'FPT-LAP-082', icon: Laptop,          type: 'laptop'    },
-        period:    { date: '24 Oct – 27 Oct 2024', label: 'ACADEMIC PROJECT', labelColor: 'text-[#1E2B58] dark:text-blue-300' },
-    },
-    {
-        id: '2', status: 'pending',
-        student: { name: 'Sarah Nguyen',    id: 'SE154432', initials: 'SN', statusColor: 'bg-green-500',  avatar: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBwxnUoHlVaJw2tQTpJ27nrY6Sk4izzYmvaXbPYiH_twnbu6FJxoqKSRZeGMCKdPP277hkO0BVIuaCcEW59AezBs92M4cgc1D1_8BOTVQcm6h5futrQwlkg7d5ztd8hUCslRAuMvX6GsjWHpdqOuVdLEP4uEk9GRS3ToIQ5K7yrlO9X-tQOqYWaT9lPCR-X9eiXO7i7VJlF4I6iqOVDgL7nPq_EPdhxPXSSKwEIdBoiTzLN_uLb6QWu31dNquN-W2DaOyi41oWKkyIz' },
-        equipment: { name: 'Arduino Robotics Kit', asset: 'FPT-ROB-15',  icon: Bot,             type: 'other'     },
-        period:    { date: '26 Oct 2024',           label: '08:00 AM – 05:00 PM', labelColor: 'text-slate-500 dark:text-slate-400' },
-    },
-    {
-        id: '3', status: 'pending',
-        student: { name: 'Mark Peterson',   id: 'AI170291', initials: 'MP', statusColor: 'bg-yellow-500', avatar: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDuk5PpjiiG1ii0_EPkJ--aHglfUFCy4dVk8KHMeb02gVWotBou9GvCcCRSE6goB6vfXreZhT6loZUL9E94m2AkJsm1Aq0KjrbgoK1JSb-KPVW1cxD5ZUgOf9t41NxdSIbYeXxd7sftp8xqEGb5JGwtidWsKGdDyDL4vTMdTu-npAIE1PJuGYM3bXXlF2Khb4k7N6objyPN4b6W0nrwL-dagsbdNmIlXKuDt58iXSKjiR-JHeJJ6MoHdQV2_NVeWKPX2lZUCHO-gIY3' },
-        equipment: { name: '4K Sony DSLR',         asset: 'FPT-CAM-102', icon: Camera,          type: 'camera'    },
-        period:    { date: '25 Oct – 26 Oct 2024', label: 'EXTERNAL EVENT', labelColor: 'text-orange-500 dark:text-orange-400' },
-    },
-    {
-        id: '4', status: 'pending',
-        student: { name: 'Emily Watson',    id: 'SE162017', initials: 'EW', statusColor: 'bg-green-500' },
-        equipment: { name: 'iPad Air 5th Gen',     asset: 'FPT-TAB-055', icon: TabletSmartphone, type: 'tablet'   },
-        period:    { date: '28 Oct – 30 Oct 2024', label: 'RESEARCH',      labelColor: 'text-purple-500 dark:text-purple-400' },
-    },
-    {
-        id: '5', status: 'pending',
-        student: { name: 'Daniel Kim',      id: 'SE158891', initials: 'DK', statusColor: 'bg-green-500' },
-        equipment: { name: '4K Laser Projector',   asset: 'FPT-PJ-014',  icon: Video,           type: 'projector' },
-        period:    { date: '29 Oct 2024',           label: 'CLASS DEMO',    labelColor: 'text-[#1E2B58] dark:text-blue-300' },
-    },
-    {
-        id: '6', status: 'pending',
-        student: { name: 'Lisa Chen',       id: 'SE163344', initials: 'LC', statusColor: 'bg-gray-400' },
-        equipment: { name: 'UltraWide Monitor',    asset: 'FPT-MN-033',  icon: Monitor,         type: 'monitor'  },
-        period:    { date: '1 Nov – 3 Nov 2024',   label: 'RESEARCH',      labelColor: 'text-purple-500 dark:text-purple-400' },
-    },
-    {
-        id: '7', status: 'pending',
-        student: { name: 'Alex Brown',      id: 'SE155123', initials: 'AB', statusColor: 'bg-green-500' },
-        equipment: { name: 'MacBook Air M2',       asset: 'FPT-LAP-095', icon: Laptop,          type: 'laptop'   },
-        period:    { date: '31 Oct – 5 Nov 2024',  label: 'ACADEMIC PROJECT', labelColor: 'text-[#1E2B58] dark:text-blue-300' },
-    },
-    {
-        id: '8', status: 'pending',
-        student: { name: 'Ryan Smith',      id: 'AI168774', initials: 'RS', statusColor: 'bg-yellow-500' },
-        equipment: { name: 'Sony A7 IV Camera',    asset: 'FPT-CAM-011', icon: Camera,          type: 'camera'   },
-        period:    { date: '2 Nov 2024',            label: 'EXTERNAL EVENT', labelColor: 'text-orange-500 dark:text-orange-400' },
-    },
-    {
-        id: '9', status: 'pending',
-        student: { name: 'Jessica Lee',     id: 'SE157901', initials: 'JL', statusColor: 'bg-green-500' },
-        equipment: { name: 'Dell XPS 15',          asset: 'FPT-LAP-097', icon: Laptop,          type: 'laptop'   },
-        period:    { date: '4 Nov – 7 Nov 2024',   label: 'RESEARCH',      labelColor: 'text-purple-500 dark:text-purple-400' },
-    },
-    {
-        id: '10', status: 'pending',
-        student: { name: 'Michael Park',    id: 'SE164820', initials: 'MP', statusColor: 'bg-green-500' },
-        equipment: { name: 'Epson Projector',      asset: 'FPT-PJ-022',  icon: Video,           type: 'projector' },
-        period:    { date: '5 Nov 2024',            label: 'CLASS DEMO',    labelColor: 'text-[#1E2B58] dark:text-blue-300' },
-    },
-    {
-        id: '11', status: 'pending',
-        student: { name: 'Sophia Davis',    id: 'SE161503', initials: 'SD', statusColor: 'bg-green-500' },
-        equipment: { name: 'Samsung Galaxy Tab',   asset: 'FPT-TAB-061', icon: TabletSmartphone, type: 'tablet'  },
-        period:    { date: '6 Nov – 8 Nov 2024',   label: 'ACADEMIC PROJECT', labelColor: 'text-[#1E2B58] dark:text-blue-300' },
-    },
-    {
-        id: '12', status: 'pending',
-        student: { name: 'James Wilson',    id: 'AI172090', initials: 'JW', statusColor: 'bg-gray-400' },
-        equipment: { name: 'Focusrite Interface',  asset: 'FPT-AUD-007', icon: Mic,             type: 'audio'    },
-        period:    { date: '7 Nov 2024',            label: 'PERSONAL USE',  labelColor: 'text-slate-500 dark:text-slate-400' },
-    },
-    {
-        id: '13', status: 'pending',
-        student: { name: 'Olivia Taylor',   id: 'AI169335', initials: 'OT', statusColor: 'bg-yellow-500' },
-        equipment: { name: 'Canon EOS R6',         asset: 'FPT-CAM-019', icon: Camera,          type: 'camera'   },
-        period:    { date: '9 Nov – 10 Nov 2024',  label: 'EXTERNAL EVENT', labelColor: 'text-orange-500 dark:text-orange-400' },
-    },
-    {
-        id: '14', status: 'pending',
-        student: { name: 'Noah Martinez',   id: 'SE165280', initials: 'NM', statusColor: 'bg-green-500' },
-        equipment: { name: 'LG 4K Display',        asset: 'FPT-MN-044',  icon: Monitor,         type: 'monitor'  },
-        period:    { date: '10 Nov 2024',           label: 'CLASS DEMO',    labelColor: 'text-[#1E2B58] dark:text-blue-300' },
-    },
-];
-
-const ROWS_PER_PAGE = 5;
-const TOTAL_STAT = 128; // total historical count (fixed display stat)
+const ROWS_PER_PAGE = 10;
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export const ApprovalCenter: React.FC = () => {
-    const location = useLocation();
-
     // ── Core state ────────────────────────────────────────────────────────────
-    const [requests,     setRequests]     = useState<BorrowRequest[]>(INITIAL_REQUESTS);
-    const [searchText,   setSearchText]   = useState('');
-    const [showPanel,    setShowPanel]    = useState(false);
+    const pendingBorrowRequests = useBorrowRequestStore(state => state.pendingBorrowRequests);
+    const fetchPendingBorrowRequests = useBorrowRequestStore(state => state.fetchPendingBorrowRequests);
+    const loading = useBorrowRequestStore(state => state.loading);
+
+    const fetchApprovedByMe = useBorrowRequestStore(state => state.fetchApprovedByMe);
+    const approvedByMe = useBorrowRequestStore(state => state.approvedByMe);
+
+    useEffect(() => {
+        fetchPendingBorrowRequests();
+        fetchApprovedByMe();
+    }, [fetchPendingBorrowRequests, fetchApprovedByMe]);
+
+    const mappedRequests = useMemo<ApprovalTableItem[]>(() => {
+        return pendingBorrowRequests
+            .filter((r: any) => r.user_id?.role === 'student') // Only show student requests
+            .map((r: any) => ({
+                id: r._id,
+                status: r.status as RequestStatus,
+                student: {
+                    name: r.user_id?.displayName || r.user_id?.username || 'Requested User',
+                    id: (r.user_id?._id || 'UID').substring(18).toUpperCase(), // Short ID from mongo _id
+                    initials: (r.user_id?.displayName || r.user_id?.username || 'US').substring(0, 2).toUpperCase(),
+                    statusColor: 'bg-green-500',
+                    avatar: r.user_id?.avatarUrl
+                },
+                equipment: {
+                    name: r.equipment_id?.name || r.room_id?.name || 'Unknown',
+                    asset: (r.equipment_id?._id || r.room_id?._id || 'ASSET').substring(18).toUpperCase(),
+                    icon: r.room_id ? Monitor : Laptop,
+                    type: (r.type === 'infrastructure' ? 'other' : (r.equipment_id?.category || 'other')) as any
+                },
+                period: {
+                    date: `${new Date(r.borrow_date || new Date()).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })} – ${new Date(r.return_date || new Date()).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}`,
+                    label: r.note || 'ACADEMIC PROJECT',
+                    labelColor: r.type === 'infrastructure' ? 'text-blue-500' : 'text-[#1E2B58] dark:text-blue-300'
+                },
+            }));
+    }, [pendingBorrowRequests]);
+
+    const requests = mappedRequests;
+
+    const [searchText, setSearchText] = useState('');
+    const [showPanel, setShowPanel] = useState(false);
     const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
-    const [typeFilter,   setTypeFilter]   = useState<TypeFilter>('all');
-    const [currentPage,  setCurrentPage]  = useState(1);
+    const [typeFilter, setTypeFilter] = useState<TypeFilter>('all');
+    const [currentPage, setCurrentPage] = useState(1);
 
     // ── Modal state ───────────────────────────────────────────────────────────
-    const [approvingReq, setApprovingReq] = useState<BorrowRequest | null>(null);
-    const [rejectingReq, setRejectingReq] = useState<BorrowRequest | null>(null);
+    const [approvingReq, setApprovingReq] = useState<ApprovalTableItem | null>(null);
+    const [rejectingReq, setRejectingReq] = useState<ApprovalTableItem | null>(null);
     const [rejectReason, setRejectReason] = useState('');
-    const [rejectError,  setRejectError]  = useState('');
+    const [rejectError, setRejectError] = useState('');
 
     // ── Toast state ───────────────────────────────────────────────────────────
-    const [toast, setToast] = useState<{ type: 'success' | 'info'; message: string } | null>(null);
-
-    // ── Handle navigation from Equipment Catalog (new borrow request) ─────────
-    useEffect(() => {
-        const state = location.state as { newBorrowRequest?: { equipmentTitle: string } } | null;
-        if (state?.newBorrowRequest) {
-            showToast('info', `Your borrow request for "${state.newBorrowRequest.equipmentTitle}" has been submitted and is pending review.`);
-        }
-    }, []);
+    const [toast, setToast] = useState<{ type: 'success' | 'info' | 'error'; message: string } | null>(null);
 
     // ── Toast helper ──────────────────────────────────────────────────────────
-    const showToast = (type: 'success' | 'info', message: string) => {
+    const showToast = (type: 'success' | 'info' | 'error', message: string) => {
         setToast({ type, message });
         setTimeout(() => setToast(null), 5000);
     };
 
     // ── Derived counts ────────────────────────────────────────────────────────
-    const pendingCount   = requests.filter(r => r.status === 'pending').length;
+    const pendingCount = requests.filter(r => r.status === 'pending').length;
 
     // ── Filter logic ──────────────────────────────────────────────────────────
     const filteredRequests = useMemo(() => {
         const q = searchText.toLowerCase();
         return requests.filter(r => {
             if (statusFilter !== 'all' && r.status !== statusFilter) return false;
-            if (typeFilter   !== 'all' && r.equipment.type !== typeFilter) return false;
+            if (typeFilter !== 'all' && r.equipment.type !== typeFilter) return false;
             if (q) {
                 const matches =
                     r.student.name.toLowerCase().includes(q) ||
-                    r.student.id.toLowerCase().includes(q)   ||
+                    r.student.id.toLowerCase().includes(q) ||
                     r.equipment.name.toLowerCase().includes(q) ||
                     r.equipment.asset.toLowerCase().includes(q);
                 if (!matches) return false;
@@ -157,7 +99,7 @@ export const ApprovalCenter: React.FC = () => {
 
     // ── Pagination ────────────────────────────────────────────────────────────
     const totalPages = Math.max(1, Math.ceil(filteredRequests.length / ROWS_PER_PAGE));
-    const safePage   = Math.min(currentPage, totalPages);
+    const safePage = Math.min(currentPage, totalPages);
     const pagedItems = filteredRequests.slice((safePage - 1) * ROWS_PER_PAGE, safePage * ROWS_PER_PAGE);
 
     const handlePageChange = (page: number) => {
@@ -166,38 +108,46 @@ export const ApprovalCenter: React.FC = () => {
     };
 
     // Reset to page 1 on filter change
-    const handleSearchChange    = (val: string) => { setSearchText(val);    setCurrentPage(1); };
-    const handleStatusChange    = (val: StatusFilter) => { setStatusFilter(val); setCurrentPage(1); };
-    const handleTypeChange      = (val: TypeFilter)   => { setTypeFilter(val);   setCurrentPage(1); };
+    const handleSearchChange = (val: string) => { setSearchText(val); setCurrentPage(1); };
+    const handleStatusChange = (val: StatusFilter) => { setStatusFilter(val); setCurrentPage(1); };
+    const handleTypeChange = (val: TypeFilter) => { setTypeFilter(val); setCurrentPage(1); };
+
+    const approveAction = useBorrowRequestStore(state => state.approveBorrowRequest);
+    const rejectAction = useBorrowRequestStore(state => state.rejectBorrowRequest);
 
     // ── Approve logic ─────────────────────────────────────────────────────────
-    const handleApprove = (req: BorrowRequest) => setApprovingReq(req);
+    const handleApprove = (req: ApprovalTableItem) => setApprovingReq(req);
 
-    const confirmApprove = () => {
+    const confirmApprove = async () => {
         if (!approvingReq) return;
-        setRequests(prev => prev.map(r =>
-            r.id === approvingReq.id ? { ...r, status: 'approved' as RequestStatus } : r
-        ));
-        showToast('success', `Approved: ${approvingReq.student.name}'s request for ${approvingReq.equipment.name}.`);
+        try {
+            await approveAction(approvingReq.id);
+            showToast('success', `Approved: ${approvingReq.student.name}'s request for ${approvingReq.equipment.name}.`);
+        } catch (error: any) {
+            showToast('error', error?.response?.data?.message || `Failed to approve request.`);
+        }
         setApprovingReq(null);
         setCurrentPage(1);
     };
 
     // ── Reject logic ──────────────────────────────────────────────────────────
-    const handleReject = (req: BorrowRequest) => {
+    const handleReject = (req: ApprovalTableItem) => {
         setRejectingReq(req);
         setRejectReason('');
         setRejectError('');
     };
 
-    const confirmReject = (e: React.FormEvent) => {
+    const confirmReject = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!rejectingReq) return;
         if (!rejectReason.trim()) { setRejectError('Please provide a reason for rejection.'); return; }
-        setRequests(prev => prev.map(r =>
-            r.id === rejectingReq.id ? { ...r, status: 'rejected' as RequestStatus } : r
-        ));
-        showToast('info', `Rejected: ${rejectingReq.student.name}'s request for ${rejectingReq.equipment.name}.`);
+
+        try {
+            await rejectAction(rejectingReq.id, rejectReason.trim());
+            showToast('success', `Rejected: ${rejectingReq.student.name}'s request.`);
+        } catch (error: any) {
+            showToast('error', error?.response?.data?.message || `Failed to reject request.`);
+        }
         setRejectingReq(null);
         setCurrentPage(1);
     };
@@ -209,10 +159,10 @@ export const ApprovalCenter: React.FC = () => {
             .map(r => `"${r.student.name}","${r.student.id}","${r.equipment.name}","${r.equipment.asset}","${r.period.date}","${r.status}"`)
             .join('\n');
         const blob = new Blob([header + rows], { type: 'text/csv' });
-        const url  = URL.createObjectURL(blob);
-        const a    = document.createElement('a');
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
         a.href = url;
-        a.download = `approval-log-${new Date().toISOString().slice(0,10)}.csv`;
+        a.download = `approval-log-${new Date().toISOString().slice(0, 10)}.csv`;
         a.click();
         URL.revokeObjectURL(url);
         showToast('success', 'Export complete! The CSV file has been downloaded.');
@@ -226,22 +176,20 @@ export const ApprovalCenter: React.FC = () => {
         'Conflicting schedule',
     ];
 
-    // ─────────────────────────────────────────────────────────────────────────
-
     return (
-        <div className="w-full">                <main className="pt-6 sm:pt-8 pb-10 px-4 sm:px-6 w-full max-w-[90vw] xl:max-w-7xl mx-auto flex-1 flex flex-col overflow-hidden">
+        <div className="w-full">
+            <main className="pt-6 sm:pt-8 pb-10 px-4 sm:px-6 w-full max-w-[90vw] xl:max-w-7xl mx-auto flex-1 flex flex-col overflow-hidden">
                 <div className="w-full">
 
                     {/* ── Toast notification ──────────────────────────────────── */}
                     {toast && (
-                        <div className={`mb-6 flex items-start gap-3 px-5 py-4 rounded-[1.25rem] border text-sm font-medium animate-in fade-in slide-in-from-top-3 duration-300 ${
-                            toast.type === 'success'
-                                ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-700 dark:text-emerald-400'
-                                : 'bg-blue-500/10 border-blue-500/20 text-blue-700 dark:text-blue-400'
-                        }`}>
+                        <div className={`mb-6 flex items-start gap-3 px-5 py-4 rounded-[1.25rem] border text-sm font-medium animate-in fade-in slide-in-from-top-3 duration-300 ${toast.type === 'success'
+                            ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-700 dark:text-emerald-400'
+                            : (toast.type === 'error' ? 'bg-red-500/10 border-red-500/20 text-red-700 dark:text-red-400' : 'bg-blue-500/10 border-blue-500/20 text-blue-700 dark:text-blue-400')
+                            }`}>
                             {toast.type === 'success'
                                 ? <CheckCircle2 className="w-5 h-5 shrink-0 mt-0.5" />
-                                : <span className="material-symbols-outlined text-[1.25rem] shrink-0 mt-0.5 leading-none">info</span>
+                                : (toast.type === 'error' ? <AlertTriangle className="w-5 h-5 shrink-0 mt-0.5" /> : <span className="material-symbols-outlined text-[1.25rem] shrink-0 mt-0.5 leading-none">info</span>)
                             }
                             <span className="flex-1">{toast.message}</span>
                             <button onClick={() => setToast(null)} className="shrink-0 opacity-60 hover:opacity-100 transition-opacity">
@@ -269,9 +217,9 @@ export const ApprovalCenter: React.FC = () => {
                                 </div>
                                 <div className="dashboard-card px-6 md:px-10 py-5 md:py-7 rounded-3xl md:rounded-4xl flex flex-col items-center justify-center min-w-32 md:min-w-40">
                                     <span className="text-4xl md:text-5xl font-black text-slate-500 dark:text-slate-300 leading-none mb-1.5">
-                                        {TOTAL_STAT}
+                                        {approvedByMe.length}
                                     </span>
-                                    <span className="text-[0.625rem] font-bold uppercase tracking-[0.2em] text-slate-500/70 dark:text-slate-400/70">Total</span>
+                                    <span className="text-[0.625rem] font-bold uppercase tracking-[0.2em] text-slate-500/70 dark:text-slate-400/70">My History</span>
                                 </div>
                             </div>
                         </div>
@@ -279,25 +227,31 @@ export const ApprovalCenter: React.FC = () => {
 
                     {/* ── Filter bar ──────────────────────────────────────────── */}
                     <ApprovalFilter
-                        searchText={searchText}        onSearchChange={handleSearchChange}
-                        showPanel={showPanel}          onTogglePanel={() => setShowPanel(p => !p)}
-                        statusFilter={statusFilter}    onStatusFilterChange={handleStatusChange}
-                        typeFilter={typeFilter}        onTypeFilterChange={handleTypeChange}
+                        searchText={searchText} onSearchChange={handleSearchChange}
+                        showPanel={showPanel} onTogglePanel={() => setShowPanel(p => !p)}
+                        statusFilter={statusFilter} onStatusFilterChange={handleStatusChange}
+                        typeFilter={typeFilter} onTypeFilterChange={handleTypeChange}
                         onExportLog={handleExportLog}
                         resultCount={filteredRequests.length}
                         totalPending={pendingCount}
                     />
 
                     {/* ── Table ───────────────────────────────────────────────── */}
-                    <ApprovalTable
-                        items={pagedItems}
-                        totalPending={filteredRequests.length}
-                        currentPage={safePage}
-                        totalPages={totalPages}
-                        onPageChange={handlePageChange}
-                        onApprove={handleApprove}
-                        onReject={handleReject}
-                    />
+                    {loading ? (
+                        <div className="py-20 flex justify-center">
+                            <Loader2 className="w-10 h-10 animate-spin text-[#1E2B58] opacity-20" />
+                        </div>
+                    ) : (
+                        <ApprovalTable
+                            items={pagedItems}
+                            totalPending={filteredRequests.length}
+                            currentPage={safePage}
+                            totalPages={totalPages}
+                            onPageChange={handlePageChange}
+                            onApprove={handleApprove}
+                            onReject={handleReject}
+                        />
+                    )}
                 </div>
             </main>
 
@@ -397,11 +351,10 @@ export const ApprovalCenter: React.FC = () => {
                                             key={r}
                                             type="button"
                                             onClick={() => setRejectReason(r)}
-                                            className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all hover:scale-105 active:scale-95 ${
-                                                rejectReason === r
-                                                    ? 'bg-red-500 text-white shadow-md shadow-red-500/20'
-                                                    : 'bg-white/40 dark:bg-slate-800/40 text-[#1E2B58] dark:text-white border border-[#1E2B58]/10 dark:border-white/10 hover:bg-white/60 dark:hover:bg-slate-700/50'
-                                            }`}
+                                            className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all hover:scale-105 active:scale-95 ${rejectReason === r
+                                                ? 'bg-red-500 text-white shadow-md shadow-red-500/20'
+                                                : 'bg-white/40 dark:bg-slate-800/40 text-[#1E2B58] dark:text-white border border-[#1E2B58]/10 dark:border-white/10 hover:bg-white/60 dark:hover:bg-slate-700/50'
+                                                }`}
                                         >
                                             {r}
                                         </button>

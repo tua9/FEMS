@@ -12,4 +12,5 @@ export interface AuthState {
   signOut: () => Promise<void>;
   fetchUserProfile: () => Promise<void>;
   refreshToken: () => Promise<void>;
+  updateProfile: (payload: { phone?: string; dob?: string; displayName?: string }) => Promise<void>;
 }

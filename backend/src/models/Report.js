@@ -28,13 +28,13 @@ const reportSchema = new mongoose.Schema(
 
     status: {
       type: String,
-      enum: ['pending', 'approved', 'rejected', 'processing', 'fixed'],
+      enum: ['pending', 'approved', 'rejected', 'processing', 'fixed', 'cancelled'],
       default: 'pending',
     },
 
     priority: {
       type: String,
-      enum: ['low', 'medium', 'high'],
+      enum: ['low', 'medium', 'high', 'critical'],
       default: 'medium',
     },
 
@@ -43,6 +43,14 @@ const reportSchema = new mongoose.Schema(
       ref: 'User',
       default: null,
     },
+
+
+    // Timestamps + actor for admin approve/reject/fix
+    processed_at: { type: Date, default: null },
+    processed_by: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
+
+    assigned_to: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
+
 
     img: {
       type: String,

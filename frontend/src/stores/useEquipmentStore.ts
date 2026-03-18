@@ -4,10 +4,20 @@ import { equipmentService } from "@/services/equipmentService";
 
 type EquipmentStore = {
   equipments: Equipment[];
+  inventoryData: {
+    items: Equipment[];
+    pagination: {
+      totalItems: number;
+      currentPage: number;
+      totalPages: number;
+      limit: number;
+    }
+  } | null;
   loading: boolean;
   error: string | null;
 
   fetchAll: () => Promise<void>;
+  fetchInventory: (params?: any) => Promise<void>;
   createEquipment: (payload: CreateEquipmentPayload) => Promise<void>;
   updateEquipment: (id: string, payload: CreateEquipmentPayload) => Promise<void>;
   deleteEquipment: (id: string) => Promise<void>;
@@ -15,6 +25,7 @@ type EquipmentStore = {
 
 export const useEquipmentStore = create<EquipmentStore>((set) => ({
   equipments: [],
+  inventoryData: null,
   loading: false,
   error: null,
 
@@ -25,6 +36,18 @@ export const useEquipmentStore = create<EquipmentStore>((set) => ({
       set({ equipments: data });
     } catch (error: any) {
       set({ error: error?.response?.data?.message || "Cannot fetch equipments" });
+    } finally {
+      set({ loading: false });
+    }
+  },
+
+  fetchInventory: async (params?: any) => {
+    try {
+      set({ loading: true, error: null });
+      const data = await equipmentService.getInventory(params);
+      set({ inventoryData: data });
+    } catch (error: any) {
+      set({ error: error?.response?.data?.message || "Cannot fetch inventory" });
     } finally {
       set({ loading: false });
     }

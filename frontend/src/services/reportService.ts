@@ -17,8 +17,13 @@ export const reportService = {
     return res.data;
   },
 
-  updateStatus: async (id: string, status: ReportStatus): Promise<Report> => {
-    const res = await api.patch(`/tickets/${id}/status`, { status });
+  updateStatus: async (id: string, status: ReportStatus, technicianId?: string): Promise<Report> => {
+    const res = await api.patch(`/tickets/${id}/status`, { status, technicianId });
+    return res.data.report || res.data;
+  },
+
+  cancelReport: async (id: string): Promise<Report> => {
+    const res = await api.delete(`/tickets/history/${id}`);
     return res.data.report || res.data;
   },
 };

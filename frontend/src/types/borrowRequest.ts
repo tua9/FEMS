@@ -20,6 +20,7 @@ export interface BorrowRequestEquipment {
   _id: string;
   name: string;
   category?: string;
+  qr_code?: string;
 }
 
 export interface BorrowRequestRoom {
@@ -35,10 +36,12 @@ export interface BorrowRequest {
   room_id?: string | BorrowRequestRoom | null;
   type: BorrowRequestType;
   status: BorrowRequestStatus;
-  approved_by?: string | BorrowRequestUser | null;
+  processed_by?: string | BorrowRequestUser | null;
+  processed_at?: string | null;
   borrow_date: string;
   return_date: string;
   note?: string | null;
+  decision_note?: string | null;
   createdAt?: string;
   updatedAt?: string;
 }

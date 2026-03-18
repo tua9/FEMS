@@ -33,7 +33,7 @@ const EquipmentQRCodeModal: React.FC<EquipmentQRCodeModalProps> = ({ isOpen, onC
                 </div>
 
                 <div className="bg-white p-4 rounded-2xl shadow-inner mx-auto w-48 h-48 flex items-center justify-center border border-slate-100">
-                    <img src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${equipment._id}`} alt="QR Code" className="w-full h-full opacity-90" />
+                    <img src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${equipment.code}`} alt="QR Code" className="w-full h-full opacity-90" />
                 </div>
 
                 <div className="mt-6 flex gap-3">

@@ -3,9 +3,11 @@ import { Link } from "react-router-dom";
 import { Package, History, AlertCircle, TrendingUp } from "lucide-react";
 import { AnimatedList, AnimatedListItem } from "@/components/motion";
 import { useBorrowRequestStore } from "@/stores/useBorrowRequestStore";
+import { useReportStore } from "@/stores/useReportStore";
 
 const StudentStatCard: React.FC = () => {
   const borrowRequests = useBorrowRequestStore((state) => state.borrowRequests);
+  const myReports = useReportStore((state) => state.myReports);
 
   const statCards = [
     {
@@ -13,7 +15,7 @@ const StudentStatCard: React.FC = () => {
       title: "Active Borrows",
       value: String(
         borrowRequests.filter((r) =>
-          ["Pending", "Approved", "HandedOver"].includes(r.status)
+          ["approved", "handed_over"].includes(r.status)
         ).length
       ),
       icon: Package,
@@ -37,13 +39,13 @@ const StudentStatCard: React.FC = () => {
     {
       id: "pending-reports",
       title: "Pending Reports",
-      value: "0",
+      value: String(myReports.filter((r) => r.status === "pending").length),
       icon: AlertCircle,
       color: "bg-orange-500",
       iconShadow: "shadow-orange-500/40",
       dot: "bg-orange-400",
       glow: "glow-orange",
-      route: "/student/report",
+      route: "/student/borrow-history?tab=report",
     },
     {
       id: "usage",

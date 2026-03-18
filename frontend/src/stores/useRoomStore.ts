@@ -1,23 +1,27 @@
 import { create } from "zustand";
-import type { Room } from "@/types/room";
-import { roomService, CreateRoomPayload } from "@/services/roomService";
+import type { Room, BuildingGroup } from "@/types/room";
+import { roomService, type CreateRoomPayload } from "@/services/roomService";
 
 type RoomStore = {
   rooms: Room[];
   currentRoom: Room | null;
+  statusCenterData: BuildingGroup[];
   loading: boolean;
   error: string | null;
 
   fetchAll: () => Promise<void>;
   fetchById: (id: string) => Promise<void>;
+  fetchStatusCenter: (params?: any) => Promise<void>;
   createRoom: (payload: CreateRoomPayload) => Promise<void>;
   updateRoom: (id: string, payload: Partial<CreateRoomPayload>) => Promise<void>;
   deleteRoom: (id: string) => Promise<void>;
+  fetchByBuildingId: (buildingId: string) => Promise<void>;
 };
 
 export const useRoomStore = create<RoomStore>((set) => ({
   rooms: [],
   currentRoom: null,
+  statusCenterData: [],
   loading: false,
   error: null,
 
@@ -33,6 +37,18 @@ export const useRoomStore = create<RoomStore>((set) => ({
     }
   },
 
+  fetchStatusCenter: async (params?: any) => {
+    try {
+      set({ loading: true, error: null });
+      const data = await roomService.getStatusCenter(params);
+      set({ statusCenterData: data });
+    } catch (error: any) {
+      set({ error: error?.response?.data?.message || "Cannot fetch room status center" });
+    } finally {
+      set({ loading: false });
+    }
+  },
+
   fetchById: async (id: string) => {
     try {
       set({ loading: true, error: null });
@@ -40,6 +56,18 @@ export const useRoomStore = create<RoomStore>((set) => ({
       set({ currentRoom: data });
     } catch (error: any) {
       set({ error: error?.response?.data?.message || "Cannot fetch room details" });
+    } finally {
+      set({ loading: false });
+    }
+  },
+
+  fetchByBuildingId: async (buildingId: string) => {
+    try {
+      set({ loading: true, error: null });
+      const data = await roomService.getByBuildingId(buildingId);
+      set({ rooms: data });
+    } catch (error: any) {
+      set({ error: error?.response?.data?.message || "Cannot fetch rooms by building" });
     } finally {
       set({ loading: false });
     }

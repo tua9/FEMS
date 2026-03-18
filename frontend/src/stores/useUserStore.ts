@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import type { User } from "@/types/user";
-import { userService, CreateUserPayload } from "@/services/userService";
+import { userService, type CreateUserPayload } from "@/services/userService";
 
 type UserStore = {
   users: User[];
