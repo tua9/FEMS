@@ -27,7 +27,7 @@ const DeviceDetailsModal: React.FC<DeviceDetailsModalProps> = ({ isOpen, device,
     const getVirtualStatusDotClass = (vStatus: string) => {
         switch (vStatus) {
             case 'Available': return { ping: 'bg-emerald-400', static: 'bg-emerald-500', text: 'text-emerald-500' };
-            case 'Reserved': 
+            case 'Reserved':
             case 'In Use': return { ping: 'bg-amber-400', static: 'bg-amber-500', text: 'text-amber-500' };
             case 'Broken': return { ping: 'bg-red-400', static: 'bg-red-500', text: 'text-red-500' };
             case 'Maintenance': return { ping: 'bg-orange-400', static: 'bg-orange-500', text: 'text-orange-500' };
@@ -46,8 +46,8 @@ const DeviceDetailsModal: React.FC<DeviceDetailsModalProps> = ({ isOpen, device,
         if (['Reserved', 'In Use'].includes(vStatus)) {
             import('../../../services/borrowRequestService').then(({ borrowRequestService }) => {
                 borrowRequestService.getAllBorrowRequests().then((reqs: any[]) => {
-                    const active = reqs.find(r => 
-                        (r.equipment_id?._id === device._id || r.equipment_id === device._id) && 
+                    const active = reqs.find(r =>
+                        (r.equipment_id?._id === device._id || r.equipment_id === device._id) &&
                         ['approved', 'handed_over', 'borrowing'].includes(r.status)
                     );
                     setActiveRequest(active);
@@ -127,12 +127,6 @@ const DeviceDetailsModal: React.FC<DeviceDetailsModalProps> = ({ isOpen, device,
                             <div className="p-6 rounded-3xl bg-white/40 dark:bg-slate-900/30 border-2 border-white dark:border-slate-700 shadow-sm grow flex flex-col justify-center">
                                 <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Current Location</h4>
                                 <div className="flex items-center gap-3">
-<<<<<<< HEAD
-                                    <span className={`px-4 py-1.5 rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-sm border-2 border-transparent ${getStatusColor(device.status)}`}>
-                                        {device.status}
-                                    </span>
-                                    <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">{device.category} • CODE: {device.code || 'N/A'}</span>
-=======
                                     <div className="w-10 h-10 rounded-2xl bg-indigo-50 dark:bg-indigo-900/20 text-indigo-500 flex items-center justify-center border-2 border-indigo-100 dark:border-indigo-900/30">
                                         <span className="material-symbols-outlined text-xl">location_on</span>
                                     </div>
@@ -149,7 +143,6 @@ const DeviceDetailsModal: React.FC<DeviceDetailsModalProps> = ({ isOpen, device,
                                         <span className="material-symbols-outlined text-xl">calendar_today</span>
                                     </div>
                                     <p className="font-black text-slate-800 dark:text-white leading-tight">{formatDate(device.createdAt)}</p>
->>>>>>> mergeMy
                                 </div>
                             </div>
                         </div>
@@ -167,7 +160,7 @@ const DeviceDetailsModal: React.FC<DeviceDetailsModalProps> = ({ isOpen, device,
                                 {vStatus === 'Available' ? 'Available in Inventory' : `Currently ${vStatus}`}
                             </p>
                         </div>
-                        
+
                         {/* New Borrow Tracking Section */}
                         {['Reserved', 'In Use'].includes(vStatus) && activeRequest && (
                             <div className="mt-4 pt-4 border-t border-slate-200 dark:border-slate-700 w-full flex flex-col items-center justify-center gap-1.5 transition-all text-sm">

@@ -32,13 +32,6 @@ const reportSchema = new mongoose.Schema(
       default: 'pending',
     },
 
-<<<<<<< HEAD
-
-    severity: {
-      type: String,
-      enum: ['low', 'medium', 'high', 'critical'],
-      default: 'medium',
-=======
     priority: {
       type: String,
       enum: ['low', 'medium', 'high', 'critical'],
@@ -49,7 +42,6 @@ const reportSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
       default: null,
->>>>>>> mergeMy
     },
 
 
@@ -57,11 +49,8 @@ const reportSchema = new mongoose.Schema(
     processed_at: { type: Date, default: null },
     processed_by: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
 
-<<<<<<< HEAD
-=======
     assigned_to: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
 
->>>>>>> mergeMy
 
     img: {
       type: String,

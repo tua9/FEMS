@@ -10,10 +10,7 @@ import {
   rejectBorrowRequest,
   handoverBorrowRequest,
   returnBorrowRequest,
-<<<<<<< HEAD
-=======
   remindBorrowRequest,
->>>>>>> mergeMy
   getPendingBorrowRequests,
   getApprovedByMe,
 } from '../controllers/borrowRequestController.js'

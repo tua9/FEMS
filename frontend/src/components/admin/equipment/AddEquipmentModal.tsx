@@ -18,12 +18,6 @@ const AddEquipmentModal: React.FC<AddEquipmentModalProps> = ({ isOpen, onClose, 
     const [name, setName] = useState('');
     const [category, setCategory] = useState('');
     const [quantity, setQuantity] = useState(1);
-<<<<<<< HEAD
-    const [description, setDescription] = useState('');
-    const [warranty, setWarranty] = useState('');
-    const [purchaseDate, setPurchaseDate] = useState('');
-=======
->>>>>>> mergeMy
     const [code, setCode] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -35,25 +29,12 @@ const AddEquipmentModal: React.FC<AddEquipmentModalProps> = ({ isOpen, onClose, 
             setName(equipment.name);
             setCategory(equipment.category);
             setQuantity(1);
-<<<<<<< HEAD
-            // location is handled via room_id in the new model
-            setDescription((equipment as any).description || '');
-            setWarranty(equipment.updatedAt || ''); // Placeholder if warranty is not in new type
-            setPurchaseDate(equipment.createdAt || ''); // Placeholder
-=======
->>>>>>> mergeMy
             setCode(equipment.code || '');
         } else {
             setName('');
             setCategory('');
             setQuantity(1);
-<<<<<<< HEAD
-            setDescription('');
-            setWarranty('');
-            setPurchaseDate('');
-=======
             setCode('');
->>>>>>> mergeMy
             setCode('');
         }
     }, [equipment, isOpen]);
@@ -67,11 +48,7 @@ const AddEquipmentModal: React.FC<AddEquipmentModalProps> = ({ isOpen, onClose, 
                 name,
                 category,
                 status: (equipment?.status as any) || 'good',
-<<<<<<< HEAD
-                room_id: null, // Placeholder, should be selected from a room list
-=======
                 room_id: (equipment?.room_id as any)?._id || (equipment?.room_id as any) || null,
->>>>>>> mergeMy
                 code: code || undefined
             };
 
@@ -153,33 +130,19 @@ const AddEquipmentModal: React.FC<AddEquipmentModalProps> = ({ isOpen, onClose, 
                             </div>
 
                             <div className="space-y-1.5">
-<<<<<<< HEAD
-                                <label className="text-xs font-bold text-slate-700 dark:text-slate-300 ml-1">Asset Code (Optional)</label>
-=======
                                 <label className={labelClasses}>Asset Code (Optional)</label>
->>>>>>> mergeMy
                                 <input
                                     type="text"
                                     value={code}
                                     onChange={e => setCode(e.target.value)}
-<<<<<<< HEAD
-                                    className="w-full bg-white/50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-[#1A2B56] dark:focus:ring-blue-500 outline-none transition-all dark:text-white"
-=======
                                     className={inputClasses}
->>>>>>> mergeMy
                                     placeholder="e.g. FPT-LAP-082"
                                 />
                             </div>
 
-<<<<<<< HEAD
-                            <div className="space-y-1.5">
-                                <label className="text-xs font-bold text-slate-700 dark:text-slate-300 ml-1">Category <span className="text-red-500">*</span></label>
-                                <select
-=======
                             <div className="space-y-1.5 relative">
                                 <label className={labelClasses}>Primary Category <span className="text-red-500">*</span></label>
                                 <CustomDropdown
->>>>>>> mergeMy
                                     value={category}
                                     options={[
                                         { value: '', label: 'Select Category' },
