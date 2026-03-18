@@ -16,7 +16,7 @@ type ReportStore = {
   cancelMyReport: (id: string) => Promise<void>;
 };
 
-export const useReportStore = create<ReportStore>((set) => ({
+export const useReportStore = create<ReportStore>((set, get) => ({
   reports: [],
   myReports: [],
   loading: false,
@@ -24,6 +24,7 @@ export const useReportStore = create<ReportStore>((set) => ({
   error: null,
 
   fetchAllReports: async () => {
+    if (get().loading) return;
     try {
       set({ loading: true, error: null });
       const data = await reportService.getAll();
@@ -36,6 +37,7 @@ export const useReportStore = create<ReportStore>((set) => ({
   },
 
   fetchMyReports: async () => {
+    if (get().loading) return;
     try {
       set({ loading: true, error: null });
       const data = await reportService.getPersonalHistory();
