@@ -8,7 +8,7 @@ import AdminUsers from "@/pages/admin/UserManagement";
 import AdminReports from "@/pages/admin/DamageReports";
 import AdminNotifications from "@/pages/admin/AdminNotifications";
 import ProfilePage from "@/pages/admin/Profile";
-import LecturerChangePassword from "@/pages/lecturer/LecturerChangePassword";
+import ChangePasswordPage from "@/pages/shared/ChangePasswordPage";
 
 const AdminRoutes = () => (
   <Route element={<ProtectedRoute allowRoles={["admin"]} />}>
@@ -20,7 +20,7 @@ const AdminRoutes = () => (
       <Route path="/admin/reports" element={<AdminReports />} />
       <Route path="/admin/notifications" element={<AdminNotifications />} />
       <Route path="/admin/profile" element={<ProfilePage />} />
-      <Route path="/admin/change-password" element={<LecturerChangePassword />} />
+      <Route path="/admin/change-password" element={<ChangePasswordPage />} />
     </Route>
   </Route>
 );

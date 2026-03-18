@@ -8,7 +8,9 @@ import {
 } from "lucide-react";
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuthStore } from "../../stores/useAuthStore";
+import { useAuthStore } from "@/stores/useAuthStore";
+import { authService } from "@/services/authService";
+import { AxiosError } from "axios";
 
 // ─── Password strength helper ─────────────────────────────────────────────────
 function getStrength(pw: string): {
@@ -105,10 +107,11 @@ const ROLE_PREFIX: Record<string, string> = {
   student:  "/student",
   lecturer: "/lecturer",
   admin:    "/admin",
+  technician: "/technician",
 };
 
-// ─── LecturerChangePassword ───────────────────────────────────────────────────
-const LecturerChangePassword: React.FC = () => {
+// ─── ChangePasswordPage ───────────────────────────────────────────────────
+export default function ChangePasswordPage() {
   const navigate = useNavigate();
   const { user } = useAuthStore();
   const role = user?.role || "student";
@@ -134,6 +137,8 @@ const LecturerChangePassword: React.FC = () => {
       errs.next = "Must contain at least one uppercase letter.";
     else if (!/[0-9]/.test(next))
       errs.next = "Must contain at least one number.";
+    else if (!/[!@#$%^&*]/.test(next))
+      errs.next = "Must contain at least one special character (!@#$%^&*).";
     if (!confirm) errs.confirm = "Please confirm your new password.";
     else if (next !== confirm) errs.confirm = "Passwords do not match.";
     if (current && next && current === next)
@@ -146,10 +151,21 @@ const LecturerChangePassword: React.FC = () => {
     e.preventDefault();
     if (!validate()) return;
     setLoading(true);
-    // Simulate API call
-    await new Promise((r) => setTimeout(r, 1200));
-    setLoading(false);
-    setSuccess(true);
+    setErrors({});
+    
+    try {
+      await authService.changePassword(current, next);
+      setSuccess(true);
+    } catch (err: unknown) {
+      if (err instanceof AxiosError && err.response?.data?.message) {
+        // Assume root cause could be incorrect current password
+        setErrors({ current: err.response.data.message });
+      } else {
+        setErrors({ current: "An unexpected error occurred. Please try again." });
+      }
+    } finally {
+      setLoading(false);
+    }
   };
 
   if (success) {
@@ -164,21 +180,13 @@ const LecturerChangePassword: React.FC = () => {
               Password Updated!
             </h2>
             <p className="mb-8 text-sm font-medium text-[#1E2B58]/55 dark:text-white/50">
-              Your password has been changed successfully. You can now log in
-              with your new password.
+              Your password has been changed successfully. You will need to log in again on other devices or if your session expires.
             </p>
             <div className="flex flex-col gap-3">
               <button
                 type="button"
-                onClick={() => navigate(profilePath)}
-                className="w-full rounded-2xl bg-[#1E2B58] px-8 py-3.5 text-[0.875rem] font-extrabold text-white shadow-lg shadow-[#1E2B58]/20 transition-all hover:scale-[1.02] hover:bg-[#1E2B58]/90 active:scale-95"
-              >
-                Back to Profile
-              </button>
-              <button
-                type="button"
                 onClick={() => navigate(dashboardPath)}
-                className="glass-card w-full !rounded-2xl px-8 py-3.5 text-[0.875rem] font-bold text-[#1E2B58]/70 transition-opacity hover:opacity-80 dark:text-white/70"
+                className="w-full rounded-2xl bg-[#1E2B58] px-8 py-3.5 text-[0.875rem] font-extrabold text-white shadow-lg shadow-[#1E2B58]/20 transition-all hover:scale-[1.02] hover:bg-[#1E2B58]/90 active:scale-95"
               >
                 Go to Dashboard
               </button>
@@ -253,7 +261,7 @@ const LecturerChangePassword: React.FC = () => {
                 }}
                 placeholder="Enter new password"
                 error={errors.next}
-                hint="At least 8 characters, 1 uppercase letter, 1 number."
+                hint="At least 8 characters, 1 uppercase letter, 1 number, 1 special character."
               />
               {/* Strength meter */}
               {next && (
@@ -306,6 +314,7 @@ const LecturerChangePassword: React.FC = () => {
                   { label: "8+ characters", ok: next.length >= 8 },
                   { label: "Uppercase letter", ok: /[A-Z]/.test(next) },
                   { label: "Number", ok: /[0-9]/.test(next) },
+                  { label: "Special char", ok: /[!@#$%^&*]/.test(next) },
                   {
                     label: "Passwords match",
                     ok: !!confirm && next === confirm,
@@ -352,6 +361,4 @@ const LecturerChangePassword: React.FC = () => {
       </main>
     </div>
   );
-};
-
-export default LecturerChangePassword;
+}

@@ -10,7 +10,7 @@ import { UsageStatsCenter } from "@/pages/lecturer/UsageStatsCenter";
 import ReportIssuePage from "@/pages/shared/ReportIssuePage";
 import AcademicCalendar from "@/pages/lecturer/AcademicCalendar";
 import ProfilePage from "@/pages/lecturer/Profile";
-import LecturerChangePassword from "@/pages/lecturer/LecturerChangePassword";
+import ChangePasswordPage from "@/pages/shared/ChangePasswordPage";
 // import LecturerNotifications from "@/pages/lecturer/LecturerNotifications";
 
 const LecturerRoutes = () => (
@@ -25,7 +25,7 @@ const LecturerRoutes = () => (
       <Route path="/lecturer/report-issue" element={<ReportIssuePage />} />
       <Route path="/lecturer/calendar" element={<AcademicCalendar />} />
       <Route path="/lecturer/profile" element={<ProfilePage />} />
-      <Route path="/lecturer/change-password" element={<LecturerChangePassword />} />
+      <Route path="/lecturer/change-password" element={<ChangePasswordPage />} />
       {/* <Route path="/lecturer/notifications" element={<LecturerNotifications />} /> */}
     </Route>
   </Route>
