@@ -30,7 +30,7 @@ type BorrowRequestStore = {
   clearSelectedBorrowRequest: () => void;
 };
 
-export const useBorrowRequestStore = create<BorrowRequestStore>((set) => ({
+export const useBorrowRequestStore = create<BorrowRequestStore>((set, get) => ({
   borrowRequests: [],
   pendingBorrowRequests: [],
   approvedByMe: [],
@@ -40,6 +40,7 @@ export const useBorrowRequestStore = create<BorrowRequestStore>((set) => ({
   error: null,
 
   fetchMyBorrowRequests: async () => {
+    if (get().loading) return; 
     try {
       set({ loading: true, error: null });
       const data = await borrowRequestService.getMyBorrowRequests();
@@ -56,6 +57,7 @@ export const useBorrowRequestStore = create<BorrowRequestStore>((set) => ({
   },
 
   fetchApprovedByMe: async () => {
+    if (get().loading) return;
     try {
       set({ loading: true, error: null });
       const data = await borrowRequestService.getApprovedByMe();
