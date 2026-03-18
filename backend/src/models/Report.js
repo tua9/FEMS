@@ -38,16 +38,9 @@ const reportSchema = new mongoose.Schema(
       default: 'medium',
     },
 
-    approved_by: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'User',
-      default: null,
-    },
-
 
     // Timestamps + actor for admin approve/reject/fix
     processed_at: { type: Date, default: null },
-    processed_by: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
 
     assigned_to: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
 
