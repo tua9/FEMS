@@ -48,9 +48,11 @@ const signIn = async (body) => {
     )
   }
 
-  const user = await User.findOne({ username })
+  const user = await User.findOne({
+    $or: [{ username }, { email: username }]
+  })
   if (!user) {
-    throw new ApiError(StatusCodes.NOT_FOUND, 'Invalid username')
+    throw new ApiError(StatusCodes.NOT_FOUND, 'Invalid username or email')
   }
 
   if (user.isActive === false) {

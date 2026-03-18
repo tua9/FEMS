@@ -2,11 +2,17 @@ import nodemailer from 'nodemailer'
 import { env } from '../config/environment.js'
 
 const transporter = nodemailer.createTransport({
-  service: 'gmail',
+  host: 'smtp.gmail.com',
+  port: 587,
+  secure: false, // true cho port 465, false cho 587 (sẽ tự động dùng STARTTLS)
   auth: {
     user: env.EMAIL_USER,
     pass: env.EMAIL_PASS,
   },
+  tls: {
+    // Ép bỏ qua các lỗi chứng chỉ nội bộ do Antivirus/Firewall Windows gây ra
+    rejectUnauthorized: false
+  }
 })
 
 const sendPasswordResetEmail = async (toEmail, token) => {
