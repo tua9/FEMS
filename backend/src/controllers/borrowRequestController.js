@@ -78,10 +78,16 @@ export const returnBorrowRequest = asyncHandler(async (req, res) => {
   res.status(StatusCodes.OK).json(result)
 })
 
+export const remindBorrowRequest = asyncHandler(async (req, res) => {
+  const result = await borrowRequestService.remindBorrowRequest(req.params.id)
+  res.status(StatusCodes.OK).json(result)
+})
+
 export const getPendingBorrowRequests = asyncHandler(async (req, res) => {
   const result = await borrowRequestService.getPendingBorrowRequests()
   res.status(StatusCodes.OK).json(result)
 })
+
 export const getApprovedByMe = asyncHandler(async (req, res) => {
   const result = await borrowRequestService.getApprovedByMe(req.user._id)
   res.status(StatusCodes.OK).json(result)

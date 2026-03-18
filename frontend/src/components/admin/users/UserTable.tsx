@@ -24,7 +24,7 @@ const UserTable: React.FC<UserTableProps> = ({ users, onOpenDetails, onEdit, onD
 
     return (
         <div>
-            <table className="w-full text-left border-separate border-spacing-y-3">
+            <table className="w-full text-left border-separate border-spacing-y-3 table-fixed">
                 <colgroup>
                     <col className="w-[32%]" />
                     <col className="w-[22%]" />
@@ -47,7 +47,7 @@ const UserTable: React.FC<UserTableProps> = ({ users, onOpenDetails, onEdit, onD
                             <tr key={user._id} className="group cursor-pointer" onClick={() => onOpenDetails && onOpenDetails(user)}>
                                 {/* AdminUser: avatar + name + email */}
                                 <td className={`p-3 rounded-l-xl ${rowBg}`}>
-                                    <div className="flex items-center gap-3">
+                                    <div className="flex items-center gap-3 max-w-[280px]">
                                         {user.avatarUrl ? (
                                             <img alt={user.displayName} className="w-9 h-9 rounded-full object-cover flex-shrink-0 border-2 border-white dark:border-slate-600 shadow-sm" src={user.avatarUrl} />
                                         ) : (
@@ -55,9 +55,9 @@ const UserTable: React.FC<UserTableProps> = ({ users, onOpenDetails, onEdit, onD
                                                 {user.displayName?.charAt(0) || user.username?.charAt(0)}
                                             </div>
                                         )}
-                                        <div className="min-w-0">
+                                        <div className="min-w-0 flex-1">
                                             <p className="text-sm font-bold text-slate-800 dark:text-white truncate">{user.displayName}</p>
-                                            <p className="text-[10px] text-slate-500 dark:text-slate-400 font-semibold truncate">{user.email}</p>
+                                            <p className="text-[10px] text-slate-500 dark:text-slate-400 font-semibold truncate break-all">{user.email}</p>
                                         </div>
                                     </div>
                                 </td>
@@ -74,8 +74,8 @@ const UserTable: React.FC<UserTableProps> = ({ users, onOpenDetails, onEdit, onD
 
                                 {/* Status: pill badge */}
                                 <td className={`p-3 ${rowBg}`}>
-                                    <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider inline-flex items-center justify-center whitespace-nowrap ${getStatusStyle(user.avatarId === 'Inactive' ? 'Inactive' : 'Active')}`}>
-                                        {user.avatarId === 'Inactive' ? 'Inactive' : 'Active'}
+                                    <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider inline-flex items-center justify-center whitespace-nowrap ${getStatusStyle(user.isActive !== false ? 'Active' : 'Inactive')}`}>
+                                        {user.isActive !== false ? 'Active' : 'Inactive'}
                                     </span>
                                 </td>
 
@@ -90,9 +90,9 @@ const UserTable: React.FC<UserTableProps> = ({ users, onOpenDetails, onEdit, onD
                                         </button>
                                         <button
                                             onClick={() => onToggleStatus && onToggleStatus(user)}
-                                            className={`p-1.5 rounded-lg transition-all inline-flex items-center justify-center ${user.avatarId !== 'Inactive' ? 'hover:bg-amber-50 dark:hover:bg-amber-900/30 text-slate-400 hover:text-amber-500' : 'hover:bg-emerald-50 dark:hover:bg-emerald-900/30 text-slate-400 hover:text-emerald-500'}`}
+                                            className={`p-1.5 rounded-lg transition-all inline-flex items-center justify-center ${user.isActive !== false ? 'hover:bg-amber-50 dark:hover:bg-amber-900/30 text-slate-400 hover:text-amber-500' : 'hover:bg-emerald-50 dark:hover:bg-emerald-900/30 text-slate-400 hover:text-emerald-500'}`}
                                         >
-                                            <span className="material-symbols-outlined text-[10px]">{user.avatarId !== 'Inactive' ? 'person_off' : 'check_circle'}</span>
+                                            <span className="material-symbols-outlined text-[10px]">{user.isActive !== false ? 'person_off' : 'check_circle'}</span>
                                         </button>
                                         <button
                                             onClick={() => onDelete && onDelete(user)}

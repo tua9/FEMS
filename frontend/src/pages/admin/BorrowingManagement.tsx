@@ -8,6 +8,7 @@ import BorrowingDetailModal from '../../components/admin/borrowing/BorrowingDeta
 import { useBorrowRequestStore } from '../../stores/useBorrowRequestStore';
 import type { BorrowRequest } from '../../types/borrowRequest';
 import { PageHeader } from '@/components/shared/PageHeader';
+import { toast } from 'sonner';
 
 const BorrowingManagement: React.FC = () => {
     const borrowRecords = useBorrowRequestStore(state => state.borrowRequests);
@@ -17,6 +18,7 @@ const BorrowingManagement: React.FC = () => {
     const rejectRequest = useBorrowRequestStore(state => state.rejectBorrowRequest);
     const returnRequest = useBorrowRequestStore(state => state.returnBorrowRequest);
     const handoverRequest = useBorrowRequestStore(state => state.handoverBorrowRequest);
+    const remindRequest = useBorrowRequestStore(state => state.remindBorrowRequest);
 
     const [isNewBorrowModalOpen, setIsNewBorrowModalOpen] = useState(false);
     const [selectedRecord, setSelectedRecord] = useState<BorrowRequest | null>(null);
@@ -34,15 +36,20 @@ const BorrowingManagement: React.FC = () => {
             else if (action === 'handed_over') await handoverRequest(id);
             else if (action === 'returned') await returnRequest(id);
             else if (action === 'rejected') await rejectRequest(id);
-        } catch (error) {
-            alert("Failed to update status");
+            
+            toast.success(`Request ${action} successfully`);
+        } catch (error: any) {
+            toast.error(error?.response?.data?.message || "Failed to update status");
         }
     };
 
     const handleAlert = async (id: string) => {
-        // alert logic might need a dedicated service later
-        console.log("Send alert for", id);
-        alert("Alert logic to be implemented with notification service.");
+        try {
+            await remindRequest(id);
+            toast.success("Reminder sent successfully to borrower");
+        } catch (error: any) {
+            toast.error(error?.response?.data?.message || "Failed to send reminder");
+        }
     };
 
     const handleViewDetails = (record: BorrowRequest) => {
@@ -71,7 +78,13 @@ const BorrowingManagement: React.FC = () => {
                 equipment?.toLowerCase().includes(searchQuery.toLowerCase()) ||
                 record._id.toLowerCase().includes(searchQuery.toLowerCase());
 
-            const matchesStatus = statusFilter === 'All' || record.status === statusFilter;
+            // Handle multi-status filtering for Active Loans (Handed Over + Overdue)
+            const isRecOverdue = record.status === 'overdue' || (record.status === 'handed_over' && new Date(record.return_date) < new Date());
+            
+            const matchesStatus = statusFilter === 'All' 
+                || (statusFilter === 'handed_over' && (record.status === 'handed_over' || isRecOverdue))
+                || (statusFilter === 'overdue' && isRecOverdue)
+                || record.status === statusFilter;
 
             return matchesSearch && matchesStatus;
         })
@@ -86,9 +99,13 @@ const BorrowingManagement: React.FC = () => {
     }
 
     // Filter statuses for counts
+    const now = new Date();
+    const isOverdueGlobal = (r: typeof borrowRecords[0]) => 
+        r.status === 'overdue' || (r.status === 'handed_over' && new Date(r.return_date) < now);
+
     const pendingCount = borrowRecords.filter(r => r.status === 'pending').length;
-    const overdueCount = 0; // Backend needs logic for overdue status
-    const activeLoansCount = borrowRecords.filter(r => r.status === 'approved' || r.status === 'handed_over').length;
+    const activeLoansCount = borrowRecords.filter(r => r.status === 'handed_over' || isOverdueGlobal(r)).length;
+    const overdueCount = borrowRecords.filter(isOverdueGlobal).length;
 
     const isBlurred = isNewBorrowModalOpen || isDetailModalOpen;
 
@@ -115,7 +132,7 @@ const BorrowingManagement: React.FC = () => {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
                     {/* Active Loans Card */}
                     <button
-                        onClick={() => setStatusFilter(statusFilter === 'approved' ? 'All' : 'approved')}
+                        onClick={() => setStatusFilter(statusFilter === 'handed_over' ? 'All' : 'handed_over')}
                         className="group relative p-6 ambient-shadow flex items-center justify-between rounded-[24px] border transition-all duration-300 hover:scale-[1.02] active:scale-95 text-left w-full backdrop-blur-xl bg-white/60 dark:bg-slate-800/60 border-white/60 dark:border-white/10"
                     >
                         <div>
@@ -192,8 +209,10 @@ const BorrowingManagement: React.FC = () => {
                                                 { value: 'pending', label: 'Pending' },
                                                 { value: 'approved', label: 'Approved' },
                                                 { value: 'handed_over', label: 'Handed Over' },
+                                                { value: 'overdue', label: 'Overdue' },
                                                 { value: 'returned', label: 'Returned' },
                                                 { value: 'rejected', label: 'Rejected' },
+                                                { value: 'cancelled', label: 'Cancelled' },
                                             ]}
                                             onChange={v => setStatusFilter(v as any)}
                                             align="right"

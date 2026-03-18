@@ -1,5 +1,6 @@
 export type ReportType = 'equipment' | 'infrastructure' | 'other';
 export type ReportStatus = 'pending' | 'approved' | 'rejected' | 'processing' | 'fixed';
+export type ReportPriority = 'low' | 'medium' | 'high';
 
 export interface Report {
   _id: string;
@@ -24,7 +25,18 @@ export interface Report {
   } | string | null;
   type: ReportType;
   status: ReportStatus;
+<<<<<<< HEAD
   processed_by?: {
+=======
+  priority: ReportPriority;
+  processed_by?: {
+    _id: string;
+    username: string;
+    displayName?: string;
+  } | string | null;
+  processed_at?: string | null;
+  assigned_to?: {
+>>>>>>> mergeMy
     _id: string;
     username: string;
     displayName?: string;
@@ -40,6 +52,10 @@ export interface CreateReportPayload {
   equipment_id?: string | null;
   room_id?: string | null;
   type: ReportType;
+<<<<<<< HEAD
+=======
+  priority?: ReportPriority;
+>>>>>>> mergeMy
   severity?: 'low' | 'medium' | 'high' | 'critical';
   img?: string | null;
   description?: string | null;

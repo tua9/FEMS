@@ -50,6 +50,10 @@ const signIn = async (body) => {
     throw new ApiError(StatusCodes.NOT_FOUND, 'Invalid username')
   }
 
+  if (user.isActive === false) {
+    throw new ApiError(StatusCodes.FORBIDDEN, 'Your account is deactivated. Please contact admin.')
+  }
+
   const isPasswordValid = await bcrypt.compare(password, user.hashedPassword)
   if (!isPasswordValid) {
     throw new ApiError(StatusCodes.UNAUTHORIZED, 'Invalid password')

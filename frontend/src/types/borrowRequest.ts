@@ -3,6 +3,7 @@ export type BorrowRequestStatus =
   | "approved"
   | "rejected"
   | "handed_over"
+  | "overdue"
   | "returned"
   | string;
 
@@ -40,6 +41,7 @@ export interface BorrowRequest {
   borrow_date: string;
   return_date: string;
   note?: string | null;
+  decision_note?: string | null;
   createdAt?: string;
   updatedAt?: string;
 }

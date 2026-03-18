@@ -64,4 +64,8 @@ export const borrowRequestService = {
     const res = await api.get("/requests/approved-by-me");
     return res.data;
   },
+  async remindBorrowRequest(id: string): Promise<{ message: string }> {
+    const res = await api.post(`/requests/${id}/remind`);
+    return res.data;
+  },
 };

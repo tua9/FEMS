@@ -38,7 +38,7 @@ export interface Building {
 
 // ── Room ─────────────────────────────────────────────────────────────────────
 
-export type RoomType   = 'classroom' | 'lab' | 'office' | 'meeting' | 'other';
+export type RoomType = 'classroom' | 'lab' | 'office' | 'meeting' | 'other';
 export type RoomStatus = 'available' | 'occupied' | 'maintenance';
 
 export interface Room {
@@ -54,8 +54,8 @@ export interface Room {
 
 // ── Equipment ─────────────────────────────────────────────────────────────────
 
-export type EquipmentStatus   = 'good' | 'broken' | 'maintenance';
-export type EquipmentCategory = 'laptop' | 'projector' | 'tablet' | 'monitor' | 'camera' | 'audio' | 'network' | 'printer' | 'other';
+export type EquipmentStatus = 'good' | 'broken' | 'maintenance';
+export type EquipmentCategory = string;
 
 export interface Equipment {
   _id: string;
@@ -74,8 +74,8 @@ export interface Equipment {
 
 // ── BorrowRequest ────────────────────────────────────────────────────────────
 
-export type BorrowRequestType   = 'equipment' | 'infrastructure';
-export type BorrowRequestStatus = 'pending' | 'approved' | 'rejected' | 'returned';
+export type BorrowRequestType = 'equipment' | 'infrastructure';
+export type BorrowRequestStatus = 'pending' | 'approved' | 'rejected' | 'handed_over' | 'returned' | 'cancelled' | 'borrowing' | 'closed';
 
 export interface BorrowRequest {
   _id: string;
@@ -99,7 +99,7 @@ export interface BorrowRequest {
 
 // ── Report ───────────────────────────────────────────────────────────────────
 
-export type ReportType   = 'equipment' | 'infrastructure' | 'other';
+export type ReportType = 'equipment' | 'infrastructure' | 'other';
 export type ReportStatus = 'pending' | 'approved' | 'rejected';
 
 export interface Report {

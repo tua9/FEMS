@@ -10,6 +10,7 @@ export interface User {
   avatarId?: string;
   phone?: string;
   dob?: string;
+  isActive?: boolean;
   createdAt?: string;
   updatedAt?: string;
 }

@@ -86,8 +86,22 @@ const getEquipmentInventory = async (queries) => {
   }
 
   if (status && status !== 'all-status') {
+<<<<<<< HEAD
     if (status === 'Available') matchQuery.status = 'good'
     if (status === 'Maintenance') matchQuery.status = { $in: ['broken', 'maintenance'] }
+=======
+    if (status === 'Available') {
+       matchQuery.status = 'good';
+       matchQuery.borrowed_by = null;
+    }
+    if (status === 'In Use') {
+       matchQuery.status = 'good';
+       matchQuery.borrowed_by = { $ne: null };
+    }
+    if (status === 'Maintenance') {
+       matchQuery.status = { $in: ['broken', 'maintenance'] };
+    }
+>>>>>>> mergeMy
   }
 
   const pipeline = [

@@ -1,5 +1,6 @@
 import React from 'react';
 import type { Equipment } from '../../../types/equipment';
+import { getDerivedStatus } from '../../../utils/equipmentHelpers';
 
 interface EquipmentTableProps {
     equipments: Equipment[];
@@ -8,15 +9,18 @@ interface EquipmentTableProps {
     onEdit?: (asset: Equipment) => void;
     onDelete?: (asset: Equipment) => void;
     onReportDamage?: (asset: Equipment) => void;
+    activeRequests?: any[];
 }
 
-const EquipmentTable: React.FC<EquipmentTableProps> = ({ equipments, onOpenDetails, onOpenQRCode, onEdit, onDelete, onReportDamage }) => {
+const EquipmentTable: React.FC<EquipmentTableProps> = ({ equipments, onOpenDetails, onOpenQRCode, onEdit, onDelete, onReportDamage, activeRequests = [] }) => {
 
     const getStatusStyle = (status: string) => {
         switch (status) {
-            case 'good': return 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400';
-            case 'maintenance': return 'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400';
-            case 'broken': return 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400';
+            case 'Available': return 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400';
+            case 'In Use': return 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400';
+            case 'Reserved': return 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400';
+            case 'Broken': return 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400';
+            case 'Maintenance': return 'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400';
             default: return 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300';
         }
     };
@@ -25,7 +29,7 @@ const EquipmentTable: React.FC<EquipmentTableProps> = ({ equipments, onOpenDetai
 
     return (
         <div className="overflow-x-auto">
-            <table className="w-full text-left border-separate border-spacing-y-4 min-w-[900px]">
+            <table className="w-full text-left border-separate border-spacing-y-4 min-w-[900px] table-fixed">
                 <thead>
                     <tr className="text-slate-800 dark:text-slate-300">
                         <th className="px-6 pb-2 text-[11px] font-semibold uppercase tracking-[0.2em] opacity-80">Equipment</th>
@@ -44,18 +48,23 @@ const EquipmentTable: React.FC<EquipmentTableProps> = ({ equipments, onOpenDetai
                                         <div className="w-12 h-12 rounded-xl bg-white dark:bg-slate-700 p-1 shadow-sm overflow-hidden flex-shrink-0">
                                             <img alt={item.name} className="w-full h-full object-cover rounded-lg" src={(item as any).imageUrl || 'https://via.placeholder.com/150'} />
                                         </div>
-                                        <div>
-                                            <p className="text-sm font-semibold text-slate-800 dark:text-white">{item.name}</p>
-                                            <p className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">ID: {item._id}</p>
+                                        <div className="min-w-0 flex-1">
+                                            <p className="text-sm font-semibold text-slate-800 dark:text-white truncate" title={item.name}>{item.name}</p>
+                                            <p className="text-[10px] text-slate-500 dark:text-slate-400 font-medium truncate">ID: {item._id}</p>
                                         </div>
                                     </div>
                                 </td>
-                                <td className={`p-4 text-sm font-medium text-slate-600 dark:text-slate-300 hidden md:table-cell ${rowBg}`}>{item.category}</td>
-                                <td className={`p-4 text-sm font-medium text-slate-600 dark:text-slate-300 hidden sm:table-cell ${rowBg}`}>{(item.room_id as any)?.name || 'N/A'}</td>
+                                <td className={`p-4 text-sm font-medium text-slate-600 dark:text-slate-300 hidden md:table-cell max-w-[150px] truncate ${rowBg}`} title={item.category}>{item.category}</td>
+                                <td className={`p-4 text-sm font-medium text-slate-600 dark:text-slate-300 hidden sm:table-cell max-w-[150px] truncate ${rowBg}`} title={(item.room_id as any)?.name}>{(item.room_id as any)?.name || 'N/A'}</td>
                                 <td className={`p-4 ${rowBg}`}>
-                                    <span className={`px-3 py-1 rounded-full text-[10px] font-semibold uppercase tracking-wider inline-flex items-center justify-center whitespace-nowrap ${getStatusStyle(item.status)}`}>
-                                        {item.status}
-                                    </span>
+                                    {(() => {
+                                        const vStatus = getDerivedStatus(item, activeRequests);
+                                        return (
+                                            <span className={`px-3 py-1 rounded-full text-[10px] font-semibold uppercase tracking-wider inline-flex items-center justify-center whitespace-nowrap ${getStatusStyle(vStatus)}`}>
+                                                {vStatus}
+                                            </span>
+                                        );
+                                    })()}
                                 </td>
                                 <td className={`p-4 rounded-r-2xl text-right ${rowBg}`} onClick={e => e.stopPropagation()}>
                                     <div className="flex items-center justify-end gap-2 text-slate-400">

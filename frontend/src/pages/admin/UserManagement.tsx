@@ -4,6 +4,7 @@ import UserTable from '../../components/admin/users/UserTable';
 import AddUserModal from '../../components/admin/users/AddUserModal';
 import UserDetailModal from '../../components/admin/users/UserDetailModal';
 import DeleteConfirmationModal from '../../components/admin/common/DeleteConfirmationModal';
+import Pagination from '../../components/shared/Pagination';
 import ActionConfirmationModal from '../../components/admin/common/ActionConfirmationModal';
 import { useUserStore } from '../../stores/useUserStore';
 import type { User } from '../../types/user';
@@ -63,8 +64,8 @@ const UserManagement: React.FC = () => {
 
     const confirmToggleStatus = async () => {
         if (userToToggle) {
-            const newStatus = userToToggle.avatarId === 'Inactive' ? 'Active' : 'Inactive';
-            await updateUser(userToToggle._id, { avatarId: newStatus } as any);
+            const newStatus = !userToToggle.isActive;
+            await updateUser(userToToggle._id, { isActive: newStatus } as any);
             setUserToToggle(null);
         }
     };
@@ -73,7 +74,7 @@ const UserManagement: React.FC = () => {
         setIsExporting(true);
         // Simulate CSV generation
         const headers = "ID,Name,Email,Role,Status\n";
-        const rows = users.map(u => `${u._id},${u.displayName},${u.email},${u.role},${u.avatarId === 'Inactive' ? 'Inactive' : 'Active'}`).join("\n");
+        const rows = users.map(u => `${u._id},${u.displayName},${u.email},${u.role},${u.isActive !== false ? 'Active' : 'Inactive'}`).join("\n");
         const blob = new Blob([headers + rows], { type: 'text/csv' });
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
@@ -104,7 +105,7 @@ const UserManagement: React.FC = () => {
 
         const matchesSearch = nameMatch || emailMatch || idMatch;
         const matchesRole = roleFilter === 'All' || user.role.toLowerCase() === roleFilter.toLowerCase();
-        const matchesStatus = statusFilter === 'All' || (statusFilter === 'Active' ? user.avatarId !== 'Inactive' : user.avatarId === 'Inactive');
+        const matchesStatus = statusFilter === 'All' || (statusFilter === 'Active' ? user.isActive !== false : user.isActive === false);
 
         return matchesSearch && matchesRole && matchesStatus;
     });
@@ -128,8 +129,8 @@ const UserManagement: React.FC = () => {
         );
     }
 
-    const activeUsers = users.filter(u => u.avatarId !== 'Inactive').length;
-    const inactiveUsers = users.filter(u => u.avatarId === 'Inactive').length;
+    const activeUsers = users.filter(u => u.isActive !== false).length;
+    const inactiveUsers = users.filter(u => u.isActive === false).length;
 
     const isBlurred = isAddModalOpen || isDetailModalOpen || !!userToDelete || !!userToToggle;
 
@@ -222,9 +223,9 @@ const UserManagement: React.FC = () => {
                     >
                         <div>
                             <p className="text-[10px] font-medium uppercase tracking-[0.2em] text-slate-500 mb-1">Technicians</p>
-                            <p className="text-sm font-black text-slate-800 dark:text-white">
+                            <h3 className="text-3xl font-bold text-[#1A2B56] dark:text-white tracking-tight">
                                 {users.filter(u => u.role === 'technician').length}
-                            </p>
+                            </h3>
                         </div>
                         <div className="w-10 h-10 rounded-full flex items-center justify-center bg-slate-50 dark:bg-slate-700/30 text-slate-400 dark:text-slate-500 transition-all duration-300">
                             <span className="material-symbols-outlined">engineering</span>
@@ -305,38 +306,11 @@ const UserManagement: React.FC = () => {
                             <p className="text-xs font-bold text-slate-500 dark:text-slate-400">
                                 Showing <span className="text-[#1A2B56] dark:text-white">{(currentPage - 1) * ITEMS_PER_PAGE + 1}</span> to <span className="text-[#1A2B56] dark:text-white">{Math.min(currentPage * ITEMS_PER_PAGE, filteredUsers.length)}</span> of <span className="text-[#1A2B56] dark:text-white">{filteredUsers.length}</span> users
                             </p>
-                            <div className="flex items-center gap-2">
-                                <button
-                                    onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-                                    disabled={currentPage === 1}
-                                    className="p-2 flex items-center justify-center rounded-xl bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm"
-                                >
-                                    <span className="material-symbols-outlined text-sm">chevron_left</span>
-                                </button>
-
-                                <div className="flex items-center gap-1.5 mx-2">
-                                    {Array.from({ length: totalPages }).map((_, i) => (
-                                        <button
-                                            key={i + 1}
-                                            onClick={() => setCurrentPage(i + 1)}
-                                            className={`w-8 h-8 flex items-center justify-center rounded-xl text-xs font-bold transition-all shadow-sm
-                                                ${currentPage === i + 1
-                                                    ? 'bg-[#1A2B56] text-white'
-                                                    : 'bg-white dark:bg-slate-700 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-600'}`}
-                                        >
-                                            {i + 1}
-                                        </button>
-                                    ))}
-                                </div>
-
-                                <button
-                                    onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-                                    disabled={currentPage === totalPages}
-                                    className="p-2 flex items-center justify-center rounded-xl bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm"
-                                >
-                                    <span className="material-symbols-outlined text-sm">chevron_right</span>
-                                </button>
-                            </div>
+                            <Pagination
+                                currentPage={currentPage}
+                                totalPages={totalPages}
+                                onPageChange={setCurrentPage}
+                            />
                         </div>
                     )}
                 </div>
@@ -373,15 +347,15 @@ const UserManagement: React.FC = () => {
 
             <ActionConfirmationModal
                 isOpen={!!userToToggle}
-                title={userToToggle?.avatarId !== 'Inactive' ? "Deactivate User Account" : "Activate User Account"}
-                message={userToToggle?.avatarId !== 'Inactive'
+                title={userToToggle?.isActive !== false ? "Deactivate User Account" : "Activate User Account"}
+                message={userToToggle?.isActive !== false
                     ? "Are you sure you want to deactivate this account? The user will no longer be able to sign in."
                     : "Are you sure you want to reactivate this account? The user will regain access to the system."}
                 itemName={userToToggle?.displayName}
-                confirmText={userToToggle?.avatarId !== 'Inactive' ? "Deactivate" : "Activate"}
-                confirmColor={userToToggle?.avatarId !== 'Inactive' ? "bg-amber-500 hover:bg-amber-600" : "bg-emerald-500 hover:bg-emerald-600"}
-                icon={userToToggle?.avatarId !== 'Inactive' ? "person_off" : "check_circle"}
-                iconColor={userToToggle?.avatarId !== 'Inactive' ? "text-amber-500" : "text-emerald-500"}
+                confirmText={userToToggle?.isActive !== false ? "Deactivate" : "Activate"}
+                confirmColor={userToToggle?.isActive !== false ? "bg-amber-500 hover:bg-amber-600" : "bg-emerald-500 hover:bg-emerald-600"}
+                icon={userToToggle?.isActive !== false ? "person_off" : "check_circle"}
+                iconColor={userToToggle?.isActive !== false ? "text-amber-500" : "text-emerald-500"}
                 onClose={() => setUserToToggle(null)}
                 onConfirm={confirmToggleStatus}
             />

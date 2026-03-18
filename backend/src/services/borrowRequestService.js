@@ -5,6 +5,30 @@ import Equipment from '../models/Equipment.js'
 import Room from '../models/Room.js'
 import ApiError from '../utils/ApiError.js'
 
+const autoCancelExpiredRequests = async () => {
+  const approvedRequests = await BorrowRequest.find({ status: 'approved' })
+  const now = new Date()
+
+  for (const req of approvedRequests) {
+    // Lấy ngày hẹn mượn
+    const borrowDate = new Date(req.borrow_date)
+
+    // Chuyển sang ngày tiếp theo
+    const deadline = new Date(borrowDate)
+    deadline.setDate(deadline.getDate() + 1)
+
+    // Set deadline chót là 16:00 (Cộng 8 tiếng từ 08:00 sáng ngày hôm sau)
+    deadline.setHours(16, 0, 0, 0)
+
+    if (now > deadline) {
+      req.status = 'cancelled'
+      req.decision_note = 'Yêu cầu đã bị hệ thống tự động hủy do người mượn không đến nhận thiết bị trễ nhất vào lúc 16:00 của ngày làm việc tiếp theo.'
+      req.cancelled_at = new Date()
+      await req.save()
+    }
+  }
+}
+
 const createBorrowRequest = async (body) => {
   const {
     user_id,
@@ -20,7 +44,6 @@ const createBorrowRequest = async (body) => {
     throw new ApiError(StatusCodes.UNPROCESSABLE_ENTITY, 'user_id is required')
   }
 
-  // Must have at least equipment_id or room_id (or both, for fixed-location equipment)
   if (!equipment_id && !room_id) {
     throw new ApiError(
       StatusCodes.UNPROCESSABLE_ENTITY,
@@ -28,7 +51,6 @@ const createBorrowRequest = async (body) => {
     )
   }
 
-  // 1. Validate Item Condition & Existence
   if (equipment_id) {
     const equipment = await Equipment.findById(equipment_id)
     if (!equipment) {
@@ -58,6 +80,19 @@ const createBorrowRequest = async (body) => {
     throw new ApiError(StatusCodes.UNPROCESSABLE_ENTITY, 'Invalid dates provided')
   }
 
+  if (equipment_id) {
+    const conflictingRequests = await BorrowRequest.find({
+      equipment_id,
+      status: { $in: ['approved', 'handed_over', 'borrowing'] },
+      borrow_date: { $lt: returnDate }, // Existing start < New end
+      return_date: { $gt: borrowDate }  // Existing end > New start
+    })
+
+    if (conflictingRequests.length > 0) {
+      throw new ApiError(StatusCodes.BAD_REQUEST, 'Thiết bị đã có người đặt trước trong hệ thống với khoảng thời gian này. Vui lòng chọn thiết bị hoặc thời gian khác.')
+    }
+  }
+
   if (borrowDate >= returnDate) {
     throw new ApiError(
       StatusCodes.UNPROCESSABLE_ENTITY,
@@ -65,7 +100,6 @@ const createBorrowRequest = async (body) => {
     )
   }
 
-  // Allow requesting for today, but not in the very past (buffer of 5 mins)
   if (borrowDate < new Date(now.getTime() - 5 * 60 * 1000)) {
     throw new ApiError(
       StatusCodes.UNPROCESSABLE_ENTITY,
@@ -82,10 +116,9 @@ const createBorrowRequest = async (body) => {
     borrow_date: borrowDate,
     return_date: returnDate,
     note,
-    status: 'pending', // Explicitly set to pending
+    status: 'pending',
   })
 
-  // Deep populate for immediate response if needed
   const populatedRequest = await BorrowRequest.findById(newBorrowRequest._id)
     .populate('equipment_id', 'name category qr_code')
     .populate({
@@ -101,6 +134,7 @@ const createBorrowRequest = async (body) => {
 }
 
 const getAllBorrowRequests = async () => {
+  await autoCancelExpiredRequests()
   return await BorrowRequest.find()
     .populate('user_id', 'username displayName email')
     .populate('equipment_id')
@@ -136,6 +170,7 @@ const updateBorrowRequest = async (id, body) => {
 }
 
 const getPersonalBorrowRequests = async (userId) => {
+  await autoCancelExpiredRequests()
   return await BorrowRequest.find({ user_id: userId })
     .populate('equipment_id', '_id name category status available')
     .populate('room_id', 'name type')
@@ -150,21 +185,15 @@ const cancelBorrowRequest = async (id, userId, decisionNote) => {
     )
   }
 
-  console.log(`🔍 [CANCEL SERVICE] Attempting findById with ID: "${id}" (length: ${id?.length})`)
   const request = await BorrowRequest.findById(id?.trim())
-  console.log('🔍 [CANCEL SERVICE] findById result:', request ? `found _id=${request._id}` : 'NOT FOUND')
   if (!request) {
     throw new ApiError(StatusCodes.NOT_FOUND, 'Borrow request not found')
   }
 
-  // Ownership check using string comparison to avoid ObjectId type mismatch
-  console.log('🔍 [CANCEL SERVICE] request.user_id:', request.user_id?.toString(), '| incoming userId:', userId?.toString())
-  console.log('🔍 [CANCEL SERVICE] match:', request.user_id?.toString() === userId?.toString())
   if (request.user_id.toString() !== userId.toString()) {
     throw new ApiError(StatusCodes.FORBIDDEN, 'You can only cancel your own requests')
   }
 
-  console.log('🔍 [CANCEL SERVICE] request.status:', request.status)
   if (request.status !== 'pending') {
     throw new ApiError(
       StatusCodes.BAD_REQUEST,
@@ -189,13 +218,19 @@ const approveBorrowRequest = async (id, approverId, decisionNote) => {
     throw new ApiError(StatusCodes.BAD_REQUEST, 'Request is not pending')
   }
 
-  // 1. Update Asset Status (Mark as occupied/borrowed)
   if (request.equipment_id) {
-    const equipment = await Equipment.findById(request.equipment_id)
-    if (equipment) {
-      equipment.borrowed_by = request.user_id
-      await equipment.save() // Triggers pre-save hook to set available = false
+    const conflictingRequests = await BorrowRequest.find({
+      _id: { $ne: id },
+      equipment_id: request.equipment_id,
+      status: { $in: ['approved', 'handed_over', 'borrowing'] },
+      borrow_date: { $lt: request.return_date },
+      return_date: { $gt: request.borrow_date }
+    })
+    if (conflictingRequests.length > 0) {
+      throw new ApiError(StatusCodes.BAD_REQUEST, 'Không thể duyệt vì thiết bị đã được xếp lịch cho một đơn khác bị trùng thời gian.')
     }
+    // Không gán borrowed_by ở đây nữa để tránh khóa chết available = false. 
+    // Người khác vẫn có thể đặt trước được vào ngày khác.
   } else if (request.room_id) {
     const room = await Room.findById(request.room_id)
     if (room) {
@@ -204,7 +239,6 @@ const approveBorrowRequest = async (id, approverId, decisionNote) => {
     }
   }
 
-  // 2. Update Request Status
   request.status = 'approved'
   request.processed_at = new Date()
   request.processed_by = approverId
@@ -226,20 +260,13 @@ const handoverBorrowRequest = async (id) => {
     )
   }
 
-  // Handle equipment status if this is an equipment-type request
   if (request.type === 'equipment' && request.equipment_id) {
     const equipment = await Equipment.findById(request.equipment_id)
     if (!equipment) {
       throw new ApiError(StatusCodes.NOT_FOUND, 'Equipment not found')
     }
-    if (!equipment.available) {
-      throw new ApiError(
-        StatusCodes.BAD_REQUEST,
-        'Equipment is already borrowed or unavailable',
-      )
-    }
 
-    // Update equipment availability
+    // Handover triggers request status change to 'handed_over' (which UI maps to Borrowing)
     equipment.available = false
     equipment.borrowed_by = request.user_id
     await equipment.save()
@@ -259,12 +286,11 @@ const returnBorrowRequest = async (id) => {
     throw new ApiError(StatusCodes.BAD_REQUEST, 'Invalid status to return')
   }
 
-  // 1. Release Asset Status
   if (request.equipment_id) {
     const equipment = await Equipment.findById(request.equipment_id)
     if (equipment) {
       equipment.borrowed_by = null
-      await equipment.save() // Triggers pre-save hook to set available = true
+      await equipment.save()
     }
   } else if (request.room_id) {
     const room = await Room.findById(request.room_id)
@@ -274,7 +300,6 @@ const returnBorrowRequest = async (id) => {
     }
   }
 
-  // 2. Update Request Status
   request.status = 'returned'
   await request.save()
 
@@ -291,7 +316,8 @@ const rejectBorrowRequest = async (id, approverId, reason) => {
   }
 
   request.status = 'rejected'
-  request.approved_by = approverId
+  request.processed_by = approverId
+  request.processed_at = new Date()
   if (reason) {
     request.note = `${request.note || ''} | Rejection Reason: ${reason}`.trim()
   }
@@ -300,6 +326,7 @@ const rejectBorrowRequest = async (id, approverId, reason) => {
 }
 
 const getPendingBorrowRequests = async () => {
+  await autoCancelExpiredRequests()
   return await BorrowRequest.find({ status: 'pending' })
     .populate('user_id', 'username displayName email')
     .populate('equipment_id', 'name category qr_code status available')
@@ -311,10 +338,26 @@ const getPendingBorrowRequests = async () => {
 }
 
 const getApprovedByMe = async (approverId) => {
-  return await BorrowRequest.find({ approved_by: approverId })
+  await autoCancelExpiredRequests()
+  return await BorrowRequest.find({ processed_by: approverId, status: 'approved' })
     .populate('user_id', 'displayName username')
     .populate('equipment_id', 'name category')
     .populate('room_id', 'name type')
+}
+
+const remindBorrowRequest = async (id) => {
+  const request = await BorrowRequest.findById(id).populate('user_id', 'displayName email')
+  if (!request) {
+    throw new ApiError(StatusCodes.NOT_FOUND, 'Borrow request not found')
+  }
+
+  if (!request.user_id) {
+    throw new ApiError(StatusCodes.NOT_FOUND, 'Borrower information not found')
+  }
+
+  console.log(`🔔 Reminder sent to ${request.user_id.displayName} (${request.user_id.email}) for request ${id}`)
+
+  return { message: 'Reminder sent successfully' }
 }
 
 export const borrowRequestService = {
@@ -328,6 +371,7 @@ export const borrowRequestService = {
   rejectBorrowRequest,
   handoverBorrowRequest,
   returnBorrowRequest,
+  remindBorrowRequest,
   getPendingBorrowRequests,
   getApprovedByMe,
 }

@@ -6,8 +6,11 @@ import AddEquipmentModal from '../../components/admin/equipment/AddEquipmentModa
 import EquipmentQRCodeModal from '../../components/admin/equipment/EquipmentQRCodeModal';
 import DeviceDetailsModal from '../../components/admin/equipment/DeviceDetailsModal';
 import DeleteConfirmationModal from '../../components/admin/common/DeleteConfirmationModal';
+import Pagination from '../../components/shared/Pagination';
 import { useEquipmentStore } from '../../stores/useEquipmentStore';
 import type { Equipment } from '../../types/equipment';
+import { getDerivedStatus } from '../../utils/equipmentHelpers';
+import { borrowRequestService } from '../../services/borrowRequestService';
 import { useLocation } from 'react-router-dom';
 import { PageHeader } from '@/components/shared/PageHeader';
 
@@ -24,6 +27,7 @@ const EquipmentManagement: React.FC = () => {
     const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
     const [qrDevice, setQrDevice] = useState<Equipment | null>(null);
     const [deviceToDelete, setDeviceToDelete] = useState<Equipment | null>(null);
+    const [activeRequests, setActiveRequests] = useState<any[]>([]);
 
     const [searchQuery, setSearchQuery] = useState('');
     const [statusFilter, setStatusFilter] = useState('All Status');
@@ -40,6 +44,9 @@ const EquipmentManagement: React.FC = () => {
 
     useEffect(() => {
         fetchAll();
+        borrowRequestService.getAllBorrowRequests().then(reqs => {
+            setActiveRequests(reqs);
+        }).catch(console.error);
     }, [fetchAll]);
 
     // Reset to page 1 when filters change
@@ -71,21 +78,26 @@ const EquipmentManagement: React.FC = () => {
     const brokenAttention = equipments.filter(e => e.status === 'broken' || e.status === 'maintenance').slice(0, 5);
 
     const categories = Array.from(new Set(equipments.map(e => e.category)));
-    const statuses = ['good', 'broken', 'maintenance'];
+    const statuses = ['Available', 'In Use', 'Reserved', 'Broken', 'Maintenance'];
 
     const filteredEquipments = equipments
         .filter(item => {
+            const vStatus = getDerivedStatus(item, activeRequests);
             const matchesSearch =
                 item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                 item._id.toLowerCase().includes(searchQuery.toLowerCase()) ||
                 item.category.toLowerCase().includes(searchQuery.toLowerCase());
-            const matchesStatus = statusFilter === 'All Status' || item.status === statusFilter;
+            const matchesStatus = statusFilter === 'All Status' || vStatus === statusFilter;
             const matchesCategory = categoryFilter === 'All Categories' || item.category === categoryFilter;
             return matchesSearch && matchesStatus && matchesCategory;
         })
         .sort((a, b) => {
             if (sortBy === 'Name') return a.name.localeCompare(b.name);
-            if (sortBy === 'Status') return a.status.localeCompare(b.status);
+            if (sortBy === 'Status') {
+                const sA = getDerivedStatus(a, activeRequests);
+                const sB = getDerivedStatus(b, activeRequests);
+                return sA.localeCompare(sB);
+            }
             return 0;
         });
 
@@ -194,39 +206,18 @@ const EquipmentManagement: React.FC = () => {
                         onEdit={handleEditDevice}
                         onDelete={handleDeleteClick}
                         onReportDamage={(item) => handleUpdateStatus(item._id, 'broken')}
+                        activeRequests={activeRequests}
                     />
 
                     <div className="mt-8 flex items-center justify-between px-2">
                         <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                             Showing {Math.min(filteredEquipments.length, (currentPage - 1) * ITEMS_PER_PAGE + 1)} - {Math.min(filteredEquipments.length, currentPage * ITEMS_PER_PAGE)} of {filteredEquipments.length} assets
                         </p>
-                        <div className="flex items-center gap-2">
-                            <button
-                                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-                                disabled={currentPage === 1}
-                                className={`w-10 h-10 flex items-center justify-center rounded-xl bg-white/40 dark:bg-slate-700 border border-white dark:border-slate-600 text-slate-600 dark:text-slate-300 transition-opacity ${currentPage === 1 ? 'opacity-30 cursor-not-allowed' : 'hover:bg-white dark:hover:bg-slate-600'}`}
-                            >
-                                <span className="material-symbols-outlined text-lg">chevron_left</span>
-                            </button>
-
-                            {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
-                                <button
-                                    key={page}
-                                    onClick={() => setCurrentPage(page)}
-                                    className={`w-10 h-10 flex items-center justify-center rounded-xl font-semibold text-sm transition-all ${currentPage === page ? 'bg-[#1A2B56] text-white shadow-md' : 'bg-white/40 dark:bg-slate-700 border border-white dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-600'}`}
-                                >
-                                    {page}
-                                </button>
-                            ))}
-
-                            <button
-                                onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-                                disabled={currentPage === totalPages || totalPages === 0}
-                                className={`w-10 h-10 flex items-center justify-center rounded-xl bg-white/40 dark:bg-slate-700 border border-white dark:border-slate-600 text-slate-600 dark:text-slate-300 transition-opacity ${currentPage === totalPages || totalPages === 0 ? 'opacity-30 cursor-not-allowed' : 'hover:bg-white dark:hover:bg-slate-600'}`}
-                            >
-                                <span className="material-symbols-outlined text-lg">chevron_right</span>
-                            </button>
-                        </div>
+                        <Pagination
+                            currentPage={currentPage}
+                            totalPages={totalPages}
+                            onPageChange={setCurrentPage}
+                        />
                     </div>
                 </div>
 

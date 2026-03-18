@@ -10,6 +10,10 @@ import {
   rejectBorrowRequest,
   handoverBorrowRequest,
   returnBorrowRequest,
+<<<<<<< HEAD
+=======
+  remindBorrowRequest,
+>>>>>>> mergeMy
   getPendingBorrowRequests,
   getApprovedByMe,
 } from '../controllers/borrowRequestController.js'
@@ -70,6 +74,12 @@ router.patch(
   '/:id/return',
   restrictTo('student', 'technician', 'admin'),
   returnBorrowRequest,
+)
+
+router.post(
+  '/:id/remind',
+  restrictTo('lecturer', 'technician', 'admin'),
+  remindBorrowRequest,
 )
 
 router.get('/', restrictTo('technician', 'lecturer', 'admin'), getAllBorrowRequests)

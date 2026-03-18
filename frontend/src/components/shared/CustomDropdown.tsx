@@ -18,6 +18,10 @@ export interface CustomDropdownProps {
     className?: string;
     /** Optional placeholder shown as the trigger label when no match found */
     placeholder?: string;
+    /** Custom class for the trigger button */
+    triggerClassName?: string;
+    /** Whether the panel should match the trigger's width */
+    fullWidth?: boolean;
 }
 
 // ─── CustomDropdown — portal-based, immune to parent overflow:hidden ──────────
@@ -26,9 +30,12 @@ const CustomDropdown: React.FC<CustomDropdownProps> = ({
     value, options, onChange,
     align = 'left',
     className = '',
+    triggerClassName,
+    fullWidth = false,
+    placeholder,
 }) => {
     const [open, setOpen] = useState(false);
-    const [coords, setCoords] = useState<{ top: number; left?: number; right?: number }>({ top: 0 });
+    const [coords, setCoords] = useState<{ top: number; left?: number; right?: number; width?: number }>({ top: 0 });
     const triggerRef = useRef<HTMLButtonElement>(null);
 
     // Close on outside click
@@ -55,23 +62,23 @@ const CustomDropdown: React.FC<CustomDropdownProps> = ({
             const r = triggerRef.current.getBoundingClientRect();
             setCoords(
                 align === 'right'
-                    ? { top: r.bottom + 8, right: window.innerWidth - r.right }
-                    : { top: r.bottom + 8, left: r.left }
+                    ? { top: r.bottom + 8, right: window.innerWidth - r.right, width: fullWidth ? r.width : undefined }
+                    : { top: r.bottom + 8, left: r.left, width: fullWidth ? r.width : undefined }
             );
         };
         window.addEventListener('resize', recalc);
         return () => {
             window.removeEventListener('resize', recalc);
         };
-    }, [open, align]);
+    }, [open, align, fullWidth]);
 
     const handleToggle = () => {
         if (!open && triggerRef.current) {
             const r = triggerRef.current.getBoundingClientRect();
             setCoords(
                 align === 'right'
-                    ? { top: r.bottom + 8, right: window.innerWidth - r.right }
-                    : { top: r.bottom + 8, left: r.left }
+                    ? { top: r.bottom + 8, right: window.innerWidth - r.right, width: fullWidth ? r.width : undefined }
+                    : { top: r.bottom + 8, left: r.left, width: fullWidth ? r.width : undefined }
             );
         }
         setOpen(p => !p);
@@ -87,6 +94,7 @@ const CustomDropdown: React.FC<CustomDropdownProps> = ({
                 top: coords.top,
                 left: coords.left,
                 right: coords.right,
+                width: coords.width,
                 zIndex: 9999,
             }}
             className="glass-card !rounded-[1.25rem] py-2 min-w-[10rem] shadow-xl shadow-[#1E2B58]/10 dark:shadow-black/30"
@@ -119,10 +127,10 @@ const CustomDropdown: React.FC<CustomDropdownProps> = ({
                 ref={triggerRef}
                 type="button"
                 onClick={handleToggle}
-                className="flex items-center gap-2 bg-transparent text-[0.875rem] font-bold text-[#1E2B58] dark:text-white px-4 py-2.5 h-[2.5rem] cursor-pointer hover:opacity-70 transition-opacity select-none whitespace-nowrap"
+                className={triggerClassName || "flex items-center gap-2 bg-transparent text-[0.875rem] font-bold text-[#1E2B58] dark:text-white px-4 py-2.5 h-[2.5rem] cursor-pointer hover:opacity-70 transition-opacity select-none whitespace-nowrap"}
             >
-                <span>{selected?.label}</span>
-                <ChevronDown className={`w-4 h-4 text-slate-400 shrink-0 transition-transform duration-200 ${open ? 'rotate-180' : ''}`} />
+                <span className={triggerClassName ? "truncate block" : ""}>{selected?.label || placeholder || "Select..."}</span>
+                <ChevronDown className={`w-4 h-4 shrink-0 transition-transform duration-200 ${triggerClassName ? 'text-slate-400' : 'text-slate-400'} ${open ? 'rotate-180' : ''}`} />
             </button>
 
             {typeof document !== 'undefined' && ReactDOM.createPortal(panel, document.body)}
