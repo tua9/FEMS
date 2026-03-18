@@ -123,21 +123,21 @@ const DamageReportTable: React.FC<DamageReportTableProps> = ({
 
     return (
         <div>
-            <table className="w-full text-left border-separate border-spacing-y-3">
+            <table className="w-full text-left border-separate border-spacing-y-3 table-fixed">
                 <colgroup>
-                    <col className="w-[20%]" />
-                    <col className="w-[28%]" />
-                    <col className="w-[20%]" />
-                    <col className="w-[20%]" />
-                    <col className="w-[12%]" />
+                    <col className="w-[15%]" />
+                    <col className="w-[25%]" />
+                    <col className="w-[25%]" />
+                    <col className="w-[18%]" />
+                    <col className="w-[17%]" />
                 </colgroup>
                 <thead>
                     <tr className="text-slate-800 dark:text-slate-300">
                         <th className="px-3 pb-2 text-[10px] font-semibold uppercase tracking-[0.15em] opacity-80">Report ID & Date</th>
                         <th className="px-3 pb-2 text-[10px] font-semibold uppercase tracking-[0.15em] opacity-80">Equipment Issue</th>
                         <th className="px-3 pb-2 text-[10px] font-semibold uppercase tracking-[0.15em] opacity-80">Reported By</th>
-                        <th className="px-3 pb-2 text-[10px] font-semibold uppercase tracking-[0.15em] opacity-80">Status & Priority</th>
-                        <th className="px-3 pb-2 text-[10px] font-semibold uppercase tracking-[0.15em] opacity-80 text-right px-6">Actions</th>
+                        <th className="px-3 pb-2 text-[10px] font-semibold uppercase tracking-[0.15em] opacity-80 text-center">Status & Priority</th>
+                        <th className="px-3 pb-2 text-[10px] font-semibold uppercase tracking-[0.15em] opacity-80 text-right pr-6">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -154,9 +154,9 @@ const DamageReportTable: React.FC<DamageReportTableProps> = ({
                                     </div>
                                 </td>
                                 <td className={`p-4 ${rowBg}`}>
-                                    <div className="flex flex-col justify-center min-h-[44px]">
+                                    <div className="flex flex-col justify-center min-h-[44px] max-w-[300px]">
                                         <div className="text-xs font-semibold text-slate-800 dark:text-white mb-1 truncate">{eqName}</div>
-                                        <div className="text-[10px] text-slate-600 dark:text-slate-400 line-clamp-2 leading-relaxed">{report.description}</div>
+                                        <div className="text-[10px] text-slate-600 dark:text-slate-400 line-clamp-2 leading-relaxed break-words">{report.description}</div>
                                     </div>
                                 </td>
                                 <td className={`p-4 ${rowBg}`}>
@@ -169,17 +169,19 @@ const DamageReportTable: React.FC<DamageReportTableProps> = ({
                                 </td>
                                 <td className={`p-4 ${rowBg}`}>
                                     <div className="flex flex-col items-center gap-2 h-full justify-center">
-                                        <span className="w-[124px] py-1.5 flex items-center justify-center gap-2 rounded-full text-[9px] font-semibold uppercase tracking-widest bg-slate-100/50 dark:bg-slate-800/50 text-slate-600 dark:text-slate-400">
+                                        <span className="w-full max-w-[120px] py-1.5 flex items-center justify-center gap-2 rounded-full text-[9px] font-semibold uppercase tracking-widest bg-slate-100/50 dark:bg-slate-800/50 text-slate-600 dark:text-slate-400">
                                             <span className={`w-2 h-2 rounded-full flex-shrink-0 ${getStatusStyle(report.status)}`}></span>
                                             {getStatusLabel(report.status)}
                                         </span>
-                                        <span className={`w-[124px] py-1 flex items-center justify-center rounded-full text-[8px] font-semibold uppercase tracking-[0.15em] border ${getPriorityStyle(report.priority)}`}>
+                                        <span className={`w-full max-w-[120px] py-1 flex items-center justify-center rounded-full text-[8px] font-semibold uppercase tracking-[0.15em] border ${getPriorityStyle(report.priority)}`}>
                                             {report.priority}
                                         </span>
                                     </div>
                                 </td>
-                                <td className={`p-4 rounded-r-[24px] text-right px-6 ${rowBg}`} onClick={e => e.stopPropagation()}>
-                                    {renderActions(report)}
+                                <td className={`p-4 rounded-r-[24px] text-right pr-6 ${rowBg}`} onClick={e => e.stopPropagation()}>
+                                    <div className="flex justify-end min-w-max">
+                                        {renderActions(report)}
+                                    </div>
                                 </td>
                             </tr>
                         );

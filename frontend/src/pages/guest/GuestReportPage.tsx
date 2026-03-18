@@ -14,62 +14,74 @@ import type {
   ReportFormData,
   IssueCategory,
 } from "@/components/shared/report";
-
-interface SubmittedReport {
-  id: string;
-  subject: string;
-  location: string;
-  category: IssueCategory;
-  description: string;
-  date: string;
-}
+import { useReportStore } from "@/stores/useReportStore";
+import { useRoomStore } from "@/stores/useRoomStore";
+import type { CreateReportPayload, ReportType } from "@/types/report";
 
 const GuestReportPage: React.FC = () => {
   const navigate = useNavigate();
 
-  const [prefillLocation, setPrefillLocation] = useState<string>("");
+  const [prefillRoomId, setPrefillRoomId] = useState<string>("");
+  const [prefillEquipmentId, setPrefillEquipmentId] = useState<string>("");
   const [prefillCategory, setPrefillCategory] = useState<IssueCategory | undefined>(undefined);
   const [prefillDescription, setPrefillDescription] = useState<string>("");
 
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submittedReport, setSubmittedReport] = useState<SubmittedReport | null>(null);
+  const [submittedReportId, setSubmittedReportId] = useState<string | null>(null);
   const [showSuccess, setShowSuccess] = useState(false);
 
+  const { createReport, loading: isSubmitting } = useReportStore();
+  const { rooms, fetchAll: fetchRooms } = useRoomStore();
+
+  React.useEffect(() => {
+    fetchRooms();
+  }, [fetchRooms]);
+
   const handleQRDetected = (result: QRResult) => {
-    setPrefillLocation(result.location);
+    setPrefillRoomId(result.roomId);
+    setPrefillEquipmentId(result.equipmentId);
     setPrefillCategory(result.category);
     setPrefillDescription(result.description);
   };
 
-  const handleFormSubmit = (data: ReportFormData) => {
-    setIsSubmitting(true);
-    setTimeout(() => {
-      const reportId = `#REP-${Math.floor(7800 + Math.random() * 200)}`;
-      const categoryLabels: Record<IssueCategory, string> = {
-        electrical: "Electrical",
-        plumbing: "Plumbing",
-        it: "IT Device",
-        furniture: "Furniture",
-        other: "Other",
-      };
-      const subject = `${categoryLabels[data.category]} Issue — ${data.location}`;
-      const today = new Date().toLocaleDateString("en-GB", {
-        day: "numeric",
-        month: "short",
-        year: "numeric",
-      });
+  const mapCategoryToReportType = (category: IssueCategory): ReportType => {
+    switch (category) {
+      case "it":
+        return "equipment";
+      case "electrical":
+      case "plumbing":
+      case "furniture":
+        return "infrastructure";
+      case "other":
+      default:
+        return "other";
+    }
+  };
 
-      setSubmittedReport({
-        id: reportId,
-        subject,
-        location: data.location,
-        category: data.category,
+  const handleFormSubmit = async (data: ReportFormData) => {
+    try {
+      const payload: CreateReportPayload = {
+        type: mapCategoryToReportType(data.category),
+        room_id: data.room_id,
         description: data.description,
-        date: today,
-      });
-      setIsSubmitting(false);
+      };
+
+      if (data.equipment_id) {
+        payload.equipment_id = data.equipment_id;
+      }
+
+      await createReport(payload);
+      
+      setSubmittedReportId(`New request submitted successfully.`);
       setShowSuccess(true);
-    }, 1500);
+      
+      setPrefillRoomId("");
+      setPrefillEquipmentId("");
+      setPrefillCategory(undefined);
+      setPrefillDescription("");
+      
+    } catch (error) {
+      console.error("Failed to submit report:", error);
+    }
   };
 
   return (
@@ -116,19 +128,21 @@ const GuestReportPage: React.FC = () => {
         </div>
 
         <ReportManualForm
-          key={`${prefillLocation}-${prefillCategory}`}
-          prefillLocation={prefillLocation}
+          key={`${prefillRoomId}-${prefillEquipmentId}-${prefillCategory}`}
+          prefillRoomId={prefillRoomId}
+          prefillEquipmentId={prefillEquipmentId}
           prefillCategory={prefillCategory}
           prefillDescription={prefillDescription}
           onSubmit={handleFormSubmit}
           isSubmitting={isSubmitting}
+          rooms={rooms}
         />
       </main>
 
       <Footer role="auth" />
 
       {/* ── Success modal ── */}
-      {showSuccess && submittedReport && (
+      {showSuccess && submittedReportId && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 px-4 backdrop-blur-sm"
           onClick={(e) => e.target === e.currentTarget && setShowSuccess(false)}
@@ -150,19 +164,8 @@ const GuestReportPage: React.FC = () => {
               Your issue has been logged. Our team will follow up soon.
             </p>
             <div className="mb-6 space-y-2.5 rounded-[1.25rem] bg-white/40 p-4 dark:bg-slate-800/40">
-              <div className="flex justify-between text-xs">
-                <span>Report ID</span>
-                <span className="font-black">{submittedReport.id}</span>
-              </div>
-              <div className="flex justify-between text-xs">
-                <span>Subject</span>
-                <span className="max-w-44 truncate font-bold">
-                  {submittedReport.subject}
-                </span>
-              </div>
-              <div className="flex justify-between text-xs">
-                <span>Date</span>
-                <span className="font-bold">{submittedReport.date}</span>
+              <div className="flex justify-center text-center text-sm font-bold">
+                {submittedReportId}
               </div>
             </div>
             <div className="flex flex-col gap-3">

@@ -8,6 +8,9 @@ export interface User {
   displayName: string;
   avatarUrl?: string;
   avatarId?: string;
+  phone?: string;
+  dob?: string;
+  isActive?: boolean;
   createdAt?: string;
   updatedAt?: string;
 }

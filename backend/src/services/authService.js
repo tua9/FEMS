@@ -6,6 +6,9 @@ import Session from '../models/Session.js'
 import { JwtProvider } from '../providers/JwtProvider.js'
 import { env } from '../config/environment.js'
 import ApiError from '../utils/ApiError.js'
+import crypto from 'crypto'
+import { emailService } from './emailService.js'
+import ResetPassword from '../models/ResetPassword.js'
 
 const ACCESS_TOKEN_TTL = '15m'
 const REFRESH_TOKEN_TTL_MS = 14 * 24 * 60 * 60 * 1000 // 14 days
@@ -48,6 +51,10 @@ const signIn = async (body) => {
   const user = await User.findOne({ username })
   if (!user) {
     throw new ApiError(StatusCodes.NOT_FOUND, 'Invalid username')
+  }
+
+  if (user.isActive === false) {
+    throw new ApiError(StatusCodes.FORBIDDEN, 'Your account is deactivated. Please contact admin.')
   }
 
   const isPasswordValid = await bcrypt.compare(password, user.hashedPassword)
@@ -136,9 +143,144 @@ const refreshToken = async (refreshToken) => {
   return { accessToken: newAccessToken }
 }
 
+const forgotPassword = async ({ email }) => {
+  if (!email) throw new ApiError(StatusCodes.BAD_REQUEST, 'Email is required')
+
+  const user = await User.findOne({ email })
+  if (!user) {
+    throw new ApiError(StatusCodes.NOT_FOUND, 'Email does not exist in our system.')
+  }
+
+  // Generate 6-digit token
+  const token = crypto.randomInt(100000, 999999).toString()
+  const expiresAt = new Date(Date.now() + 5 * 60 * 1000) // 5 minutes
+
+  // Clear previous tokens
+  await ResetPassword.deleteMany({ userId: user._id })
+  
+  // Save new token
+  await ResetPassword.create({
+    userId: user._id,
+    email: user.email,
+    token,
+    expiresAt,
+  })
+
+  // Send email
+  const emailSent = await emailService.sendPasswordResetEmail(user.email, token)
+  if (!emailSent) {
+    throw new ApiError(StatusCodes.INTERNAL_SERVER_ERROR, 'Failed to send password reset email. Check server configuration.')
+  }
+
+  return { message: 'Password reset code sent to your email.' }
+}
+
+const verifyResetToken = async ({ email, token }) => {
+  if (!email || !token) throw new ApiError(StatusCodes.BAD_REQUEST, 'Email and token are required')
+
+  const resetRecord = await ResetPassword.findOne({ 
+    email,
+    token,
+    expiresAt: { $gt: new Date() } // Token must not be expired
+  })
+
+  if (!resetRecord) {
+    throw new ApiError(StatusCodes.BAD_REQUEST, 'Invalid or expired token')
+  }
+
+  return { message: 'Token is valid' }
+}
+
+const resetPassword = async ({ email, token, newPassword }) => {
+  if (!email || !token || !newPassword) {
+    throw new ApiError(StatusCodes.BAD_REQUEST, 'All fields are required')
+  }
+
+  const resetRecord = await ResetPassword.findOne({ 
+    email,
+    token,
+    expiresAt: { $gt: new Date() }
+  })
+
+  if (!resetRecord) {
+    throw new ApiError(StatusCodes.BAD_REQUEST, 'Invalid or expired token')
+  }
+
+  if (resetRecord.usageCount >= 1) {
+    throw new ApiError(StatusCodes.BAD_REQUEST, 'This token has already been used.')
+  }
+
+  // Mark token as used to strictly enforce single use
+  resetRecord.usageCount += 1
+  await resetRecord.save()
+
+  const user = await User.findById(resetRecord.userId)
+  if (!user) {
+    throw new ApiError(StatusCodes.NOT_FOUND, 'User not found')
+  }
+
+  const hashedPassword = await bcrypt.hash(newPassword, 10)
+  
+  // Force strict overwrite directly on document and fetch new state
+  const updatedUser = await User.findByIdAndUpdate(
+    user._id,
+    { hashedPassword },
+    { new: true, runValidators: true }
+  )
+
+  if (!updatedUser) {
+    throw new ApiError(StatusCodes.INTERNAL_SERVER_ERROR, 'Failed to properly overwrite the password in the database.')
+  }
+
+  // Security measure: Destroy all active login sessions for this specific user
+  await Session.deleteMany({ userId: user._id })
+  
+  // Clean up tokens
+  await ResetPassword.deleteMany({ userId: user._id })
+
+  return { message: 'Password has been reset successfully' }
+}
+
+const changePassword = async (userId, { currentPassword, newPassword }) => {
+  if (!currentPassword || !newPassword) {
+    throw new ApiError(StatusCodes.BAD_REQUEST, 'Current and new password are required')
+  }
+
+  const user = await User.findById(userId)
+  if (!user) {
+    throw new ApiError(StatusCodes.NOT_FOUND, 'User not found')
+  }
+
+  const isPasswordValid = await bcrypt.compare(currentPassword, user.hashedPassword)
+  if (!isPasswordValid) {
+    throw new ApiError(StatusCodes.BAD_REQUEST, 'Incorrect current password')
+  }
+
+  const hashedPassword = await bcrypt.hash(newPassword, 10)
+  
+  const updatedUser = await User.findByIdAndUpdate(
+    user._id,
+    { hashedPassword },
+    { new: true, runValidators: true }
+  )
+
+  if (!updatedUser) {
+    throw new ApiError(StatusCodes.INTERNAL_SERVER_ERROR, 'Failed to properly overwrite the password in the database.')
+  }
+
+  // Destroy sessions so old devices are forcibly logged out
+  await Session.deleteMany({ userId: user._id })
+
+  return { message: 'Password changed successfully' }
+}
+
 export const authService = {
   signUp,
   signIn,
   signOut,
   refreshToken,
+  forgotPassword,
+  verifyResetToken,
+  resetPassword,
+  changePassword,
 }

@@ -77,9 +77,8 @@ const DamageReports: React.FC = () => {
         if (!selectedReport) return;
 
         try {
-            // Backend updateStatus currently only takes status, not technician assignment explicitly in reportService.ts
-            // But we can update status to 'processing'
-            await updateReportStatus(selectedReport._id, 'processing');
+            // Updated to pass technician ID to the store
+            await updateReportStatus(selectedReport._id, 'processing', technician._id);
             setIsAssignModalOpen(false);
             toast.success(`Assigned to ${technician.displayName || technician.username}. Status is now 'In Progress'.`);
         } catch (error) {

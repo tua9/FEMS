@@ -13,6 +13,8 @@ import roomRouters from './routes/roomRoute.js'
 import borrowRequestRouters from './routes/borrowRequestRoute.js'
 import equipmentRouters from './routes/equipmentRoute.js'
 import adminRoutes from './routes/adminRoute.js'
+import dashboardRoutes from './routes/dashboardRoute.js'
+import scheduleRoutes from './routes/scheduleRoute.js'
 
 import { protectedRoute } from './middlewares/authMiddlewares.js'
 
@@ -20,9 +22,15 @@ const app = express()
 const PORT = env.PORT || 5001
 
 // middlewares
-app.use(express.json())
+app.use(express.json({ limit: '50mb' }))
 app.use(cookieParser())
 app.use(cors(corsOptions))
+
+// Global Request Logger for Debugging
+app.use((req, res, next) => {
+  console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`)
+  next()
+})
 
 // API Routes
 app.use('/api/auth', authRoutes)
@@ -36,6 +44,10 @@ app.use('/api/admin', adminRoutes)
 // Other facilities routes
 app.use('/api/buildings', buildingRouters)
 app.use('/api/rooms', roomRouters)
+
+// Lecturer/Dashboard specific routes
+app.use('/api/dashboard', dashboardRoutes)
+app.use('/api/schedules', scheduleRoutes)
 
 import { errorHandlingMiddleware } from './middlewares/errorMiddleware.js'
 

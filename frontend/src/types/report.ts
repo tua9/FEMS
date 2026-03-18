@@ -18,11 +18,21 @@ export interface Report {
   room_id?: {
     _id: string;
     name: string;
+    building_id?: {
+      _id: string;
+      name: string;
+    } | string | null;
   } | string | null;
   type: ReportType;
   status: ReportStatus;
   priority: ReportPriority;
-  approved_by?: {
+  processed_by?: {
+    _id: string;
+    username: string;
+    displayName?: string;
+  } | string | null;
+  processed_at?: string | null;
+  assigned_to?: {
     _id: string;
     username: string;
     displayName?: string;
@@ -38,6 +48,7 @@ export interface CreateReportPayload {
   room_id?: string | null;
   type: ReportType;
   priority?: ReportPriority;
+  severity?: 'low' | 'medium' | 'high' | 'critical';
   img?: string | null;
   description?: string | null;
 }

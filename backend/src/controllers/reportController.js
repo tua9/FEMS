@@ -1,11 +1,13 @@
 import { StatusCodes } from 'http-status-codes'
 import { reportService } from '../services/reportService.js'
+import { asyncHandler } from '../middlewares/asyncHandler.js'
 
 export const createReport = async (req, res) => {
   const data = { ...req.body }
   if (req.user) {
     data.user_id = req.user._id
   }
+
   const result = await reportService.createReport(data)
   res.status(StatusCodes.CREATED).json(result)
 }
@@ -40,6 +42,16 @@ export const updateReportStatus = async (req, res) => {
     req.params.id,
     req.body.status,
     req.user._id,
+    req.body.technicianId
   )
   res.status(StatusCodes.OK).json(result)
 }
+
+export const cancelReport = asyncHandler(async (req, res) => {
+  const result = await reportService.cancelReport(
+    req.params.id,
+    req.user._id,
+  )
+  res.status(StatusCodes.OK).json(result)
+})
+

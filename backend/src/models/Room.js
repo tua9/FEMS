@@ -23,6 +23,14 @@ const roomSchema = mongoose.Schema(
       ref: 'Building',
       default: null,
     },
+    floor: {
+      type: Number,
+      default: 1,
+    },
+    labels: {
+      type: [String],
+      default: [],
+    },
   },
   { timestamps: true },
 )

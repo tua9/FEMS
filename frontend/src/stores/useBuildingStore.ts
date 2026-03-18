@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import type { Building } from "@/types/building";
-import { buildingService, CreateBuildingPayload } from "@/services/buildingService";
+import { buildingService, type CreateBuildingPayload } from "@/services/buildingService";
 
 type BuildingStore = {
   buildings: Building[];

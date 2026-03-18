@@ -13,7 +13,7 @@ interface UserDetailModalProps {
 }
 
 const UserDetailModal: React.FC<UserDetailModalProps> = ({ isOpen, user, onClose, onEdit, onUpdate }) => {
-    const [status, setStatus] = useState<string>(user?.avatarId === 'Inactive' ? 'Inactive' : 'Active');
+    const [status, setStatus] = useState<string>(user?.isActive !== false ? 'Active' : 'Inactive');
     const [isResetting, setIsResetting] = useState(false);
     
     const updateUser = useUserStore(state => state.updateUser);
@@ -21,7 +21,7 @@ const UserDetailModal: React.FC<UserDetailModalProps> = ({ isOpen, user, onClose
 
     useEffect(() => {
         if (user) {
-            setStatus(user.avatarId === 'Inactive' ? 'Inactive' : 'Active');
+            setStatus(user.isActive !== false ? 'Active' : 'Inactive');
         }
     }, [user, isOpen]);
 
@@ -41,13 +41,13 @@ const UserDetailModal: React.FC<UserDetailModalProps> = ({ isOpen, user, onClose
     };
 
     const handleToggleStatus = async () => {
-        const newStatus = status === 'Active' ? 'Inactive' : 'Active';
         const actionLabel = status === 'Active' ? 'deactivated' : 'activated';
 
         try {
-            // Using avatarId as temporary field for status as per system design
-            await updateUser(user._id, { avatarId: newStatus } as any);
-            setStatus(newStatus);
+            const newIsActive = status !== 'Active';
+            // We can now use isActive field directly
+            await updateUser(user._id, { isActive: newIsActive } as any);
+            setStatus(newIsActive ? 'Active' : 'Inactive');
             toast.success(`User ${user.displayName} has been ${actionLabel}`);
             if (onUpdate) onUpdate();
         } catch (error) {

@@ -212,6 +212,7 @@ const BorrowingManagement: React.FC = () => {
                                                 { value: 'overdue', label: 'Overdue' },
                                                 { value: 'returned', label: 'Returned' },
                                                 { value: 'rejected', label: 'Rejected' },
+                                                { value: 'cancelled', label: 'Cancelled' },
                                             ]}
                                             onChange={v => setStatusFilter(v as any)}
                                             align="right"

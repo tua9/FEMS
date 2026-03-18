@@ -37,7 +37,7 @@ const assetSchema = new mongoose.Schema(
       default: null,
     },
 
-    qr_code: {
+    code: {
       type: String,
       unique: true,
       sparse: true,

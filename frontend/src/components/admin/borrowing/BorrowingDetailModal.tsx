@@ -33,6 +33,7 @@ const BorrowingDetailModal: React.FC<BorrowingDetailModalProps> = ({
             case 'overdue': return 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 border-red-200/50';
             case 'returned': return 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 border-emerald-200/50';
             case 'rejected': return 'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400 border-orange-200/50';
+            case 'cancelled': return 'bg-slate-200 dark:bg-slate-800/50 text-slate-800 dark:text-slate-200 border-slate-300/50';
             default: return 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200/50';
         }
     };
@@ -138,6 +139,16 @@ const BorrowingDetailModal: React.FC<BorrowingDetailModalProps> = ({
                             </div>
                         )}
 
+                        {/* Cancellation Reason */}
+                        {record.status === 'cancelled' && record.decision_note && (
+                            <div className="p-8 rounded-[32px] bg-red-50/50 dark:bg-red-900/10 border-2 border-red-100 dark:border-red-900/30">
+                                <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-red-500 mb-4">Cancellation Reason</h4>
+                                <p className="text-sm font-bold text-red-700 dark:text-red-400 leading-relaxed italic">
+                                    "{record.decision_note}"
+                                </p>
+                            </div>
+                        )}
+
                         {/* Schedule & Timing */}
                         <div className="p-8 rounded-4xl bg-slate-50/50 dark:bg-slate-900/20 border-2 border-slate-100 dark:border-slate-800">
                             <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
@@ -182,7 +193,7 @@ const BorrowingDetailModal: React.FC<BorrowingDetailModalProps> = ({
                                             </div>
                                         </div>
                                     )}
-                                    {record.approved_by && (
+                                    {record.processed_by && (
                                         <div className="flex items-center gap-4 p-4 rounded-2xl bg-white dark:bg-slate-900/40 border-2 border-slate-100 dark:border-slate-800">
                                             <div className="w-8 h-8 rounded-xl bg-emerald-50 dark:bg-emerald-900/20 text-emerald-500 flex items-center justify-center shadow-sm">
                                                 <span className="material-symbols-outlined text-[18px]">verified_user</span>
@@ -190,7 +201,7 @@ const BorrowingDetailModal: React.FC<BorrowingDetailModalProps> = ({
                                             <div className="text-[10px]">
                                                 <p className="font-bold text-slate-500 uppercase tracking-widest">Handled By</p>
                                                 <p className="font-black text-slate-800 dark:text-white mt-0.5 truncate">
-                                                    {typeof record.approved_by === 'object' ? record.approved_by?.displayName : 'Staff'}
+                                                    {typeof record.processed_by === 'object' ? (record.processed_by as any)?.displayName : 'Staff'}
                                                 </p>
                                             </div>
                                         </div>

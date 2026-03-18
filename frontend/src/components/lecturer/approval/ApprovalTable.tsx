@@ -6,7 +6,7 @@ import React from 'react';
 export type RequestStatus  = 'pending' | 'approved' | 'rejected';
 export type EquipmentType  = 'laptop' | 'projector' | 'tablet' | 'camera' | 'audio' | 'other';
 
-export interface BorrowRequest {
+export interface ApprovalTableItem {
     id: string;
     status: RequestStatus;
     student: {
@@ -31,13 +31,13 @@ export interface BorrowRequest {
 }
 
 interface ApprovalTableProps {
-    items: BorrowRequest[];
+    items: ApprovalTableItem[];
     totalPending: number;
     currentPage: number;
     totalPages: number;
     onPageChange: (page: number) => void;
-    onApprove: (request: BorrowRequest) => void;
-    onReject:  (request: BorrowRequest) => void;
+    onApprove: (request: ApprovalTableItem) => void;
+    onReject:  (request: ApprovalTableItem) => void;
 }
 
 // ─── Status badge helper ──────────────────────────────────────────────────────

@@ -27,8 +27,21 @@ export const equipmentService = {
     return res.data;
   },
 
-  getByQrCode: async (qrCode: string): Promise<Equipment> => {
-    const res = await api.get(`/equipments/qr/${qrCode}`);
+  getByCode: async (code: string): Promise<Equipment> => {
+    const res = await api.get(`/equipments/code/${code}`);
+    return res.data;
+  },
+
+  getInventory: async (params?: any): Promise<{
+    items: Equipment[];
+    pagination: {
+      totalItems: number;
+      currentPage: number;
+      totalPages: number;
+      limit: number;
+    }
+  }> => {
+    const res = await api.get("/equipments/inventory", { params });
     return res.data;
   },
 };
