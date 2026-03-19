@@ -1,5 +1,5 @@
 import React from 'react';
-import { EquipmentRequest } from '../../../types/admin.types';
+import type { EquipmentRequest } from '../../../types/admin.types';
 
 interface InventoryRequestListProps {
     requests: EquipmentRequest[];
@@ -20,7 +20,7 @@ const InventoryRequestList: React.FC<InventoryRequestListProps> = ({ requests, e
     };
 
     return (
-        <div className="bg-white/40 dark:bg-slate-800/60 p-8 ambient-shadow flex flex-col h-full rounded-[32px] border border-white/40 dark:border-white/10 backdrop-blur-xl transition-all duration-300">
+        <div className="dashboard-card p-8 flex flex-col h-full rounded-4xl transition-all duration-300">
             <div className="flex items-center justify-between mb-8">
                 <h4 className="font-extrabold text-[#1A2B56] dark:text-white text-lg">Inventory Requests</h4>
                 <button

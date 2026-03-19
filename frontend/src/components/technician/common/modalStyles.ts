@@ -1,48 +1,57 @@
 /**
- * Shared modal design tokens — unified across all modals in the technician portal.
- * Inspired by: clean white card on soft blue-gray backdrop, minimal flat design.
+ * Shared modal design tokens — unified across ALL modals in the entire app.
+ * Reference design: glass-card overlay, rounded-[2rem], bg-black/30 backdrop-blur-sm.
  */
 
+// ── Backdrop ──────────────────────────────────────────────────────────────────
 export const MODAL_OVERLAY =
-  'fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-[#C8D6E8]/70 backdrop-blur-sm';
+  'fixed inset-0 z-50 flex items-center justify-center px-4 py-6 bg-black/30 backdrop-blur-sm';
 
 export const MODAL_OVERLAY_TOP =
-  'fixed inset-0 z-[60] flex items-center justify-center p-4 sm:p-6 bg-[#C8D6E8]/70 backdrop-blur-sm';
+  'fixed inset-0 z-[60] flex items-center justify-center px-4 py-6 bg-black/30 backdrop-blur-sm';
 
+// ── Card ──────────────────────────────────────────────────────────────────────
 export const MODAL_CARD =
-  'relative w-full bg-white rounded-2xl shadow-xl overflow-hidden flex flex-col';
+  'relative w-full glass-card rounded-[2rem] shadow-2xl shadow-[#1E2B58]/20 overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-200';
 
+// ── Internal layout ───────────────────────────────────────────────────────────
 export const MODAL_HEADER = 'px-7 pt-7 pb-5 flex items-start justify-between';
 
-export const MODAL_DIVIDER = 'mx-7 border-t border-slate-100';
+export const MODAL_DIVIDER = 'mx-7 border-t border-black/8 dark:border-white/10';
 
 export const MODAL_BODY = 'px-7 py-6 overflow-y-auto flex-1 space-y-5';
 
-export const MODAL_FOOTER = 'px-7 py-5 border-t border-slate-100 flex gap-3 items-center';
+export const MODAL_FOOTER = 'px-7 py-5 border-t border-black/8 dark:border-white/10 flex gap-3 items-center';
 
+// ── Buttons ───────────────────────────────────────────────────────────────────
 export const CLOSE_BTN =
-  'w-8 h-8 rounded-full flex items-center justify-center text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors shrink-0 ml-3';
+  'w-8 h-8 rounded-full flex items-center justify-center text-[#1E2B58]/50 hover:text-[#1E2B58] hover:bg-[#1E2B58]/8 dark:text-white/50 dark:hover:text-white dark:hover:bg-white/10 transition-colors shrink-0 ml-3';
 
 export const BTN_PRIMARY =
-  'flex-1 py-3 rounded-xl bg-[#1A2B56] text-white text-sm font-bold hover:bg-[#14203f] active:scale-[0.98] transition-all flex items-center justify-center gap-2 shadow-sm';
+  'flex-1 py-3 rounded-[1.25rem] bg-[#1E2B58] text-white text-sm font-bold hover:bg-[#151f40] hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-2 shadow-lg shadow-[#1E2B58]/20';
 
 export const BTN_SECONDARY =
-  'flex-1 py-3 rounded-xl border border-slate-200 text-slate-600 text-sm font-semibold hover:bg-slate-50 transition-colors text-center';
+  'flex-1 py-3 rounded-[1.25rem] border border-[#1E2B58]/15 dark:border-white/15 text-[#1E2B58]/70 dark:text-white/70 text-sm font-bold hover:bg-[#1E2B58]/5 dark:hover:bg-white/5 transition-all text-center';
 
 export const BTN_DANGER =
-  'flex-1 py-3 rounded-xl bg-rose-500 text-white text-sm font-bold hover:bg-rose-600 active:scale-[0.98] transition-all flex items-center justify-center gap-2 shadow-sm';
+  'flex-1 py-3 rounded-[1.25rem] bg-red-500 text-white text-sm font-bold hover:bg-red-600 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-2 shadow-lg shadow-red-500/20';
 
-export const CHIP =
-  'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-semibold bg-slate-100 text-slate-600';
+export const BTN_SUCCESS =
+  'flex-1 py-3 rounded-[1.25rem] bg-emerald-500 text-white text-sm font-bold hover:bg-emerald-600 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/20';
 
-export const SECTION_LABEL =
-  'text-[10px] font-bold text-slate-400 uppercase tracking-widest';
-
-export const INFO_CARD =
-  'bg-slate-50 rounded-xl p-4 border border-slate-100';
-
+// ── Form inputs ───────────────────────────────────────────────────────────────
 export const INPUT_CLASS =
-  'w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-sm text-slate-800 font-medium outline-none focus:bg-white focus:border-[#1A2B56] focus:ring-2 focus:ring-[#1A2B56]/10 transition placeholder:text-slate-300';
+  'w-full rounded-2xl border border-white/40 bg-white/40 px-4 py-3 text-sm font-medium text-[#1E2B58] outline-none transition-all placeholder:text-[#1E2B58]/30 focus:ring-2 focus:ring-[#1E2B58]/25 dark:border-slate-700/50 dark:bg-slate-800/50 dark:text-white dark:placeholder:text-white/30 dark:focus:ring-blue-500/30';
 
 export const TEXTAREA_CLASS =
-  'w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-sm text-slate-800 font-medium outline-none focus:bg-white focus:border-[#1A2B56] focus:ring-2 focus:ring-[#1A2B56]/10 transition resize-none placeholder:text-slate-300';
+  'w-full resize-none rounded-2xl border border-white/40 bg-white/40 px-4 py-3 text-sm font-medium text-[#1E2B58] outline-none transition-all placeholder:text-[#1E2B58]/30 focus:ring-2 focus:ring-[#1E2B58]/25 dark:border-slate-700/50 dark:bg-slate-800/50 dark:text-white dark:placeholder:text-white/30 dark:focus:ring-blue-500/30';
+
+// ── Info card (detail rows) ───────────────────────────────────────────────────
+export const CHIP =
+  'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-semibold';
+
+export const SECTION_LABEL =
+  'text-[0.625rem] font-black uppercase tracking-widest text-[#1E2B58]/50 dark:text-white/40';
+
+export const INFO_CARD =
+  'bg-white/40 dark:bg-slate-800/40 rounded-[1.25rem] p-5 space-y-3';

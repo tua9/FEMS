@@ -11,9 +11,9 @@ const cardCls = cn(
 
 const submitBtnCls = cn(
   "flex h-12 w-full items-center justify-center gap-2 rounded-xl",
-  "bg-slate-900 text-[0.9rem] font-semibold text-white",
-  "shadow-[0_10px_25px_-5px_rgba(30,41,59,0.3)]",
-  "transition-all duration-200 hover:bg-slate-800 active:scale-[0.99]",
+  "bg-[#1E2B58] text-[0.9rem] font-semibold text-white",
+  "shadow-[0_10px_25px_-5px_rgba(30,43,88,0.35)]",
+  "transition-all duration-200 hover:bg-[#162044] active:scale-[0.99]",
   "disabled:opacity-60",
   "dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white",
   "dark:shadow-[0_10px_25px_-5px_rgba(0,0,0,0.4)]",
@@ -29,12 +29,14 @@ interface OtpVerificationFormProps extends React.ComponentProps<"div"> {
   /** Called with the 6-digit code when the user clicks "Verify & Continue" */
   onVerified: (code: string) => Promise<{ success: boolean }>;
   onBack: () => void;
+  onResend?: () => Promise<void>;
 }
 
 export function OtpVerificationForm({
   email,
   onVerified,
   onBack,
+  onResend,
   className,
   ...props
 }: OtpVerificationFormProps) {
@@ -107,14 +109,16 @@ export function OtpVerificationForm({
     setIsSubmitting(false);
   };
 
-  const handleResend = () => {
+  const handleResend = async () => {
     if (!canResend) return;
     setCanResend(false);
     setCountdown(RESEND_SECONDS);
     setDigits(Array(OTP_LENGTH).fill(""));
     setError(null);
     inputRefs.current[0]?.focus();
-    // TODO: trigger real resend API
+    if (onResend) {
+      await onResend();
+    }
   };
 
   const isFilled = digits.every((d) => d !== "");
@@ -139,10 +143,6 @@ export function OtpVerificationForm({
           </span>
         </div>
 
-        {/* Heading */}
-        <h2 className="mb-2 text-center text-2xl font-extrabold tracking-tight text-slate-900 dark:text-white">
-          Verification Code
-        </h2>
         <p className="mx-auto mb-7 max-w-xs text-center text-sm text-slate-500 dark:text-slate-400">
           We have sent a 6-digit code to{" "}
           <span className="font-semibold text-slate-700 dark:text-slate-300">{email}</span>.

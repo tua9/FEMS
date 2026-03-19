@@ -4,6 +4,9 @@ import DarkModeToggle from "@/components/shared/navbar/DarkModeToggle";
 import { ForgotPasswordForm } from "@/components/auth/forgot-password-form";
 import { OtpVerificationForm } from "@/components/auth/otp-verification-form";
 import { SetNewPasswordForm } from "@/components/auth/set-new-password-form";
+import Footer from "@/components/common/Footer";
+import { authService } from "@/services/authService";
+import { toast } from "sonner";
 
 // ── Steps ─────────────────────────────────────────────────────────────────────
 
@@ -23,30 +26,42 @@ const HEADINGS: Record<Step, string> = {
 export default function ForgotPasswordPage() {
   const [step, setStep] = useState<Step>("email");
   const [email, setEmail] = useState("");
+  const [token, setToken] = useState("");
   const navigate = useNavigate();
 
   // ── Handlers ────────────────────────────────────────────────────────────
 
   /** Step 1 → 2: email submitted */
   const handleSent = async (submittedEmail: string) => {
-    // TODO: call real "send OTP" API here
-    await new Promise((r) => setTimeout(r, 800));
-    setEmail(submittedEmail);
-    setStep("otp");
+    try {
+      await authService.forgotPassword(submittedEmail);
+      toast.success("Verification code sent to your email.");
+      setEmail(submittedEmail);
+      setStep("otp");
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || "Failed to send reset code.");
+    }
   };
 
   /** Step 2 → 3 or error: OTP verified */
   const handleVerified = async (code: string): Promise<{ success: boolean }> => {
-    // TODO: call real "verify OTP" API here — return { success: false } on wrong code
-    await new Promise((r) => setTimeout(r, 800));
-    const isCorrect = code === "123456"; // placeholder: accept "123456"
-    if (isCorrect) setStep("set-password");
-    return { success: isCorrect };
+    try {
+      await authService.verifyResetToken(email, code);
+      setToken(code);
+      setStep("set-password");
+      return { success: true };
+    } catch (err: any) {
+      return { success: false };
+    }
   };
 
   /** Step 3 done: password reset success — modal inside SetNewPasswordForm handles redirect */
   const handlePasswordSet = () => {
     // no-op: PasswordResetSuccessModal auto-redirects to /login
+  };
+
+  const handleResetPassword = async (password: string) => {
+    await authService.resetPassword(email, token, password);
   };
 
   // ── Render ───────────────────────────────────────────────────────────────
@@ -72,7 +87,7 @@ export default function ForgotPasswordPage() {
           <DarkModeToggle />
           <a
             href="#"
-            className="text-[0.85rem] font-medium text-slate-500 transition hover:text-slate-800 dark:text-slate-400 dark:hover:text-white"
+            className="text-[0.85rem] font-extrabold text-slate-600 transition hover:text-slate-900 dark:text-slate-200 dark:hover:text-white"
           >
             Report Issue
           </a>
@@ -80,12 +95,12 @@ export default function ForgotPasswordPage() {
       </header>
 
       {/* ── Main content ── */}
-      <main className="flex flex-1 items-center justify-center px-4 pb-16 pt-10 sm:pt-16">
+      <main className="flex flex-1 items-center justify-center px-4 pb-8 pt-10 sm:pt-16">
         <div className="flex w-full max-w-md -translate-y-6 flex-col items-center">
 
-          {/* Heading — hidden for OTP/set-password since they have their own in-card heading */}
-          {step === "email" && (
-            <h1 className="mb-4 text-4xl font-extrabold tracking-tight text-slate-900 dark:text-white md:text-5xl">
+          {/* Heading — only shown on email step */}
+          {(step === "email" || step === "otp" || step === "set-password") && (
+            <h1 className="mb-4 text-4xl font-extrabold tracking-tight text-navi dark:text-white md:text-5xl">
               {HEADINGS[step]}
             </h1>
           )}
@@ -105,6 +120,7 @@ export default function ForgotPasswordPage() {
               className="w-full"
               email={email}
               onVerified={handleVerified}
+              onResend={() => handleSent(email)}
               onBack={() => setStep("email")}
             />
           )}
@@ -114,11 +130,14 @@ export default function ForgotPasswordPage() {
             <SetNewPasswordForm
               className="w-full"
               onSuccess={handlePasswordSet}
+              onResetPassword={handleResetPassword}
             />
           )}
 
         </div>
       </main>
+
+      <Footer role="auth" />
 
     </div>
   );

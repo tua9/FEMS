@@ -72,7 +72,7 @@ interface DetailProps {
 }
 const FulfillmentDetail: React.FC<DetailProps> = ({ req, isDone, onDetails, onConfirmHandover }) => (
   <div
-    className="tech-card rounded-3xl overflow-hidden"
+    className="dashboard-card rounded-3xl overflow-hidden"
   >
     {/* Header */}
     <div className="p-8 border-b border-white/10 bg-white/5">
@@ -261,7 +261,7 @@ const HandoverTab: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         {/* Left list */}
         <div
-          className="tech-card rounded-3xl overflow-hidden flex flex-col h-[700px] lg:col-span-4"
+          className="dashboard-card rounded-3xl overflow-hidden flex flex-col h-[700px] lg:col-span-4"
         >
           <div className="p-6 border-b border-white/10">
             <h3 className="text-lg font-bold text-white flex items-center gap-2">

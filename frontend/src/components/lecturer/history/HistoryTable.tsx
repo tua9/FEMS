@@ -1,6 +1,6 @@
 import React from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { StatusBadge } from '../shared/StatusBadge';
+import { StatusBadge } from '@/components/shared/ui/StatusBadge';
 
 const mockHistory = [
     { id: 'HIS-101', item: 'Room AL-402', type: 'Facility', date: 'Ocr 20, 2024', status: 'RETURNED' },
@@ -10,7 +10,7 @@ const mockHistory = [
 
 export const HistoryTable: React.FC = () => {
     return (
-        <div className="glass-card rounded-[32px] p-6 sm:p-8 overflow-hidden">
+        <div className="dashboard-card rounded-4xl p-6 sm:p-8 overflow-hidden">
             <h3 className="text-xl font-extrabold text-[#1E2B58] dark:text-white mb-6">My Activity History</h3>
             <div className="overflow-x-auto">
                 <Table>

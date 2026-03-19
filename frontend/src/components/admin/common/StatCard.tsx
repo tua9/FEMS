@@ -62,7 +62,7 @@ const StatCard: React.FC<StatCardProps> = ({
         </>
     );
 
-    const baseClasses = "relative p-6 ambient-shadow flex items-center justify-between rounded-[24px] border transition-all duration-300 text-left w-full backdrop-blur-xl bg-white/60 dark:bg-slate-800/60 border-white/60 dark:border-white/10 hover:bg-white/80 dark:hover:bg-slate-700 hover:scale-[1.02] hover:shadow-2xl active:scale-95";
+    const baseClasses = "relative p-6 dashboard-card flex items-center justify-between rounded-[24px] transition-all duration-300 text-left w-full hover:scale-[1.02] active:scale-95";
 
     if (onClick) {
         return (

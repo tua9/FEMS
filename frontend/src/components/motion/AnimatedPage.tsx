@@ -47,7 +47,7 @@ export const AnimatedPage: React.FC<AnimatedPageProps> = ({
       initial="initial"
       animate="enter"
       exit="exit"
-      className={clsx("will-change-transform", className)}
+      className={clsx(className)}
     >
       {children}
     </motion.div>

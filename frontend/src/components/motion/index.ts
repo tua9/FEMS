@@ -6,6 +6,9 @@ export { AnimatedCard } from "./AnimatedCard";
 export { RouteTransitionWrapper } from "./RouteTransitionWrapper";
 export { PageShell } from "./PageShell";
 
+// ── Shared UI ─────────────────────────────────────────────────────────────────
+export { PageHeader } from "@/components/shared/PageHeader";
+
 // ── Legacy (backward-compatible) ─────────────────────────────────────────────
 export { PageTransition } from "./PageTransition";
 export { SlideOver } from "./SlideOver";

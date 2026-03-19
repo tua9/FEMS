@@ -2,39 +2,45 @@ import { StatusCodes } from 'http-status-codes'
 import Report from '../models/Report.js'
 import ApiError from '../utils/ApiError.js'
 
+const populateReport = (query) => {
+  return query
+    .populate('user_id', 'displayName email username')
+    .populate('equipment_id', 'name category')
+    .populate('room_id', 'name type')
+    .populate('room_id', 'name type')
+    .populate('processed_by', 'displayName username')
+    .populate('assigned_to', 'displayName username')
+}
+
 const createReport = async (body) => {
-  const { user_id, equipment_id, room_id, description, imageUrl, imageId } =
-    body
+  const { user_id, equipment_id, room_id, type, severity, description, img, priority } = body
 
   const newReport = await Report.create({
-    user_id,
-    equipment_id,
-    room_id,
-    description,
-    imageUrl,
-    imageId,
+    user_id: user_id || null,
+    equipment_id: equipment_id || null,
+    room_id: room_id || null,
+    type: type || 'other',
+    severity: severity || 'medium',
+    priority: priority || severity || 'medium',
+    description: description || null,
+    img: img || null,
   })
+
+  const populated = await populateReport(Report.findById(newReport._id))
 
   return {
     message: 'Create report success',
     report_id: newReport._id,
+    report: populated,
   }
 }
 
 const getAllReports = async () => {
-  return await Report.find()
-    .populate('user_id', 'displayName email')
-    .populate('equipment_id', 'name category')
-    .populate('room_id', 'name type')
-    .populate('approved_by', 'displayName')
+  return await populateReport(Report.find())
 }
 
 const getReportById = async (id) => {
-  const report = await Report.findById(id)
-    .populate('user_id', 'displayName email')
-    .populate('equipment_id', 'name category')
-    .populate('room_id', 'name type')
-    .populate('approved_by', 'displayName')
+  const report = await populateReport(Report.findById(id))
 
   if (!report) {
     throw new ApiError(StatusCodes.NOT_FOUND, 'Report not found')
@@ -51,7 +57,10 @@ const updateReport = async (id, body) => {
   if (!report) {
     throw new ApiError(StatusCodes.NOT_FOUND, 'Report not found')
   }
-  return { message: 'Update success', report }
+
+  const populated = await populateReport(Report.findById(report._id))
+
+  return { message: 'Update success', report: populated }
 }
 
 const deleteReport = async (id) => {
@@ -63,19 +72,33 @@ const deleteReport = async (id) => {
 }
 
 const getPersonalReports = async (userId) => {
-  return await Report.find({ user_id: userId })
-    .populate('equipment_id', 'name category')
-    .populate('room_id', 'name type')
-    .populate('approved_by', 'displayName')
+  return await populateReport(Report.find({ user_id: userId }))
 }
 
-const updateReportStatus = async (id, status, approverId) => {
+const cancelReport = async (id, userId) => {
+  const report = await Report.findOne({ _id: id, user_id: userId })
+  if (!report) {
+    throw new ApiError(StatusCodes.NOT_FOUND, 'Report not found')
+  }
+  if (report.status !== 'pending') {
+    throw new ApiError(
+      StatusCodes.BAD_REQUEST,
+      'Only pending reports can be cancelled',
+    )
+  }
+  report.status = 'cancelled'
+  await report.save()
+  return { message: 'Report cancelled successfully', report }
+}
+
+const updateReportStatus = async (id, status, approverId, technicianId) => {
   const allowedStatuses = [
     'pending',
     'approved',
     'rejected',
     'processing',
     'fixed',
+    'cancelled'
   ]
   if (!allowedStatuses.includes(status)) {
     throw new ApiError(StatusCodes.BAD_REQUEST, 'Invalid status')
@@ -87,12 +110,20 @@ const updateReportStatus = async (id, status, approverId) => {
   }
 
   report.status = status
+  if (status === 'processing' && technicianId) {
+    report.assigned_to = technicianId
+  }
+
   if (approverId) {
-    report.approved_by = approverId
+    report.processed_by = approverId
+    report.processed_at = new Date()
   }
 
   await report.save()
-  return { message: 'Status updated successfully', report }
+
+  const populated = await populateReport(Report.findById(id))
+
+  return { message: 'Status updated successfully', report: populated }
 }
 
 export const reportService = {
@@ -102,5 +133,6 @@ export const reportService = {
   updateReport,
   deleteReport,
   getPersonalReports,
+  cancelReport,
   updateReportStatus,
 }

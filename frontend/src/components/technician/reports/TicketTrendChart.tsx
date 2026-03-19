@@ -30,7 +30,7 @@ const TicketTrendChart: React.FC<Props> = ({ dateRangeDays }) => {
   const areaPath = `${reportedPath} L1000,200 L0,200 Z`;
 
   return (
-    <div className="lg:col-span-2 tech-card p-8 rounded-3xl border border-white/50 shadow-sm">
+    <div className="lg:col-span-2 dashboard-card p-8 rounded-3xl">
       {/* Header */}
       <div className="flex justify-between items-center mb-8">
         <div>

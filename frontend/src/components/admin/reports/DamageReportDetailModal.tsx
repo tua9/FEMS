@@ -1,16 +1,16 @@
 import React from 'react';
 import { createPortal } from 'react-dom';
-import { DamageReport } from '../../../types/admin.types';
+import type { Report, ReportStatus } from '../../../types/report';
 
 interface DamageReportDetailModalProps {
     isOpen: boolean;
-    report: DamageReport | null;
+    report: Report | null;
     onClose: () => void;
-    onApprove?: (report: DamageReport) => void;
-    onReject?: (report: DamageReport) => void;
-    onUndo?: (report: DamageReport) => void;
-    onAssign?: (report: DamageReport) => void;
-    onResolve?: (report: DamageReport) => void;
+    onApprove?: (report: Report) => void;
+    onReject?: (report: Report) => void;
+    onUndo?: (report: Report) => void;
+    onAssign?: (report: Report) => void;
+    onResolve?: (report: Report) => void;
 }
 
 const DamageReportDetailModal: React.FC<DamageReportDetailModalProps> = ({
@@ -26,24 +26,45 @@ const DamageReportDetailModal: React.FC<DamageReportDetailModalProps> = ({
     if (!isOpen || !report) return null;
 
     const getPriorityStyle = (priority: string) => {
-        if (priority.includes('High')) return 'bg-[#EE4E4E] text-white border-transparent';
-        if (priority.includes('Medium')) return 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 border-amber-200/50';
+        const p = priority.toLowerCase();
+        if (p === 'high') return 'bg-[#EE4E4E] text-white border-transparent';
+        if (p === 'medium') return 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 border-amber-200/50';
         return 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 border-blue-200/50';
     };
 
-    const getStatusStyle = (status: string) => {
+    const getPriorityLabel = (priority: string) => {
+        const p = priority.toLowerCase();
+        return p.charAt(0).toUpperCase() + p.slice(1) + ' Priority';
+    };
+
+    const getStatusStyle = (status: ReportStatus) => {
         switch (status) {
-            case 'Resolved': return 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 border-emerald-200/50';
-            case 'In Progress': return 'bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400 border-indigo-200/50';
-            case 'Approved': return 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 border-blue-200/50';
-            case 'Pending': return 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 border-amber-200/50';
-            case 'Rejected': return 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 border-red-200/50';
+            case 'fixed': return 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 border-emerald-200/50';
+            case 'processing': return 'bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400 border-indigo-200/50';
+            case 'approved': return 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 border-blue-200/50';
+            case 'pending': return 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 border-amber-200/50';
+            case 'rejected': return 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 border-red-200/50';
             default: return 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200/50';
         }
     };
 
+    const getStatusLabel = (status: ReportStatus) => {
+        switch (status) {
+            case 'fixed': return 'Resolved';
+            case 'processing': return 'In Progress';
+            case 'approved': return 'Approved';
+            case 'pending': return 'Pending';
+            case 'rejected': return 'Rejected';
+            default: return status;
+        }
+    };
+
+    const reporterName = typeof report.user_id === 'object' ? report.user_id?.displayName || report.user_id?.username : 'Unknown';
+    const equipmentName = typeof report.equipment_id === 'object' ? report.equipment_id?.name : 'General Issue';
+    const equipmentId = typeof report.equipment_id === 'object' ? report.equipment_id?._id : report.equipment_id;
+
     return createPortal(
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center px-4 py-6 bg-black/30 backdrop-blur-sm">
             <style dangerouslySetInnerHTML={{
                 __html: `
                 .no-scrollbar::-webkit-scrollbar { display: none; }
@@ -51,37 +72,33 @@ const DamageReportDetailModal: React.FC<DamageReportDetailModalProps> = ({
             ` }} />
             {/* Backdrop */}
             <div
-                className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm transition-opacity"
+                className="absolute inset-0"
                 onClick={onClose}
             ></div>
 
             {/* Modal Content */}
-            <div className="relative w-full max-w-2xl bg-white/95 dark:bg-slate-800/95 backdrop-blur-2xl rounded-[40px] border-2 border-white/50 dark:border-white/10 shadow-3xl overflow-hidden flex flex-col max-h-[90vh] animate-in fade-in zoom-in duration-300">
+            <div className="relative w-full max-w-2xl dashboard-card rounded-4xl shadow-2xl shadow-[#1E2B58]/20 overflow-hidden flex flex-col max-h-[90vh] animate-in fade-in zoom-in-95 duration-200">
 
                 {/* Header Section */}
-                <div className="p-10 pb-6 relative overflow-hidden">
-                    <div className="absolute top-0 left-0 w-full h-40 bg-gradient-to-b from-blue-50/50 dark:from-blue-900/10 to-transparent"></div>
-
+                <div className="px-10 pt-8 pb-6 relative border-b border-black/8 dark:border-white/10">
                     <button
                         onClick={onClose}
-                        className="absolute top-8 right-10 w-11 h-11 flex items-center justify-center hover:bg-slate-100 dark:hover:bg-slate-700/50 rounded-full transition-colors text-slate-400 z-20 border-2 border-transparent hover:border-slate-200 dark:hover:border-slate-600"
+                        className="absolute top-6 right-8 w-8 h-8 flex items-center justify-center text-[#1E2B58]/50 hover:text-[#1E2B58] hover:bg-[#1E2B58]/8 dark:text-white/50 dark:hover:text-white dark:hover:bg-white/10 rounded-full transition-colors z-20"
                     >
                         <span className="material-symbols-outlined text-xl">close</span>
                     </button>
 
-                    <div className="relative z-10">
-                        <div className="flex items-center gap-4 mb-6">
-                            <span className={`px-4 py-1.5 rounded-2xl text-[10px] font-black uppercase tracking-widest border-2 shadow-sm ${getStatusStyle(report.status)}`}>
-                                {report.status}
-                            </span>
-                            <span className={`px-4 py-1.5 rounded-2xl text-[10px] font-black uppercase tracking-widest border-2 shadow-sm ${getPriorityStyle(report.priority)}`}>
-                                {report.priority}
-                            </span>
-                        </div>
-
-                        <h3 className="text-3xl font-black text-[#1A2B56] dark:text-white tracking-tight">Issue Report Details</h3>
-                        <p className="text-slate-500 dark:text-slate-400 font-bold text-xs mt-2 uppercase tracking-widest">Ticket ID: {report.id}</p>
+                    <div className="flex items-center gap-4 mb-3">
+                        <span className={`px-4 py-1.5 rounded-2xl text-[10px] font-black uppercase tracking-widest border-2 shadow-sm ${getStatusStyle(report.status)}`}>
+                            {getStatusLabel(report.status)}
+                        </span>
+                        <span className={`px-4 py-1.5 rounded-2xl text-[10px] font-black uppercase tracking-widest border-2 shadow-sm ${getPriorityStyle(report.priority)}`}>
+                            {getPriorityLabel(report.priority)}
+                        </span>
                     </div>
+
+                    <h3 className="text-2xl font-black text-[#1E2B58] dark:text-white tracking-tight">Issue Report Details</h3>
+                    <p className="text-[0.625rem] font-black text-[#1E2B58]/50 dark:text-white/40 uppercase tracking-widest mt-1">Ticket ID: {report._id}</p>
                 </div>
 
                 <div className="p-10 pt-0 overflow-y-auto no-scrollbar space-y-8 relative z-10">
@@ -90,16 +107,12 @@ const DamageReportDetailModal: React.FC<DamageReportDetailModalProps> = ({
                         <div className="p-6 rounded-3xl bg-white/40 dark:bg-slate-900/30 border-2 border-white dark:border-slate-700 shadow-sm space-y-4">
                             <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Reported By</h4>
                             <div className="flex items-center gap-4">
-                                {report.reporterAvatar ? (
-                                    <img src={report.reporterAvatar} alt={report.reportedBy} className="w-12 h-12 rounded-2xl object-cover border-2 border-white dark:border-slate-600 shadow-sm" />
-                                ) : (
-                                    <div className="w-12 h-12 rounded-2xl bg-[#1A2B56] text-white flex items-center justify-center font-bold text-lg">
-                                        {report.reportedBy.charAt(0)}
-                                    </div>
-                                )}
+                                <div className="w-12 h-12 rounded-2xl bg-[#1A2B56] text-white flex items-center justify-center font-bold text-lg">
+                                    {(reporterName || 'U').charAt(0)}
+                                </div>
                                 <div>
-                                    <p className="font-black text-slate-800 dark:text-white leading-tight">{report.reportedBy}</p>
-                                    <p className="text-[10px] font-bold text-slate-500 dark:text-slate-400 mt-1">{report.dateReported}</p>
+                                    <p className="font-black text-slate-800 dark:text-white leading-tight">{reporterName}</p>
+                                    <p className="text-[10px] font-bold text-slate-500 dark:text-slate-400 mt-1">{new Date(report.createdAt || '').toLocaleDateString()}</p>
                                 </div>
                             </div>
                         </div>
@@ -110,19 +123,18 @@ const DamageReportDetailModal: React.FC<DamageReportDetailModalProps> = ({
                                 <div className="w-12 h-12 rounded-2xl bg-blue-50 dark:bg-blue-900/20 text-blue-500 flex items-center justify-center border-2 border-blue-100 dark:border-blue-900/30">
                                     <span className="material-symbols-outlined text-2xl">devices</span>
                                 </div>
-                                <div>
-                                    <p className="font-black text-slate-800 dark:text-white leading-tight">{report.equipmentName}</p>
-                                    <p className="text-xs font-bold text-slate-500 dark:text-slate-400 mt-0.5">Asset: {report.equipmentId}</p>
+                                <div className="min-w-0">
+                                    <p className="font-black text-slate-800 dark:text-white leading-tight truncate">{equipmentName}</p>
+                                    <p className="text-xs font-bold text-slate-500 dark:text-slate-400 mt-0.5 truncate">Asset: {equipmentId}</p>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    {/* Issue Description */}
                     <div className="p-8 rounded-[32px] bg-slate-50/50 dark:bg-slate-900/20 border-2 border-slate-100 dark:border-slate-800">
                         <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mb-4">Description of the Incident</h4>
                         <p className="text-sm font-bold text-slate-700 dark:text-slate-300 leading-relaxed italic">
-                            "{report.issueDescription}"
+                            "{report.description || 'No description provided.'}"
                         </p>
                     </div>
 
@@ -139,9 +151,9 @@ const DamageReportDetailModal: React.FC<DamageReportDetailModalProps> = ({
                                 </div>
                                 <div className="text-xs">
                                     <p className="font-bold text-slate-800 dark:text-white">
-                                        {report.status === 'Pending' ? 'Awaiting Approval' : report.status === 'Approved' ? 'Technician Assigned' : report.status === 'In Progress' ? 'Maintenance Underway' : report.status === 'Rejected' ? 'Request Rejected' : 'Issue Resolved'}
+                                        {report.status === 'pending' ? 'Awaiting Approval' : report.status === 'approved' ? 'Technician Assignment Required' : report.status === 'processing' ? 'Maintenance Underway' : report.status === 'rejected' ? 'Request Rejected' : 'Issue Resolved'}
                                     </p>
-                                    <p className="text-slate-500">Last updated • {new Date().toLocaleDateString()}</p>
+                                    <p className="text-slate-500">Last updated • {new Date(report.updatedAt || report.createdAt || '').toLocaleDateString()}</p>
                                 </div>
                             </div>
                         </div>
@@ -149,9 +161,9 @@ const DamageReportDetailModal: React.FC<DamageReportDetailModalProps> = ({
                 </div>
 
                 {/* Footer Section */}
-                <div className="p-8 border-t border-slate-100 dark:border-slate-700/50 bg-slate-50/50 dark:bg-slate-900/30 flex flex-wrap items-center justify-between gap-4">
+                <div className="px-8 py-5 border-t border-black/8 dark:border-white/10 bg-black/3 dark:bg-white/3 flex flex-wrap items-center justify-between gap-4">
                     <div className="flex gap-3">
-                        {report.status === 'Pending' && (
+                        {report.status === 'pending' && (
                             <>
                                 <button
                                     onClick={() => { onApprove?.(report); onClose(); }}
@@ -169,7 +181,7 @@ const DamageReportDetailModal: React.FC<DamageReportDetailModalProps> = ({
                                 </button>
                             </>
                         )}
-                        {report.status === 'Rejected' && (
+                        {report.status === 'rejected' && (
                             <button
                                 onClick={() => { onUndo?.(report); onClose(); }}
                                 className="w-11 h-11 bg-slate-50 dark:bg-slate-900/10 border-2 border-slate-100 dark:border-slate-800/30 text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:border-blue-100 dark:hover:border-blue-800/30 rounded-xl transition-all shadow-sm flex items-center justify-center"
@@ -178,7 +190,7 @@ const DamageReportDetailModal: React.FC<DamageReportDetailModalProps> = ({
                                 <span className="material-symbols-outlined text-xl font-light">undo</span>
                             </button>
                         )}
-                        {report.status === 'Approved' && (
+                        {report.status === 'approved' && (
                             <button
                                 onClick={() => { onAssign?.(report); onClose(); }}
                                 className="w-11 h-11 bg-slate-50 dark:bg-slate-900/10 border-2 border-slate-100 dark:border-slate-800/30 text-slate-400 hover:text-orange-700 dark:hover:text-orange-900/80 hover:bg-orange-50 dark:hover:bg-orange-900/20 hover:border-orange-100 dark:hover:border-orange-800/30 rounded-xl transition-all shadow-lg flex items-center justify-center"
@@ -187,7 +199,7 @@ const DamageReportDetailModal: React.FC<DamageReportDetailModalProps> = ({
                                 <span className="material-symbols-outlined text-xl">person_add</span>
                             </button>
                         )}
-                        {report.status === 'In Progress' && (
+                        {report.status === 'processing' && (
                             <button
                                 onClick={() => { onResolve?.(report); onClose(); }}
                                 className="px-8 py-3 bg-slate-50 dark:bg-slate-900/10 border-2 border-slate-100 dark:border-slate-800/30 text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 hover:border-emerald-100 dark:hover:border-emerald-800/30 rounded-xl font-black text-xs uppercase tracking-widest transition-all shadow-lg flex items-center gap-2"
@@ -211,3 +223,4 @@ const DamageReportDetailModal: React.FC<DamageReportDetailModalProps> = ({
 };
 
 export default DamageReportDetailModal;
+

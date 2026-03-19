@@ -61,7 +61,7 @@ const FacilityHealthTable: React.FC<Props> = ({ dateRangeDays }) => {
   const rows = getFacilityRows(dateRangeDays);
 
   return (
-    <section className="tech-card rounded-3xl border border-white/20 dark:border-white/6 shadow-sm overflow-hidden">
+    <section className="dashboard-card rounded-3xl overflow-hidden">
       {/* Header */}
       <div className="p-8 border-b border-white/30 flex justify-between items-center">
         <h3 className="text-lg font-bold text-[#232F58] dark:text-white flex items-center gap-2">

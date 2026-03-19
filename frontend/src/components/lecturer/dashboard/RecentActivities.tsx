@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 
 export const RecentActivities: React.FC = () => {
     return (
-        <div className="glass-card rounded-3xl lg:rounded-[2rem] p-6 lg:p-8 h-full flex flex-col">
+        <div className="dashboard-card rounded-3xl lg:rounded-4xl p-6 lg:p-8 h-full flex flex-col">
             <div className="flex items-center justify-between mb-6 lg:mb-8">
                 <h3 className="text-lg lg:text-xl font-extrabold text-[#1E2B58] dark:text-white">Recent Activities</h3>
                 <Button variant="link" className="text-[0.6875rem] lg:text-xs font-bold text-[#4f75ff] uppercase tracking-[0.15em] lg:tracking-widest hover:underline p-0 h-auto">

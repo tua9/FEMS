@@ -154,7 +154,7 @@ const LoanCard: React.FC<CardProps> = ({ loan, onDetails, onMarkReturned }) => {
     .split(' ').slice(0, 2).map((w) => w[0]).join('').toUpperCase();
 
   return (
-    <div className={`tech-card rounded-3xl border-2 ${st.border} dark:border-white/10 overflow-hidden flex flex-col`}>
+    <div className={`dashboard-card rounded-3xl border-2 ${st.border} dark:border-white/10 overflow-hidden flex flex-col`}>
       <div className="p-6 flex-1">
         {/* Header row */}
         <div className="flex justify-between items-start mb-4">

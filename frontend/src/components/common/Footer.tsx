@@ -1,37 +1,36 @@
 // ─── Shared Footer — dùng cho tất cả role ─────────────────────────────────────
-// Các icon là: school | verified_user | icon thứ 3 khác nhau theo role
 
-const ICONS: Record<string, string> = {
-  student: 'construction',
-  lecturer: 'construction',
-  admin: 'biotech',
+const ROLE_ICONS: Record<string, string> = {
+  student:    'construction',
+  lecturer:   'construction',
+  admin:      'biotech',
   technician: 'build_circle',
+  auth:       'verified_user',
 };
 
 interface FooterProps {
-  /** Tên role để chọn icon thứ 3. Nếu không truyền → mặc định 'construction' */
+  /** Role để chọn icon thứ 3. Không truyền → fallback 'construction' */
   role?: string;
-  /** Override toàn bộ className của <footer> nếu cần */
   className?: string;
 }
 
 export default function Footer({ role, className }: FooterProps) {
-  const thirdIcon = ICONS[role ?? ''] ?? 'construction';
+  const thirdIcon = ROLE_ICONS[role ?? ''] ?? 'construction';
 
   return (
     <footer
       className={
         className ??
-        'mt-8 flex w-full shrink-0 flex-col items-center justify-center gap-4 border-t border-[#1E2B58]/10 px-4 py-8 text-center opacity-40 md:gap-6 md:py-16 dark:border-white/10'
+        'mt-4 flex w-full shrink-0 flex-col items-center justify-center gap-2 border-t border-[#1E2B58]/50 px-4 py-5 text-center opacity-50 dark:border-white/50'
       }
     >
-      <div className="flex flex-wrap items-center justify-center gap-6 text-[#1E2B58] md:gap-10 dark:text-white">
-        <span className="material-symbols-rounded text-xl md:text-2xl">school</span>
-        <span className="material-symbols-rounded text-xl md:text-2xl">verified_user</span>
-        <span className="material-symbols-rounded text-xl md:text-2xl">{thirdIcon}</span>
+      <div className="flex items-center justify-center gap-5 text-[#1E2B58] dark:text-white">
+        <span className="material-symbols-rounded text-base">school</span>
+        <span className="material-symbols-rounded text-base">verified_user</span>
+        <span className="material-symbols-rounded text-base">{thirdIcon}</span>
       </div>
-      <p className="text-[0.625rem] font-black tracking-[0.2em] text-[#1E2B58] uppercase md:text-xs md:tracking-[0.4em] dark:text-white">
-        Facility &amp; Equipment Management System — F-EMS 2024
+      <p className="text-[0.6rem] font-black tracking-[0.2em] text-[#1E2B58] uppercase dark:text-white">
+        Facility &amp; Equipment Management System — F-EMS 2026
       </p>
     </footer>
   );

@@ -8,8 +8,9 @@ export interface AuthState {
   setAccessToken: (accessToken: string | null) => void;
 
   clearState: () => void;
-  signIn: (username: string, password: string, role: string) => Promise<void>;
+  signIn: (username: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
   fetchUserProfile: () => Promise<void>;
   refreshToken: () => Promise<void>;
+  updateProfile: (payload: { phone?: string; dob?: string; displayName?: string }) => Promise<void>;
 }

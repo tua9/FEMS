@@ -4,6 +4,7 @@ import {
   MODAL_OVERLAY, MODAL_CARD, CLOSE_BTN,
   BTN_SECONDARY, BTN_DANGER, SECTION_LABEL, TEXTAREA_CLASS,
 } from '@/components/technician/common/modalStyles';
+import ModalPortal from '@/components/technician/common/ModalPortal';
 
 interface Props {
   ticket: Ticket;
@@ -31,6 +32,7 @@ const TicketRejectModal: React.FC<Props> = ({ ticket, onClose, onConfirm }) => {
   };
 
   return (
+    <ModalPortal>
     <div className={MODAL_OVERLAY} onClick={onClose}>
       <div
         className={`${MODAL_CARD} max-w-sm`}
@@ -128,6 +130,7 @@ const TicketRejectModal: React.FC<Props> = ({ ticket, onClose, onConfirm }) => {
         </div>
       </div>
     </div>
+    </ModalPortal>
   );
 };
 

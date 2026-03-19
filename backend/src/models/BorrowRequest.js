@@ -28,15 +28,10 @@ const borrowRequestSchema = new mongoose.Schema(
 
     status: {
       type: String,
-      enum: ['pending', 'approved', 'rejected', 'handed_over', 'returned'],
+      enum: ['pending', 'approved', 'rejected', 'handed_over', 'returned', 'cancelled'],
       default: 'pending',
     },
 
-    approved_by: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'User',
-      default: null,
-    },
 
     borrow_date: {
       type: Date,
@@ -52,14 +47,28 @@ const borrowRequestSchema = new mongoose.Schema(
       type: String,
       default: null,
     },
+
+    // ── Decision / Audit fields ──────────────────────────────────────────────
+    // Shared field for: user's cancel reason, admin's approve/reject note
+    decision_note: {
+      type: String,
+      default: null,
+    },
+
+    // Timestamps + actor for cancel
+    cancelled_at: { type: Date, default: null },
+    cancelled_by: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
+
+    // Timestamps + actor for admin approve/reject
+    processed_at: { type: Date, default: null },
+    processed_by: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
   },
   { timestamps: true },
 )
 
 // Default sort by newest first
-borrowRequestSchema.pre('find', function (next) {
+borrowRequestSchema.pre('find', function () {
   this.sort({ createdAt: -1 })
-  next()
 })
 
 const BorrowRequest = mongoose.model('BorrowRequest', borrowRequestSchema)

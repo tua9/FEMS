@@ -23,14 +23,22 @@ const roomSchema = mongoose.Schema(
       ref: 'Building',
       default: null,
     },
+    floor: {
+      type: Number,
+      default: 1,
+    },
+    labels: {
+      type: [String],
+      default: [],
+    },
   },
   { timestamps: true },
 )
 
 // Default sort by newest first
-roomSchema.pre('find', function (next) {
+roomSchema.pre('find', function () {
   this.sort({ createdAt: -1 })
-  next()
+
 })
 
 const Room = mongoose.model('Room', roomSchema)

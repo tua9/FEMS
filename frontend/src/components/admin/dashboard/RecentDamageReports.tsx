@@ -1,5 +1,5 @@
 import React from 'react';
-import { DamageReport } from '../../../types/admin.types';
+import type { DamageReport } from '../../../types/admin.types';
 
 interface RecentDamageReportsProps {
     reports: DamageReport[];
@@ -15,7 +15,7 @@ const RecentDamageReports: React.FC<RecentDamageReportsProps> = ({ reports, onVi
     };
 
     return (
-        <div className="bg-white/40 dark:bg-slate-800/60 p-8 ambient-shadow rounded-[32px] border border-white/40 dark:border-white/10 backdrop-blur-xl transition-all duration-300">
+        <div className="dashboard-card p-8 rounded-4xl transition-all duration-300">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
                 <div>
                     <h4 className="font-extrabold text-[#1A2B56] dark:text-white text-lg">User Damage Reports</h4>

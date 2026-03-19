@@ -3,24 +3,26 @@ import {
   createEquipment,
   getAllEquipment,
   getEquipmentById,
-  getEquipmentByQrCode,
+  getEquipmentByCode,
   updateEquipment,
   deleteEquipment,
+  getEquipmentInventory,
 } from '../controllers/equipmentController.js'
 import { restrictTo, protectedRoute } from '../middlewares/authMiddlewares.js'
 
 const router = express.Router()
 
 // Guest / All routes
-router.get('/qr/:qrCode', getEquipmentByQrCode)
+router.get('/code/:code', getEquipmentByCode)
+router.get('/inventory', getEquipmentInventory)
 router.get('/', getAllEquipment)
 router.get('/:id', getEquipmentById)
 
-// Admin/Tech routes
+// Role protected routes
 router.use(protectedRoute)
-router.post('/', restrictTo('Admin', 'Tech'), createEquipment)
-router.put('/:id', restrictTo('Admin', 'Tech'), updateEquipment)
-router.patch('/:id', restrictTo('Admin', 'Tech'), updateEquipment)
-router.delete('/:id', restrictTo('Admin', 'Tech'), deleteEquipment)
+router.post('/', restrictTo('admin', 'technician'), createEquipment)
+router.put('/:id', restrictTo('admin', 'technician'), updateEquipment)
+router.patch('/:id', restrictTo('admin', 'technician'), updateEquipment)
+router.delete('/:id', restrictTo('admin', 'technician'), deleteEquipment)
 
 export default router

@@ -40,14 +40,27 @@ const userSchema = new mongoose.Schema(
       type: String,
       trim: true,
     },
+    phone: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+    dob: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+    isActive: {
+      type: Boolean,
+      default: true,
+    },
   },
   { timestamps: true },
 )
 
 // Default sort by newest first
-userSchema.pre('find', function (next) {
+userSchema.pre('find', function () {
   this.sort({ createdAt: -1 })
-  next()
 })
 
 const User = mongoose.model('User', userSchema)

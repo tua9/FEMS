@@ -15,7 +15,7 @@ const AssetPagination: React.FC<Props> = ({
   totalCount,
   onPageChange,
 }) => (
-  <div className="flex items-center justify-between pt-6 border-t border-slate-300/30 dark:border-slate-600/30">
+  <div className="flex items-center justify-between pt-6 border-t border-slate-300 dark:border-slate-600">
     <span className="text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em]">
       Showing {visibleCount} of {totalCount} assets
     </span>

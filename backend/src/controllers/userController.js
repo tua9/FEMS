@@ -31,3 +31,9 @@ export const getUserProfile = asyncHandler(async (req, res) => {
   const result = await userService.getUserProfile(req.user._id)
   res.status(StatusCodes.OK).json(result)
 })
+
+export const updateOwnProfile = asyncHandler(async (req, res) => {
+  const { phone, email } = req.body
+  const result = await userService.updateUser(req.user._id, { phone, email })
+  res.status(StatusCodes.OK).json(result)
+})

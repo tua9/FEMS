@@ -14,11 +14,11 @@ export const ApprovalHeader: React.FC = () => {
                 </div>
 
                 <div className="flex flex-row items-center gap-[1rem] mt-[1.5rem] md:mt-0">
-                    <div className="glass-card bg-white/60 dark:bg-slate-800/60 border border-white/60 dark:border-white/10 px-[1.5rem] md:px-[2.5rem] py-[1.25rem] md:py-[1.75rem] rounded-[1.5rem] md:rounded-[2rem] flex flex-col items-center justify-center min-w-[8rem] md:min-w-[10rem] flex-1 md:flex-none">
-                        <span className="text-[2.25rem] md:text-[2.5rem] font-black text-[#1E2B58] dark:text-white leading-none mb-[0.375rem]">14</span>
+                    <div className="dashboard-card px-6 md:px-10 py-5 md:py-7 rounded-3xl md:rounded-4xl flex flex-col items-center justify-center min-w-32 md:min-w-40 flex-1 md:flex-none">
+                        <span className="text-4xl md:text-5xl font-black text-[#1E2B58] dark:text-white leading-none mb-1.5">14</span>
                         <span className="text-[0.625rem] font-bold uppercase tracking-[0.2em] text-[#1E2B58]/50 dark:text-white/50">Pending</span>
                     </div>
-                    <div className="glass-card bg-white/60 dark:bg-slate-800/60 border border-white/60 dark:border-white/10 px-[1.5rem] md:px-[2.5rem] py-[1.25rem] md:py-[1.75rem] rounded-[1.5rem] md:rounded-[2rem] flex flex-col items-center justify-center min-w-[8rem] md:min-w-[10rem] flex-1 md:flex-none">
+                    <div className="dashboard-card px-6 md:px-10 py-5 md:py-7 rounded-3xl md:rounded-4xl flex flex-col items-center justify-center min-w-32 md:min-w-40 flex-1 md:flex-none">
                         <span className="text-[2.25rem] md:text-[2.5rem] font-black text-slate-500 dark:text-slate-300 leading-none mb-[0.375rem]">128</span>
                         <span className="text-[0.625rem] font-bold uppercase tracking-[0.2em] text-slate-500/70 dark:text-slate-400/70">Total</span>
                     </div>

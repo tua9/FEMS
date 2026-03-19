@@ -28,15 +28,23 @@ const reportSchema = new mongoose.Schema(
 
     status: {
       type: String,
-      enum: ['pending', 'approved', 'rejected', 'processing', 'fixed'],
+      enum: ['pending', 'approved', 'rejected', 'processing', 'fixed', 'cancelled'],
       default: 'pending',
     },
 
-    approved_by: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'User',
-      default: null,
+    priority: {
+      type: String,
+      enum: ['low', 'medium', 'high', 'critical'],
+      default: 'medium',
     },
+
+
+    // Timestamps + actor for admin approve/reject/fix
+    processed_at: { type: Date, default: null },
+    processed_by: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
+
+    assigned_to: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
+
 
     img: {
       type: String,
@@ -52,9 +60,8 @@ const reportSchema = new mongoose.Schema(
 )
 
 // Default sort by newest first
-reportSchema.pre('find', function (next) {
+reportSchema.pre('find', function () {
   this.sort({ createdAt: -1 })
-  next()
 })
 
 const Report = mongoose.model('Report', reportSchema)

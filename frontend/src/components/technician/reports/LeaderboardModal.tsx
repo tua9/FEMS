@@ -110,43 +110,35 @@ const LeaderboardModal: React.FC<Props> = ({ dateRangeDays, onClose }) => {
   return (
     /* Backdrop */
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4"
-      style={{ background: 'rgba(15,23,42,0.55)', backdropFilter: 'blur(4px)' }}
+      className="fixed inset-0 z-50 flex items-center justify-center px-4 py-6 bg-black/30 backdrop-blur-sm"
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
       {/* Panel */}
-      <div
-        className="w-full max-w-2xl max-h-[90vh] flex flex-col rounded-3xl shadow-2xl overflow-hidden"
-        style={{
-          background: 'rgba(255,255,255,0.97)',
-          backdropFilter: 'blur(20px)',
-          border: '1px solid rgba(255,255,255,0.5)',
-        }}
-      >
+      <div className="glass-card animate-in fade-in zoom-in-95 duration-200 w-full max-w-2xl max-h-[90vh] flex flex-col rounded-[2rem] shadow-2xl shadow-[#1E2B58]/20 overflow-hidden">
         {/* Header */}
-        <div className="px-8 py-6 border-b border-slate-100 flex items-center justify-between flex-shrink-0">
+        <div className="px-8 py-6 border-b border-black/8 dark:border-white/10 flex items-center justify-between shrink-0">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-amber-50 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-2xl bg-amber-500/10 flex items-center justify-center">
               <span className="material-symbols-outlined text-amber-500" style={{ fontVariationSettings: "'FILL' 1" }}>
                 emoji_events
               </span>
             </div>
             <div>
-              <h2 className="text-lg font-extrabold text-[#232F58]">Full Leaderboard</h2>
+              <h2 className="text-lg font-extrabold text-[#1E2B58] dark:text-white">Full Leaderboard</h2>
               <p className="text-xs text-slate-400 font-medium">{rangeLabel} · {performers.length} technicians ranked</p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="w-9 h-9 rounded-xl flex items-center justify-center text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors"
+            className="w-8 h-8 rounded-full flex items-center justify-center text-[#1E2B58]/50 hover:text-[#1E2B58] hover:bg-[#1E2B58]/8 dark:text-white/50 dark:hover:text-white dark:hover:bg-white/10 transition-colors"
           >
             <span className="material-symbols-outlined text-xl">close</span>
           </button>
         </div>
 
         {/* Legend row */}
-        <div className="px-8 py-3 bg-slate-50 border-b border-slate-100 flex-shrink-0">
-          <div className="flex items-center gap-6 text-[10px] font-extrabold uppercase tracking-widest text-slate-400">
+        <div className="px-8 py-3 bg-black/3 dark:bg-white/3 border-b border-black/8 dark:border-white/10 shrink-0">
+          <div className="flex items-center gap-6 text-[10px] font-extrabold uppercase tracking-widest text-[#1E2B58]/40 dark:text-white/40">
             <span className="w-12 text-center">#</span>
             <span className="flex-1">Technician</span>
             <span className="w-32">Resolve Rate</span>
@@ -167,13 +159,13 @@ const LeaderboardModal: React.FC<Props> = ({ dateRangeDays, onClose }) => {
         </div>
 
         {/* Footer */}
-        <div className="px-8 py-5 border-t border-slate-100 flex items-center justify-between flex-shrink-0 bg-slate-50/80">
+        <div className="px-8 py-5 border-t border-black/8 dark:border-white/10 flex items-center justify-between shrink-0 bg-black/3 dark:bg-white/3">
           <p className="text-xs text-slate-400 font-medium">
             Rankings based on tickets resolved · {rangeLabel}
           </p>
           <button
             onClick={onClose}
-            className="px-5 py-2.5 bg-[#232F58] text-white text-xs font-bold rounded-xl hover:opacity-90 transition-all"
+            className="px-5 py-2.5 rounded-[1.25rem] border border-[#1E2B58]/15 dark:border-white/15 text-[#1E2B58]/70 dark:text-white/70 text-xs font-bold hover:bg-[#1E2B58]/5 dark:hover:bg-white/5 transition-all"
           >
             Close
           </button>
