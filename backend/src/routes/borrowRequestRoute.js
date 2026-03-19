@@ -8,6 +8,7 @@ import {
   cancelBorrowRequest,
   approveBorrowRequest,
   rejectBorrowRequest,
+  directAllocateEquipment,
   handoverBorrowRequest,
   returnBorrowRequest,
   remindBorrowRequest,
@@ -45,6 +46,12 @@ router.post(
   restrictTo('student', 'lecturer', 'technician', 'admin'),
   createBorrowRequest,
 ) // Student specific
+
+router.post(
+  '/direct-allocation',
+  restrictTo('technician', 'admin'),
+  directAllocateEquipment,
+)
 router.patch(
   '/:id/cancel',
   restrictTo('student', 'lecturer', 'technician', 'admin'),

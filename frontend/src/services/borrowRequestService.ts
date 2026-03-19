@@ -4,6 +4,14 @@ import type {
   CreateBorrowRequestPayload,
 } from "@/types/borrowRequest";
 
+export type DirectAllocationPayload = {
+  user_id: string;
+  equipment_id: string;
+  borrow_date: string;
+  return_date: string;
+  note?: string;
+};
+
 export const borrowRequestService = {
   async getMyBorrowRequests(): Promise<BorrowRequest[]> {
     const res = await api.get("/requests/me");
@@ -19,6 +27,11 @@ export const borrowRequestService = {
     payload: CreateBorrowRequestPayload
   ): Promise<BorrowRequest> {
     const res = await api.post("/requests", payload);
+    return res.data;
+  },
+
+  async directAllocateEquipment(payload: DirectAllocationPayload): Promise<{ message: string; borrowRequest: BorrowRequest }> {
+    const res = await api.post("/requests/direct-allocation", payload);
     return res.data;
   },
 
