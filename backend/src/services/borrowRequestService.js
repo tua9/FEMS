@@ -13,16 +13,13 @@ const autoCancelExpiredRequests = async () => {
     // Lấy ngày hẹn mượn
     const borrowDate = new Date(req.borrow_date)
     
-    // Chuyển sang ngày tiếp theo
+    // Deadline auto-cancel: kết thúc giờ hành chính 17:00:00 của đúng ngày handover (borrow_date)
     const deadline = new Date(borrowDate)
-    deadline.setDate(deadline.getDate() + 1)
-    
-    // Set deadline chót là 16:00 (Cộng 8 tiếng từ 08:00 sáng ngày hôm sau)
-    deadline.setHours(16, 0, 0, 0)
+    deadline.setHours(17, 0, 0, 0)
     
     if (now > deadline) {
       req.status = 'cancelled'
-      req.decision_note = 'Yêu cầu đã bị hệ thống tự động hủy do người mượn không đến nhận thiết bị trễ nhất vào lúc 16:00 của ngày làm việc tiếp theo.'
+      req.decision_note = 'Yêu cầu đã bị hệ thống tự động hủy do người mượn không đến nhận thiết bị trễ nhất vào lúc 17:00:00 của ngày handover hẹn trước.'
       req.cancelled_at = new Date()
       await req.save()
     }
@@ -304,6 +301,82 @@ const returnBorrowRequest = async (id) => {
   return { message: 'Equipment returned and asset released', request }
 }
 
+const directAllocateEquipment = async (body, allocatorId) => {
+  const { user_id, equipment_id, borrow_date, return_date, note } = body
+
+  if (!user_id) {
+    throw new ApiError(StatusCodes.UNPROCESSABLE_ENTITY, 'user_id is required')
+  }
+  if (!equipment_id) {
+    throw new ApiError(StatusCodes.UNPROCESSABLE_ENTITY, 'equipment_id is required')
+  }
+
+  const borrower = await User.findById(user_id)
+  if (!borrower) {
+    throw new ApiError(StatusCodes.NOT_FOUND, 'User not found')
+  }
+
+  const equipment = await Equipment.findById(equipment_id)
+  if (!equipment) {
+    throw new ApiError(StatusCodes.NOT_FOUND, 'Equipment not found')
+  }
+  if (equipment.status === 'broken' || equipment.status === 'maintenance') {
+    throw new ApiError(StatusCodes.BAD_REQUEST, `Equipment is currently ${equipment.status}`)
+  }
+  if (equipment.available === false) {
+    throw new ApiError(StatusCodes.BAD_REQUEST, 'Equipment is not available')
+  }
+
+  const borrowDate = new Date(borrow_date)
+  const returnDate = new Date(return_date)
+  if (isNaN(borrowDate.getTime()) || isNaN(returnDate.getTime())) {
+    throw new ApiError(StatusCodes.UNPROCESSABLE_ENTITY, 'Invalid dates provided')
+  }
+  if (borrowDate >= returnDate) {
+    throw new ApiError(StatusCodes.UNPROCESSABLE_ENTITY, 'Borrow date must be before return date')
+  }
+
+  // Avoid allocating if already scheduled/active in that window
+  const conflictingRequests = await BorrowRequest.find({
+    equipment_id,
+    status: { $in: ['approved', 'handed_over', 'borrowing'] },
+    borrow_date: { $lt: returnDate }, // Existing start < New end
+    return_date: { $gt: borrowDate }, // Existing end > New start
+  })
+  if (conflictingRequests.length > 0) {
+    throw new ApiError(
+      StatusCodes.BAD_REQUEST,
+      'Thiết bị đã có người đặt trước trong hệ thống với khoảng thời gian này. Vui lòng chọn thiết bị hoặc thời gian khác.',
+    )
+  }
+
+  // Create request already handed over (direct allocation)
+  const request = await BorrowRequest.create({
+    user_id,
+    equipment_id,
+    room_id: null,
+    type: 'equipment',
+    borrow_date: borrowDate,
+    return_date: returnDate,
+    note: note || null,
+    status: 'handed_over',
+    processed_at: new Date(),
+    processed_by: allocatorId,
+    decision_note: 'Direct allocation',
+  })
+
+  equipment.available = false
+  equipment.borrowed_by = borrower._id
+  await equipment.save()
+
+  const populatedRequest = await BorrowRequest.findById(request._id)
+    .populate('user_id', 'username displayName email')
+    .populate('equipment_id')
+    .populate('processed_by', 'username displayName')
+
+  return { message: 'Direct allocation created', borrowRequest: populatedRequest }
+}
+
 const rejectBorrowRequest = async (id, approverId, reason) => {
   const request = await BorrowRequest.findById(id)
   if (!request) {
@@ -367,6 +440,7 @@ export const borrowRequestService = {
   cancelBorrowRequest,
   approveBorrowRequest,
   rejectBorrowRequest,
+  directAllocateEquipment,
   handoverBorrowRequest,
   returnBorrowRequest,
   remindBorrowRequest,

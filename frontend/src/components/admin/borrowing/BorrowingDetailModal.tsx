@@ -175,7 +175,7 @@ const BorrowingDetailModal: React.FC<BorrowingDetailModalProps> = ({
                         </div>
 
                         {/* Administrative Metadata */}
-                        {(record.approved_by || record.createdAt) && (
+                        {(record.processed_by || record.createdAt) && (
                             <div>
                                 <h4 className="text-[11px] font-black uppercase tracking-[0.25em] text-slate-400 mb-6 flex items-center gap-3">
                                     <span className="w-8 h-0.5 bg-slate-200 dark:bg-slate-700"></span>

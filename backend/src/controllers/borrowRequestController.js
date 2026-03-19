@@ -68,6 +68,11 @@ export const rejectBorrowRequest = asyncHandler(async (req, res) => {
   res.status(StatusCodes.OK).json(result)
 })
 
+export const directAllocateEquipment = asyncHandler(async (req, res) => {
+  const result = await borrowRequestService.directAllocateEquipment(req.body, req.user._id)
+  res.status(StatusCodes.CREATED).json(result)
+})
+
 export const handoverBorrowRequest = asyncHandler(async (req, res) => {
   const result = await borrowRequestService.handoverBorrowRequest(req.params.id)
   res.status(StatusCodes.OK).json(result)
