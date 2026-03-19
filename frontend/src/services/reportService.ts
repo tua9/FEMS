@@ -26,4 +26,5 @@ export const reportService = {
     const res = await api.delete(`/tickets/history/${id}`);
     return res.data.report || res.data;
   },
+
 };

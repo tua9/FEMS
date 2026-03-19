@@ -20,8 +20,8 @@ export const signOut = asyncHandler(async (req, res) => {
 })
 
 export const signIn = asyncHandler(async (req, res) => {
-  const { userInfo, accessToken, refreshToken, displayName } =
-    await authService.signIn(req.body)
+  const result = await authService.signIn(req.body)
+  const { userInfo, accessToken, refreshToken, displayName } = result.data
 
   res.cookie('accessToken', accessToken, {
     httpOnly: true,
@@ -39,9 +39,7 @@ export const signIn = asyncHandler(async (req, res) => {
 
   res.status(StatusCodes.OK).json({
     message: `Sign in successful: User[${displayName}]`,
-    userInfo,
-    accessToken,
-    refreshToken,
+    ...result // Wrap data as status: success
   })
 })
 
@@ -60,4 +58,24 @@ export const refreshToken = asyncHandler(async (req, res) => {
   res.status(StatusCodes.OK).json({
     accessToken,
   })
+})
+
+export const forgotPassword = asyncHandler(async (req, res) => {
+  const result = await authService.forgotPassword(req.body)
+  res.status(StatusCodes.OK).json(result)
+})
+
+export const verifyResetToken = asyncHandler(async (req, res) => {
+  const result = await authService.verifyResetToken(req.body)
+  res.status(StatusCodes.OK).json(result)
+})
+
+export const resetPassword = asyncHandler(async (req, res) => {
+  const result = await authService.resetPassword(req.body)
+  res.status(StatusCodes.OK).json(result)
+})
+
+export const changePassword = asyncHandler(async (req, res) => {
+  const result = await authService.changePassword(req.user._id, req.body)
+  res.status(StatusCodes.OK).json(result)
 })

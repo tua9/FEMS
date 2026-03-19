@@ -5,6 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router";
 import { createPortal } from "react-dom";
+import { AxiosError } from "axios";
 
 // ── Validation schema ─────────────────────────────────────────────────────────
 
@@ -189,16 +190,19 @@ export function PasswordResetSuccessModal({ open }: PasswordResetSuccessModalPro
 
 interface SetNewPasswordFormProps extends React.ComponentProps<"div"> {
   onSuccess: () => void;
+  onResetPassword: (newPassword: string) => Promise<void>;
 }
 
 export function SetNewPasswordForm({
   onSuccess,
+  onResetPassword,
   className,
   ...props
 }: SetNewPasswordFormProps) {
   const [showPw, setShowPw] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [showModal, setShowModal] = useState(false);
+  const [formError, setFormError] = useState("");
 
   const {
     handleSubmit,
@@ -221,10 +225,18 @@ export function SetNewPasswordForm({
   ];
 
   const onSubmit = async (_data: SetPasswordValues) => {
-    // TODO: wire up real reset API call
-    await new Promise((r) => setTimeout(r, 800));
-    setShowModal(true);
-    onSuccess();
+    try {
+      setFormError("");
+      await onResetPassword(_data.password);
+      setShowModal(true);
+      onSuccess();
+    } catch (err: unknown) {
+      if (err instanceof AxiosError) {
+        setFormError(err.response?.data?.message || "Failed to reset password.");
+      } else {
+        setFormError("An unexpected error occurred.");
+      }
+    }
   };
 
   return (
@@ -322,6 +334,12 @@ export function SetNewPasswordForm({
                 ))}
               </ul>
             </div>
+
+            {formError && (
+              <div className="rounded-xl border border-red-200 dark:border-red-900/50 bg-red-50 dark:bg-red-900/20 px-4 py-3 text-[0.85rem] font-bold text-red-600 dark:text-red-400 animate-in slide-in-from-bottom-1 fade-in">
+                {formError}
+              </div>
+            )}
 
             {/* Submit */}
             <button

@@ -27,7 +27,7 @@ const DeviceDetailsModal: React.FC<DeviceDetailsModalProps> = ({ isOpen, device,
     const getVirtualStatusDotClass = (vStatus: string) => {
         switch (vStatus) {
             case 'Available': return { ping: 'bg-emerald-400', static: 'bg-emerald-500', text: 'text-emerald-500' };
-            case 'Reserved': 
+            case 'Reserved':
             case 'In Use': return { ping: 'bg-amber-400', static: 'bg-amber-500', text: 'text-amber-500' };
             case 'Broken': return { ping: 'bg-red-400', static: 'bg-red-500', text: 'text-red-500' };
             case 'Maintenance': return { ping: 'bg-orange-400', static: 'bg-orange-500', text: 'text-orange-500' };
@@ -46,8 +46,8 @@ const DeviceDetailsModal: React.FC<DeviceDetailsModalProps> = ({ isOpen, device,
         if (['Reserved', 'In Use'].includes(vStatus)) {
             import('../../../services/borrowRequestService').then(({ borrowRequestService }) => {
                 borrowRequestService.getAllBorrowRequests().then((reqs: any[]) => {
-                    const active = reqs.find(r => 
-                        (r.equipment_id?._id === device._id || r.equipment_id === device._id) && 
+                    const active = reqs.find(r =>
+                        (r.equipment_id?._id === device._id || r.equipment_id === device._id) &&
                         ['approved', 'handed_over', 'borrowing'].includes(r.status)
                     );
                     setActiveRequest(active);
@@ -160,7 +160,7 @@ const DeviceDetailsModal: React.FC<DeviceDetailsModalProps> = ({ isOpen, device,
                                 {vStatus === 'Available' ? 'Available in Inventory' : `Currently ${vStatus}`}
                             </p>
                         </div>
-                        
+
                         {/* New Borrow Tracking Section */}
                         {['Reserved', 'In Use'].includes(vStatus) && activeRequest && (
                             <div className="mt-4 pt-4 border-t border-slate-200 dark:border-slate-700 w-full flex flex-col items-center justify-center gap-1.5 transition-all text-sm">

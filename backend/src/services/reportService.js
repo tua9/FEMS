@@ -113,7 +113,7 @@ const updateReportStatus = async (id, status, approverId, technicianId) => {
   if (status === 'processing' && technicianId) {
     report.assigned_to = technicianId
   }
-  
+
   if (approverId) {
     report.processed_by = approverId
     report.processed_at = new Date()

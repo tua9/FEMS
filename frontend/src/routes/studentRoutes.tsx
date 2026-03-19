@@ -6,8 +6,8 @@ import { EquipmentCatalog } from "@/pages/shared/EquipmentCatalog";
 import { HistoryPage } from "@/pages/shared/HistoryPage";
 import ReportIssuePage from "@/pages/shared/ReportIssuePage";
 import ProfilePage from "@/pages/student/Profile";
-import LecturerChangePassword from "@/pages/lecturer/LecturerChangePassword";
-import NotificationsPage from "@/pages/shared/NotificationsPage";
+import ChangePasswordPage from "@/pages/shared/ChangePasswordPage";
+// import NotificationsPage from "@/pages/shared/NotificationsPage";
 
 const StudentRoutes = () => (
   <Route element={<ProtectedRoute allowRoles={["student"]} />}>
@@ -18,8 +18,8 @@ const StudentRoutes = () => (
       <Route path="/student/borrow-history" element={<HistoryPage />} />
       <Route path="/student/report-issue" element={<ReportIssuePage />} />
       <Route path="/student/profile" element={<ProfilePage />} />
-      <Route path="/student/change-password" element={<LecturerChangePassword />} />
-      <Route path="/student/notifications" element={<NotificationsPage />} />
+      <Route path="/student/change-password" element={<ChangePasswordPage />} />
+      {/* <Route path="/student/notifications" element={<NotificationsPage />} /> */}
     </Route>
   </Route>
 );

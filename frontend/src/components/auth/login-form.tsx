@@ -9,7 +9,7 @@ import { useState } from "react";
 // ── Validation schema ─────────────────────────────────────────────────────────
 
 const signInSchema = z.object({
-  username: z.string().min(1, "Username không được để trống"),
+  username: z.string().min(1, "Username or Email không được để trống"),
   password: z.string().min(1, "Password không được để trống"),
   rememberMe: z.boolean().optional(),
 });
@@ -97,7 +97,7 @@ export function LoginForm({ className, ...props }: React.ComponentProps<"div">) 
       const role = useAuthStore.getState().user?.role ?? "";
       navigate(ROLE_ROUTES[role] ?? "/");
     } catch {
-      setLoginError("Incorrect username or password. Please try again.");
+      setLoginError("Incorrect username/email or password. Please try again.");
     }
   };
 
@@ -123,7 +123,7 @@ export function LoginForm({ className, ...props }: React.ComponentProps<"div">) 
 
           {/* Username */}
           <div className="flex flex-col gap-2">
-            <FieldLabel>Username</FieldLabel>
+            <FieldLabel>Username or Email</FieldLabel>
             <div className="relative">
               <span
                 className={cn(
@@ -139,7 +139,7 @@ export function LoginForm({ className, ...props }: React.ComponentProps<"div">) 
                 id="username"
                 type="text"
                 autoComplete="username"
-                placeholder="Username"
+                placeholder="Username or Email"
                 {...register("username", {
                   onChange: () => { if (loginError) setLoginError(null); },
                 })}
@@ -212,7 +212,7 @@ export function LoginForm({ className, ...props }: React.ComponentProps<"div">) 
                 <span className="material-symbols-rounded text-[14px]">error</span>
                 {errors.password
                   ? errors.password.message
-                  : "Incorrect username or password. Please try again."}
+                  : "Incorrect username/email or password. Please try again."}
               </span>
             )}
           </div>

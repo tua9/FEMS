@@ -8,7 +8,7 @@ import ApiError from '../utils/ApiError.js'
 const autoCancelExpiredRequests = async () => {
   const approvedRequests = await BorrowRequest.find({ status: 'approved' })
   const now = new Date()
-  
+
   for (const req of approvedRequests) {
     // Lấy ngày hẹn mượn
     const borrowDate = new Date(req.borrow_date)
@@ -68,6 +68,7 @@ const createBorrowRequest = async (body) => {
     }
   }
 
+  // 2. Validate Dates
   const now = new Date()
   const borrowDate = new Date(borrow_date)
   const returnDate = new Date(return_date)
@@ -83,7 +84,7 @@ const createBorrowRequest = async (body) => {
       borrow_date: { $lt: returnDate }, // Existing start < New end
       return_date: { $gt: borrowDate }  // Existing end > New start
     })
-    
+
     if (conflictingRequests.length > 0) {
       throw new ApiError(StatusCodes.BAD_REQUEST, 'Thiết bị đã có người đặt trước trong hệ thống với khoảng thời gian này. Vui lòng chọn thiết bị hoặc thời gian khác.')
     }
@@ -103,6 +104,7 @@ const createBorrowRequest = async (body) => {
     )
   }
 
+  // 3. Create Pending Request
   const newBorrowRequest = await BorrowRequest.create({
     user_id,
     equipment_id: equipment_id || null,
@@ -260,7 +262,7 @@ const handoverBorrowRequest = async (id) => {
     if (!equipment) {
       throw new ApiError(StatusCodes.NOT_FOUND, 'Equipment not found')
     }
-    
+
     // Handover triggers request status change to 'handed_over' (which UI maps to Borrowing)
     equipment.available = false
     equipment.borrowed_by = request.user_id

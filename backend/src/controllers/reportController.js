@@ -54,3 +54,4 @@ export const cancelReport = asyncHandler(async (req, res) => {
   )
   res.status(StatusCodes.OK).json(result)
 })
+

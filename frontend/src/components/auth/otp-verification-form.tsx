@@ -29,12 +29,14 @@ interface OtpVerificationFormProps extends React.ComponentProps<"div"> {
   /** Called with the 6-digit code when the user clicks "Verify & Continue" */
   onVerified: (code: string) => Promise<{ success: boolean }>;
   onBack: () => void;
+  onResend?: () => Promise<void>;
 }
 
 export function OtpVerificationForm({
   email,
   onVerified,
   onBack,
+  onResend,
   className,
   ...props
 }: OtpVerificationFormProps) {
@@ -107,14 +109,16 @@ export function OtpVerificationForm({
     setIsSubmitting(false);
   };
 
-  const handleResend = () => {
+  const handleResend = async () => {
     if (!canResend) return;
     setCanResend(false);
     setCountdown(RESEND_SECONDS);
     setDigits(Array(OTP_LENGTH).fill(""));
     setError(null);
     inputRefs.current[0]?.focus();
-    // TODO: trigger real resend API
+    if (onResend) {
+      await onResend();
+    }
   };
 
   const isFilled = digits.every((d) => d !== "");

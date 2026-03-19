@@ -5,6 +5,8 @@ import { ForgotPasswordForm } from "@/components/auth/forgot-password-form";
 import { OtpVerificationForm } from "@/components/auth/otp-verification-form";
 import { SetNewPasswordForm } from "@/components/auth/set-new-password-form";
 import Footer from "@/components/common/Footer";
+import { authService } from "@/services/authService";
+import { toast } from "sonner";
 
 // ── Steps ─────────────────────────────────────────────────────────────────────
 
@@ -24,31 +26,42 @@ const HEADINGS: Record<Step, string> = {
 export default function ForgotPasswordPage() {
   const [step, setStep] = useState<Step>("email");
   const [email, setEmail] = useState("");
+  const [token, setToken] = useState("");
   const navigate = useNavigate();
 
   // ── Handlers ────────────────────────────────────────────────────────────
 
   /** Step 1 → 2: email submitted */
   const handleSent = async (submittedEmail: string) => {
-    // TODO: call real "send OTP" API here
-    await new Promise((r) => setTimeout(r, 800));
-    setEmail(submittedEmail);
-    setStep("otp");
+    try {
+      await authService.forgotPassword(submittedEmail);
+      toast.success("Verification code sent to your email.");
+      setEmail(submittedEmail);
+      setStep("otp");
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || "Failed to send reset code.");
+    }
   };
 
   /** Step 2 → 3 or error: OTP verified */
   const handleVerified = async (code: string): Promise<{ success: boolean }> => {
-    // TODO: call real "verify OTP" API here — return { success: false } on wrong code
-    await new Promise((r) => setTimeout(r, 800));
-    // Dev bypass: "123456" hoặc "000000" đều được chấp nhận
-    const isCorrect = code === "123456" || code === "000000";
-    if (isCorrect) setStep("set-password");
-    return { success: isCorrect };
+    try {
+      await authService.verifyResetToken(email, code);
+      setToken(code);
+      setStep("set-password");
+      return { success: true };
+    } catch (err: any) {
+      return { success: false };
+    }
   };
 
   /** Step 3 done: password reset success — modal inside SetNewPasswordForm handles redirect */
   const handlePasswordSet = () => {
     // no-op: PasswordResetSuccessModal auto-redirects to /login
+  };
+
+  const handleResetPassword = async (password: string) => {
+    await authService.resetPassword(email, token, password);
   };
 
   // ── Render ───────────────────────────────────────────────────────────────
@@ -107,6 +120,7 @@ export default function ForgotPasswordPage() {
               className="w-full"
               email={email}
               onVerified={handleVerified}
+              onResend={() => handleSent(email)}
               onBack={() => setStep("email")}
             />
           )}
@@ -116,6 +130,7 @@ export default function ForgotPasswordPage() {
             <SetNewPasswordForm
               className="w-full"
               onSuccess={handlePasswordSet}
+              onResetPassword={handleResetPassword}
             />
           )}
 

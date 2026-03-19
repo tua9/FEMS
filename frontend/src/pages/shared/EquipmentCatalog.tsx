@@ -1,26 +1,20 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { PageHeader } from "@/components/shared/PageHeader";
-import {
-  X,
-  ArrowRight,
-  CalendarDays,
-  FileText,
-  Loader2
-} from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
-import { EquipmentFilter } from "../../components/lecturer/equipment/EquipmentFilter";
-import { EquipmentCategories } from "../../components/lecturer/equipment/EquipmentCategories";
-import { EquipmentGrid } from "../../components/lecturer/equipment/EquipmentGrid";
-import { BorrowedEquipmentGrid } from "../../components/lecturer/equipment/BorrowedEquipmentGrid";
+import { EquipmentFilter } from "@/components/shared/equipment/EquipmentFilter";
+import { EquipmentCategories } from "@/components/shared/equipment/EquipmentCategories";
+import { EquipmentGrid } from "@/components/shared/equipment/EquipmentGrid";
+import { BorrowedEquipmentGrid } from "@/components/shared/equipment/BorrowedEquipmentGrid";
+import BorrowModal from "@/components/shared/equipment/BorrowModal";
 import { useEquipmentStore } from "@/stores/useEquipmentStore";
 import { useBuildingStore } from "@/stores/useBuildingStore";
 import { useBorrowRequestStore } from "@/stores/useBorrowRequestStore";
 import { useRoomStore } from "@/stores/useRoomStore";
 import { useAuthStore } from "@/stores/useAuthStore";
 import type { Equipment } from "@/types/equipment";
-import { getTomorrowLocal } from "@/utils/dateUtils";
 
 // Category id → EquipmentType (or 'all')
 // Must match the `category` values stored in MongoDB
@@ -38,12 +32,6 @@ const TYPE_TO_CATEGORY: Record<string, string> = Object.fromEntries(
   Object.entries(CATEGORY_TO_TYPE).map(([k, v]) => [v, k]),
 );
 
-// Categories that are fixed to a specific room (auto-assigned)
-const FIXED_ROOM_CATEGORY: Record<string, string> = {
-  pc_lab:  "Computer Lab",
-  iot_kit: "Lab211",
-};
-
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export const EquipmentCatalog: React.FC = () => {
@@ -54,7 +42,7 @@ export const EquipmentCatalog: React.FC = () => {
 
   const { inventoryData, fetchInventory, loading: equipmentLoading } = useEquipmentStore();
   const { buildings, fetchAll: fetchBuildings } = useBuildingStore();
-  const { rooms, fetchAll: fetchRooms } = useRoomStore();
+  const { fetchAll: fetchRooms } = useRoomStore();
   const { createMyBorrowRequest, fetchMyBorrowRequests, loading: borrowLoading } = useBorrowRequestStore();
 
   // ── Filter state ──────────────────────────────────────────────────────────
@@ -66,10 +54,6 @@ export const EquipmentCatalog: React.FC = () => {
 
   // ── Borrow modal state ────────────────────────────────────────────────────
   const [borrowingItem, setBorrowingItem] = useState<Equipment | null>(null);
-  const [returnDate, setReturnDate] = useState("");
-  const [purpose, setPurpose] = useState("");
-  const [selectedRoomId, setSelectedRoomId] = useState("");
-  const [formError, setFormError] = useState("");
 
   const ITEMS_PER_PAGE = 12;
 
@@ -131,63 +115,25 @@ export const EquipmentCatalog: React.FC = () => {
   };
 
   // ── Borrow modal ──────────────────────────────────────────────────────────
-  const tomorrow = getTomorrowLocal();
 
   const openBorrowModal = (item: Equipment) => {
     setBorrowingItem(item);
-    setReturnDate(tomorrow);
-    setPurpose("");
-    setFormError("");
-
-    // Auto-assign room for fixed-location equipment
-    const fixedRoomName = FIXED_ROOM_CATEGORY[item.category];
-    if (fixedRoomName) {
-      // Equipment already has room_id populated — use it directly
-      const roomIdFromItem = (item.room_id as any)?._id || (item.room_id as any);
-      if (roomIdFromItem) {
-        setSelectedRoomId(String(roomIdFromItem));
-      } else {
-        // Fallback: find by name from rooms store
-        const found = rooms.find(r => r.name === fixedRoomName);
-        setSelectedRoomId(found?._id || "");
-      }
-    } else {
-      setSelectedRoomId("");
-    }
   };
 
   const closeBorrowModal = () => {
     setBorrowingItem(null);
-    setFormError("");
   };
 
-  const handleSubmitBorrow = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!returnDate) {
-      setFormError("Please select a return date.");
-      return;
-    }
-    if (!purpose.trim()) {
-      setFormError("Please enter the purpose of borrowing.");
-      return;
-    }
-
+  const handleSubmitBorrow = async (borrowDate: string, returnDate: string, purpose: string) => {
     try {
-      const now = new Date();
-      // Set borrow date to tomorrow at 8:00 AM for consistency
-      const tomorrowDate = new Date(now);
-      tomorrowDate.setDate(now.getDate() + 1);
-      tomorrowDate.setHours(8, 0, 0, 0);
-
-      // For fixed-location categories (pc_lab, iot_kit), send room_id
-      // For all other categories, DO NOT send room_id (leave as null)
-      const isFixed = !!FIXED_ROOM_CATEGORY[borrowingItem?.category || ""];
+      const roomIdFromItem = (borrowingItem?.room_id as any)?._id || (borrowingItem?.room_id as any);
+      const roomId = roomIdFromItem ? String(roomIdFromItem) : "";
 
       await createMyBorrowRequest({
         equipment_id: borrowingItem!._id,
-        ...(isFixed && selectedRoomId ? { room_id: selectedRoomId } : {}),
+        ...(roomId ? { room_id: roomId } : {}),
         type: "equipment",
-        borrow_date: tomorrowDate.toISOString(),
+        borrow_date: new Date(borrowDate).toISOString(),
         return_date: new Date(returnDate).toISOString(),
         note: purpose.trim(),
       });
@@ -196,12 +142,10 @@ export const EquipmentCatalog: React.FC = () => {
         description: `Your request for "${borrowingItem!.name}" is pending review.`,
       });
 
-      // Component is responsible for refreshing data after creation (not the store)
       await fetchMyBorrowRequests();
-
       closeBorrowModal();
     } catch (err: any) {
-      setFormError(err?.response?.data?.message || "Failed to submit request. Please try again.");
+      toast.error(err?.response?.data?.message || "Failed to submit request.");
     }
   };
 
@@ -318,115 +262,12 @@ export const EquipmentCatalog: React.FC = () => {
 
       {/* ── Borrow Request Modal ───────────────────────────────────────── */}
       {borrowingItem && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 px-4 backdrop-blur-sm"
-          onClick={(e) => {
-            if (e.target === e.currentTarget) closeBorrowModal();
-          }}
-        >
-          <div className="glass-card animate-in fade-in zoom-in-95 relative w-full max-w-md rounded-[2rem] p-8 shadow-2xl shadow-[#1E2B58]/20 duration-200">
-            {/* Close button */}
-            <button
-              onClick={closeBorrowModal}
-              className="absolute top-5 right-5 flex h-8 w-8 items-center justify-center rounded-full text-[#1E2B58]/60 transition hover:bg-[#1E2B58]/10 dark:text-white/60 dark:hover:bg-white/10"
-            >
-              <X className="h-4 w-4" />
-            </button>
-
-            {/* Modal header */}
-            <div className="mb-6">
-              <p className="mb-1 text-[0.625rem] font-black tracking-widest text-[#1E2B58]/50 uppercase dark:text-white/40">
-                Borrow Request
-              </p>
-              <h3 className="text-2xl leading-tight font-black text-[#1E2B58] dark:text-white">
-                {borrowingItem.name}
-              </h3>
-              <p className="mt-1 text-xs font-bold tracking-widest text-[#1E2B58]/50 uppercase dark:text-white/40">
-                {borrowingItem._id.slice(-6).toUpperCase()} • {(borrowingItem.room_id as any)?.name || "N/A"}
-              </p>
-            </div>
-
-            {/* Form */}
-            <form onSubmit={handleSubmitBorrow} className="flex flex-col gap-5">
-              {/* Return date */}
-              <div className="flex flex-col gap-2">
-                <label className="flex items-center gap-2 text-xs font-black tracking-widest text-[#1E2B58]/70 uppercase dark:text-white/60">
-                  <CalendarDays className="h-3.5 w-3.5" />
-                  Return Date
-                </label>
-                <input
-                  type="date"
-                  required
-                  min={tomorrow}
-                  value={returnDate}
-                  onChange={(e) => setReturnDate(e.target.value)}
-                  className="w-full rounded-[1rem] border border-white/40 bg-white/40 px-4 py-3 text-sm font-bold text-[#1E2B58] transition-all outline-none focus:ring-2 focus:ring-[#1E2B58]/30 dark:border-slate-700/50 dark:bg-slate-800/50 dark:text-white"
-                />
-              </div>
-
-              {/* Room Section: only show for fixed-room categories (pc_lab / iot_kit) */}
-              {FIXED_ROOM_CATEGORY[borrowingItem?.category || ""] && (
-                <div className="flex items-center gap-3 rounded-[1rem] border border-emerald-400/30 bg-emerald-50/60 dark:bg-emerald-900/20 px-4 py-3">
-                  <span className="material-symbols-outlined text-emerald-600 dark:text-emerald-400 text-[1.25rem]">location_on</span>
-                  <div>
-                    <p className="text-[0.625rem] font-black uppercase tracking-widest text-emerald-700/60 dark:text-emerald-400/60">Fixed Location</p>
-                    <p className="text-sm font-black text-emerald-700 dark:text-emerald-300">
-                      {FIXED_ROOM_CATEGORY[borrowingItem?.category || ""]}
-                    </p>
-                  </div>
-                </div>
-              )}
-
-              {/* Purpose */}
-              <div className="flex flex-col gap-2">
-                <label className="flex items-center gap-2 text-xs font-black tracking-widest text-[#1E2B58]/70 uppercase dark:text-white/60">
-                  <FileText className="h-3.5 w-3.5" />
-                  Purpose of Borrowing
-                </label>
-                <textarea
-                  required
-                  rows={3}
-                  placeholder="e.g. Teaching demo for CS101 lecture..."
-                  value={purpose}
-                  onChange={(e) => setPurpose(e.target.value)}
-                  className="w-full resize-none rounded-[1rem] border border-white/40 bg-white/40 px-4 py-3 text-sm font-medium text-[#1E2B58] transition-all outline-none placeholder:text-[#1E2B58]/30 focus:ring-2 focus:ring-[#1E2B58]/30 dark:border-slate-700/50 dark:bg-slate-800/50 dark:text-white dark:placeholder:text-white/30"
-                />
-              </div>
-
-              {/* Error */}
-              {formError && (
-                <p className="rounded-xl bg-red-500/10 px-4 py-2.5 text-xs font-bold text-red-500 dark:text-red-400">
-                  {formError}
-                </p>
-              )}
-
-              {/* Actions */}
-              <div className="mt-1 flex gap-3">
-                <button
-                  type="button"
-                  onClick={closeBorrowModal}
-                  className="flex-1 rounded-[1.25rem] border border-[#1E2B58]/20 py-3.5 text-sm font-bold text-[#1E2B58]/70 transition-all hover:bg-[#1E2B58]/5 dark:border-white/20 dark:text-white/70 dark:hover:bg-white/5"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={borrowLoading}
-                  className="flex flex-[2] items-center justify-center gap-2 rounded-[1.25rem] bg-[#1E2B58] py-3.5 text-sm font-bold text-white transition-all hover:scale-[1.02] hover:shadow-xl hover:shadow-[#1E2B58]/30 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {borrowLoading ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <>
-                      Submit Request
-                      <ArrowRight className="h-4 w-4" strokeWidth={3} />
-                    </>
-                  )}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
+        <BorrowModal
+          item={borrowingItem}
+          onClose={closeBorrowModal}
+          onSubmit={handleSubmitBorrow}
+          isLoading={borrowLoading}
+        />
       )}
     </div>
   );

@@ -16,7 +16,7 @@ type ReportStore = {
   cancelMyReport: (id: string) => Promise<void>;
 };
 
-export const useReportStore = create<ReportStore>((set) => ({
+export const useReportStore = create<ReportStore>((set, get) => ({
   reports: [],
   myReports: [],
   loading: false,
@@ -24,6 +24,7 @@ export const useReportStore = create<ReportStore>((set) => ({
   error: null,
 
   fetchAllReports: async () => {
+    if (get().loading) return;
     try {
       set({ loading: true, error: null });
       const data = await reportService.getAll();
@@ -36,6 +37,7 @@ export const useReportStore = create<ReportStore>((set) => ({
   },
 
   fetchMyReports: async () => {
+    if (get().loading) return;
     try {
       set({ loading: true, error: null });
       const data = await reportService.getPersonalHistory();
@@ -55,7 +57,7 @@ export const useReportStore = create<ReportStore>((set) => ({
       // If it's a new report, we can either append it (if full data exists) or refetch.
       // Based on the merged logic, let's append the returned report and also refetch history to be safe.
       const newReport = (response as any).report;
-      
+
       if (newReport) {
         set((state) => ({
           reports: [newReport, ...state.reports],

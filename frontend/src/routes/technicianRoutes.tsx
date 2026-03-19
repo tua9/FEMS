@@ -8,7 +8,7 @@ import TechnicianEquipment from "@/pages/technician/EquipmentInventory";
 import TechnicianHandover from "@/pages/technician/HandoverManagement";
 import TechnicianReports from "@/pages/technician/PerformanceInsights";
 import TechnicianProfile from "@/pages/technician/Profile";
-import LecturerChangePassword from "@/pages/lecturer/LecturerChangePassword";
+import ChangePasswordPage from "@/pages/shared/ChangePasswordPage";
 import TechnicianNotifications from "@/pages/technician/TechnicianNotifications";
 
 const TechnicianRoutes = () => (
@@ -21,7 +21,7 @@ const TechnicianRoutes = () => (
       <Route path="/technician/handover" element={<TechnicianHandover />} />
       <Route path="/technician/reports" element={<TechnicianReports />} />
       <Route path="/technician/profile" element={<TechnicianProfile />} />
-      <Route path="/technician/change-password" element={<LecturerChangePassword />} />
+      <Route path="/technician/change-password" element={<ChangePasswordPage />} />
       <Route path="/technician/notifications" element={<TechnicianNotifications />} />
     </Route>
   </Route>
