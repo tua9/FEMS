@@ -38,13 +38,13 @@ const createBorrowRequest = async (body) => {
   } = body
 
   if (!user_id) {
-    throw new ApiError(StatusCodes.UNPROCESSABLE_ENTITY, 'user_id is required')
+    throw new ApiError(StatusCodes.UNPROCESSABLE_ENTITY, 'All required fields must be provided')
   }
 
   if (!equipment_id && !room_id) {
     throw new ApiError(
       StatusCodes.UNPROCESSABLE_ENTITY,
-      'Must provide at least equipment_id or room_id',
+      'All required fields must be provided',
     )
   }
 
@@ -54,7 +54,7 @@ const createBorrowRequest = async (body) => {
       throw new ApiError(StatusCodes.NOT_FOUND, 'Equipment not found')
     }
     if (equipment.status === 'broken' || equipment.status === 'maintenance') {
-      throw new ApiError(StatusCodes.BAD_REQUEST, `Equipment is currently ${equipment.status}`)
+      throw new ApiError(StatusCodes.BAD_REQUEST, 'Equipment is broken')
     }
   }
 
@@ -86,7 +86,7 @@ const createBorrowRequest = async (body) => {
     })
 
     if (conflictingRequests.length > 0) {
-      throw new ApiError(StatusCodes.BAD_REQUEST, 'Thiết bị đã có người đặt trước trong hệ thống với khoảng thời gian này. Vui lòng chọn thiết bị hoặc thời gian khác.')
+      throw new ApiError(StatusCodes.BAD_REQUEST, 'Date conflicts with existing borrow')
     }
   }
 
@@ -125,7 +125,7 @@ const createBorrowRequest = async (body) => {
     })
 
   return {
-    message: 'Create borrow request success',
+    message: 'Borrow request created successfully',
     borrowRequest: populatedRequest,
   }
 }
