@@ -168,6 +168,7 @@ export const useBorrowRequestStore = create<BorrowRequestStore>((set, get) => ({
       borrowRequests: state.borrowRequests.map((item) =>
         item._id === id ? { ...item, status: 'approved' } : item
       ),
+      pendingBorrowRequests: state.pendingBorrowRequests.filter((item) => item._id !== id),
     }));
     try {
       set({ actionLoading: id, error: null });
@@ -180,6 +181,9 @@ export const useBorrowRequestStore = create<BorrowRequestStore>((set, get) => ({
           ),
         }));
       }
+      // Refresh approved-by-me list để History tab cập nhật
+      const freshHistory = await borrowRequestService.getApprovedByMe();
+      set({ approvedByMe: freshHistory });
     } catch (error: any) {
       // Rollback nếu lỗi
       set((state) => ({
@@ -199,6 +203,7 @@ export const useBorrowRequestStore = create<BorrowRequestStore>((set, get) => ({
       borrowRequests: state.borrowRequests.map((item) =>
         item._id === id ? { ...item, status: 'rejected' } : item
       ),
+      pendingBorrowRequests: state.pendingBorrowRequests.filter((item) => item._id !== id),
     }));
     try {
       set({ actionLoading: id, error: null });
@@ -210,8 +215,10 @@ export const useBorrowRequestStore = create<BorrowRequestStore>((set, get) => ({
           ),
         }));
       }
+      // Refresh approved-by-me list để History tab cập nhật
+      const freshHistory = await borrowRequestService.getApprovedByMe();
+      set({ approvedByMe: freshHistory });
     } catch (error: any) {
-
       set((state) => ({
         borrowRequests: state.borrowRequests.map((item) =>
           item._id === id ? { ...item, status: 'pending' } : item

@@ -13,7 +13,7 @@ type ReportStore = {
   fetchMyReports: () => Promise<void>;
   createReport: (payload: CreateReportPayload) => Promise<void>;
   updateReportStatus: (id: string, status: ReportStatus, technicianId?: string) => Promise<void>;
-  cancelMyReport: (id: string) => Promise<void>;
+  cancelMyReport: (id: string, decisionNote: string) => Promise<void>;
 };
 
 export const useReportStore = create<ReportStore>((set, get) => ({
@@ -95,10 +95,10 @@ export const useReportStore = create<ReportStore>((set, get) => ({
     }
   },
 
-  cancelMyReport: async (id: string) => {
+  cancelMyReport: async (id: string, decisionNote: string) => {
     try {
       set({ loading: true, error: null });
-      await reportService.cancelReport(id);
+      await reportService.cancelReport(id, decisionNote);
       // Update status in-place so the row stays visible with status 'cancelled'
       set((state) => ({
         myReports: state.myReports.map((r) =>

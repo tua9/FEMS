@@ -6,7 +6,7 @@ import type { Report } from '@/types/report';
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 export type ReportSeverity = 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW';
-export type ReportStatus = 'RESOLVED' | 'IN PROGRESS' | 'PENDING';
+export type ReportStatus = 'RESOLVED' | 'IN PROGRESS' | 'PENDING' | 'CANCELLED' | 'APPROVED' | 'REJECTED' | 'PROCESSING' | 'FIXED';
 
 export interface ReportHistoryItem {
     id: string;
@@ -19,6 +19,7 @@ export interface ReportHistoryItem {
     status: ReportStatus;
     description?: string;
     img?: string;
+    decision_note?: string;
     original: Report;
 }
 

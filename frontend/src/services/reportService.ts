@@ -22,8 +22,8 @@ export const reportService = {
     return res.data.report || res.data;
   },
 
-  cancelReport: async (id: string): Promise<Report> => {
-    const res = await api.delete(`/tickets/history/${id}`);
+  cancelReport: async (id: string, decisionNote: string): Promise<Report> => {
+    const res = await api.delete(`/tickets/history/${id}`, { data: { decision_note: decisionNote } });
     return res.data.report || res.data;
   },
 

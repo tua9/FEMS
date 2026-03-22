@@ -10,6 +10,7 @@ import {
     ReportHistoryTable,
     type ReportHistoryItem,
     type ReportSeverity,
+    type ReportStatus,
 } from '../../components/shared/history/ReportHistoryTable';
 
 import {
@@ -24,6 +25,7 @@ import {
 } from '../../components/shared/history/ApprovalHistoryTable';
 
 import BorrowCancelModal from '@/components/student/history/BorrowCancelModal';
+import ReportCancelModal from '@/components/shared/history/ReportCancelModal';
 
 import { useBorrowRequestStore } from '../../stores/useBorrowRequestStore';
 import { useReportStore } from '../../stores/useReportStore';
@@ -103,6 +105,7 @@ export const HistoryPage: React.FC = () => {
     // ── Detail modal ───────────────────────────────────────────────────────────
     const [modal, setModal] = useState<ModalItem | null>(null);
     const [cancelTargetItem, setCancelTargetItem] = useState<BorrowRequest | null>(null);
+    const [cancelTargetReport, setCancelTargetReport] = useState<ReportHistoryItem | null>(null);
 
     // ── Mapping Data ──────────────────────────────────────────────────────────
     const mappedReports = useMemo<ReportHistoryItem[]>(() => {
@@ -133,10 +136,11 @@ export const HistoryPage: React.FC = () => {
                 location: locationLabel,
                 block:    '-',
                 severity: (r.severity?.toUpperCase() as ReportSeverity) || 'MEDIUM',
-                status:   (r.status?.toUpperCase() as any) || 'PENDING',
+                status:   ((r.status?.toUpperCase() || 'PENDING') as ReportStatus),
                 icon:     TYPE_ICON[type] ?? FileText,
                 description: r.description,
                 img:      r.img,
+                decision_note: r.decision_note || undefined,
                 original: r
             };
         });
@@ -200,6 +204,12 @@ export const HistoryPage: React.FC = () => {
             const equipment = a.equipment_id as BorrowRequestEquipment;
             const room = a.room_id as BorrowRequestRoom;
 
+            // Map all terminal statuses to a binary decision for display
+            const APPROVED_STATUSES = ['approved', 'handed_over', 'returned'];
+            const decision: 'APPROVED' | 'REJECTED' = APPROVED_STATUSES.includes(a.status)
+                ? 'APPROVED'
+                : 'REJECTED';
+
             return {
                 id: `#APP-${(a._id as string).substring(18).toUpperCase()}`,
                 studentName: userRef?.displayName || 'User',
@@ -207,7 +217,7 @@ export const HistoryPage: React.FC = () => {
                 equipment: equipment?.name || room?.name || 'Asset',
                 requestDate: a.borrow_date ? new Date(a.borrow_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '?',
                 decidedDate: a.updatedAt ? new Date(a.updatedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '?',
-                decision: a.status === 'approved' ? 'APPROVED' : 'REJECTED',
+                decision,
                 reason: a.note?.split('| Rejection Reason: ')[1] || undefined
             };
         });
@@ -318,12 +328,16 @@ export const HistoryPage: React.FC = () => {
         }
     };
 
-    const handleCancelReport = async (item: any) => {
+    const handleCancelReport = (item: ReportHistoryItem) => {
+        setCancelTargetReport(item);
+    };
+
+    const handleConfirmCancelReport = async (note: string) => {
+        if (!cancelTargetReport) return;
         try {
-            if (window.confirm('Are you sure you want to cancel this report?')) {
-                await cancelMyReport(item.original._id);
-                fetchMyReports();
-            }
+            await cancelMyReport(cancelTargetReport.original._id, note);
+            setCancelTargetReport(null);
+            fetchMyReports();
         } catch (error) {
             console.error(error);
         }
@@ -477,9 +491,17 @@ export const HistoryPage: React.FC = () => {
                                             <span className="text-[#1E2B58]/60 dark:text-white/50 font-medium">Status</span>
                                             <span className={`text-[0.625rem] font-bold px-3 py-1.5 rounded-full uppercase tracking-wider ${r.status === 'RESOLVED' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400'
                                                 : r.status === 'IN PROGRESS' ? 'bg-[#1E2B58] text-white'
+                                                    : r.status === 'CANCELLED' ? 'bg-slate-200 text-slate-600 dark:bg-slate-700/50 dark:text-slate-400'
                                                     : 'bg-slate-200 text-slate-700 dark:bg-slate-700/50 dark:text-slate-400'
                                                 }`}>{r.status}</span>
                                         </div>
+
+                                        {r.status === 'CANCELLED' && r.decision_note && (
+                                            <div className="pt-2 border-t border-[#1E2B58]/10 dark:border-white/10">
+                                                <p className="text-[0.625rem] font-bold uppercase tracking-wider text-red-500/60 dark:text-red-400/50 mb-1">Cancellation Reason</p>
+                                                <p className="text-sm text-[#1E2B58] dark:text-white/90 font-medium bg-red-50/60 dark:bg-red-900/10 border border-red-200/60 dark:border-red-800/20 px-3 py-2.5 rounded-xl leading-relaxed">{r.decision_note}</p>
+                                            </div>
+                                        )}
                                     </div>
                                     <div className="flex gap-3">
                                         <button onClick={() => { setModal(null); navigate(`/${user?.role}/report-issue`); }} className="flex-1 py-3 rounded-[1.25rem] font-bold text-sm bg-[#1E2B58] text-white hover:bg-[#151f40] hover:scale-[1.02] active:scale-95 transition-all shadow-lg shadow-[#1E2B58]/20 flex items-center justify-center gap-2">
@@ -610,6 +632,14 @@ export const HistoryPage: React.FC = () => {
                     item={cancelTargetItem}
                     onClose={() => setCancelTargetItem(null)}
                     onConfirm={(note) => handleConfirmCancelBorrow(cancelTargetItem._id, note)}
+                />
+            )}
+
+            {cancelTargetReport && (
+                <ReportCancelModal
+                    item={cancelTargetReport}
+                    onClose={() => setCancelTargetReport(null)}
+                    onConfirm={handleConfirmCancelReport}
                 />
             )}
         </div>
