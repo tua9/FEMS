@@ -4,6 +4,7 @@ import User from '../models/User.js'
 import Equipment from '../models/Equipment.js'
 import Room from '../models/Room.js'
 import ApiError from '../utils/ApiError.js'
+import { notificationService } from './notificationService.js'
 
 const autoCancelExpiredRequests = async () => {
   const approvedRequests = await BorrowRequest.find({ status: 'approved' })
@@ -22,6 +23,16 @@ const autoCancelExpiredRequests = async () => {
       req.decision_note = 'Yêu cầu đã bị hệ thống tự động hủy do người mượn không đến nhận thiết bị trễ nhất vào lúc 17:00:00 của ngày handover hẹn trước.'
       req.cancelled_at = new Date()
       await req.save()
+
+      // Notify User
+      await notificationService.createNotification({
+        user_id: req.user_id,
+        type: 'approval',
+        title: 'Borrow Request Auto-Cancelled',
+        message: `Your request for ${req.equipment_id ? 'equipment' : 'room'} was automatically cancelled because it wasn't picked up by 17:00.`,
+        to: '/student/history',
+        state: { tab: 'borrow' }
+      }).catch(err => console.error('Failed to create notification:', err))
     }
   }
 }
@@ -38,13 +49,13 @@ const createBorrowRequest = async (body) => {
   } = body
 
   if (!user_id) {
-    throw new ApiError(StatusCodes.UNPROCESSABLE_ENTITY, 'user_id is required')
+    throw new ApiError(StatusCodes.UNPROCESSABLE_ENTITY, 'All required fields must be provided')
   }
 
   if (!equipment_id && !room_id) {
     throw new ApiError(
       StatusCodes.UNPROCESSABLE_ENTITY,
-      'Must provide at least equipment_id or room_id',
+      'All required fields must be provided',
     )
   }
 
@@ -54,7 +65,7 @@ const createBorrowRequest = async (body) => {
       throw new ApiError(StatusCodes.NOT_FOUND, 'Equipment not found')
     }
     if (equipment.status === 'broken' || equipment.status === 'maintenance') {
-      throw new ApiError(StatusCodes.BAD_REQUEST, `Equipment is currently ${equipment.status}`)
+      throw new ApiError(StatusCodes.BAD_REQUEST, 'Equipment is broken')
     }
   }
 
@@ -86,7 +97,7 @@ const createBorrowRequest = async (body) => {
     })
 
     if (conflictingRequests.length > 0) {
-      throw new ApiError(StatusCodes.BAD_REQUEST, 'Thiết bị đã có người đặt trước trong hệ thống với khoảng thời gian này. Vui lòng chọn thiết bị hoặc thời gian khác.')
+      throw new ApiError(StatusCodes.BAD_REQUEST, 'Date conflicts with existing borrow')
     }
   }
 
@@ -125,7 +136,7 @@ const createBorrowRequest = async (body) => {
     })
 
   return {
-    message: 'Create borrow request success',
+    message: 'Borrow request created successfully',
     borrowRequest: populatedRequest,
   }
 }
@@ -133,7 +144,7 @@ const createBorrowRequest = async (body) => {
 const getAllBorrowRequests = async () => {
   await autoCancelExpiredRequests()
   return await BorrowRequest.find()
-    .populate('user_id', 'username displayName email')
+    .populate('user_id', 'username displayName email role')
     .populate('equipment_id')
     .populate('room_id')
     .populate('processed_by', 'username displayName')
@@ -141,7 +152,7 @@ const getAllBorrowRequests = async () => {
 
 const getBorrowRequestById = async (id) => {
   const borrowRequest = await BorrowRequest.findById(id)
-    .populate('user_id', 'username displayName email')
+    .populate('user_id', 'username displayName email role')
     .populate('equipment_id')
     .populate('room_id')
     .populate('processed_by', 'username displayName')
@@ -241,6 +252,16 @@ const approveBorrowRequest = async (id, approverId, decisionNote) => {
   request.processed_by = approverId
   if (decisionNote) request.decision_note = decisionNote.trim()
   await request.save()
+
+  // Notify User
+  await notificationService.createNotification({
+    user_id: request.user_id,
+    type: 'approval',
+    title: 'Borrow Request Approved',
+    message: `Your request for ${request.equipment_id ? 'equipment' : 'room'} has been approved.`,
+    to: '/student/history',
+    state: { tab: 'borrow' }
+  }).catch(err => console.error('Failed to create notification:', err))
 
   return { message: 'Borrow request approved and asset locked', request }
 }
@@ -372,7 +393,7 @@ const directAllocateEquipment = async (body, allocatorId) => {
   await equipment.save()
 
   const populatedRequest = await BorrowRequest.findById(request._id)
-    .populate('user_id', 'username displayName email')
+    .populate('user_id', 'username displayName email role')
     .populate('equipment_id')
     .populate('processed_by', 'username displayName')
 
@@ -395,13 +416,24 @@ const rejectBorrowRequest = async (id, approverId, reason) => {
     request.note = `${request.note || ''} | Rejection Reason: ${reason}`.trim()
   }
   await request.save()
+
+  // Notify User
+  await notificationService.createNotification({
+    user_id: request.user_id,
+    type: 'approval',
+    title: 'Borrow Request Rejected',
+    message: `Your request for ${request.equipment_id ? 'equipment' : 'room'} has been rejected. ${reason ? 'Reason: ' + reason : ''}`,
+    to: '/student/history',
+    state: { tab: 'borrow' }
+  }).catch(err => console.error('Failed to create notification:', err))
+
   return { message: 'Borrow request rejected', request }
 }
 
 const getPendingBorrowRequests = async () => {
   await autoCancelExpiredRequests()
   return await BorrowRequest.find({ status: 'pending' })
-    .populate('user_id', 'username displayName email')
+    .populate('user_id', 'username displayName email role')
     .populate('equipment_id', 'name category qr_code status available')
     .populate({
       path: 'room_id',

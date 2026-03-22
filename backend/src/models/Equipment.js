@@ -49,16 +49,14 @@ const assetSchema = new mongoose.Schema(
   },
 )
 
-// If equipment is assigned to a room or borrowed, it's not available
+// If equipment is assigned to a room, borrowed, or not in 'good' status, it's not available
 assetSchema.pre('save', function () {
-  if (this.room_id || this.borrowed_by) {
+  if (this.room_id || this.borrowed_by || this.status !== 'good') {
     this.available = false
   } else {
     this.available = true
   }
-}
-
-)
+})
 
 // Default sort by newest first
 assetSchema.pre('find', function () {

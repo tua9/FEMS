@@ -1,5 +1,5 @@
 import { ChevronRight } from "lucide-react";
-import React, { useEffect } from "react";
+import React, { useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { PageShell, AnimatedSection } from "@/components/motion";
 import { useBorrowRequestStore } from "@/stores/useBorrowRequestStore";
@@ -7,8 +7,9 @@ import { useReportStore } from "@/stores/useReportStore";
 import { useAuthStore } from "@/stores/useAuthStore";
 
 import StudentStatCard from "@/components/student/dashboard/StudentStatCard";
-import RecentActivities from "@/components/student/dashboard/RecentActivities";
+import { RecentActivityList } from "@/components/shared/dashboard/RecentActivityList";
 import UpcomingDue from "@/components/student/dashboard/UpcomingDue";
+import type { RecentActivity } from "@/types/dashboard";
 
 const HomePage: React.FC = () => {
   const navigate = useNavigate();
@@ -26,6 +27,23 @@ const HomePage: React.FC = () => {
     fetchMyBorrowRequests();
     fetchMyReports();
   }, [fetchMyBorrowRequests, fetchMyReports]);
+
+  const borrowRequests = useBorrowRequestStore((state) => state.borrowRequests);
+
+  // Map borrowRequests to RecentActivity format
+  const mappedActivities: RecentActivity[] = useMemo(() => {
+    return [...borrowRequests]
+      .sort((a, b) => new Date(b.borrow_date).getTime() - new Date(a.borrow_date).getTime())
+      .slice(0, 5)
+      .map((req) => ({
+        id: req._id,
+        type: "return", // or map based on req status/type
+        title: `${req.type === 'equipment' ? 'Equipment' : 'Facility'} Request`,
+        subject: `Status: ${req.status || 'Pending'}`,
+        time: req.borrow_date,
+        description: req.note || undefined,
+      }));
+  }, [borrowRequests]);
 
   return (
     <PageShell className="pb-20 px-4 sm:px-6">
@@ -53,7 +71,11 @@ const HomePage: React.FC = () => {
         {/* Dashboard Grid */}
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-12 lg:items-start">
           {/* Recent Activity */}
-          <RecentActivities />
+          <RecentActivityList 
+            activities={mappedActivities}
+            viewAllRoute="/student/borrow-history"
+            className="lg:col-span-8"
+          />
 
           {/* Upcoming / Due Items */}
           <UpcomingDue />

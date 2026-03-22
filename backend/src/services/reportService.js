@@ -1,6 +1,7 @@
 import { StatusCodes } from 'http-status-codes'
 import Report from '../models/Report.js'
 import ApiError from '../utils/ApiError.js'
+import { notificationService } from './notificationService.js'
 
 const populateReport = (query) => {
   return query
@@ -120,6 +121,30 @@ const updateReportStatus = async (id, status, approverId, technicianId) => {
   }
 
   await report.save()
+
+  // Notify User
+  let notificationTitle = 'Report Update'
+  let notificationMessage = `Your report status has been updated to ${status}.`
+  
+  if (status === 'fixed') {
+    notificationTitle = 'Issue Resolved'
+    notificationMessage = `Your reported issue with ${report.equipment_id ? 'equipment' : 'room'} has been resolved.`
+  } else if (status === 'rejected') {
+    notificationTitle = 'Report Rejected'
+    notificationMessage = `Your report for ${report.equipment_id ? 'equipment' : 'room'} was rejected.`
+  } else if (status === 'processing') {
+    notificationTitle = 'Repair in Progress'
+    notificationMessage = `Your report is now being processed by our technician.`
+  }
+
+  await notificationService.createNotification({
+    user_id: report.user_id,
+    type: 'report',
+    title: notificationTitle,
+    message: notificationMessage,
+    to: '/student/history', // Assuming shared history or similar
+    state: { tab: 'report' }
+  }).catch(err => console.error('Failed to create notification:', err))
 
   const populated = await populateReport(Report.findById(id))
 

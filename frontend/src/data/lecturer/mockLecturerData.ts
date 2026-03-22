@@ -16,7 +16,8 @@ import {
   populateReport,
   populateEquipment,
 } from '@/data/mockDatabase';
-import type { RequestStatus } from '@/pages/lecturer/types';
+
+export type RequestStatus = 'PENDING' | 'APPROVED' | 'REJECTED' | 'IN_PROGRESS' | 'RESOLVED' | 'RETURNED' | 'BORROWED' | 'OVERDUE';
 
 // ─── Re-export populated data ─────────────────────────────────────────────────
 

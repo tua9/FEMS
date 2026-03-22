@@ -27,6 +27,11 @@ const statusConfig = {
     label: "Under Maintenance",
     disabled: true,
   },
+  Broken: {
+    color: "bg-[#FEE2E2] text-[#DC2626] dark:bg-[#DC2626]/20 dark:text-[#F87171] opacity-80",
+    label: "Broken / Damaged",
+    disabled: true,
+  },
 };
 
 const categoryIcons: Record<string, any> = {
@@ -40,7 +45,7 @@ const categoryIcons: Record<string, any> = {
 
 const statusMap: Record<string, keyof typeof statusConfig> = {
   good: "Available",
-  broken: "Maintenance",
+  broken: "Broken",
   maintenance: "Maintenance",
 };
 
@@ -63,7 +68,12 @@ export const EquipmentGrid: React.FC<EquipmentGridProps> = ({
     <section className="mb-[3rem]">
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-[2rem]">
         {filteredItems.map((item) => {
-          const mappedStatus = statusMap[item.status] || "Available";
+          let mappedStatus: keyof typeof statusConfig = statusMap[item.status] || "Available";
+          
+          if (item.status === "good" && item.borrowed_by) {
+            mappedStatus = "In Use";
+          }
+
           const cfg = statusConfig[mappedStatus];
           const itemCategory = (item.category || "").toLowerCase();
           const Icon = categoryIcons[itemCategory] || HelpCircle;
