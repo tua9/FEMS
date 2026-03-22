@@ -444,10 +444,14 @@ const getPendingBorrowRequests = async () => {
 
 const getApprovedByMe = async (approverId) => {
   await autoCancelExpiredRequests()
-  return await BorrowRequest.find({ processed_by: approverId, status: 'approved' })
+  return await BorrowRequest.find({
+    processed_by: approverId,
+    status: { $in: ['approved', 'rejected', 'handed_over', 'returned', 'cancelled'] }
+  })
     .populate('user_id', 'displayName username')
     .populate('equipment_id', 'name category')
     .populate('room_id', 'name type')
+    .sort({ updatedAt: -1 })
 }
 
 const remindBorrowRequest = async (id) => {

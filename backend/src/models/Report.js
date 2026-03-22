@@ -55,6 +55,11 @@ const reportSchema = new mongoose.Schema(
       type: String,
       default: null,
     },
+
+    decision_note: {
+      type: String,
+      default: null,
+    },
   },
   { timestamps: true },
 )

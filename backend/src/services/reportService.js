@@ -76,7 +76,7 @@ const getPersonalReports = async (userId) => {
   return await populateReport(Report.find({ user_id: userId }))
 }
 
-const cancelReport = async (id, userId) => {
+const cancelReport = async (id, userId, decisionNote) => {
   const report = await Report.findOne({ _id: id, user_id: userId })
   if (!report) {
     throw new ApiError(StatusCodes.NOT_FOUND, 'Report not found')
@@ -88,6 +88,7 @@ const cancelReport = async (id, userId) => {
     )
   }
   report.status = 'cancelled'
+  report.decision_note = decisionNote || null
   await report.save()
   return { message: 'Report cancelled successfully', report }
 }
