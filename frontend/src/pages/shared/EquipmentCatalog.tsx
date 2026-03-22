@@ -10,7 +10,6 @@ import { EquipmentGrid } from "@/components/shared/equipment/EquipmentGrid";
 import { BorrowedEquipmentGrid } from "@/components/shared/equipment/BorrowedEquipmentGrid";
 import BorrowModal from "@/components/shared/equipment/BorrowModal";
 import { useEquipmentStore } from "@/stores/useEquipmentStore";
-import { useBuildingStore } from "@/stores/useBuildingStore";
 import { useBorrowRequestStore } from "@/stores/useBorrowRequestStore";
 import { useRoomStore } from "@/stores/useRoomStore";
 import { useAuthStore } from "@/stores/useAuthStore";
@@ -41,27 +40,25 @@ export const EquipmentCatalog: React.FC = () => {
   const historyPath = `/${role}/history`;
 
   const { inventoryData, fetchInventory, loading: equipmentLoading } = useEquipmentStore();
-  const { buildings, fetchAll: fetchBuildings } = useBuildingStore();
   const { fetchAll: fetchRooms } = useRoomStore();
   const { createMyBorrowRequest, fetchMyBorrowRequests, loading: borrowLoading } = useBorrowRequestStore();
 
   // ── Filter state ──────────────────────────────────────────────────────────
   const [searchText, setSearchText] = useState("");
   const [typeFilter, setTypeFilter] = useState("all-types");
-  const [locationFilter, setLocationFilter] = useState("all-locations");
   const [activeCategory, setActiveCategory] = useState("all");
+  const [statusFilter, setStatusFilter] = useState("all-statuses");
   const [currentPage, setCurrentPage] = useState(1);
 
   // ── Borrow modal state ────────────────────────────────────────────────────
   const [borrowingItem, setBorrowingItem] = useState<Equipment | null>(null);
 
-  const ITEMS_PER_PAGE = 12;
+  const ITEMS_PER_PAGE = 8;
 
   // ── Initial Fetch ─────────────────────────────────────────────────────────
   useEffect(() => {
-    fetchBuildings();
     fetchRooms();
-  }, [fetchBuildings, fetchRooms]);
+  }, [fetchRooms]);
 
   useEffect(() => {
     const params: any = {
@@ -76,15 +73,12 @@ export const EquipmentCatalog: React.FC = () => {
       params.category = activeCategory;
     }
 
-    if (locationFilter !== "all-locations") {
-      // Find building ID by name (case insensitive slug)
-      const slug = locationFilter.toLowerCase();
-      const building = buildings.find(b => b.name.toLowerCase().includes(slug));
-      if (building) params.building_id = building._id;
+    if (statusFilter !== "all-statuses") {
+      params.status = statusFilter;
     }
 
     fetchInventory(params);
-  }, [currentPage, searchText, typeFilter, activeCategory, locationFilter, fetchInventory, buildings]);
+  }, [currentPage, searchText, typeFilter, activeCategory, statusFilter, fetchInventory]);
 
   // ── Sync category ↔ type dropdown ─────────────────────────────────────────
   const handleTypeChange = (val: string) => {
@@ -106,6 +100,7 @@ export const EquipmentCatalog: React.FC = () => {
   // ── Pagination ────────────────────────────────────────────────────────────
   const totalPages = inventoryData?.pagination.totalPages || 1;
   const safePage = Math.min(currentPage, totalPages);
+  // Sorting is now handled by the backend to ensure correct pagination
   const pagedItems = inventoryData?.items || [];
 
   const handlePageChange = (page: number) => {
@@ -221,9 +216,9 @@ export const EquipmentCatalog: React.FC = () => {
           }}
           typeFilter={typeFilter}
           onTypeChange={handleTypeChange}
-          locationFilter={locationFilter}
-          onLocationChange={(val) => {
-            setLocationFilter(val);
+          statusFilter={statusFilter}
+          onStatusChange={(val) => {
+            setStatusFilter(val);
             setCurrentPage(1);
           }}
           onFilter={handleFilter}
@@ -249,15 +244,15 @@ export const EquipmentCatalog: React.FC = () => {
           />
         )}
 
+        {/* Pagination - Moved above currently borrowed */}
+        {renderPageButtons()}
+
         {/* Borrowed equipment */}
         <BorrowedEquipmentGrid
           items={[]} // This would eventually come from a store too
           onViewHistory={() => navigate(historyPath)}
           onItemClick={() => navigate(historyPath)}
         />
-
-        {/* Pagination */}
-        {renderPageButtons()}
       </main>
 
       {/* ── Borrow Request Modal ───────────────────────────────────────── */}

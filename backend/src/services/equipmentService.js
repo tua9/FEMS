@@ -85,17 +85,19 @@ const getEquipmentInventory = async (queries) => {
     matchQuery.category = { $regex: new RegExp(`^${category}$`, 'i') }
   }
 
-  if (status && status !== 'all-status') {
-    if (status === 'Available') {
+  if (status && status !== 'all-statuses') {
+    if (status === 'available') {
        matchQuery.status = 'good';
        matchQuery.borrowed_by = null;
     }
-    if (status === 'In Use') {
-       matchQuery.status = 'good';
+    else if (status === 'unavailable') {
        matchQuery.borrowed_by = { $ne: null };
     }
-    if (status === 'Maintenance') {
-       matchQuery.status = { $in: ['broken', 'maintenance'] };
+    else if (status === 'broken') {
+       matchQuery.status = 'broken';
+    }
+    else if (status === 'maintenance') {
+       matchQuery.status = 'maintenance';
     }
   }
 
@@ -126,7 +128,24 @@ const getEquipmentInventory = async (queries) => {
 
   // Finish pipeline with projection, sort, skip, limit
   pipeline.push(
-    { $sort: { createdAt: -1 } },
+    {
+      $addFields: {
+        sortWeight: {
+          $cond: {
+            if: { 
+              $and: [
+                { $eq: ["$status", "good"] },
+                { $eq: ["$available", true] },
+                { $eq: [{ $ifNull: ["$borrowed_by", null] }, null] }
+              ]
+            },
+            then: 0,
+            else: 1
+          }
+        }
+      }
+    },
+    { $sort: { sortWeight: 1, createdAt: -1 } },
     { $skip: skip },
     { $limit: Number(limit) },
     {
@@ -137,6 +156,7 @@ const getEquipmentInventory = async (queries) => {
         available: 1,
         status: 1,
         qr_code: 1,
+        borrowed_by: 1,
         room_id: {
           _id: '$room._id',
           name: '$room.name',

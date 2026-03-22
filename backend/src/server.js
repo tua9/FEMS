@@ -15,6 +15,7 @@ import equipmentRouters from './routes/equipmentRoute.js'
 import adminRoutes from './routes/adminRoute.js'
 import dashboardRoutes from './routes/dashboardRoute.js'
 import scheduleRoutes from './routes/scheduleRoute.js'
+import notificationRoutes from './routes/notificationRoute.js'
 
 import { protectedRoute } from './middlewares/authMiddlewares.js'
 
@@ -48,6 +49,7 @@ app.use('/api/rooms', roomRouters)
 // Lecturer/Dashboard specific routes
 app.use('/api/dashboard', dashboardRoutes)
 app.use('/api/schedules', scheduleRoutes)
+app.use('/api/notifications', notificationRoutes)
 
 import { errorHandlingMiddleware } from './middlewares/errorMiddleware.js'
 
