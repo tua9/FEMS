@@ -44,6 +44,7 @@ export interface BorrowRequest {
   decision_note?: string | null;
   createdAt?: string;
   updatedAt?: string;
+  code?: string | null;
 }
 
 export interface CreateBorrowRequestPayload {

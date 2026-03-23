@@ -26,6 +26,14 @@ const borrowRequestSchema = new mongoose.Schema(
       default: 'other',
     },
 
+    // Auto-generated business code, e.g. BR2603ABC
+    code: {
+      type: String,
+      unique: true,
+      sparse: true, // allows existing docs without code
+      trim: true,
+    },
+
     status: {
       type: String,
       enum: ['pending', 'approved', 'rejected', 'handed_over', 'returned', 'cancelled'],

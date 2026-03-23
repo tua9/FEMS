@@ -100,7 +100,7 @@ export const EquipmentGrid: React.FC<EquipmentGridProps> = ({
                 </h4>
 
                 <p className="text-[0.6875rem] font-bold uppercase tracking-widest opacity-60 text-[#1E2B58] dark:text-white">
-                  {_idToSku(item._id)} • {item.room_id && typeof item.room_id !== 'string' ? item.room_id.name : "Phòng kho"}
+                  {item.code || _idToSku(item._id)} • {item.room_id && typeof item.room_id !== 'string' ? item.room_id.name : "Phòng kho"}
                 </p>
               </div>
 

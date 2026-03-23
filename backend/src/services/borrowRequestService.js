@@ -6,6 +6,42 @@ import Room from '../models/Room.js'
 import ApiError from '../utils/ApiError.js'
 import { notificationService } from './notificationService.js'
 
+// ─── Code Generation ─────────────────────────────────────────────────────────────────────
+
+/**
+ * Build one candidate code for a borrow request.
+ * Format: BR + 2-digit year + 2-digit month + 3 random uppercase letters
+ * Example: BR2603ABC  (March 2026)
+ *
+ * @returns {string} 9-character candidate code
+ */
+const generateBorrowRequestCode = () => {
+  const now   = new Date()
+  const year  = String(now.getFullYear()).slice(-2)           // e.g. "26"
+  const month = String(now.getMonth() + 1).padStart(2, '0')  // e.g. "03"
+  const CHARS  = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+  const random = Array.from({ length: 3 }, () => CHARS[Math.floor(Math.random() * CHARS.length)]).join('')
+  return `BR${year}${month}${random}`
+}
+
+/**
+ * Keep generating until we get a code not yet in the DB.
+ * Collisions are extremely rare with 26^3 = 17 576 combinations per month.
+ *
+ * @returns {Promise<string>} A unique borrow request code
+ */
+const generateUniqueCode = async () => {
+  let code
+  let exists = true
+  while (exists) {
+    code   = generateBorrowRequestCode()
+    exists = !!(await BorrowRequest.findOne({ code }))
+  }
+  return code
+}
+
+// ─── Service Functions ─────────────────────────────────────────────────────────────────
+
 const autoCancelExpiredRequests = async () => {
   const approvedRequests = await BorrowRequest.find({ status: 'approved' })
   const now = new Date()
@@ -115,7 +151,9 @@ const createBorrowRequest = async (body) => {
     )
   }
 
-  // 3. Create Pending Request
+  // 3. Create Pending Request (code is auto-generated, never from frontend)
+  const code = await generateUniqueCode()
+
   const newBorrowRequest = await BorrowRequest.create({
     user_id,
     equipment_id: equipment_id || null,
@@ -125,6 +163,7 @@ const createBorrowRequest = async (body) => {
     return_date: returnDate,
     note,
     status: 'pending',
+    code,
   })
 
   const populatedRequest = await BorrowRequest.findById(newBorrowRequest._id)
@@ -400,7 +439,7 @@ const directAllocateEquipment = async (body, allocatorId) => {
   return { message: 'Direct allocation created', borrowRequest: populatedRequest }
 }
 
-const rejectBorrowRequest = async (id, approverId, reason) => {
+const rejectBorrowRequest = async (id, approverId, decisionNote) => {
   const request = await BorrowRequest.findById(id)
   if (!request) {
     throw new ApiError(StatusCodes.NOT_FOUND, 'Borrow request not found')
@@ -409,12 +448,11 @@ const rejectBorrowRequest = async (id, approverId, reason) => {
     throw new ApiError(StatusCodes.BAD_REQUEST, 'Request is not pending')
   }
 
-  request.status = 'rejected'
+  request.status       = 'rejected'
   request.processed_by = approverId
   request.processed_at = new Date()
-  if (reason) {
-    request.note = `${request.note || ''} | Rejection Reason: ${reason}`.trim()
-  }
+  // Save reason in decision_note — consistent with approve and cancel
+  if (decisionNote) request.decision_note = decisionNote.trim()
   await request.save()
 
   // Notify User
@@ -422,7 +460,7 @@ const rejectBorrowRequest = async (id, approverId, reason) => {
     user_id: request.user_id,
     type: 'approval',
     title: 'Borrow Request Rejected',
-    message: `Your borrow request #${request._id.toString().slice(-6).toUpperCase()} for ${request.equipment_id ? 'equipment' : 'room'} has been rejected. ${reason ? 'Reason: ' + reason : ''}`,
+    message: `Your borrow request #${request._id.toString().slice(-6).toUpperCase()} for ${request.equipment_id ? 'equipment' : 'room'} has been rejected.${decisionNote ? ' Reason: ' + decisionNote : ''}`,
     to: '/student/notifications',
     state: { type: 'borrow', id: request._id, tab: 'borrow' }
   }).catch(err => console.error('Failed to create notification:', err))

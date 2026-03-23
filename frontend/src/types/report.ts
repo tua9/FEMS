@@ -41,6 +41,7 @@ export interface Report {
   description?: string | null;
   createdAt?: string;
   updatedAt?: string;
+  code?: string | null;
 }
 
 export interface CreateReportPayload {

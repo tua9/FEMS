@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import type { Report, CreateReportPayload, ReportStatus } from "@/types/report";
 import { reportService } from "@/services/reportService";
+import { useAuthStore } from "@/stores/useAuthStore";
 
 type ReportStore = {
   reports: Report[];
@@ -11,7 +12,7 @@ type ReportStore = {
 
   fetchAllReports: () => Promise<void>;
   fetchMyReports: () => Promise<void>;
-  createReport: (payload: CreateReportPayload) => Promise<void>;
+  createReport: (payload: CreateReportPayload) => Promise<any>;
   updateReportStatus: (id: string, status: ReportStatus, technicianId?: string) => Promise<void>;
   cancelMyReport: (id: string, decisionNote: string) => Promise<void>;
 };
@@ -64,10 +65,14 @@ export const useReportStore = create<ReportStore>((set, get) => ({
           myReports: [newReport, ...state.myReports]
         }));
       } else {
-        const freshMyReports = await reportService.getPersonalHistory();
-        set({ myReports: freshMyReports });
+        // Only fetch history if there is a logged-in user
+        if (useAuthStore.getState().user) {
+          const freshMyReports = await reportService.getPersonalHistory();
+          set({ myReports: freshMyReports });
+        }
       }
 
+      return response;
     } catch (error: any) {
       set({ error: error?.response?.data?.message || "Cannot create report" });
       throw error;

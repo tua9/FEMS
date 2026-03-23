@@ -1,8 +1,10 @@
 import { technicianApi } from '../../../services/api/technicianApi';
 import React, { useEffect, useState } from 'react';
 import type { TaskStats } from '../../../types/technician.types';
+import { useNavigate } from 'react-router-dom';
 
 const StatsOverview: React.FC = () => {
+  const navigate = useNavigate();
   const [stats, setStats] = useState<TaskStats | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -13,43 +15,54 @@ const StatsOverview: React.FC = () => {
       .finally(() => setLoading(false));
   }, []);
 
+  const pendingCount = stats?.pending ?? 0;
+  const approvedCount = stats?.approved ?? 0;
+  const inProgressCount = stats?.inProgress ?? 0;
+  const completedCount = stats?.completed ?? 0;
+
   const statCards = [
     {
       label: 'Pending Approval',
-      value: stats?.pending ?? 8,
+      value: pendingCount,
       icon: 'pending_actions',
       dot: 'bg-blue-400',
       glow: 'shadow-[0_0_8px_rgba(96,165,250,0.6)]',
+      status: 'pending',
     },
     {
       label: 'Approved to Fix',
-      value: stats?.inProgress ?? 12,
+      value: approvedCount,
       icon: 'task_alt',
       dot: 'bg-emerald-400',
       glow: 'shadow-[0_0_8px_rgba(52,211,153,0.6)]',
+      status: 'approved',
     },
     {
       label: 'In Progress',
-      value: stats?.total ?? 5,
+      value: inProgressCount,
       icon: 'sync',
       dot: 'bg-amber-400',
       glow: 'shadow-[0_0_8px_rgba(251,191,36,0.6)]',
+      status: 'processing',
     },
     {
-      label: 'Overdue Tickets',
-      value: stats?.urgent ?? 3,
-      icon: 'error_outline',
+      label: 'Completed',
+      value: completedCount,
+      icon: 'check_circle',
       dot: 'bg-rose-400',
       glow: 'shadow-[0_0_8px_rgba(248,113,113,0.6)]',
+      status: 'fixed',
     },
   ];
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
       {statCards.map((stat) => (
-        <div
+        <button
+          type="button"
           key={stat.label}
-          className="dashboard-card p-7 rounded-3xl relative group"
+          onClick={() => navigate(`/technician/tasks?status=${encodeURIComponent(stat.status)}`)}
+          className="dashboard-card p-7 rounded-3xl relative group text-left hover:scale-[1.01] active:scale-[0.99] transition-transform"
         >
           {/* Top row: icon + dot */}
           <div className="flex justify-between items-start mb-4">
@@ -72,7 +85,7 @@ const StatsOverview: React.FC = () => {
           <p className="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-widest mt-2">
             {stat.label}
           </p>
-        </div>
+        </button>
       ))}
     </div>
   );

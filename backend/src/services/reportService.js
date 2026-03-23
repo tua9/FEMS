@@ -3,6 +3,37 @@ import Report from '../models/Report.js'
 import ApiError from '../utils/ApiError.js'
 import { notificationService } from './notificationService.js'
 
+// ─── Code Generation ─────────────────────────────────────────────────────────────────────
+
+/**
+ * Build one candidate code for a report.
+ * Format: RP + 2-digit year + 2-digit month + 3 random uppercase letters
+ * Example: RP2603ABC
+ */
+const generateReportCode = () => {
+  const now   = new Date()
+  const year  = String(now.getFullYear()).slice(-2)
+  const month = String(now.getMonth() + 1).padStart(2, '0')
+  const CHARS  = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+  const random = Array.from({ length: 3 }, () => CHARS[Math.floor(Math.random() * CHARS.length)]).join('')
+  return `RP${year}${month}${random}`
+}
+
+/**
+ * Generate a unique report code.
+ */
+const generateUniqueCode = async () => {
+  let code
+  let exists = true
+  while (exists) {
+    code   = generateReportCode()
+    exists = !!(await Report.findOne({ code }))
+  }
+  return code
+}
+
+// ─── Service Functions ─────────────────────────────────────────────────────────────────
+
 const populateReport = (query) => {
   return query
     .populate('user_id', 'displayName email username')
@@ -16,6 +47,8 @@ const populateReport = (query) => {
 const createReport = async (body) => {
   const { user_id, equipment_id, room_id, type, severity, description, img, priority } = body
 
+  const code = await generateUniqueCode()
+
   const newReport = await Report.create({
     user_id: user_id || null,
     equipment_id: equipment_id || null,
@@ -25,6 +58,7 @@ const createReport = async (body) => {
     priority: priority || severity || 'medium',
     description: description || null,
     img: img || null,
+    code,
   })
 
   const populated = await populateReport(Report.findById(newReport._id))

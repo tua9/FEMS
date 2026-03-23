@@ -22,7 +22,7 @@ type BorrowRequestStore = {
   cancelMyBorrowRequest: (id: string, decisionNote: string) => Promise<void>;
   fetchAllBorrowRequests: () => Promise<void>;
   approveBorrowRequest: (id: string) => Promise<void>;
-  rejectBorrowRequest: (id: string, reason?: string) => Promise<void>;
+  rejectBorrowRequest: (id: string, decisionNote?: string) => Promise<void>;
   handoverBorrowRequest: (id: string) => Promise<void>;
   returnBorrowRequest: (id: string) => Promise<void>;
   remindBorrowRequest: (id: string) => Promise<void>;
@@ -198,7 +198,7 @@ export const useBorrowRequestStore = create<BorrowRequestStore>((set, get) => ({
     }
   },
 
-  rejectBorrowRequest: async (id: string, reason?: string) => {
+  rejectBorrowRequest: async (id: string, decisionNote?: string) => {
     set((state) => ({
       borrowRequests: state.borrowRequests.map((item) =>
         item._id === id ? { ...item, status: 'rejected' } : item
@@ -207,7 +207,7 @@ export const useBorrowRequestStore = create<BorrowRequestStore>((set, get) => ({
     }));
     try {
       set({ actionLoading: id, error: null });
-      const updated = await borrowRequestService.rejectBorrowRequest(id, reason);
+      const updated = await borrowRequestService.rejectBorrowRequest(id, decisionNote);
       if (updated && updated._id) {
         set((state) => ({
           borrowRequests: state.borrowRequests.map((item) =>

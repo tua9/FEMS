@@ -1,5 +1,5 @@
 import { useTasks } from '@/hooks/technician/useTasks';
-import type { MockTask } from '@/data/technician/mockTasks';
+import type { Task } from '@/types/technician.types';
 import type { Ticket } from '@/data/technician/mockTickets';
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -7,19 +7,25 @@ import TicketViewModal    from '@/components/technician/tickets/TicketViewModal'
 import TicketApproveModal from '@/components/technician/tickets/TicketApproveModal';
 import TicketRejectModal  from '@/components/technician/tickets/TicketRejectModal';
 
-// ── Convert MockTask → Ticket (shape expected by the shared modals) ────────────
-function taskToTicket(task: MockTask): Ticket {
+// ── Convert Task → Ticket (shape expected by the shared modals) ───────────────
+function taskToTicket(task: Task): Ticket {
   return {
-    id:            task.id,
-    equipment:     task.title,
-    equipmentType: task.displayCategory ?? task.category,
-    room:          `${task.location.building}, ${task.location.room}`,
-    reporter:      {
-      name:     task.reportedBy.name,
-      initials: task.reportedBy.name.split(' ').slice(0, 2).map((w) => w[0]).join('').toUpperCase(),
+    id: task.id,
+    equipment: task.equipment,
+    equipmentType: 'Other',
+    room: `${task.location.building}, ${task.location.room}`,
+    reporter: {
+      name: task.reportedBy.name,
+      initials: task.reportedBy.name
+        .split(' ')
+        .slice(0, 2)
+        .map((w) => w[0])
+        .join('')
+        .toUpperCase(),
     },
-    priority:  task.priority as Ticket['priority'],
-    status:    task.status   as Ticket['status'],
+    priority: task.priority as Ticket['priority'],
+    // Normalize to the modal's expected status set (Pending/Approved/In Progress/Completed/Rejected)
+    status: (task.status === 'Cancelled' ? 'Rejected' : (task.status as Ticket['status'])),
     createdAt: task.createdAt,
   };
 }
@@ -38,23 +44,6 @@ const getPriorityStyle = (priority: string) => {
 const getPriorityLabel = (priority: string) =>
   priority === 'Medium' ? 'Med' : priority;
 
-// ── Category icon map ─────────────────────────────────────────────────────────
-const getCategoryDisplay = (category: string, displayCategory?: string) => {
-  const label = displayCategory ?? category;
-  const map: Record<string, { icon: string; color: string }> = {
-    'AV Device':  { icon: 'video_settings', color: 'text-blue-500'   },
-    'HVAC':       { icon: 'ac_unit',        color: 'text-cyan-500'   },
-    'IT Device':  { icon: 'computer',       color: 'text-indigo-500' },
-    'Electrical': { icon: 'electric_bolt',  color: 'text-yellow-500' },
-    'Plumbing':   { icon: 'water_drop',     color: 'text-blue-500'   },
-    'Furniture':  { icon: 'chair',          color: 'text-purple-500' },
-    'Safety':     { icon: 'warning',        color: 'text-orange-500' },
-    'Other':      { icon: 'grid_view',      color: 'text-slate-400'  },
-  };
-  const style = map[label] ?? map['Other'];
-  return { ...style, label };
-};
-
 // ── Modal state type ──────────────────────────────────────────────────────────
 type ModalKind = 'view' | 'approve' | 'reject' | null;
 
@@ -62,18 +51,18 @@ const TaskQueue: React.FC = () => {
   const navigate = useNavigate();
   const [currentPage, setCurrentPage] = useState(1);
   const [modal,        setModal]       = useState<ModalKind>(null);
-  const [selected,     setSelected]    = useState<MockTask | null>(null);
+  const [selected,     setSelected]    = useState<Task | null>(null);
   const { tasks, loading } = useTasks({});
 
   const itemsPerPage = 3;
   const totalCount  = tasks.length;
   const totalPages  = Math.max(1, Math.ceil(totalCount / itemsPerPage));
-  const displayTasks: MockTask[] = tasks.slice(
+  const displayTasks: Task[] = tasks.slice(
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage,
-  ) as MockTask[];
+  );
 
-  const open  = (kind: ModalKind, task: MockTask) => { setSelected(task); setModal(kind); };
+  const open  = (kind: ModalKind, task: Task) => { setSelected(task); setModal(kind); };
   const close = () => { setModal(null); setSelected(null); };
 
   const ticket = selected ? taskToTicket(selected) : null;
@@ -98,12 +87,13 @@ const TaskQueue: React.FC = () => {
       <div className="overflow-x-auto">
         <table className="w-full text-left table-fixed">
           <colgroup>
-            <col style={{ width: '13%' }} />
-            <col style={{ width: '26%' }} />
-            <col style={{ width: '17%' }} />
-            <col style={{ width: '10%' }} />
             <col style={{ width: '12%' }} />
+            <col style={{ width: '16%' }} />
+            <col style={{ width: '17%' }} />
             <col style={{ width: '22%' }} />
+            <col style={{ width: '10%' }} />
+            <col style={{ width: '11%' }} />
+            <col style={{ width: '12%' }} />
           </colgroup>
           <thead>
             <tr
@@ -114,10 +104,10 @@ const TaskQueue: React.FC = () => {
               }}
             >
               {[
-                'Ticket ID', 'Equipment & Location', 'Issue',
-                'Priority',  'Status',               'Actions',
+                'Ticket ID', 'Report Subject', 'Location', 'Issue',
+                'Priority',  'Status',     'Actions',
               ].map((label, i) => (
-                <th key={label} className={`px-8 py-4 ${i === 5 ? 'text-right' : ''}`}>
+                <th key={label} className={`px-8 py-4 ${i === 6 ? 'text-right' : ''}`}>
                   <span className="inline-flex items-center gap-1.5 text-[11px] font-extrabold text-[#1A2B56] dark:text-blue-200 uppercase tracking-[0.15em]">
                     {label}
                   </span>
@@ -130,7 +120,7 @@ const TaskQueue: React.FC = () => {
             {loading ? (
               [...Array(3)].map((_, i) => (
                 <tr key={i} className="border-b border-white/5">
-                  {[...Array(6)].map((_, j) => (
+                  {[...Array(7)].map((_, j) => (
                     <td key={j} className="px-8 py-5">
                       <div className="h-4 bg-white/30 rounded-lg animate-pulse" />
                     </td>
@@ -139,10 +129,13 @@ const TaskQueue: React.FC = () => {
               ))
             ) : (
               displayTasks.map((task, idx) => {
-                const cat    = getCategoryDisplay(task.category, task.displayCategory);
                 const isLast = idx === displayTasks.length - 1;
-                const isPending   = task.status === 'Pending';
                 const isCompleted = task.status === 'Completed';
+
+                const reportSubject =
+                  (task.equipment && task.equipment.trim())
+                    ? task.equipment
+                    : (task.location?.room?.trim() ? task.location.room : 'N/A');
 
                 return (
                   <tr
@@ -156,22 +149,26 @@ const TaskQueue: React.FC = () => {
                       </span>
                     </td>
 
-                    {/* Equipment & Location */}
+                    {/* Report Subject */}
                     <td className="px-8 py-5 max-w-0">
-                      <div className="font-bold text-slate-800 dark:text-white truncate">{task.title}</div>
-                      <div className="text-[10px] text-slate-500 mt-0.5 truncate">
-                        {task.location.building}, {task.location.room}
+                      <div className="font-bold text-slate-800 dark:text-white truncate">
+                        {reportSubject}
                       </div>
                     </td>
 
-                    {/* Issue */}
-                    <td className="px-8 py-5">
-                      <div className="flex items-center gap-2">
-                        <span className={`material-symbols-outlined text-sm shrink-0 ${cat.color}`}>
-                          {cat.icon}
-                        </span>
-                        <span className="font-bold text-slate-600 dark:text-slate-300 truncate">{cat.label}</span>
+                    {/* Location */}
+                    <td className="px-8 py-5 max-w-0">
+                      <div className="font-bold text-slate-800 dark:text-white truncate">{task.location.building}</div>
+                      <div className="text-[10px] text-slate-500 mt-0.5 truncate">
+                        {task.location.room}
                       </div>
+                    </td>
+
+                    {/* Issue (description) */}
+                    <td className="px-8 py-5 max-w-0">
+                      <span className="block font-bold text-slate-600 dark:text-slate-300 truncate">
+                        {task.issue}
+                      </span>
                     </td>
 
                     {/* Priority */}
@@ -194,35 +191,51 @@ const TaskQueue: React.FC = () => {
                       )}
                     </td>
 
-                    {/* ── Actions — mirror Tickets / Pending tab exactly ── */}
+                    {/* Actions */}
                     <td className="px-8 py-5 text-right">
-                      <div className="flex justify-end gap-2">
-                        {/* View — always shown */}
+                      <div className="flex justify-end gap-3 pointer-events-auto">
+                        {/* View (always available) */}
                         <button
-                          onClick={() => open('view', task)}
-                          className="px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300 text-xs font-bold hover:bg-white dark:hover:bg-slate-700 transition-all"
+                          type="button"
+                          onClick={(e) => { e.preventDefault(); e.stopPropagation(); open('view', task); }}
+                          aria-label="View"
+                          title="View"
+                          className="w-11 h-11 rounded-2xl border border-slate-200/80 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:bg-white/70 dark:hover:bg-slate-700 transition-all inline-flex items-center justify-center shadow-sm"
                         >
-                          View
+                          <span className="material-symbols-outlined text-[20px]">visibility</span>
                         </button>
 
-                        {isPending && (
-                          <>
-                            {/* Reject */}
-                            <button
-                              onClick={() => open('reject', task)}
-                              className="px-4 py-2 rounded-xl border border-rose-200 text-rose-500 text-xs font-bold hover:bg-rose-50 transition-all"
-                            >
-                              Reject
-                            </button>
-                            {/* Approve */}
-                            <button
-                              onClick={() => open('approve', task)}
-                              className="px-4 py-2 rounded-xl bg-[#232F58] text-white text-xs font-bold hover:opacity-90 shadow-sm transition-all"
-                            >
-                              Approve
-                            </button>
-                          </>
-                        )}
+                        {/* Reject */}
+                        <button
+                          type="button"
+                          onClick={(e) => { e.preventDefault(); e.stopPropagation(); open('reject', task); }}
+                          aria-label="Reject"
+                          title={task.status === 'Pending' ? 'Reject' : 'Reject (only for Pending)'}
+                          disabled={task.status !== 'Pending'}
+                          className={`w-11 h-11 rounded-2xl border transition-all inline-flex items-center justify-center shadow-sm \
+${task.status === 'Pending'
+  ? 'border-rose-200 text-rose-500 hover:bg-rose-50'
+  : 'border-slate-200/60 text-slate-300 cursor-not-allowed opacity-60'
+}`}
+                        >
+                          <span className="material-symbols-outlined text-[20px]">close</span>
+                        </button>
+
+                        {/* Approve */}
+                        <button
+                          type="button"
+                          onClick={(e) => { e.preventDefault(); e.stopPropagation(); open('approve', task); }}
+                          aria-label="Approve"
+                          title={task.status === 'Pending' ? 'Approve' : 'Approve (only for Pending)'}
+                          disabled={task.status !== 'Pending'}
+                          className={`w-11 h-11 rounded-2xl transition-all inline-flex items-center justify-center shadow-md \
+${task.status === 'Pending'
+  ? 'bg-[#232F58] text-white hover:opacity-90'
+  : 'bg-slate-200/70 text-slate-400 cursor-not-allowed opacity-70'
+}`}
+                        >
+                          <span className="material-symbols-outlined text-[20px]">check</span>
+                        </button>
                       </div>
                     </td>
                   </tr>

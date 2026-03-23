@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback, useEffect } from "react";
+import React, { useState, useRef, useCallback, useEffect, useMemo } from "react";
 import {
   Monitor,
   Armchair,
@@ -6,7 +6,6 @@ import {
   MapPin,
   ChevronDown,
   Camera,
-  ImagePlus,
   ArrowRight,
   X,
   Loader2,
@@ -14,8 +13,11 @@ import {
   Info,
   AlertOctagon,
   Flame,
+  Search,
+  CheckCircle2,
 } from "lucide-react";
 import type { Room } from "@/types/room";
+import { useEquipmentStore } from "@/stores/useEquipmentStore";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -74,10 +76,20 @@ export const ReportManualForm: React.FC<ReportManualFormProps> = ({
   const [severity, setSeverity] = useState<ReportSeverity>("medium");
   const [files, setFiles] = useState<File[]>([]);
   const [dragOver, setDragOver] = useState(false);
-  const [errors, setErrors] = useState<Partial<Record<keyof ReportFormData | "files" | "roomId", string>>>({});
+  const [errors, setErrors] = useState<Partial<Record<keyof ReportFormData | "files" | "roomId" | "equipmentCode", string>>>({});
   const [selectedBuildingId, setSelectedBuildingId] = useState<string>("");
 
+  // Equipment selection state
+  const [eqSearch, setEqSearch] = useState("");
+  const [showEqResults, setShowEqResults] = useState(false);
+  const equipments = useEquipmentStore(state => state.equipments);
+  const fetchEquipments = useEquipmentStore(state => state.fetchAll);
+
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    fetchEquipments();
+  }, [fetchEquipments]);
 
   // Sync if props change (from QR scan)
   useEffect(() => {
@@ -95,8 +107,12 @@ export const ReportManualForm: React.FC<ReportManualFormProps> = ({
   }, [prefillRoomId, rooms]);
 
   useEffect(() => {
-    if (prefillEquipmentId) setEquipmentId(prefillEquipmentId);
-  }, [prefillEquipmentId]);
+    if (prefillEquipmentId) {
+      setEquipmentId(prefillEquipmentId);
+      const eq = equipments.find(e => e._id === prefillEquipmentId);
+      if (eq) setEqSearch(eq.code || "");
+    }
+  }, [prefillEquipmentId, equipments]);
 
   useEffect(() => {
     if (prefillDescription) setDescription(prefillDescription);
@@ -124,6 +140,29 @@ export const ReportManualForm: React.FC<ReportManualFormProps> = ({
     }).sort((a, b) => a.name.localeCompare(b.name));
   }, [rooms, selectedBuildingId]);
 
+  // Filter equipments based on search
+  const filteredEquipments = useMemo(() => {
+    if (!eqSearch) return [];
+    const term = eqSearch.toUpperCase();
+    return equipments.filter(e => 
+      e.code?.toUpperCase().startsWith(term) || 
+      e.name.toUpperCase().includes(term)
+    ).slice(0, 10);
+  }, [equipments, eqSearch]);
+
+  const handleSelectEquipment = (eq: any) => {
+    setEquipmentId(eq._id);
+    setEqSearch(eq.code || eq.name);
+    setShowEqResults(false);
+    setErrors(prev => ({ ...prev, equipmentCode: undefined }));
+    
+    // Auto populate room_id if equipment has one
+    if (eq.room_id) {
+      const rid = typeof eq.room_id === 'object' ? eq.room_id._id : eq.room_id;
+      setRoomId(rid);
+    }
+  };
+
   // ── File handling ──────────────────────────────────────────────────────────
   const addFiles = useCallback((incoming: FileList | null) => {
     if (!incoming) return;
@@ -144,8 +183,22 @@ export const ReportManualForm: React.FC<ReportManualFormProps> = ({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const newErrors: typeof errors = {};
-    if (!roomId) newErrors.roomId = "Please select an incident location.";
+    
+    if (category === 'equipment' && !equipmentId) {
+      newErrors.equipmentCode = "Please search and select an equipment code.";
+    }
+
+    if (category !== 'equipment' && !roomId) {
+      newErrors.roomId = "Please select an incident location.";
+    }
+
+    // Fallback if equipment category doesn't have a room resolved yet
+    if (category === 'equipment' && equipmentId && !roomId) {
+      newErrors.equipmentCode = "This equipment has no assigned location. Please contact admin.";
+    }
+
     if (description.length < 10) newErrors.description = "Description must be at least 10 characters.";
+    
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
       return;
@@ -167,19 +220,19 @@ export const ReportManualForm: React.FC<ReportManualFormProps> = ({
   return (
     <form
       onSubmit={handleSubmit}
-      className="glass-card mb-[2.5rem] space-y-[2.5rem] rounded-[2rem] border border-white bg-white/60 p-[2rem] shadow-[0_10px_30px_-5px_rgba(30,43,88,0.1)] dark:border-white/10 dark:bg-slate-800/70 lg:p-[2.5rem]"
+      className="glass-card mb-[2.5rem] space-y-[2.5rem] rounded-[2rem] border border-white bg-white/60 p-[1.5rem] shadow-[0_10px_30px_-5px_rgba(30,43,88,0.1)] dark:border-white/10 dark:bg-slate-800/70 lg:p-[2.5rem]"
     >
       {/* 1. Category ──────────────────────────────────────────────────── */}
       <div>
-        <h3 className="mb-[1.5rem] text-[0.6875rem] font-bold tracking-[0.15em] text-slate-500 uppercase dark:text-slate-400">
+        <h3 className="mb-[1rem] text-[0.625rem] font-black tracking-[0.2em] text-slate-500 uppercase dark:text-slate-400 opacity-60">
           1. Select Issue Category
         </h3>
-        <div className="grid grid-cols-2 gap-[1rem] sm:grid-cols-3">
+        <div className="flex flex-wrap gap-[0.75rem]">
           {CATEGORIES.map((cat) => {
             const Icon = cat.icon;
             const isSelected = category === cat.id;
             return (
-              <label key={cat.id} className="group cursor-pointer">
+              <label key={cat.id} className="cursor-pointer group">
                 <input
                   type="radio"
                   name="category"
@@ -187,17 +240,21 @@ export const ReportManualForm: React.FC<ReportManualFormProps> = ({
                   checked={isSelected}
                   onChange={() => {
                     setCategory(cat.id);
-                    setErrors((p) => ({ ...p, category: undefined }));
+                    setErrors((p) => ({ ...p, category: undefined, equipmentCode: undefined, roomId: undefined }));
+                    if (cat.id !== 'equipment') {
+                      setEquipmentId("");
+                      setEqSearch("");
+                    }
                   }}
                 />
                 <div
-                  className={`flex aspect-square flex-col items-center justify-center gap-[0.75rem] rounded-[1.5rem] border p-[1.5rem] transition-all hover:scale-[1.03] hover:bg-white/80 hover:shadow-sm active:scale-95 dark:hover:bg-white/10 ${isSelected
-                    ? "scale-[1.02] border-[#1E2B58] bg-white shadow-md ring-1 ring-[#1E2B58]/20 dark:border-white dark:bg-slate-700 dark:ring-white/20"
-                    : "border-white/60 bg-white/40 dark:border-white/5 dark:bg-slate-800/40"
+                  className={`flex items-center gap-[0.75rem] px-[1.25rem] py-[0.75rem] rounded-2xl border transition-all hover:scale-[1.02] active:scale-95 ${isSelected
+                    ? "border-[#1E2B58] bg-white shadow-md ring-1 ring-[#1E2B58]/10 dark:border-white dark:bg-slate-700 dark:ring-white/10"
+                    : "border-white/60 bg-white/20 dark:border-white/5 dark:bg-slate-800/40 opacity-70 hover:opacity-100"
                     }`}
                 >
-                  <Icon className={`h-[2rem] w-[2rem] ${isSelected ? "text-[#1E2B58] dark:text-white" : "text-slate-500 dark:text-slate-400"}`} strokeWidth={1.5} />
-                  <span className={`text-[0.625rem] font-bold tracking-wider uppercase ${isSelected ? "text-[#1E2B58] dark:text-white" : "text-slate-500 dark:text-slate-400"}`}>
+                  <Icon className={`h-4 w-4 ${isSelected ? "text-[#1E2B58] dark:text-white" : "text-slate-400 dark:text-slate-400"}`} strokeWidth={2.5} />
+                  <span className={`text-[0.6875rem] font-black tracking-widest uppercase ${isSelected ? "text-[#1E2B58] dark:text-white" : "text-slate-500 dark:text-slate-400"}`}>
                     {cat.label}
                   </span>
                 </div>
@@ -207,65 +264,138 @@ export const ReportManualForm: React.FC<ReportManualFormProps> = ({
         </div>
       </div>
 
-      {/* 2. Location ──────────────────────────────────────────────────── */}
-      <div>
-        <h3 className="mb-[1rem] text-[0.6875rem] font-bold tracking-[0.15em] text-slate-500 uppercase dark:text-slate-400">
-          2. Incident Location
-        </h3>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-[1rem]">
-          <div className="relative">
-            <div className="pointer-events-none absolute inset-y-0 left-[1.25rem] flex items-center">
-              <MapPin className={`h-[1.25rem] w-[1.25rem] ${errors.roomId && !selectedBuildingId ? "text-red-400" : "text-slate-400"}`} />
-            </div>
-            <select
-              value={selectedBuildingId}
-              onChange={(e) => {
-                setSelectedBuildingId(e.target.value);
-                setRoomId("");
-              }}
-              className={`text-[#1E2B58] h-[3.5rem] w-full appearance-none rounded-[1.5rem] border bg-white/40 pl-[3rem] pr-[3rem] font-medium shadow-sm outline-none transition-all cursor-pointer focus:ring-2 focus:border-[#1E2B58]/30 dark:bg-white/5 dark:text-white ${errors.roomId && !selectedBuildingId
-                ? "border-red-400/60 focus:ring-red-400/20"
-                : "border-white/50 focus:ring-[#1E2B58]/10 dark:border-white/10"
+      {/* 2. Logic Controller for Location / Equipment ─────────────────── */}
+      <div className="animate-in fade-in slide-in-from-top-2 duration-300">
+        {category === 'equipment' ? (
+          <div>
+            <h3 className="mb-[1rem] text-[0.625rem] font-black tracking-[0.2em] text-slate-500 uppercase dark:text-slate-400 opacity-60">
+              2. Identify Equipment
+            </h3>
+            <div className="relative">
+              <div className="pointer-events-none absolute inset-y-0 left-[1.25rem] flex items-center">
+                <Search className={`h-[1.25rem] w-[1.25rem] ${errors.equipmentCode ? "text-red-400" : "text-slate-400"}`} />
+              </div>
+              <input
+                type="text"
+                placeholder="Search equipment code (e.g. LA26...)"
+                value={eqSearch}
+                onChange={(e) => {
+                  setEqSearch(e.target.value);
+                  setShowEqResults(true);
+                  if (equipmentId) setEquipmentId(""); // Clear selection if typing
+                }}
+                onFocus={() => setShowEqResults(true)}
+                className={`text-[#1E2B58] h-[3.5rem] w-full rounded-[1.5rem] border bg-white/40 pl-[3.25rem] pr-[1.5rem] font-bold shadow-sm outline-none transition-all placeholder:text-slate-400 focus:ring-2 dark:bg-white/5 dark:text-white ${errors.equipmentCode 
+                  ? "border-red-400/60 focus:ring-red-400/20" 
+                  : "border-white/50 focus:ring-[#1E2B58]/10 dark:border-white/10"
                 }`}
-            >
-              <option value="">Select Building</option>
-              {buildings.map((b) => (
-                <option key={b.id} value={b.id}>{b.name}</option>
-              ))}
-            </select>
-            <div className="pointer-events-none absolute inset-y-0 right-[1.25rem] flex items-center">
-              <ChevronDown className="h-[1.25rem] w-[1.25rem] text-slate-400" />
+              />
+              
+              {equipmentId && (
+                <div className="absolute inset-y-0 right-[1.25rem] flex items-center">
+                  <CheckCircle2 className="h-5 w-5 text-emerald-500" />
+                </div>
+              )}
+
+              {/* Equipment Search Dropdown */}
+              {showEqResults && eqSearch && !equipmentId && (
+                <div className="absolute top-[110%] left-0 right-0 z-50 max-h-[15rem] overflow-y-auto rounded-3xl border border-white/50 bg-white shadow-2xl backdrop-blur-xl dark:border-white/10 dark:bg-slate-800 no-scrollbar animate-in zoom-in-95 duration-200">
+                  {filteredEquipments.length > 0 ? (
+                    filteredEquipments.map((eq) => (
+                      <button
+                        key={eq._id}
+                        type="button"
+                        onClick={() => handleSelectEquipment(eq)}
+                        className="flex w-full items-center justify-between px-6 py-4 transition-colors hover:bg-slate-50 dark:hover:bg-white/5 border-b border-black/5 dark:border-white/5 last:border-0"
+                      >
+                        <div className="text-left">
+                          <p className="text-sm font-black text-[#1E2B58] dark:text-white uppercase tracking-tight">{eq.code || "NO CODE"}</p>
+                          <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500">{eq.name}</p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest italic opacity-60">
+                            Room: {(eq.room_id as any)?.name || "N/A"}
+                          </p>
+                        </div>
+                      </button>
+                    ))
+                  ) : (
+                    <div className="px-6 py-4 text-center">
+                      <p className="text-xs font-bold text-slate-400 uppercase tracking-widest italic">No matching equipment</p>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
+            {errors.equipmentCode && <p className="mt-2 pl-4 text-[10px] font-black text-red-500 dark:text-red-400 uppercase tracking-widest">{errors.equipmentCode}</p>}
+            {equipmentId && (
+              <p className="mt-2 pl-4 text-[10px] font-black text-emerald-500 uppercase tracking-widest flex items-center gap-1.5 opacity-80 italic">
+                <MapPin className="w-3 h-3" />
+                Location resolved: {rooms.find(r => r._id === roomId)?.name || "Unknown"}
+              </p>
+            )}
           </div>
-          <div className="relative">
-            <select
-              value={roomId}
-              onChange={(e) => {
-                setRoomId(e.target.value);
-                setErrors((p) => ({ ...p, roomId: undefined }));
-              }}
-              disabled={!selectedBuildingId}
-              className={`text-[#1E2B58] h-[3.5rem] w-full appearance-none rounded-[1.5rem] border bg-white/40 pl-[1.5rem] pr-[3rem] font-medium shadow-sm outline-none transition-all cursor-pointer focus:ring-2 focus:border-[#1E2B58]/30 dark:bg-white/5 dark:text-white disabled:opacity-50 disabled:cursor-not-allowed ${errors.roomId
-                ? "border-red-400/60 focus:ring-red-400/20"
-                : "border-white/50 focus:ring-[#1E2B58]/10 dark:border-white/10"
-                }`}
-            >
-              <option value="">{selectedBuildingId ? "Select Room" : "Select Building First"}</option>
-              {filteredRooms.map((room) => (
-                <option key={room._id} value={room._id}>{room.name}</option>
-              ))}
-            </select>
-            <div className="pointer-events-none absolute inset-y-0 right-[1.25rem] flex items-center">
-              <ChevronDown className="h-[1.25rem] w-[1.25rem] text-slate-400" />
+        ) : (
+          <div>
+            <h3 className="mb-[1rem] text-[0.625rem] font-black tracking-[0.2em] text-slate-500 uppercase dark:text-slate-400 opacity-60">
+              2. Incident Location
+            </h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-[1rem]">
+              <div className="relative">
+                <div className="pointer-events-none absolute inset-y-0 left-[1.25rem] flex items-center">
+                  <MapPin className={`h-[1.25rem] w-[1.25rem] ${errors.roomId && !selectedBuildingId ? "text-red-400" : "text-slate-400"}`} />
+                </div>
+                <select
+                  value={selectedBuildingId}
+                  onChange={(e) => {
+                    setSelectedBuildingId(e.target.value);
+                    setRoomId("");
+                  }}
+                  className={`text-[#1E2B58] h-[3.5rem] w-full appearance-none rounded-[1.5rem] border bg-white/40 pl-[3rem] pr-[3rem] font-bold shadow-sm outline-none transition-all cursor-pointer focus:ring-2 focus:border-[#1E2B58]/30 dark:bg-white/5 dark:text-white ${errors.roomId && !selectedBuildingId
+                    ? "border-red-400/60 focus:ring-red-400/20"
+                    : "border-white/50 focus:ring-[#1E2B58]/10 dark:border-white/10"
+                    }`}
+                >
+                  <option value="">Select Building</option>
+                  {buildings.map((b) => (
+                    <option key={b.id} value={b.id}>{b.name}</option>
+                  ))}
+                </select>
+                <div className="pointer-events-none absolute inset-y-0 right-[1.25rem] flex items-center">
+                  <ChevronDown className="h-[1.25rem] w-[1.25rem] text-slate-400" />
+                </div>
+              </div>
+              <div className="relative">
+                <select
+                  value={roomId}
+                  onChange={(e) => {
+                    setRoomId(e.target.value);
+                    setErrors((p) => ({ ...p, roomId: undefined }));
+                  }}
+                  disabled={!selectedBuildingId}
+                  className={`text-[#1E2B58] h-[3.5rem] w-full appearance-none rounded-[1.5rem] border bg-white/40 pl-[1.5rem] pr-[3rem] font-bold shadow-sm outline-none transition-all cursor-pointer focus:ring-2 focus:border-[#1E2B58]/30 dark:bg-white/5 dark:text-white disabled:opacity-50 disabled:cursor-not-allowed ${errors.roomId
+                    ? "border-red-400/60 focus:ring-red-400/20"
+                    : "border-white/50 focus:ring-[#1E2B58]/10 dark:border-white/10"
+                    }`}
+                >
+                  <option value="">{selectedBuildingId ? "Select Room" : "Select Building First"}</option>
+                  {filteredRooms.map((room) => (
+                    <option key={room._id} value={room._id}>{room.name}</option>
+                  ))}
+                </select>
+                <div className="pointer-events-none absolute inset-y-0 right-[1.25rem] flex items-center">
+                  <ChevronDown className="h-[1.25rem] w-[1.25rem] text-slate-400" />
+                </div>
+              </div>
             </div>
+            {errors.roomId && <p className="mt-2 pl-4 text-[10px] font-black text-red-500 dark:text-red-400 uppercase tracking-widest">{errors.roomId}</p>}
           </div>
-        </div>
-        {errors.roomId && <p className="mt-2 pl-1 text-xs font-bold text-red-500 dark:text-red-400">{errors.roomId}</p>}
+        )}
       </div>
 
       {/* 3. Severity ──────────────────────────────────────────────────── */}
       <div>
-        <h3 className="mb-[1.5rem] text-[0.6875rem] font-bold tracking-[0.15em] text-slate-500 uppercase dark:text-slate-400">
+        <h3 className="mb-[1rem] text-[0.625rem] font-black tracking-[0.2em] text-slate-500 uppercase dark:text-slate-400 opacity-60">
           3. Severity Level
         </h3>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-[1rem]">
@@ -281,12 +411,12 @@ export const ReportManualForm: React.FC<ReportManualFormProps> = ({
                   checked={isSelected}
                   onChange={() => setSeverity(sev.id)}
                 />
-                <div className={`flex items-center gap-[0.75rem] p-[1.25rem] rounded-[1.25rem] border transition-all hover:bg-white/80 dark:hover:bg-white/10 hover:scale-[1.02] active:scale-95 ${isSelected
+                <div className={`flex items-center gap-[0.75rem] p-[1rem] rounded-[1.25rem] border transition-all hover:bg-white/80 dark:hover:bg-white/10 hover:scale-[1.02] active:scale-95 ${isSelected
                   ? `${sev.bgActive} shadow-sm ring-1 ring-black/5 dark:ring-white/10 scale-[1.01]`
-                  : 'bg-white/40 dark:bg-slate-800/40 border-white/60 dark:border-white/5'
+                  : 'bg-white/40 dark:bg-slate-800/40 border-white/60 dark:border-white/5 opacity-80'
                   }`}>
-                  <Icon className={`w-5 h-5 ${isSelected ? sev.colorClass : 'text-slate-400'}`} strokeWidth={2} />
-                  <span className={`text-xs font-bold uppercase tracking-wider ${isSelected ? 'text-[#1E2B58] dark:text-white' : 'text-slate-500 dark:text-slate-400'}`}>
+                  <Icon className={`w-4 h-4 ${isSelected ? sev.colorClass : 'text-slate-400'}`} strokeWidth={2.5} />
+                  <span className={`text-[0.6875rem] font-black uppercase tracking-widest ${isSelected ? 'text-[#1E2B58] dark:text-white' : 'text-slate-500 dark:text-slate-400'}`}>
                     {sev.label}
                   </span>
                 </div>
@@ -298,7 +428,7 @@ export const ReportManualForm: React.FC<ReportManualFormProps> = ({
 
       {/* 4. Description ───────────────────────────────────────────────── */}
       <div>
-        <h3 className="mb-[1rem] text-[0.6875rem] font-bold tracking-[0.15em] text-slate-500 uppercase dark:text-slate-400">
+        <h3 className="mb-[1rem] text-[0.625rem] font-black tracking-[0.2em] text-slate-500 uppercase dark:text-slate-400 opacity-60">
           4. Issue Description
         </h3>
         <textarea
@@ -307,22 +437,22 @@ export const ReportManualForm: React.FC<ReportManualFormProps> = ({
             setDescription(e.target.value);
             setErrors((p) => ({ ...p, description: undefined }));
           }}
-          className={`text-[#1E2B58] h-[9rem] w-full resize-none rounded-[1.5rem] border bg-white/40 p-[1.5rem] shadow-sm outline-none transition-all placeholder:text-slate-400 focus:ring-2 focus:border-[#1E2B58]/30 dark:bg-white/5 dark:text-white ${errors.description
+          className={`text-[#1E2B58] h-[9rem] w-full resize-none rounded-[1.5rem] border bg-white/40 p-[1.5rem] font-bold shadow-sm outline-none transition-all placeholder:text-slate-400 focus:ring-2 focus:border-[#1E2B58]/30 dark:bg-white/5 dark:text-white ${errors.description
             ? "border-red-400/60 focus:ring-red-400/20"
             : "border-white/50 focus:ring-[#1E2B58]/10 dark:border-white/10"
             }`}
           placeholder="Please provide specific details about the issue..."
         />
         <div className="mt-1.5 flex justify-between px-1">
-          {errors.description ? <p className="text-xs font-bold text-red-500 dark:text-red-400">{errors.description}</p> : <span />}
+          {errors.description ? <p className="text-[10px] font-black text-red-500 dark:text-red-400 uppercase tracking-widest">{errors.description}</p> : <span />}
           <span className={`text-[0.625rem] font-bold ${description.length < 10 ? "text-slate-400" : "text-emerald-500"}`}>{description.length} / 500</span>
         </div>
       </div>
 
       {/* 5. Evidence ──────────────────────────────────────────────────── */}
       <div>
-        <h3 className="mb-[1rem] text-[0.6875rem] font-bold tracking-[0.15em] text-slate-500 uppercase dark:text-slate-400">
-          5. Upload Evidence <span className="font-medium normal-case opacity-60">(optional, max 5 files)</span>
+        <h3 className="mb-[1rem] text-[0.625rem] font-black tracking-[0.2em] text-slate-500 uppercase dark:text-slate-400 opacity-60">
+          5. Upload Evidence <span className="font-medium normal-case opacity-60 tracking-normal">(optional, max 5 files)</span>
         </h3>
         <input ref={fileInputRef} type="file" accept="image/*" multiple className="hidden" onChange={(e) => addFiles(e.target.files)} />
         <div
@@ -330,35 +460,27 @@ export const ReportManualForm: React.FC<ReportManualFormProps> = ({
           onDragLeave={() => setDragOver(false)}
           onDrop={handleDrop}
           onClick={() => fileInputRef.current?.click()}
-          className={`relative flex h-[12rem] w-full cursor-pointer flex-col items-center justify-center gap-[0.75rem] rounded-[2rem] border-2 border-dashed transition-all ${dragOver
+          className={`relative flex h-[10rem] w-full cursor-pointer flex-col items-center justify-center gap-[0.75rem] rounded-[2rem] border-2 border-dashed transition-all ${dragOver
             ? "scale-[1.01] border-[#1E2B58] bg-[#1E2B58]/5 dark:border-sky-400 dark:bg-sky-400/5"
             : "border-white/60 bg-white/40 hover:bg-white/50 dark:border-slate-600 dark:bg-white/5 dark:hover:bg-slate-800/50"
             }`}
         >
-          <div className="group-hover:scale-110 flex h-[3rem] w-[3rem] items-center justify-center rounded-full bg-white shadow-sm transition-transform dark:bg-slate-700/50">
-            <Camera className="h-[1.5rem] w-[1.5rem] text-slate-500 dark:text-slate-400" />
+          <div className="group-hover:scale-110 flex h-[2.5rem] w-[2.5rem] items-center justify-center rounded-2xl bg-white shadow-sm transition-transform dark:bg-slate-700/50 border border-slate-100 dark:border-slate-600">
+            <Camera className="h-[1.25rem] w-[1.25rem] text-slate-500 dark:text-slate-400" />
           </div>
-          <div className="text-center">
-            <p className="text-[#1E2B58] text-[0.875rem] font-bold dark:text-white">
-              {files.length > 0 ? `${files.length} file${files.length > 1 ? "s" : ""} selected` : "Drag and drop photos here"}
+          <div className="text-center px-4">
+            <p className="text-[#1E2B58] text-[0.75rem] font-black uppercase tracking-widest dark:text-white">
+              {files.length > 0 ? `${files.length} file${files.length > 1 ? "s" : ""} selected` : "Drag or Click to upload"}
             </p>
-            <p className="mt-[0.25rem] text-[0.625rem] tracking-wider text-slate-400 uppercase dark:text-slate-500">PNG, JPG up to 10MB · Click to browse</p>
-          </div>
-          <div className="absolute bottom-[1rem] right-[1rem] flex gap-[0.5rem]" onClick={(e) => e.stopPropagation()}>
-            <button type="button" onClick={() => fileInputRef.current?.click()} className="hover:scale-110 active:scale-95 rounded-xl bg-white/40 p-[0.5rem] text-slate-600 transition-all hover:bg-white/60 dark:bg-white/10 dark:text-slate-300 dark:hover:bg-white/20" title="Take Photo">
-              <Camera className="h-[1.25rem] w-[1.25rem]" />
-            </button>
-            <button type="button" onClick={() => fileInputRef.current?.click()} className="hover:scale-110 active:scale-95 rounded-xl bg-white/40 p-[0.5rem] text-slate-600 transition-all hover:bg-white/60 dark:bg-white/10 dark:text-slate-300 dark:hover:bg-white/20" title="Upload from Gallery">
-              <ImagePlus className="h-[1.25rem] w-[1.25rem]" />
-            </button>
+            <p className="mt-[0.25rem] text-[0.5rem] font-bold tracking-widest text-slate-400 uppercase dark:text-slate-500">PNG, JPG up to 10MB</p>
           </div>
         </div>
         {files.length > 0 && (
-          <div className="mt-3 flex flex-wrap gap-2">
+          <div className="mt-3 flex flex-wrap gap-2 animate-in fade-in zoom-in-95 duration-200">
             {files.map((file, i) => (
               <div key={i} className="group relative">
-                <img src={URL.createObjectURL(file)} alt={file.name} className="h-16 w-16 rounded-xl border border-white/60 object-cover shadow-sm dark:border-white/10" />
-                <button type="button" onClick={() => removeFile(i)} className="hover:scale-110 active:scale-90 absolute -right-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-white opacity-0 shadow-sm transition-all group-hover:opacity-100">
+                <img src={URL.createObjectURL(file)} alt={file.name} className="h-16 w-16 rounded-xl border-2 border-white object-cover shadow-md dark:border-slate-700" />
+                <button type="button" onClick={() => removeFile(i)} className="hover:scale-110 active:scale-90 absolute -right-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-white shadow-sm transition-all">
                   <X className="h-2.5 w-2.5" />
                 </button>
               </div>
@@ -371,16 +493,16 @@ export const ReportManualForm: React.FC<ReportManualFormProps> = ({
       <button
         type="submit"
         disabled={isSubmitting}
-        className="active:scale-[0.98] flex w-full items-center justify-center gap-[0.75rem] rounded-[1.25rem] bg-[#1E2B58] py-[1.25rem] font-bold text-white shadow-[0_10px_25px_-5px_rgba(30,43,88,0.4)] transition-all hover:bg-[#151f40] disabled:scale-100 disabled:cursor-not-allowed disabled:opacity-60"
+        className="active:scale-[0.98] flex w-full items-center justify-center gap-[0.75rem] rounded-[1.5rem] bg-[#1E2B58] py-[1.25rem] text-[0.75rem] font-black uppercase tracking-[0.2em] text-white shadow-[0_10px_25px_-5px_rgba(30,43,88,0.4)] transition-all hover:bg-[#151f40] disabled:scale-100 disabled:cursor-not-allowed disabled:opacity-60"
       >
         {isSubmitting ? (
           <>
-            <Loader2 className="h-5 w-5 animate-spin" />
-            Submitting…
+            <Loader2 className="h-4 w-4 animate-spin" />
+            Processing…
           </>
         ) : (
           <>
-            Submit Report
+            Emit Report Signal
             <ArrowRight className="h-[1.25rem] w-[1.25rem]" />
           </>
         )}

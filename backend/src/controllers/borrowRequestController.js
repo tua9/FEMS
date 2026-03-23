@@ -59,11 +59,11 @@ export const approveBorrowRequest = asyncHandler(async (req, res) => {
 })
 
 export const rejectBorrowRequest = asyncHandler(async (req, res) => {
-  const { reason } = req.body
+  const { decision_note } = req.body
   const result = await borrowRequestService.rejectBorrowRequest(
     req.params.id,
     req.user._id,
-    reason,
+    decision_note,
   )
   res.status(StatusCodes.OK).json(result)
 })

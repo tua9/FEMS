@@ -40,8 +40,8 @@ const assetSchema = new mongoose.Schema(
     code: {
       type: String,
       unique: true,
-      sparse: true,
-      default: null,
+      sparse: true, // allows existing docs without code; new ones always get one
+      trim: true,
     },
   },
   {
