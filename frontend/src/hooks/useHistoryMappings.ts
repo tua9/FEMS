@@ -54,7 +54,7 @@ export function useHistoryMappings(
             const type = (r.type || 'other').toLowerCase();
 
             return {
-                id:            `#${(r._id as string)?.substring(18).toUpperCase() || 'ID'}`,
+                id:            r.code || `#${(r._id as string)?.substring(18).toUpperCase() || 'ID'}`,
                 date:          r.createdAt ? new Date(r.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'N/A',
                 category:      TYPE_LABEL[type] ?? 'Other',
                 location:      locationLabel,
@@ -106,7 +106,8 @@ export function useHistoryMappings(
             const smartClassInfo = roomName || extractClassInfo(b.note || '') || 'Academic Use';
 
             return {
-                id: (eq && typeof eq === 'object' ? eq.qr_code : null)
+                id: b.code 
+                    || (eq && typeof eq === 'object' ? eq.qr_code : null)
                     || (rm && typeof rm === 'object' ? rm.name : null)
                     || `#REQ-${(b._id as string)?.substring(18).toUpperCase() || '....'}`,
                 course:        smartClassInfo,
@@ -135,7 +136,7 @@ export function useHistoryMappings(
                 : 'REJECTED';
 
             return {
-                id:          `#APP-${(a._id as string).substring(18).toUpperCase()}`,
+                id:          a.code || `#APP-${(a._id as string).substring(18).toUpperCase()}`,
                 studentName: userRef?.displayName || 'User',
                 studentId:   (userRef?._id as string || '').substring(18).toUpperCase(),
                 equipment:   equipment?.name || room?.name || 'Asset',

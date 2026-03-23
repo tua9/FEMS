@@ -1,14 +1,65 @@
-import crypto from 'crypto'
+// (crypto removed — no longer needed after code generator refactor)
 import { StatusCodes } from 'http-status-codes'
 import Equipment from '../models/Equipment.js'
 import ApiError from '../utils/ApiError.js'
 
+// ─── Code Generation ──────────────────────────────────────────────────────────
+
+/**
+ * Build one candidate code from a category string.
+ * Format: <2-char prefix><2-digit year><2-digit month><3 random uppercase letters>
+ * Example: "Laptop" in March 2026 → "LA2603XYZ"
+ *
+ * @param {string} category - Equipment category (e.g. "Laptop", "Monitor")
+ * @returns {string} A candidate code string (9 chars)
+ */
+const generateEquipmentCode = (category) => {
+  // Prefix: first 2 chars of category, uppercased (pad with 'X' if category is 1 char)
+  const prefix = (category || 'XX').trim().toUpperCase().padEnd(2, 'X').slice(0, 2)
+
+  // Date parts
+  const now   = new Date()
+  const year  = String(now.getFullYear()).slice(-2)          // e.g. "26"
+  const month = String(now.getMonth() + 1).padStart(2, '0') // e.g. "03"
+
+  // 3 random uppercase letters (A–Z)
+  const CHARS  = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+  const random = Array.from({ length: 3 }, () => CHARS[Math.floor(Math.random() * CHARS.length)]).join('')
+
+  return `${prefix}${year}${month}${random}` // e.g. "LA2603ABC"
+}
+
+/**
+ * Generate a code that does not yet exist in the database.
+ * Retries until a unique code is found (very rare collision in practice).
+ *
+ * @param {string} category
+ * @returns {Promise<string>} A unique equipment code
+ */
+const generateUniqueCode = async (category) => {
+  let code
+  let exists = true
+
+  while (exists) {
+    code   = generateEquipmentCode(category)
+    exists = !!(await Equipment.findOne({ code }))
+  }
+
+  return code
+}
+
+// ─── CRUD ─────────────────────────────────────────────────────────────────────
+
 const createEquipment = async (body) => {
-  const { name, category, available, status, room_id, code } = body
+  // Destructure body — `code` from frontend is intentionally ignored
+  const { name, category, available, status, room_id } = body
 
   if (!name) {
     throw new ApiError(StatusCodes.BAD_REQUEST, 'Name is required')
   }
+
+  // Always auto-generate a unique code based on category
+  const code = await generateUniqueCode(category)
 
   const newEquipment = await Equipment.create({
     name,
@@ -16,12 +67,13 @@ const createEquipment = async (body) => {
     available,
     status,
     room_id,
-    code: code || crypto.randomUUID(),
+    code,
   })
 
   return {
     message: 'Create equipment success',
     equipment_id: newEquipment._id,
+    equipment: newEquipment,
   }
 }
 

@@ -43,7 +43,7 @@ const BrokenAttentionCard: React.FC<BrokenAttentionCardProps> = ({ items, onView
                                     {item.status}
                                 </span>
                             </div>
-                            <p className="text-[10px] text-slate-500 dark:text-slate-400 font-semibold mb-2">ID: {item._id}</p>
+                            <p className="text-[10px] text-slate-500 dark:text-slate-400 font-semibold mb-2">Code: {item.code || "#" + item._id.slice(-6).toUpperCase()}</p>
 
                             <div className="flex gap-1.5 flex-wrap">
                                 {item.status === 'maintenance' ? (

@@ -57,7 +57,7 @@ export const BorrowHistoryTable: React.FC<BorrowHistoryTableProps> = ({
                 <table className="w-full border-collapse min-w-[1000px]">
                     <thead>
                         <tr className="thead-tint">
-                            {['Asset ID', 'Class / Course', 'Equipment', 'Borrow Period', 'Purpose', 'Status', 'Actions'].map((h, i) => (
+                            {['Code', 'Class / Course', 'Equipment', 'Borrow Period', 'Purpose', 'Status', 'Actions'].map((h, i) => (
                                 <th key={h} className={`px-[2rem] py-[1.5rem] text-[0.625rem] font-black uppercase tracking-[0.2em] text-[#1E2B58]/50 dark:text-slate-400 ${i === 5 ? 'text-center' : i === 6 ? 'text-right' : 'text-left'}`}>
                                     {h}
                                 </th>

@@ -50,7 +50,7 @@ const EquipmentTable: React.FC<EquipmentTableProps> = ({ equipments, onOpenDetai
                                         </div>
                                         <div className="min-w-0 flex-1">
                                             <p className="text-sm font-semibold text-slate-800 dark:text-white truncate" title={item.name}>{item.name}</p>
-                                            <p className="text-[10px] text-slate-500 dark:text-slate-400 font-medium truncate">ID: {item._id}</p>
+                                            <p className="text-[10px] text-slate-500 dark:text-slate-400 font-medium truncate">Code: {item.code || "#" + item._id.slice(-6).toUpperCase()}</p>
                                         </div>
                                     </div>
                                 </td>

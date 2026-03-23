@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import CustomDropdown from '../../shared/CustomDropdown';
 import type { Equipment, CreateEquipmentPayload } from '../../../types/equipment';
 import { useEquipmentStore } from '../../../stores/useEquipmentStore';
+import { useRoomStore } from '../../../stores/useRoomStore';
 import { toast } from 'sonner';
 
 interface AddEquipmentModalProps {
@@ -17,27 +18,74 @@ const AddEquipmentModal: React.FC<AddEquipmentModalProps> = ({ isOpen, onClose, 
 
     const [name, setName] = useState('');
     const [category, setCategory] = useState('');
-    const [quantity, setQuantity] = useState(1);
+    const [buildingId, setBuildingId] = useState<string>('');
+    const [roomId, setRoomId] = useState<string>('');
     const [code, setCode] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     const createEquipment = useEquipmentStore(state => state.createEquipment);
     const updateEquipment = useEquipmentStore(state => state.updateEquipment);
+    const { rooms, fetchAll: fetchRooms } = useRoomStore();
+
+    useEffect(() => {
+        if (isOpen) {
+            fetchRooms();
+        }
+    }, [isOpen, fetchRooms]);
 
     useEffect(() => {
         if (equipment) {
             setName(equipment.name);
             setCategory(equipment.category);
-            setQuantity(1);
             setCode(equipment.code || '');
+            
+            // Set building and room for editing
+            const rm = equipment.room_id as any;
+            if (rm && typeof rm === 'object') {
+                setRoomId(rm._id || '');
+                setBuildingId(rm.building_id?._id || rm.building_id || '');
+            } else if (rm) {
+                setRoomId(rm);
+                // Building will be fetched/matched later if possible
+            }
         } else {
             setName('');
             setCategory('');
-            setQuantity(1);
-            setCode('');
+            setBuildingId('');
+            setRoomId('');
             setCode('');
         }
     }, [equipment, isOpen]);
+
+    // ── Room Selection Logic ──────────────────────────────────────────────────
+    
+    // Group rooms by building
+    const buildings = useMemo(() => {
+        const bMap = new Map<string, string>();
+        rooms.forEach((r: any) => {
+            const b = r.building_id;
+            if (b && typeof b === 'object') {
+                bMap.set(b._id, b.name);
+            }
+        });
+        return Array.from(bMap.entries()).map(([id, name]) => ({ value: id, label: name }));
+    }, [rooms]);
+
+    const roomOptions = useMemo(() => {
+        const filtered = buildingId 
+            ? rooms.filter((r: any) => (r.building_id?._id || r.building_id) === buildingId)
+            : rooms;
+            
+        return [
+            { value: '', label: 'No Room / Storage' },
+            ...filtered.map(r => ({ value: r._id, label: r.name }))
+        ];
+    }, [rooms, buildingId]);
+
+    const handleBuildingChange = (id: string) => {
+        setBuildingId(id);
+        setRoomId(''); // Reset room when building changes
+    };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -48,7 +96,7 @@ const AddEquipmentModal: React.FC<AddEquipmentModalProps> = ({ isOpen, onClose, 
                 name,
                 category,
                 status: (equipment?.status as any) || 'good',
-                room_id: (equipment?.room_id as any)?._id || (equipment?.room_id as any) || null,
+                room_id: roomId || null,
                 code: code || undefined
             };
 
@@ -56,10 +104,11 @@ const AddEquipmentModal: React.FC<AddEquipmentModalProps> = ({ isOpen, onClose, 
                 await updateEquipment(equipment._id, payload);
                 toast.success(`Asset "${name}" updated successfully`);
             } else {
-                for (let i = 0; i < quantity; i++) {
-                    await createEquipment(payload);
-                }
-                toast.success(`${quantity} new unit(s) of "${name}" registered`);
+                const response = await createEquipment(payload);
+                const newEquip = response.equipment || response;
+                toast.success(`Registered product "${name}"`, {
+                    description: `System Code: ${newEquip.code || 'Generated'}`
+                });
             }
             if (onEquipmentUpdated) onEquipmentUpdated();
             onClose();
@@ -130,13 +179,14 @@ const AddEquipmentModal: React.FC<AddEquipmentModalProps> = ({ isOpen, onClose, 
                             </div>
 
                             <div className="space-y-1.5">
-                                <label className={labelClasses}>Asset Code (Optional)</label>
+                                <label className={labelClasses}>Asset Code (Backend will auto-ignore if creating)</label>
                                 <input
                                     type="text"
                                     value={code}
                                     onChange={e => setCode(e.target.value)}
-                                    className={inputClasses}
-                                    placeholder="e.g. FPT-LAP-082"
+                                    disabled={!isEdit}
+                                    className={`${inputClasses} ${!isEdit ? 'opacity-50 bg-slate-100 dark:bg-slate-800 cursor-not-allowed' : ''}`}
+                                    placeholder={!isEdit ? "Auto-generated" : "e.g. LA2603XYZ"}
                                 />
                             </div>
 
@@ -165,28 +215,32 @@ const AddEquipmentModal: React.FC<AddEquipmentModalProps> = ({ isOpen, onClose, 
                                 />
                             </div>
 
-                            {!isEdit && (
-                                <div className="space-y-1.5">
-                                    <label className={labelClasses}>Batch Quantity <span className="text-red-500">*</span></label>
-                                    <input
-                                        type="number"
-                                        value={quantity}
-                                        onChange={e => setQuantity(parseInt(e.target.value) || 0)}
-                                        className={inputClasses}
-                                        placeholder="1"
-                                        min={1}
-                                        required
-                                    />
-                                </div>
-                            )}
+                            {/* Building Selection */}
+                            <div className="space-y-1.5">
+                                <label className={labelClasses}>Building</label>
+                                <CustomDropdown
+                                    value={buildingId}
+                                    options={[
+                                        { value: '', label: 'All Buildings' },
+                                        ...buildings
+                                    ]}
+                                    onChange={handleBuildingChange}
+                                    className="w-full"
+                                    triggerClassName={`${inputClasses} flex justify-between items-center cursor-pointer`}
+                                    fullWidth={true}
+                                />
+                            </div>
 
+                            {/* Room Selection */}
                             <div className="space-y-1.5">
                                 <label className={labelClasses}>Assigned Room</label>
-                                <input
-                                    type="text"
-                                    value="Lab 402"
-                                    disabled
-                                    className={`${inputClasses} bg-slate-100/30 border-dashed cursor-not-allowed`}
+                                <CustomDropdown
+                                    value={roomId}
+                                    options={roomOptions}
+                                    onChange={setRoomId}
+                                    className="w-full"
+                                    triggerClassName={`${inputClasses} flex justify-between items-center cursor-pointer`}
+                                    fullWidth={true}
                                 />
                             </div>
 

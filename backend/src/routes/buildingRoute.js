@@ -7,11 +7,19 @@ import {
   deleteBuilding,
 } from '../controllers/buildingController.js'
 
+import { protectedRoute, restrictTo } from '../middlewares/authMiddlewares.js'
+
 const router = express.Router()
 
-router.post('/', createBuilding)
+// Public Routes
 router.get('/', getAllBuildings)
 router.get('/:id', getBuildingById)
+
+// Protected Routes (Admin only)
+router.use(protectedRoute)
+router.use(restrictTo('admin'))
+
+router.post('/', createBuilding)
 router.patch('/:id', updateBuilding)
 router.delete('/:id', deleteBuilding)
 

@@ -106,7 +106,7 @@ const DeviceDetailsModal: React.FC<DeviceDetailsModalProps> = ({ isOpen, device,
                     </div>
 
                     <h3 className="text-2xl font-black text-[#1E2B58] dark:text-white tracking-tight">{device.name}</h3>
-                    <p className="text-[0.625rem] font-black text-[#1E2B58]/50 dark:text-white/40 uppercase tracking-widest mt-1">Asset ID: {device._id}</p>
+                    <p className="text-[0.625rem] font-black text-[#1E2B58]/50 dark:text-white/40 uppercase tracking-widest mt-1">Equipment Code: {device.code || "#" + device._id.slice(-6).toUpperCase()}</p>
                 </div>
 
                 <div className="p-10 pt-0 overflow-y-auto no-scrollbar space-y-8 relative z-10 mt-6">
@@ -132,7 +132,7 @@ const DeviceDetailsModal: React.FC<DeviceDetailsModalProps> = ({ isOpen, device,
                                     </div>
                                     <div className="flex flex-col">
                                         <p className="font-black text-slate-800 dark:text-white leading-tight">{(device.room_id as any)?.name || 'N/A'}</p>
-                                        <p className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mt-0.5">Asset Code: {device.code || 'N/A'}</p>
+                                        <p className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mt-0.5">Asset Code: {device.code || "#" + device._id.slice(-6).toUpperCase()}</p>
                                     </div>
                                 </div>
                             </div>

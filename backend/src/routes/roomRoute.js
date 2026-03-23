@@ -12,6 +12,12 @@ import { protectedRoute, restrictTo } from '../middlewares/authMiddlewares.js'
 
 const router = express.Router()
 
+// Public Routes (Accessible by guests for reporting)
+router.get('/', getAllRooms)
+router.get('/building/:buildingId', getRoomsByBuilding)
+router.get('/:id', getRoomById)
+
+// Protected Routes (Require login)
 router.use(protectedRoute)
 
 router.get(
@@ -21,9 +27,6 @@ router.get(
 )
 
 router.post('/', restrictTo('admin'), createRoom)
-router.get('/', getAllRooms)
-router.get('/building/:buildingId', getRoomsByBuilding)
-router.get('/:id', getRoomById)
 router.patch('/:id', restrictTo('admin'), updateRoom)
 router.delete('/:id', restrictTo('admin'), deleteRoom)
 

@@ -60,6 +60,14 @@ const reportSchema = new mongoose.Schema(
       type: String,
       default: null,
     },
+
+    // Auto-generated business code, e.g. RP2603ABC
+    code: {
+      type: String,
+      unique: true,
+      sparse: true,
+      trim: true,
+    },
   },
   { timestamps: true },
 )

@@ -18,7 +18,7 @@ type EquipmentStore = {
 
   fetchAll: () => Promise<void>;
   fetchInventory: (params?: any) => Promise<void>;
-  createEquipment: (payload: CreateEquipmentPayload) => Promise<void>;
+  createEquipment: (payload: CreateEquipmentPayload) => Promise<any>;
   updateEquipment: (id: string, payload: CreateEquipmentPayload) => Promise<void>;
   deleteEquipment: (id: string) => Promise<void>;
 };
@@ -56,8 +56,10 @@ export const useEquipmentStore = create<EquipmentStore>((set) => ({
   createEquipment: async (payload: CreateEquipmentPayload) => {
     try {
       set({ loading: true, error: null });
-      const newEquipment = await equipmentService.create(payload);
+      const response = await equipmentService.create(payload);
+      const newEquipment = (response as any).equipment || response;
       set((state) => ({ equipments: [newEquipment, ...state.equipments] }));
+      return response;
     } catch (error: any) {
       set({ error: error?.response?.data?.message || "Cannot create equipment" });
       throw error;
