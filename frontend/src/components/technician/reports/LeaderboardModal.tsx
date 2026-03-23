@@ -1,5 +1,6 @@
-import React, { useEffect } from 'react';
-import { getAllPerformers, type Performer, type DateRangeDays } from '@/data/technician/mockReports';
+import React, { useEffect, useMemo } from 'react';
+import type { Performer, DateRangeDays } from '@/data/technician/mockReports';
+import { useReports } from '@/hooks/technician/useReports';
 
 interface Props {
   dateRangeDays: DateRangeDays;
@@ -38,7 +39,7 @@ const LeaderboardRow: React.FC<{ performer: Performer; isLast: boolean }> = ({ p
       {/* Avatar + Name */}
       <td className="px-4 py-4">
         <div className="flex items-center gap-3">
-          <div className={`relative flex-shrink-0 ${medal ? medal.ring + ' rounded-full' : ''}`}>
+          <div className={`relative shrink-0 ${medal ? medal.ring + ' rounded-full' : ''}`}>
             {p.avatar ? (
               <img src={p.avatar} alt={p.name} className="w-9 h-9 rounded-full object-cover" />
             ) : (
@@ -92,7 +93,76 @@ const LeaderboardRow: React.FC<{ performer: Performer; isLast: boolean }> = ({ p
 };
 
 const LeaderboardModal: React.FC<Props> = ({ dateRangeDays, onClose }) => {
-  const performers = getAllPerformers(dateRangeDays);
+  const { reports } = useReports();
+
+  const performers = useMemo<Performer[]>(() => {
+    const now = new Date();
+    const from = dateRangeDays === 0
+      ? null
+      : new Date(now.getTime() - dateRangeDays * 24 * 60 * 60 * 1000);
+
+    const inRange = (r: any) => {
+      if (!from) return true;
+      const created = new Date(r?.createdAt || r?.created_at || 0);
+      return created >= from && created <= now;
+    };
+
+    const list = (reports || []).filter(inRange);
+
+    // Group by assigned technician
+    const map = new Map<string, { name: string; tickets: number; resolved: number }>();
+
+    for (const r of list) {
+      const assignee = r?.assigned_to;
+      const name = assignee?.displayName || assignee?.username || 'Unassigned';
+      const key = String(assignee?._id || 'unassigned');
+
+      const entry = map.get(key) || { name, tickets: 0, resolved: 0 };
+      entry.tickets += 1;
+      if (String(r?.status).toLowerCase() === 'fixed') entry.resolved += 1;
+      map.set(key, entry);
+    }
+
+    const all = Array.from(map.values())
+      .map((v) => {
+        const rate = v.tickets > 0 ? Math.round((v.resolved / v.tickets) * 100) : 0;
+        const initials = v.name
+          .split(' ')
+          .slice(0, 2)
+          .map((w) => w[0])
+          .join('')
+          .toUpperCase();
+
+        return {
+          rank: 0,
+          rankBg: 'bg-slate-300',
+          name: v.name,
+          resolveRate: `${rate}% Resolve Rate`,
+          tickets: v.tickets,
+          initials,
+        } as Performer;
+      })
+      .sort((a, b) => b.tickets - a.tickets);
+
+    // If there are no rows (e.g., empty DB), keep the table non-empty for the existing UI.
+    if (all.length === 0) {
+      return Array.from({ length: 5 }).map((_, i) => ({
+        rank: i + 1,
+        rankBg: 'bg-slate-300',
+        name: '—',
+        resolveRate: '0% Resolve Rate',
+        tickets: 0,
+        initials: '—',
+      })) as Performer[];
+    }
+
+    // Assign ranks and keep top N (UI scrolls, so allow more than 3)
+    return all.map((p, i) => ({
+      ...p,
+      rank: i + 1,
+      rankBg: i === 0 ? 'bg-emerald-500' : i === 1 ? 'bg-slate-400' : i === 2 ? 'bg-amber-600' : 'bg-slate-300',
+    }));
+  }, [reports, dateRangeDays]);
 
   const rangeLabel =
     dateRangeDays === 7  ? 'Last 7 Days'
@@ -114,7 +184,7 @@ const LeaderboardModal: React.FC<Props> = ({ dateRangeDays, onClose }) => {
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
       {/* Panel */}
-      <div className="glass-card animate-in fade-in zoom-in-95 duration-200 w-full max-w-2xl max-h-[90vh] flex flex-col rounded-[2rem] shadow-2xl shadow-[#1E2B58]/20 overflow-hidden">
+      <div className="glass-card animate-in fade-in zoom-in-95 duration-200 w-full max-w-2xl max-h-[90vh] flex flex-col rounded-4xl shadow-2xl shadow-[#1E2B58]/20 overflow-hidden">
         {/* Header */}
         <div className="px-8 py-6 border-b border-black/8 dark:border-white/10 flex items-center justify-between shrink-0">
           <div className="flex items-center gap-3">
@@ -152,7 +222,7 @@ const LeaderboardModal: React.FC<Props> = ({ dateRangeDays, onClose }) => {
           <table className="w-full">
             <tbody>
               {performers.map((p, i) => (
-                <LeaderboardRow key={p.rank} performer={p} isLast={i === performers.length - 1} />
+                <LeaderboardRow key={`${p.rank}-${p.name}`} performer={p} isLast={i === performers.length - 1} />
               ))}
             </tbody>
           </table>

@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MOCK_TICKETS } from '@/data/technician/mockTickets';
+import { technicianApi } from '@/services/api/technicianApi';
 
 // ─── Filter options ──────────────────────────────────────────────────────────
 type FilterMode = 'preset' | 'day' | 'month' | 'year';
@@ -22,38 +22,7 @@ const PRESETS: Preset[] = [
 // ─── Date helpers ────────────────────────────────────────────────────────────
 const today = () => new Date();
 
-function filterByPreset(days: number): (iso: string) => boolean {
-  const now = today();
-  if (days === 0) {
-    // This Month
-    return (iso) => {
-      const d = new Date(iso);
-      return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth();
-    };
-  }
-  if (days === -1) {
-    // This Year
-    return (iso) => new Date(iso).getFullYear() === now.getFullYear();
-  }
-  const cutoff = new Date(now);
-  cutoff.setDate(cutoff.getDate() - days);
-  return (iso) => new Date(iso) >= cutoff;
-}
-
-function filterByDay(dateStr: string): (iso: string) => boolean {
-  return (iso) => iso.slice(0, 10) === dateStr;
-}
-
-function filterByMonth(year: number, month: number): (iso: string) => boolean {
-  return (iso) => {
-    const d = new Date(iso);
-    return d.getFullYear() === year && d.getMonth() + 1 === month;
-  };
-}
-
-function filterByYear(year: number): (iso: string) => boolean {
-  return (iso) => new Date(iso).getFullYear() === year;
-}
+// (Filtering is now computed server-side via from/to range params)
 
 // ─── Component ───────────────────────────────────────────────────────────────
 const TicketPipeline: React.FC = () => {
@@ -110,23 +79,75 @@ const TicketPipeline: React.FC = () => {
     return () => document.removeEventListener('mousedown', handler);
   }, [dropdownOpen]);
 
-  // Build the predicate based on current mode
-  const predicate = useMemo(() => {
-    if (mode === 'day')   return filterByDay(customDay);
-    if (mode === 'month') return filterByMonth(customMonthYear, customMonth);
-    if (mode === 'year')  return filterByYear(customYear);
-    return filterByPreset(activePreset.days);
-  }, [mode, activePreset, customDay, customMonth, customMonthYear, customYear]);
+  // Derive API date range (from/to) from the current filter selection.
+  const range = useMemo(() => {
+    const end = new Date();
 
-  // Compute pipeline counts
-  const filtered = useMemo(
-    () => MOCK_TICKETS.filter((t) => predicate(t.createdAt)),
-    [predicate],
-  );
+    // Helpers (UTC boundaries)
+    const startOfUtcDay = (d: Date) => new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(), 0, 0, 0, 0));
+    const endOfUtcDay = (d: Date) => new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(), 23, 59, 59, 999));
 
-  const newReports = filtered.length;
-  const assigned   = filtered.filter((t) => t.status !== 'Pending').length;
-  const resolved   = filtered.filter((t) => t.status === 'Completed').length;
+    // Day (treat input as local date string YYYY-MM-DD, convert to UTC day boundaries)
+    if (mode === 'day') {
+      const [y, m, day] = customDay.split('-').map(Number);
+      const start = new Date(Date.UTC(y, m - 1, day, 0, 0, 0, 0));
+      const to = new Date(Date.UTC(y, m - 1, day, 23, 59, 59, 999));
+      return { from: start.toISOString(), to: to.toISOString() };
+    }
+
+    // Month (UTC month boundaries)
+    if (mode === 'month') {
+      const start = new Date(Date.UTC(customMonthYear, customMonth - 1, 1, 0, 0, 0, 0));
+      const to = new Date(Date.UTC(customMonthYear, customMonth, 0, 23, 59, 59, 999));
+      return { from: start.toISOString(), to: to.toISOString() };
+    }
+
+    // Year (UTC year boundaries)
+    if (mode === 'year') {
+      const start = new Date(Date.UTC(customYear, 0, 1, 0, 0, 0, 0));
+      const to = new Date(Date.UTC(customYear, 11, 31, 23, 59, 59, 999));
+      return { from: start.toISOString(), to: to.toISOString() };
+    }
+
+    // Presets
+    // This Month
+    if (activePreset.days === 0) {
+      const start = new Date(Date.UTC(end.getUTCFullYear(), end.getUTCMonth(), 1, 0, 0, 0, 0));
+      return { from: start.toISOString(), to: end.toISOString() };
+    }
+
+    // This Year
+    if (activePreset.days === -1) {
+      const start = new Date(Date.UTC(end.getUTCFullYear(), 0, 1, 0, 0, 0, 0));
+      return { from: start.toISOString(), to: end.toISOString() };
+    }
+
+    // Last N days (inclusive): from start-of-day (UTC) N-1 days ago to end-of-today (UTC)
+    const to = endOfUtcDay(end);
+    const start = startOfUtcDay(new Date(to));
+    start.setUTCDate(start.getUTCDate() - Math.max(0, activePreset.days - 1));
+
+    return { from: start.toISOString(), to: to.toISOString() };
+  }, [mode, customDay, customMonth, customMonthYear, customYear, activePreset]);
+
+  const [pipeline, setPipeline] = useState<{ newReports: number; assigned: number; resolved: number } | null>(null);
+
+  useEffect(() => {
+    let mounted = true;
+    technicianApi
+      .getTicketPipeline(range)
+      .then((data) => {
+        if (mounted) setPipeline(data);
+      })
+      .catch(console.error);
+    return () => {
+      mounted = false;
+    };
+  }, [range.from, range.to]);
+
+  const newReports = pipeline?.newReports ?? 0;
+  const assigned   = pipeline?.assigned ?? 0;
+  const resolved   = pipeline?.resolved ?? 0;
   const maxVal     = Math.max(newReports, 1);
 
   const pipelines = [

@@ -1,0 +1,64 @@
+import Report from '../models/Report.js'
+
+const TECH_STATUSES = {
+  pending: 'pending',
+  approved: 'approved',
+  processing: 'processing',
+  fixed: 'fixed',
+}
+
+const normalizeStatus = (status) => {
+  if (!status) return undefined
+  const s = String(status).trim().toLowerCase()
+  const allowed = new Set(Object.values(TECH_STATUSES))
+  return allowed.has(s) ? s : undefined
+}
+
+const getStats = async ({ user }) => {
+  // Map to UI cards (do not change FE layout):
+  // - Pending Approval -> pending
+  // - Approved to Fix  -> approved
+  // - In Progress      -> processing
+  // - Completed        -> fixed
+  const [pending, approved, processing, fixed] = await Promise.all([
+    Report.countDocuments({ status: TECH_STATUSES.pending }),
+    Report.countDocuments({ status: TECH_STATUSES.approved }),
+    Report.countDocuments({ status: TECH_STATUSES.processing }),
+    Report.countDocuments({ status: TECH_STATUSES.fixed }),
+  ])
+
+  return {
+    pending,
+    approved,
+    inProgress: processing,
+    completed: fixed,
+  }
+}
+
+const getTickets = async ({ user, status }) => {
+  const normalized = normalizeStatus(status)
+
+  const filter = {}
+  if (normalized) filter.status = normalized
+
+  // Technician sees:
+  // - approved tickets (unassigned or assigned to them)
+  // - processing tickets assigned to them
+  // - fixed tickets assigned to them
+  // - pending tickets can be shown for overview (not assigned)
+  // NOTE: keep permissive to match current UI expectations.
+  // We do not hard-limit by assigned_to for pending/approved.
+  const reports = await Report.find(filter)
+    .populate('user_id', 'displayName username email')
+    .populate('equipment_id', 'name category')
+    .populate('room_id', 'name type')
+    .populate('assigned_to', 'displayName username')
+    .populate('processed_by', 'displayName username')
+
+  return reports
+}
+
+export const technicianTicketService = {
+  getStats,
+  getTickets,
+}

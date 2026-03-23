@@ -1,6 +1,55 @@
-import React from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
+import { technicianApi } from '@/services/api/technicianApi';
+
+type DeviceHealthStats = {
+  totalAssets: number;
+  healthy: number;
+  maintenance: number;
+  faulty: number;
+  unknown?: number;
+};
+
+const clampPct = (n: number) => Math.max(0, Math.min(100, n));
 
 const DeviceHealth: React.FC = () => {
+  const [data, setData] = useState<DeviceHealthStats | null>(null);
+
+  useEffect(() => {
+    technicianApi
+      .getDeviceHealth()
+      .then(setData)
+      .catch(console.error);
+  }, []);
+
+  const { total, healthyPct, maintenancePct, faultyPct } = useMemo(() => {
+    const total = data?.totalAssets ?? 0;
+    const healthy = data?.healthy ?? 0;
+    const maintenance = data?.maintenance ?? 0;
+    const faulty = data?.faulty ?? 0;
+
+    if (total <= 0) {
+      return { total: 0, healthyPct: 0, maintenancePct: 0, faultyPct: 0 };
+    }
+
+    const healthyPct = clampPct((healthy / total) * 100);
+    const maintenancePct = clampPct((maintenance / total) * 100);
+    const faultyPct = clampPct((faulty / total) * 100);
+
+    return { total, healthyPct, maintenancePct, faultyPct };
+  }, [data]);
+
+  // Donut math
+  const CIRC = 251.2; // same as existing SVG
+  const healthyLen = (healthyPct / 100) * CIRC;
+  const maintenanceLen = (maintenancePct / 100) * CIRC;
+  const faultyLen = (faultyPct / 100) * CIRC;
+
+  // Each segment is drawn starting from the same point; we place them by shifting dashoffset.
+  // Offset is expressed in stroke length from the start of the circle.
+  const healthyOffset = CIRC - healthyLen;
+  const maintenanceOffset = CIRC - (healthyLen + maintenanceLen);
+  const faultyOffset = CIRC - (healthyLen + maintenanceLen + faultyLen);
+
   return (
     <div className="dashboard-card p-8 rounded-3xl flex flex-col h-full">
       <h3 className="text-sm font-bold text-[#1A2B56] dark:text-white uppercase tracking-widest mb-10">
@@ -17,33 +66,33 @@ const DeviceHealth: React.FC = () => {
               cx="50" cy="50" fill="transparent" r="40"
               stroke="currentColor" strokeWidth="10"
             />
-            {/* 80% Healthy — primary */}
+            {/* Healthy — primary */}
             <circle
               className="text-[#1A2B56]"
               cx="50" cy="50" fill="transparent" r="40"
               stroke="currentColor"
-              strokeDasharray="251.2"
-              strokeDashoffset="50.2"
+              strokeDasharray={CIRC}
+              strokeDashoffset={healthyOffset}
               strokeLinecap="round"
               strokeWidth="10"
             />
-            {/* 15% Maintenance — blue-accent */}
+            {/* Maintenance — blue-accent */}
             <circle
               className="text-blue-400"
               cx="50" cy="50" fill="transparent" r="40"
               stroke="currentColor"
-              strokeDasharray="251.2"
-              strokeDashoffset="213.5"
+              strokeDasharray={CIRC}
+              strokeDashoffset={maintenanceOffset}
               strokeLinecap="round"
               strokeWidth="10"
             />
-            {/* 5% Faulty — blue-light */}
+            {/* Faulty — blue-light */}
             <circle
               className="text-blue-200"
               cx="50" cy="50" fill="transparent" r="40"
               stroke="currentColor"
-              strokeDasharray="251.2"
-              strokeDashoffset="238.6"
+              strokeDasharray={CIRC}
+              strokeDashoffset={faultyOffset}
               strokeLinecap="round"
               strokeWidth="10"
             />
@@ -51,7 +100,7 @@ const DeviceHealth: React.FC = () => {
           {/* Center text */}
           <div className="absolute inset-0 flex flex-col items-center justify-center">
             <span className="text-3xl font-extrabold text-[#1A2B56] dark:text-white leading-none">
-              1,248
+              {total.toLocaleString()}
             </span>
             <span className="text-[8px] font-bold text-slate-400 uppercase tracking-[0.2em] mt-1">
               Assets
@@ -63,15 +112,15 @@ const DeviceHealth: React.FC = () => {
         <div className="grid grid-cols-2 gap-x-6 gap-y-2 w-full max-w-xs mx-auto">
           <div className="flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-[#1A2B56]"></span>
-            <span className="text-[10px] font-bold text-slate-600 dark:text-slate-400">80% Healthy</span>
+            <span className="text-[10px] font-bold text-slate-600 dark:text-slate-400">{Math.round(healthyPct)}% Healthy</span>
           </div>
           <div className="flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-blue-400"></span>
-            <span className="text-[10px] font-bold text-slate-600 dark:text-slate-400">15% Maint.</span>
+            <span className="text-[10px] font-bold text-slate-600 dark:text-slate-400">{Math.round(maintenancePct)}% Maint.</span>
           </div>
           <div className="flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-blue-200"></span>
-            <span className="text-[10px] font-bold text-slate-600 dark:text-slate-400">5% Faulty</span>
+            <span className="text-[10px] font-bold text-slate-600 dark:text-slate-400">{Math.round(faultyPct)}% Faulty</span>
           </div>
         </div>
       </div>
