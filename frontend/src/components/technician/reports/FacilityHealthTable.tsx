@@ -1,11 +1,11 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import {
-  getFacilityRows,
   type FacilityRow as FacilityRowData,
   type DateRangeDays,
   getCriticalityStyle,
   getTrendIcon,
 } from '@/data/technician/mockReports';
+import { technicianApi } from '@/services/api/technicianApi';
 
 interface Props { dateRangeDays: DateRangeDays }
 
@@ -56,9 +56,60 @@ const FacilityRow: React.FC<{ row: FacilityRowData; isLast: boolean }> = ({ row,
   );
 };
 
+const criticalityFromPct = (pct: number): FacilityRowData['criticality'] => {
+  if (pct < 85) return 'High';
+  if (pct < 95) return 'Medium';
+  return 'Normal';
+};
+
 // ── Section component ─────────────────────────────────────────────────────────
-const FacilityHealthTable: React.FC<Props> = ({ dateRangeDays }) => {
-  const rows = getFacilityRows(dateRangeDays);
+const FacilityHealthTable: React.FC<Props> = () => {
+  const { items, loading } = useEquipmentForFacilityHealth();
+
+  const rows = useMemo<FacilityRowData[]>(() => {
+    // Group by category
+    const byCat = new Map<string, { total: number; good: number }>();
+
+    for (const e of items) {
+      const cat = String(e?.category || 'Other');
+      const entry = byCat.get(cat) || { total: 0, good: 0 };
+      entry.total += 1;
+      if (String(e?.status).toLowerCase() === 'good') entry.good += 1;
+      byCat.set(cat, entry);
+    }
+
+    const list = Array.from(byCat.entries())
+      .map(([cat, v]) => {
+        const pct = v.total > 0 ? Math.round((v.good / v.total) * 100) : 0;
+        return {
+          assetType: cat,
+          unitLabel: `${v.total} Units`,
+          operationalPct: pct,
+          barColor: pct >= 95 ? 'bg-emerald-500' : pct >= 90 ? 'bg-blue-500' : 'bg-amber-400',
+          criticality: criticalityFromPct(pct),
+          // not available in DB; keep a neutral placeholder string
+          mtbf: '—',
+          trend: 'flat',
+        } as FacilityRowData;
+      })
+      .sort((a, b) => b.operationalPct - a.operationalPct)
+      .slice(0, 3);
+
+    // Keep UI stable: always 3 rows
+    while (list.length < 3) {
+      list.push({
+        assetType: '—',
+        unitLabel: '0 Units',
+        operationalPct: 0,
+        barColor: 'bg-slate-200',
+        criticality: 'Normal',
+        mtbf: '—',
+        trend: 'flat',
+      });
+    }
+
+    return list;
+  }, [items]);
 
   return (
     <section className="dashboard-card rounded-3xl overflow-hidden">
@@ -83,13 +134,23 @@ const FacilityHealthTable: React.FC<Props> = ({ dateRangeDays }) => {
             </tr>
           </thead>
           <tbody className="text-sm">
-            {rows.map((row, i) => (
-              <FacilityRow
-                key={row.assetType}
-                row={row}
-                isLast={i === rows.length - 1}
-              />
-            ))}
+            {loading
+              ? [...Array(3)].map((_, i) => (
+                  <tr key={i} className="border-b border-white/10">
+                    {[...Array(5)].map((_, j) => (
+                      <td key={j} className="px-8 py-6">
+                        <div className="h-4 bg-white/30 rounded-lg animate-pulse" />
+                      </td>
+                    ))}
+                  </tr>
+                ))
+              : rows.map((row, i) => (
+                  <FacilityRow
+                    key={`${row.assetType}-${i}`}
+                    row={row}
+                    isLast={i === rows.length - 1}
+                  />
+                ))}
           </tbody>
         </table>
       </div>
@@ -98,5 +159,36 @@ const FacilityHealthTable: React.FC<Props> = ({ dateRangeDays }) => {
 };
 
 export default FacilityHealthTable;
+
+// ── Local hook (kept nearby to avoid adding more files) ──────────────────────
+function useEquipmentForFacilityHealth() {
+  const [items, setItems] = React.useState<any[]>([]);
+  const [loading, setLoading] = React.useState(true);
+
+  React.useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        setLoading(true);
+        // reuse existing public endpoint /api/equipments
+        const { data } = await technicianApiRawGetEquipments();
+        if (!mounted) return;
+        setItems(Array.isArray(data) ? data : []);
+      } finally {
+        if (!mounted) return;
+        setLoading(false);
+      }
+    })();
+    return () => { mounted = false; };
+  }, []);
+
+  return { items, loading };
+}
+
+async function technicianApiRawGetEquipments() {
+  // We intentionally reuse the app axios instance to keep auth/cookies consistent.
+  const api = (await import('@/lib/axios')).default;
+  return api.get('/equipments');
+}
 
 
