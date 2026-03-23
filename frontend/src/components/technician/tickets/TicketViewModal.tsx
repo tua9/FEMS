@@ -1,5 +1,6 @@
 import React from 'react';
-import { Ticket, getPriorityStyle, getStatusDisplay } from '@/data/technician/mockTickets';
+import type { Ticket } from '@/data/technician/mockTickets';
+import { getPriorityStyle, getStatusDisplay } from '@/data/technician/mockTickets';
 import {
   MODAL_OVERLAY, MODAL_CARD, CLOSE_BTN,
   BTN_SECONDARY, SECTION_LABEL, INFO_CARD, CHIP,
@@ -50,7 +51,7 @@ const TicketViewModal: React.FC<Props> = ({
               <span className="material-symbols-outlined text-white text-xl">receipt_long</span>
             </div>
             <div>
-              <h2 className="text-base font-extrabold text-[#1A2B56]">Ticket #{ticket.id}</h2>
+              <h2 className="text-base font-extrabold text-[#1A2B56]">Ticket #{ticket.code || ticket.id.slice(-6).toUpperCase()}</h2>
               <p className="text-xs text-slate-400 mt-0.5">Maintenance request details</p>
             </div>
           </div>

@@ -209,7 +209,7 @@ const TicketCenter: React.FC = () => {
   // Move a ticket to a new status in local state
   const changeStatus = (id: string, newStatus: TicketStatus) => {
     setTickets((prev) =>
-      prev.map((t) => (t.id === id ? { ...t, status: newStatus } : t))
+      prev.map((t) => (t.id === id || t.code === id ? { ...t, status: newStatus } : t))
     );
   };
 
@@ -248,7 +248,11 @@ const TicketCenter: React.FC = () => {
     const reporterName = r.user_id?.displayName || r.user_id?.username || 'Unknown';
 
     return {
-      id: String(r._id).slice(-6).toUpperCase(),
+      id: String(r._id),
+      code: r.code || String(r._id).slice(-6).toUpperCase(),
+      title: equipmentName,
+      category: equipmentType,
+      description: r.description || '',
       equipment: equipmentName,
       equipmentType,
       room,

@@ -1,6 +1,10 @@
 export interface Task {
   /** 6-char display id derived from Mongo ObjectId */
   id: string;
+  /** Business serial code, e.g. RP... */
+  code?: string;
+  title: string;
+  category: string;
 
   /** Equipment name (from Report.equipment_id.name) */
   equipment: string;
@@ -14,6 +18,7 @@ export interface Task {
 
   /** Issue description (from Report.description) */
   issue: string;
+  description: string;
 
   priority: 'Low' | 'Medium' | 'High' | 'Urgent';
   status: 'Pending' | 'In Progress' | 'Completed' | 'Cancelled';

@@ -4,6 +4,10 @@ export type TicketPriority = 'High' | 'Medium' | 'Low' | 'Urgent';
 
 export interface Ticket {
   id: string;
+  code?: string;
+  title?: string;
+  category?: string;
+  description?: string;
   equipment: string;
   equipmentType: string;
   room: string;
