@@ -29,9 +29,9 @@ const autoCancelExpiredRequests = async () => {
         user_id: req.user_id,
         type: 'approval',
         title: 'Borrow Request Auto-Cancelled',
-        message: `Your request for ${req.equipment_id ? 'equipment' : 'room'} was automatically cancelled because it wasn't picked up by 17:00.`,
-        to: '/student/history',
-        state: { tab: 'borrow' }
+        message: `Your borrow request #${req._id.toString().slice(-6).toUpperCase()} for ${req.equipment_id ? 'equipment' : 'room'} was automatically cancelled because it wasn't picked up by 17:00.`,
+        to: '/student/notifications',
+        state: { type: 'borrow', id: req._id, tab: 'borrow' }
       }).catch(err => console.error('Failed to create notification:', err))
     }
   }
@@ -258,9 +258,9 @@ const approveBorrowRequest = async (id, approverId, decisionNote) => {
     user_id: request.user_id,
     type: 'approval',
     title: 'Borrow Request Approved',
-    message: `Your request for ${request.equipment_id ? 'equipment' : 'room'} has been approved.`,
-    to: '/student/history',
-    state: { tab: 'borrow' }
+    message: `Your borrow request #${request._id.toString().slice(-6).toUpperCase()} for ${request.equipment_id ? 'equipment' : 'room'} has been approved.`,
+    to: '/student/notifications',
+    state: { type: 'borrow', id: request._id, tab: 'borrow' }
   }).catch(err => console.error('Failed to create notification:', err))
 
   return { message: 'Borrow request approved and asset locked', request }
@@ -422,9 +422,9 @@ const rejectBorrowRequest = async (id, approverId, reason) => {
     user_id: request.user_id,
     type: 'approval',
     title: 'Borrow Request Rejected',
-    message: `Your request for ${request.equipment_id ? 'equipment' : 'room'} has been rejected. ${reason ? 'Reason: ' + reason : ''}`,
-    to: '/student/history',
-    state: { tab: 'borrow' }
+    message: `Your borrow request #${request._id.toString().slice(-6).toUpperCase()} for ${request.equipment_id ? 'equipment' : 'room'} has been rejected. ${reason ? 'Reason: ' + reason : ''}`,
+    to: '/student/notifications',
+    state: { type: 'borrow', id: request._id, tab: 'borrow' }
   }).catch(err => console.error('Failed to create notification:', err))
 
   return { message: 'Borrow request rejected', request }

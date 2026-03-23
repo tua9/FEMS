@@ -125,17 +125,18 @@ const updateReportStatus = async (id, status, approverId, technicianId) => {
 
   // Notify User
   let notificationTitle = 'Report Update'
-  let notificationMessage = `Your report status has been updated to ${status}.`
-  
+  const shortId = report._id.toString().slice(-6).toUpperCase()
   if (status === 'fixed') {
     notificationTitle = 'Issue Resolved'
-    notificationMessage = `Your reported issue with ${report.equipment_id ? 'equipment' : 'room'} has been resolved.`
+    notificationMessage = `Your reported issue #${shortId} with ${report.equipment_id ? 'equipment' : 'room'} has been resolved.`
   } else if (status === 'rejected') {
     notificationTitle = 'Report Rejected'
-    notificationMessage = `Your report for ${report.equipment_id ? 'equipment' : 'room'} was rejected.`
+    notificationMessage = `Your report #${shortId} for ${report.equipment_id ? 'equipment' : 'room'} was rejected.`
   } else if (status === 'processing') {
     notificationTitle = 'Repair in Progress'
-    notificationMessage = `Your report is now being processed by our technician.`
+    notificationMessage = `Your report #${shortId} is now being processed by our technician.`
+  } else {
+    notificationMessage = `Your report #${shortId} status has been updated to ${status}.`
   }
 
   await notificationService.createNotification({
@@ -143,8 +144,8 @@ const updateReportStatus = async (id, status, approverId, technicianId) => {
     type: 'report',
     title: notificationTitle,
     message: notificationMessage,
-    to: '/student/history', // Assuming shared history or similar
-    state: { tab: 'report' }
+    to: '/student/notifications',
+    state: { type: 'report', id: report._id, tab: 'report' }
   }).catch(err => console.error('Failed to create notification:', err))
 
   const populated = await populateReport(Report.findById(id))

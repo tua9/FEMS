@@ -11,7 +11,7 @@ import ReportIssuePage from "@/pages/shared/ReportIssuePage";
 import AcademicCalendar from "@/pages/lecturer/AcademicCalendar";
 import ProfilePage from "@/pages/lecturer/Profile";
 import ChangePasswordPage from "@/pages/shared/ChangePasswordPage";
-// import LecturerNotifications from "@/pages/lecturer/LecturerNotifications";
+import NotificationsPage from "@/pages/shared/NotificationsPage";
 
 const LecturerRoutes = () => (
   <Route element={<ProtectedRoute allowRoles={["lecturer"]} />}>
@@ -26,7 +26,7 @@ const LecturerRoutes = () => (
       <Route path="/lecturer/calendar" element={<AcademicCalendar />} />
       <Route path="/lecturer/profile" element={<ProfilePage />} />
       <Route path="/lecturer/change-password" element={<ChangePasswordPage />} />
-      {/* <Route path="/lecturer/notifications" element={<LecturerNotifications />} /> */}
+      <Route path="/lecturer/notifications" element={<NotificationsPage />} />
     </Route>
   </Route>
 );

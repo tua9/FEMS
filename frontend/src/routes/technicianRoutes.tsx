@@ -9,7 +9,7 @@ import TechnicianHandover from "@/pages/technician/HandoverManagement";
 import TechnicianReports from "@/pages/technician/PerformanceInsights";
 import TechnicianProfile from "@/pages/technician/Profile";
 import ChangePasswordPage from "@/pages/shared/ChangePasswordPage";
-import TechnicianNotifications from "@/pages/technician/TechnicianNotifications";
+import NotificationsPage from "@/pages/shared/NotificationsPage";
 
 const TechnicianRoutes = () => (
   <Route element={<ProtectedRoute allowRoles={["technician"]} />}>
@@ -22,7 +22,7 @@ const TechnicianRoutes = () => (
       <Route path="/technician/reports" element={<TechnicianReports />} />
       <Route path="/technician/profile" element={<TechnicianProfile />} />
       <Route path="/technician/change-password" element={<ChangePasswordPage />} />
-      <Route path="/technician/notifications" element={<TechnicianNotifications />} />
+      <Route path="/technician/notifications" element={<NotificationsPage />} />
     </Route>
   </Route>
 );

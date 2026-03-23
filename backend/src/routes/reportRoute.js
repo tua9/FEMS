@@ -2,6 +2,7 @@ import express from 'express'
 import {
   createReport,
   getAllReports,
+  getReportById,
   getPersonalReports,
   updateReportStatus,
   cancelReport,
@@ -19,6 +20,7 @@ router.get('/history', protectedRoute, getPersonalReports)
 router.delete('/history/:id', protectedRoute, cancelReport)
 
 router.get('/', protectedRoute, restrictTo('admin', 'technician'), getAllReports)
+router.get('/:id', protectedRoute, getReportById)
 router.patch(
   '/:id/status',
   protectedRoute,

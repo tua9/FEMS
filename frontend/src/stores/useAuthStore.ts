@@ -7,6 +7,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   accessToken: null,
   user: null,
   loading: false,
+  isInitialized: false,
 
   setAccessToken: (accessToken) => {
     set({ accessToken });
@@ -77,7 +78,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     } catch {
       get().clearState();
     } finally {
-      set({ loading: false });
+      set({ loading: false, isInitialized: true });
     }
   },
   

@@ -3,7 +3,7 @@
  * Dùng chung cho tất cả role.
  */
 import React from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation } from "react-router";
 import { motion } from "framer-motion";
 import type { NavLinkItem } from "./types";
 

@@ -1,10 +1,11 @@
 import { ArrowLeft, Bell, Check, CheckCheck, Filter, Trash2, Loader2 } from 'lucide-react';
 import React, { useEffect, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router';
 import { useNotificationStore } from '@/stores/useNotificationStore';
 import { PageHeader } from '@/components/shared/PageHeader';
 import type { Notification, NotificationType } from '@/types/notification';
 import { formatDistanceToNow } from 'date-fns';
+import NotificationDetailModal from '@/components/shared/notifications/NotificationDetailModal';
 
 // ─── Type config ──────────────────────────────────────────────────────────────
 
@@ -32,24 +33,34 @@ interface RowProps {
     notification: Notification;
     onRead: (id: string) => void;
     onDelete: (id: string) => void;
+    onOpenDetail: (type: 'borrow' | 'report', id: string) => void;
+    isHighlighted?: boolean;
 }
 
-const NotificationRow: React.FC<RowProps> = ({ notification, onRead, onDelete }) => {
+const NotificationRow: React.FC<RowProps> = ({ notification, onRead, onDelete, onOpenDetail, isHighlighted }) => {
     const navigate = useNavigate();
     const cfg = TYPE_CONFIG[notification.type] || TYPE_CONFIG.general;
+
+    // Notification state may contain { type: 'borrow'|'report', id: '...' }
+    const entityState = notification.state as { type?: 'borrow' | 'report'; id?: string } | null;
+    const hasDetail   = !!(entityState?.type && entityState?.id);
 
     const handleClick = () => {
         if (!notification.read) {
             onRead(notification._id);
         }
-        if (notification.to) {
+        if (hasDetail) {
+            // Open inline modal
+            onOpenDetail(entityState!.type!, entityState!.id!);
+        } else if (notification.to) {
             navigate(notification.to, { state: notification.state ?? {} });
         }
     };
 
     return (
         <div
-            className={`flex items-start gap-4 p-5 border-b border-[#1E2B58]/[0.05] dark:border-white/[0.05] last:border-0 group transition-colors ${
+            className={`flex items-start gap-4 p-5 border-b border-[#1E2B58]/[0.05] dark:border-white/[0.05] last:border-0 group transition-all duration-500 ${
+                isHighlighted ? 'ring-2 ring-blue-500 ring-inset bg-blue-50 dark:bg-blue-900/30 scale-[1.01] shadow-lg z-10' :
                 !notification.read ? 'bg-blue-50/40 dark:bg-slate-700/20' : 'hover:bg-[#1E2B58]/[0.02] dark:hover:bg-white/[0.02]'
             }`}
         >
@@ -87,6 +98,11 @@ const NotificationRow: React.FC<RowProps> = ({ notification, onRead, onDelete })
                     <span className={`text-[0.625rem] font-black uppercase tracking-wide px-2 py-0.5 rounded-lg ${cfg.bg} ${cfg.color}`}>
                         {cfg.label}
                     </span>
+                    {hasDetail && (
+                        <span className="text-[0.625rem] font-bold uppercase tracking-wide px-2 py-0.5 rounded-lg bg-[#1E2B58]/10 text-[#1E2B58]/60 dark:bg-white/10 dark:text-white/50">
+                            Tap to view detail
+                        </span>
+                    )}
                     <span className="text-[0.75rem] text-slate-400 dark:text-slate-500">
                         {formatDistanceToNow(new Date(notification.createdAt), { addSuffix: true })}
                     </span>
@@ -133,12 +149,25 @@ const NotificationsPage: React.FC = () => {
         clearAll 
     } = useNotificationStore();
 
-    const [activeFilter, setActiveFilter]     = useState<'all' | NotificationType>('all');
+    const [activeFilter, setActiveFilter] = useState<'all' | NotificationType>('all');
     const [showUnreadOnly, setShowUnreadOnly] = useState(false);
+    const [highlightId, setHighlightId] = useState<string | null>(null);
+    const location = useLocation();
+
+    // Detail modal state
+    const [detailModal, setDetailModal] = useState<{ type: 'borrow' | 'report'; id: string } | null>(null);
 
     useEffect(() => {
         fetchNotifications();
-    }, [fetchNotifications]);
+        
+        // Check for highlightId in state (passed from NavNotificationBell)
+        if (location.state?.highlightId) {
+            setHighlightId(location.state.highlightId);
+            const timer = setTimeout(() => setHighlightId(null), 3000);
+            window.history.replaceState({}, document.title);
+            return () => clearTimeout(timer);
+        }
+    }, [fetchNotifications, location.state]);
 
     const filtered = useMemo(() => {
         return notifications.filter(n => {
@@ -250,6 +279,8 @@ const NotificationsPage: React.FC = () => {
                                 notification={n}
                                 onRead={markAsRead}
                                 onDelete={deleteNotification}
+                                onOpenDetail={(type, id) => setDetailModal({ type, id })}
+                                isHighlighted={n._id === highlightId}
                             />
                         ))
                     ) : (
@@ -286,6 +317,15 @@ const NotificationsPage: React.FC = () => {
                     </p>
                 )}
             </main>
+
+            {/* Detail Modal */}
+            {detailModal && (
+                <NotificationDetailModal
+                    entityType={detailModal.type}
+                    entityId={detailModal.id}
+                    onClose={() => setDetailModal(null)}
+                />
+            )}
         </div>
     );
 };
