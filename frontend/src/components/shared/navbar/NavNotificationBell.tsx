@@ -6,7 +6,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { Bell, CheckCheck, Loader2 } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { Link } from "react-router";
 import { useAuthStore } from "@/stores/useAuthStore";
 import { useNotificationStore } from "@/stores/useNotificationStore";
 import type { Notification, NotificationType } from "@/types/notification";
@@ -65,26 +65,19 @@ const NotificationItem: React.FC<ItemProps> = ({
   onClose,
   role,
 }) => {
-  const navigate = useNavigate();
   const { icon, bg, color } = TYPE_CONFIG[notification.type] || TYPE_CONFIG.general;
 
-  const handleClick = () => {
-    if (!notification.read) {
-        onRead(notification._id);
-    }
-    onClose();
-    if (notification.to) {
-        navigate(notification.to, { state: notification.state ?? {} });
-    } else {
-        navigate(`/${role}/notifications`);
-    }
-  };
-
   return (
-    <button
-      type="button"
-      onClick={handleClick}
-      className={`w-full px-5 py-4 text-left transition-colors hover:bg-black/5 dark:hover:bg-white/10 border-b border-black/8 dark:border-white/12 last:border-0 group ${
+    <Link
+      to={`/${role}/notifications`}
+      state={{ highlightId: notification._id }}
+      onClick={() => {
+        if (!notification.read) {
+          onRead(notification._id);
+        }
+        onClose();
+      }}
+      className={`block w-full px-5 py-4 text-left transition-colors hover:bg-black/5 dark:hover:bg-white/10 border-b border-black/8 dark:border-white/12 last:border-0 group ${
         !notification.read ? "bg-blue-500/6 dark:bg-blue-400/10" : ""
       }`}
     >
@@ -122,7 +115,7 @@ const NotificationItem: React.FC<ItemProps> = ({
           </span>
         </div>
       </div>
-    </button>
+    </Link>
   );
 };
 
@@ -161,9 +154,8 @@ const NavNotificationBell: React.FC = () => {
   const buttonRef = useRef<HTMLButtonElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const { user } = useAuthStore();
-  const navigate = useNavigate();
 
-  const role = user?.role ?? "student";
+  const role = user?.role?.toLowerCase() ?? "student";
 
   useEffect(() => {
     fetchNotifications();
@@ -337,15 +329,13 @@ const NavNotificationBell: React.FC = () => {
                 {/* Footer */}
                 {notifications.length > 0 && (
                   <div className="border-t border-black/10 bg-black/3 px-5 py-3.5 text-center dark:border-white/15 dark:bg-white/5">
-                    <button
-                      onClick={() => {
-                        setIsOpen(false);
-                        navigate(`/${role}/notifications`);
-                      }}
-                      className="text-[0.8125rem] font-bold text-[#1E2B58] transition-colors hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300"
+                    <Link
+                      to={`/${role}/notifications`}
+                      onClick={() => setIsOpen(false)}
+                      className="inline-block text-[0.8125rem] font-bold text-[#1E2B58] transition-colors hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300"
                     >
                       View All Notifications →
-                    </button>
+                    </Link>
                   </div>
                 )}
               </motion.div>

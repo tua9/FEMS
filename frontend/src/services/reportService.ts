@@ -27,4 +27,9 @@ export const reportService = {
     return res.data.report || res.data;
   },
 
+  getById: async (id: string): Promise<Report> => {
+    const res = await api.get(`/tickets/${id}`);
+    return res.data;
+  },
+
 };

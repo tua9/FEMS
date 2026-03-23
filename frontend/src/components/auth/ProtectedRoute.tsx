@@ -6,10 +6,10 @@ type Props = {
 };
 
 const ProtectedRoute = ({ allowRoles }: Props) => {
-  const { user, loading } = useAuthStore();
+  const { user, isInitialized } = useAuthStore();
 
-  // Đang chờ refreshToken hoàn thành — chưa biết user là ai
-  if (loading) {
+  // refreshToken() hasn't finished yet — hold here, do NOT redirect
+  if (!isInitialized) {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <div className="h-10 w-10 animate-spin rounded-full border-b-2 border-[#1E2B58] dark:border-blue-400" />

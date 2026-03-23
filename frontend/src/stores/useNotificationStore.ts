@@ -13,6 +13,12 @@ interface NotificationStore {
   markAllAsRead: () => Promise<void>;
   deleteNotification: (id: string) => Promise<void>;
   clearAll: () => Promise<void>;
+  
+  // Modal state
+  isDetailModalOpen: boolean;
+  selectedEntity: { type: 'borrow' | 'report'; id: string } | null;
+  openDetailModal: (type: 'borrow' | 'report', id: string) => void;
+  closeDetailModal: () => void;
 }
 
 export const useNotificationStore = create<NotificationStore>((set) => ({
@@ -82,4 +88,9 @@ export const useNotificationStore = create<NotificationStore>((set) => ({
       set({ error: error?.response?.data?.message || "Failed to clear notifications" });
     }
   },
+
+  isDetailModalOpen: false,
+  selectedEntity: null,
+  openDetailModal: (type, id) => set({ isDetailModalOpen: true, selectedEntity: { type, id } }),
+  closeDetailModal: () => set({ isDetailModalOpen: false, selectedEntity: null }),
 }));

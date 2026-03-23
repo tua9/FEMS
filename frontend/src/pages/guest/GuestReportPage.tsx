@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { CheckCircle2, X, ArrowRight, ArrowLeft } from "lucide-react";
+import { CheckCircle2, X, ArrowRight } from "lucide-react";
 
 import DarkModeToggle from "@/components/shared/navbar/DarkModeToggle";
 import Footer from "@/components/common/Footer";
@@ -100,16 +100,15 @@ const GuestReportPage: React.FC = () => {
           </span>
         </div>
 
-        {/* Right side: dark mode toggle + back to login */}
-        <div className="flex items-center gap-4">
+        {/* Right side: dark mode toggle + login button */}
+        <div className="flex items-center gap-3">
           <DarkModeToggle />
           <button
             type="button"
             onClick={() => navigate("/login")}
-            className="flex items-center gap-1.5 text-[0.85rem] font-extrabold text-slate-600 transition hover:text-slate-900 dark:text-slate-200 dark:hover:text-white"
+            className="flex items-center gap-1.5 rounded-full bg-[#1E2B58] px-5 py-2 text-[0.8rem] font-bold text-white shadow-md shadow-[#1E2B58]/20 transition hover:bg-[#151f40] hover:scale-[1.03] active:scale-95"
           >
-            <ArrowLeft className="h-4 w-4" />
-            Back to Login
+            Login
           </button>
         </div>
       </header>
@@ -169,11 +168,11 @@ const GuestReportPage: React.FC = () => {
               </div>
             </div>
             <div className="flex flex-col gap-3">
-              <button
+                <button
                 onClick={() => navigate("/login")}
                 className="flex w-full items-center justify-center gap-2 rounded-[1.25rem] bg-[#1E2B58] py-3.5 text-sm font-bold text-white"
               >
-                Back to Login <ArrowRight className="h-4 w-4" />
+                Login <ArrowRight className="h-4 w-4" />
               </button>
               <button
                 onClick={() => setShowSuccess(false)}

@@ -33,7 +33,7 @@ api.interceptors.response.use(
     }
 
     // 401 / 403 → logout luôn, nhưng tránh chuyển hướng nếu đang ở trang login hoặc trang public
-    const publicPaths = ["/login", "/report-issue"];
+    const publicPaths = ["/", "/login", "/report-issue", "/forgot-password"];
     if (error.response?.status === 401 || error.response?.status === 403) {
       if (!publicPaths.includes(window.location.pathname)) {
         await authService.signOut();

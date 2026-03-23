@@ -1,5 +1,4 @@
-import { useNavigate } from "react-router-dom";
-import { useEffect } from "react";
+import { Navigate } from "react-router-dom";
 import { useAuthStore } from "../../stores/useAuthStore";
 
 const ROLE_HOME: Record<string, string> = {
@@ -10,16 +9,13 @@ const ROLE_HOME: Record<string, string> = {
 };
 
 const RoleRedirect = () => {
-  const navigate = useNavigate();
-  const { user } = useAuthStore();
-  const role = user?.role;
+  const { user, isInitialized } = useAuthStore();
 
-  useEffect(() => {
-    const target = role ? (ROLE_HOME[role] ?? "/login") : "/login";
-    navigate(target, { replace: true });
-  }, [role, navigate]);
+  // Wait until refreshToken() has finished before deciding where to send the user
+  if (!isInitialized) return null;
 
-  return null;
+  const target = user?.role ? (ROLE_HOME[user.role] ?? "/") : "/login";
+  return <Navigate to={target} replace />;
 };
 
 export default RoleRedirect;

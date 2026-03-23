@@ -8,7 +8,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { AnimatePresence, motion } from "framer-motion";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router";
 import { LogOut } from "lucide-react";
 import { useAuthStore } from "@/stores/useAuthStore";
 
