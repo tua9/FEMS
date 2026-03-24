@@ -6,8 +6,8 @@ import type { BorrowRequest } from "@/types/borrowRequest";
  */
 export const sortEquipmentByAvailability = (items: Equipment[]): Equipment[] => {
   return [...items].sort((a, b) => {
-    const aIsAvailable = a.status === "available" || a.available === true;
-    const bIsAvailable = b.status === "available" || b.available === true;
+    const aIsAvailable = (a.status === "good" || a.status === "available") && !a.borrowed_by;
+    const bIsAvailable = (b.status === "good" || b.status === "available") && !b.borrowed_by;
 
     if (aIsAvailable && !bIsAvailable) return -1;
     if (!aIsAvailable && bIsAvailable) return 1;
