@@ -20,6 +20,7 @@ import technicianRoutes from './routes/technicianRoute.js'
 import uploadRoutes from './routes/uploadRoute.js'
 import aiRoute from './routes/aiRoute.js'
 import { protectedRoute } from './middlewares/authMiddlewares.js'
+import { initCronJobs } from './jobs/cronJobs.js'
 
 const app = express()
 const PORT = env.PORT || 5001
@@ -58,6 +59,7 @@ app.use('/api/notifications', notificationRoutes)
 import { errorHandlingMiddleware } from './middlewares/errorMiddleware.js'
 
 connectDB().then(() => {
+  initCronJobs() // Initialize background jobs
   app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`)
   })

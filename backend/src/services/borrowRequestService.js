@@ -74,7 +74,7 @@ const autoCancelExpiredRequests = async () => {
         user_id: req.user_id,
         type: 'approval',
         title: 'Borrow Request Auto-Cancelled',
-        message: `Your borrow request #${req._id.toString().slice(-6).toUpperCase()} for ${req.equipment_id ? 'equipment' : 'room'} was automatically cancelled because it wasn't picked up by 17:00.`,
+        message: `Your borrow request #${req.code || req._id.toString().slice(-6).toUpperCase()} was automatically cancelled because it wasn't picked up by 5:00 PM today.`,
         to: '/student/notifications',
         state: { type: 'borrow', id: req._id, tab: 'borrow' }
       }).catch(err => console.error('Failed to create notification:', err))
@@ -376,11 +376,12 @@ const approveBorrowRequest = async (id, approverId, decisionNote) => {
   await request.save()
 
   // Notify User
+  const startDate = request.borrow_date.toISOString().split('T')[0]
   await notificationService.createNotification({
     user_id: request.user_id,
     type: 'approval',
     title: 'Borrow Request Approved',
-    message: `Your borrow request #${request._id.toString().slice(-6).toUpperCase()} for ${request.equipment_id ? 'equipment' : 'room'} has been approved.`,
+    message: `Your borrow request #${request.code || request._id.toString().slice(-6).toUpperCase()} has been approved. Please come and collect it before 5:00 PM on ${startDate}. If you do not collect it by that time, the request will be automatically canceled.`,
     to: '/student/notifications',
     state: { type: 'borrow', id: request._id, tab: 'borrow' }
   }).catch(err => console.error('Failed to create notification:', err))
@@ -415,6 +416,18 @@ const handoverBorrowRequest = async (id) => {
 
   request.status = 'handed_over'
   await request.save()
+
+  // Notify User
+  const equipmentCode = request.equipment_id?.code || request.equipment_id?.toString()?.slice(-6).toUpperCase()
+  await notificationService.createNotification({
+    user_id: request.user_id,
+    type: 'borrow',
+    title: 'Equipment Handed Over',
+    message: `You have borrowed equipment ${equipmentCode}. Please remember to return it on time.`,
+    to: '/student/notifications',
+    state: { type: 'borrow', id: request._id, tab: 'borrow' }
+  }).catch(err => console.error('Failed to create notification:', err))
+
   return { message: 'Equipment handed over', request }
 }
 
@@ -544,7 +557,7 @@ const rejectBorrowRequest = async (id, approverId, decisionNote) => {
     user_id: request.user_id,
     type: 'approval',
     title: 'Borrow Request Rejected',
-    message: `Your borrow request #${request._id.toString().slice(-6).toUpperCase()} for ${request.equipment_id ? 'equipment' : 'room'} has been rejected.${decisionNote ? ' Reason: ' + decisionNote : ''}`,
+    message: `Your borrow request #${request.code || request._id.toString().slice(-6).toUpperCase()} has been rejected. Reason: ${decisionNote || 'No reason provided'}.`,
     to: '/student/notifications',
     state: { type: 'borrow', id: request._id, tab: 'borrow' }
   }).catch(err => console.error('Failed to create notification:', err))
