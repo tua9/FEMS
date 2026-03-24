@@ -20,7 +20,7 @@ const assetSchema = new mongoose.Schema(
 
     status: {
       type: String,
-      enum: ['good', 'broken', 'maintenance'],
+      enum: ['good', 'broken', 'maintenance', 'reserved', 'in_use'],
       required: true,
       default: 'good',
     },
@@ -57,6 +57,11 @@ const assetSchema = new mongoose.Schema(
 assetSchema.pre('save', function () {
   if (this.status === 'broken' || this.status === 'maintenance') {
     this.available = false
+  } else if (this.status === 'in_use') {
+    this.available = false
+  } else if (this.status === 'reserved') {
+    // Reserved means approved but not yet handed over; still physically available in storage
+    this.available = true
   } else if (this.status === 'good') {
     this.available = !this.borrowed_by
   }

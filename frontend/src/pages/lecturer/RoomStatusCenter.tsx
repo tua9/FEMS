@@ -39,8 +39,8 @@ export const RoomStatusCenter: React.FC = () => {
         }
 
         if (status !== 'all-status') {
-            if (status === 'operational') params.deviceStatus = 'active';
-            if (status === 'maintenance') params.deviceStatus = 'faulty'; // Show rooms needing attention
+            if (status === 'operational') params.equipmentStatus = 'active';
+            if (status === 'maintenance') params.equipmentStatus = 'faulty'; // Show rooms needing attention
         }
 
         fetchStatusCenter(params);
@@ -60,10 +60,10 @@ export const RoomStatusCenter: React.FC = () => {
                 building: group.buildingName,
                 floorNumber: room.floor,
                 floor: getFloorDisplay(room.floor),
-                devices: room.displayDevices.map(d => ({
+                equipment: room.displayEquipment.map(d => ({
                     name: d.name,
                     status: d.status,
-                    icon: getIconForDevice(d.name)
+                    icon: getIconForEquipment(d.name)
                 }))
             }))
         }));
@@ -93,7 +93,7 @@ export const RoomStatusCenter: React.FC = () => {
     }
 
     // Helper to keep icons consistent with mock
-    function getIconForDevice(name: string): any {
+    function getIconForEquipment(name: string): any {
         const n = name.toLowerCase();
         if (n.includes('workstation') || n.includes('pc') || n.includes('monitor') || n.includes('tv')) return 'monitor';
         if (n.includes('climate') || n.includes('air') || n.includes('ventilation') || n.includes('cooling')) return 'thermostat';
@@ -129,7 +129,7 @@ export const RoomStatusCenter: React.FC = () => {
             state: {
                 prefillRoom: room.roomName,
                 prefillBuilding: room.buildingName,
-                hasIssue: room.devices.some((d: any) => d.status === 'MAINTENANCE' || d.status === 'FAULTY'),
+                hasIssue: room.equipment.some((d: any) => d.status === 'MAINTENANCE' || d.status === 'FAULTY'),
             },
         });
     };
@@ -205,7 +205,7 @@ export const RoomStatusCenter: React.FC = () => {
                                             roomName={room.roomName}
                                             roomType={room.roomType}
                                             statusText={room.statusText}
-                                            devices={room.devices}
+                                            equipment={room.equipment}
                                             onReportIssue={() => handleReportIssue(room)}
                                         />
                                     ))}

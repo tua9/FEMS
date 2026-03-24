@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
 import type { User } from '../../../types/user';
+import type { Report } from '../../../types/report';
 
 interface TechnicianAssignmentModalProps {
     isOpen: boolean;
     technicians: User[];
+    reports: Report[];
     onClose: () => void;
     onAssign: (technician: User) => void;
     equipmentName: string;
@@ -13,10 +15,20 @@ interface TechnicianAssignmentModalProps {
 const TechnicianAssignmentModal: React.FC<TechnicianAssignmentModalProps> = ({
     isOpen,
     technicians,
+    reports,
     onClose,
     onAssign,
     equipmentName
 }) => {
+    const getWorkloadCount = (techId: string) =>
+        reports.filter(
+            r => {
+                const assignedId = typeof r.assigned_to === 'object'
+                    ? (r.assigned_to as any)?._id
+                    : r.assigned_to;
+                return assignedId === techId && r.status === 'processing';
+            }
+        ).length;
     const [searchQuery, setSearchQuery] = useState('');
 
     if (!isOpen) return null;
@@ -99,10 +111,10 @@ const TechnicianAssignmentModal: React.FC<TechnicianAssignmentModalProps> = ({
                                         <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 mt-1 uppercase tracking-widest">{tech.email}</p>
                                     </div>
                                 </div>
-                                <div className={`px-4 py-1.5 rounded-xl border-2 text-[10px] font-black uppercase tracking-widest shadow-sm ${getWorkloadStyle(0)}`}>
+                                <div className={`px-4 py-1.5 rounded-xl border-2 text-[10px] font-black uppercase tracking-widest shadow-sm ${getWorkloadStyle(getWorkloadCount(tech._id))}`}>
                                     <div className="flex flex-col items-center">
-                                        <span>{getWorkloadText(0)}</span>
-                                        <span className="opacity-70 mt-0.5">0 tasks</span>
+                                        <span>{getWorkloadText(getWorkloadCount(tech._id))}</span>
+                                        <span className="opacity-70 mt-0.5">{getWorkloadCount(tech._id)} tasks</span>
                                     </div>
                                 </div>
                             </button>

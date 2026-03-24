@@ -1,4 +1,4 @@
-export type EquipmentStatus = 'good' | 'broken' | 'maintenance' | string;
+export type EquipmentStatus = 'good' | 'broken' | 'maintenance' | 'reserved' | 'in_use' | string;
 export type EquipmentType = 'laptop' | 'projector' | 'tablet' | 'monitor' | 'camera' | 'audio' | 'all-types';
 export type LocationKey = 'gamma' | 'beta' | 'alpha' | 'all-locations';
 

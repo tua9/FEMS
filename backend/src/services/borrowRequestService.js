@@ -60,6 +60,15 @@ const autoCancelExpiredRequests = async () => {
       req.cancelled_at = new Date()
       await req.save()
 
+      // Restore equipment status to good + available
+      if (req.equipment_id) {
+        await Equipment.findByIdAndUpdate(req.equipment_id, {
+          status: 'good',
+          available: true,
+          borrowed_by: null,
+        })
+      }
+
       // Notify User
       await notificationService.createNotification({
         user_id: req.user_id,
@@ -350,8 +359,8 @@ const approveBorrowRequest = async (id, approverId, decisionNote) => {
     if (conflictingRequests.length > 0) {
       throw new ApiError(StatusCodes.BAD_REQUEST, 'Không thể duyệt vì thiết bị đã được xếp lịch cho một đơn khác bị trùng thời gian.')
     }
-    // Không gán borrowed_by ở đây nữa để tránh khóa chết available = false. 
-    // Người khác vẫn có thể đặt trước được vào ngày khác.
+    // Mark equipment as reserved now that a borrow is approved
+    await Equipment.findByIdAndUpdate(request.equipment_id, { status: 'reserved' })
   } else if (request.room_id) {
     const room = await Room.findById(request.room_id)
     if (room) {
@@ -397,8 +406,9 @@ const handoverBorrowRequest = async (id) => {
       throw new ApiError(StatusCodes.NOT_FOUND, 'Equipment not found')
     }
 
-    // Handover triggers request status change to 'handed_over' (which UI maps to Borrowing)
+    // Handover: equipment is now actually in use
     equipment.available = false
+    equipment.status = 'in_use'
     equipment.borrowed_by = request.user_id
     await equipment.save()
   }
@@ -418,11 +428,11 @@ const returnBorrowRequest = async (id) => {
   }
 
   if (request.equipment_id) {
-    const equipment = await Equipment.findById(request.equipment_id)
-    if (equipment) {
-      equipment.borrowed_by = null
-      await equipment.save()
-    }
+    await Equipment.findByIdAndUpdate(request.equipment_id, {
+      status: 'good',
+      available: true,
+      borrowed_by: null,
+    })
   } else if (request.room_id) {
     const room = await Room.findById(request.room_id)
     if (room) {

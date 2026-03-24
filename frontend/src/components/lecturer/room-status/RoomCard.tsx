@@ -2,7 +2,7 @@ import React from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Monitor, Thermometer, Video, Cpu, Shield, Droplets, AlertTriangle, CheckCircle2 } from 'lucide-react';
 
-interface DeviceProps {
+interface EquipmentProps {
     name: string;
     status: 'ACTIVE' | 'MAINTENANCE' | 'FAULTY';
     icon: keyof typeof IconMap;
@@ -12,7 +12,7 @@ interface RoomCardProps {
     roomName: string;
     roomType: string;
     statusText: string;
-    devices: DeviceProps[];
+    equipment: EquipmentProps[];
     onReportIssue?: () => void;
 }
 
@@ -25,9 +25,9 @@ const IconMap = {
     droplets: Droplets
 };
 
-export const RoomCard: React.FC<RoomCardProps> = ({ roomName, roomType, statusText, devices, onReportIssue }) => {
-    const hasIssue = devices.some(d => d.status === 'MAINTENANCE' || d.status === 'FAULTY');
-    const hasFault = devices.some(d => d.status === 'FAULTY');
+export const RoomCard: React.FC<RoomCardProps> = ({ roomName, roomType, statusText, equipment, onReportIssue }) => {
+    const hasIssue = equipment.some(d => d.status === 'MAINTENANCE' || d.status === 'FAULTY');
+    const hasFault = equipment.some(d => d.status === 'FAULTY');
 
     return (
         <div className="dashboard-card w-[85vw] sm:w-88 md:w-96 lg:w-100 max-w-full shrink-0 rounded-3xl lg:rounded-4xl overflow-hidden transition-all hover:scale-[1.01]">
@@ -52,17 +52,17 @@ export const RoomCard: React.FC<RoomCardProps> = ({ roomName, roomType, statusTe
                     </Badge>
                 </div>
 
-                {/* Device list */}
+                {/* Equipment list */}
                 <div className="space-y-3 flex-1">
-                    {devices.map((device, idx) => {
-                        const Icon = IconMap[device.icon] || Monitor;
-                        const isActive = device.status === 'ACTIVE';
+                    {equipment.map((item, idx) => {
+                        const Icon = IconMap[item.icon] || Monitor;
+                        const isActive = item.status === 'ACTIVE';
                         const textClass = isActive
                             ? 'text-[#1E2B58] dark:text-white'
                             : 'text-[#4A5A8A] dark:text-slate-400';
                         const statusColor =
-                            device.status === 'FAULTY'      ? 'text-red-500 font-black' :
-                            device.status === 'MAINTENANCE' ? 'text-amber-500 font-black' :
+                            item.status === 'FAULTY'      ? 'text-red-500 font-black' :
+                            item.status === 'MAINTENANCE' ? 'text-amber-500 font-black' :
                             `${textClass} font-black`;
 
                         return (
@@ -76,10 +76,10 @@ export const RoomCard: React.FC<RoomCardProps> = ({ roomName, roomType, statusTe
                             >
                                 <div className="flex items-center gap-2 md:gap-3">
                                     <Icon className={`w-4 h-4 md:w-5 md:h-5 ${textClass} shrink-0`} />
-                                    <span className={`text-xs md:text-sm font-bold ${textClass} line-clamp-1`}>{device.name}</span>
+                                    <span className={`text-xs md:text-sm font-bold ${textClass} line-clamp-1`}>{item.name}</span>
                                 </div>
                                 <span className={`text-[0.5625rem] md:text-[0.625rem] ${statusColor}`}>
-                                    {device.status}
+                                    {item.status}
                                 </span>
                             </div>
                         );

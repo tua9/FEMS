@@ -11,7 +11,7 @@ type DeviceHealthStats = {
 
 const clampPct = (n: number) => Math.max(0, Math.min(100, n));
 
-const DeviceHealth: React.FC = () => {
+const EquipmentHealth: React.FC = () => {
   const [data, setData] = useState<DeviceHealthStats | null>(null);
 
   useEffect(() => {
@@ -39,62 +39,63 @@ const DeviceHealth: React.FC = () => {
   }, [data]);
 
   // Donut math
-  const CIRC = 251.2; // same as existing SVG
+  const CIRC = 251.2; // circumference for radius 40
   const healthyLen = (healthyPct / 100) * CIRC;
   const maintenanceLen = (maintenancePct / 100) * CIRC;
   const faultyLen = (faultyPct / 100) * CIRC;
 
-  // Each segment is drawn starting from the same point; we place them by shifting dashoffset.
-  // Offset is expressed in stroke length from the start of the circle.
+  // Offset logic for stacked donut segments
   const healthyOffset = CIRC - healthyLen;
   const maintenanceOffset = CIRC - (healthyLen + maintenanceLen);
   const faultyOffset = CIRC - (healthyLen + maintenanceLen + faultyLen);
 
   return (
-    <div className="dashboard-card p-8 rounded-3xl flex flex-col h-full">
+    <div className="dashboard-card p-8 rounded-3xl flex flex-col h-full transition-all duration-300">
       <h3 className="text-sm font-bold text-[#1A2B56] dark:text-white uppercase tracking-widest mb-10">
-        Device Health
+        Equipment Health
       </h3>
 
       <div className="flex-1 flex flex-col items-center justify-center">
-        {/* Donut Chart — exact from HTML */}
         <div className="relative w-44 h-44 mb-8">
           <svg className="w-full h-full -rotate-90" viewBox="0 0 100 100">
             {/* Background */}
             <circle
-              className="text-white/30"
+              className="text-slate-100 dark:text-slate-800"
               cx="50" cy="50" fill="transparent" r="40"
               stroke="currentColor" strokeWidth="10"
             />
             {/* Healthy — primary */}
             <circle
-              className="text-[#1A2B56]"
+              className="text-[#1A2B56] dark:text-blue-500"
               cx="50" cy="50" fill="transparent" r="40"
               stroke="currentColor"
               strokeDasharray={CIRC}
               strokeDashoffset={healthyOffset}
               strokeLinecap="round"
               strokeWidth="10"
+              style={{ transition: 'stroke-dashoffset 0.5s ease-out' }}
             />
             {/* Maintenance — blue-accent */}
             <circle
-              className="text-blue-400"
+              className="text-blue-400 dark:text-blue-400"
               cx="50" cy="50" fill="transparent" r="40"
               stroke="currentColor"
               strokeDasharray={CIRC}
               strokeDashoffset={maintenanceOffset}
               strokeLinecap="round"
               strokeWidth="10"
+              style={{ transition: 'stroke-dashoffset 0.5s ease-out' }}
             />
             {/* Faulty — blue-light */}
             <circle
-              className="text-blue-200"
+              className="text-blue-200 dark:text-blue-300"
               cx="50" cy="50" fill="transparent" r="40"
               stroke="currentColor"
               strokeDasharray={CIRC}
               strokeDashoffset={faultyOffset}
               strokeLinecap="round"
               strokeWidth="10"
+              style={{ transition: 'stroke-dashoffset 0.5s ease-out' }}
             />
           </svg>
           {/* Center text */}
@@ -111,7 +112,7 @@ const DeviceHealth: React.FC = () => {
         {/* Legend */}
         <div className="grid grid-cols-2 gap-x-6 gap-y-2 w-full max-w-xs mx-auto">
           <div className="flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-[#1A2B56]"></span>
+            <span className="w-2 h-2 rounded-full bg-[#1A2B56] dark:bg-blue-500"></span>
             <span className="text-[10px] font-bold text-slate-600 dark:text-slate-400">{Math.round(healthyPct)}% Healthy</span>
           </div>
           <div className="flex items-center gap-2">
@@ -119,7 +120,7 @@ const DeviceHealth: React.FC = () => {
             <span className="text-[10px] font-bold text-slate-600 dark:text-slate-400">{Math.round(maintenancePct)}% Maint.</span>
           </div>
           <div className="flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-blue-200"></span>
+            <span className="w-2 h-2 rounded-full bg-blue-200 dark:bg-blue-300"></span>
             <span className="text-[10px] font-bold text-slate-600 dark:text-slate-400">{Math.round(faultyPct)}% Faulty</span>
           </div>
         </div>
@@ -128,4 +129,4 @@ const DeviceHealth: React.FC = () => {
   );
 };
 
-export default DeviceHealth;
+export default EquipmentHealth;

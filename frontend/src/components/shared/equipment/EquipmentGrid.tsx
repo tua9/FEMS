@@ -17,6 +17,11 @@ const statusConfig = {
     label: "Request Borrow",
     disabled: false,
   },
+  Reserved: {
+    color: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400",
+    label: "Reserved",
+    disabled: true,
+  },
   "In Use": {
     color: "bg-[#FEF3C7] text-[#D97706] dark:bg-[#D97706]/20 dark:text-[#FBBF24]",
     label: "In Use",
@@ -47,6 +52,8 @@ const statusMap: Record<string, keyof typeof statusConfig> = {
   good: "Available",
   broken: "Broken",
   maintenance: "Maintenance",
+  reserved: "Reserved",
+  in_use: "In Use"
 };
 
 export const EquipmentGrid: React.FC<EquipmentGridProps> = ({
@@ -70,7 +77,7 @@ export const EquipmentGrid: React.FC<EquipmentGridProps> = ({
         {filteredItems.map((item) => {
           let mappedStatus: keyof typeof statusConfig = statusMap[item.status] || "Available";
           
-          if (item.status === "good" && item.borrowed_by) {
+          if ((item.status === "good" || item.status === "available") && item.borrowed_by) {
             mappedStatus = "In Use";
           }
 

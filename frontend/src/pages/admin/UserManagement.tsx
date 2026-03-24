@@ -182,16 +182,16 @@ const UserManagement: React.FC = () => {
                     {/* Total Users Card */}
                     <button
                         onClick={() => { setRoleFilter('All'); setStatusFilter('All'); }}
-                        className={`dashboard-card p-5 rounded-2xl transition-all duration-300 flex items-center justify-between hover:scale-[1.02] active:scale-95 text-left
-                            ${roleFilter === 'All' && statusFilter === 'All'
-                                ? 'ring-2 ring-blue-500/20'
-                                : ''}`}
+                        className="dashboard-card p-5 rounded-2xl transition-all duration-300 flex items-center justify-between hover:scale-[1.02] active:scale-95 text-left"
                     >
                         <div>
                             <p className="text-[10px] font-medium uppercase tracking-[0.2em] text-slate-500 mb-1">Total Users</p>
                             <h3 className="text-3xl font-bold text-[#1A2B56] dark:text-white tracking-tight">{users.length}</h3>
                         </div>
-                        <div className="w-10 h-10 rounded-full flex items-center justify-center bg-slate-50 dark:bg-slate-700/30 text-slate-400 dark:text-slate-500 transition-all duration-300">
+                        <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300
+                            ${roleFilter === 'All' && statusFilter === 'All'
+                                ? 'bg-blue-50 dark:bg-blue-900/20 text-[#1A2B56]'
+                                : 'bg-slate-50 dark:bg-slate-700/30 text-slate-400 dark:text-slate-500'}`}>
                             <span className="material-symbols-outlined">manage_accounts</span>
                         </div>
                     </button>
@@ -199,16 +199,16 @@ const UserManagement: React.FC = () => {
                     {/* Active Users Card */}
                     <button
                         onClick={() => { setRoleFilter('All'); setStatusFilter('Active'); }}
-                        className={`dashboard-card p-5 rounded-2xl transition-all duration-300 flex items-center justify-between hover:scale-[1.02] active:scale-95 text-left
-                            ${statusFilter === 'Active'
-                                ? 'ring-2 ring-emerald-500/20'
-                                : ''}`}
+                        className="dashboard-card p-5 rounded-2xl transition-all duration-300 flex items-center justify-between hover:scale-[1.02] active:scale-95 text-left"
                     >
                         <div>
                             <p className="text-[10px] font-medium uppercase tracking-[0.2em] text-emerald-500 mb-1">Active</p>
                             <h3 className="text-3xl font-bold text-emerald-600 dark:text-emerald-400 tracking-tight">{activeUsers}</h3>
                         </div>
-                        <div className="w-10 h-10 rounded-full flex items-center justify-center bg-emerald-50 dark:bg-emerald-900/30 text-emerald-500 transition-all duration-300">
+                        <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300
+                            ${statusFilter === 'Active'
+                                ? 'bg-emerald-50 dark:bg-emerald-900/30 text-emerald-500'
+                                : 'bg-slate-50 dark:bg-slate-700/30 text-slate-400 dark:text-slate-500'}`}>
                             <span className="material-symbols-outlined">check_circle</span>
                         </div>
                     </button>
@@ -216,10 +216,7 @@ const UserManagement: React.FC = () => {
                     {/* Technicians Card */}
                     <button
                         onClick={() => { setRoleFilter('Technician'); setStatusFilter('All'); }}
-                        className={`dashboard-card p-5 rounded-2xl transition-all duration-300 flex items-center justify-between hover:scale-[1.02] active:scale-95 text-left
-                            ${roleFilter === 'Technician'
-                                ? 'ring-2 ring-amber-500/20'
-                                : ''}`}
+                        className="dashboard-card p-5 rounded-2xl transition-all duration-300 flex items-center justify-between hover:scale-[1.02] active:scale-95 text-left"
                     >
                         <div>
                             <p className="text-[10px] font-medium uppercase tracking-[0.2em] text-slate-500 mb-1">Technicians</p>
@@ -227,7 +224,10 @@ const UserManagement: React.FC = () => {
                                 {users.filter(u => u.role === 'technician').length}
                             </h3>
                         </div>
-                        <div className="w-10 h-10 rounded-full flex items-center justify-center bg-slate-50 dark:bg-slate-700/30 text-slate-400 dark:text-slate-500 transition-all duration-300">
+                        <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300
+                            ${roleFilter === 'Technician'
+                                ? 'bg-amber-50 dark:bg-amber-900/30 text-amber-500'
+                                : 'bg-slate-50 dark:bg-slate-700/30 text-slate-400 dark:text-slate-500'}`}>
                             <span className="material-symbols-outlined">engineering</span>
                         </div>
                     </button>
@@ -235,16 +235,16 @@ const UserManagement: React.FC = () => {
                     {/* Inactive Users Card */}
                     <button
                         onClick={() => { setRoleFilter('All'); setStatusFilter('Inactive'); }}
-                        className={`dashboard-card p-5 rounded-2xl transition-all duration-300 flex items-center justify-between hover:scale-[1.02] active:scale-95 text-left
-                            ${statusFilter === 'Inactive'
-                                ? 'ring-2 ring-red-500/20'
-                                : ''}`}
+                        className="dashboard-card p-5 rounded-2xl transition-all duration-300 flex items-center justify-between hover:scale-[1.02] active:scale-95 text-left"
                     >
                         <div>
                             <p className="text-[10px] font-medium uppercase tracking-[0.2em] text-red-500 mb-1">Inactive</p>
                             <h3 className="text-3xl font-bold text-red-600 dark:text-red-400 tracking-tight">{inactiveUsers}</h3>
                         </div>
-                        <div className="w-10 h-10 rounded-full bg-red-100 dark:bg-red-900/50 flex items-center justify-center text-red-500">
+                        <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300
+                            ${statusFilter === 'Inactive'
+                                ? 'bg-red-50 dark:bg-red-900/30 text-red-500'
+                                : 'bg-slate-50 dark:bg-slate-700/30 text-slate-400 dark:text-slate-500'}`}>
                             <span className="material-symbols-outlined">person_off</span>
                         </div>
                     </button>

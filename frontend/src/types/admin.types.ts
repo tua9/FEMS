@@ -63,9 +63,9 @@ export interface BorrowRecord {
 }
 
 export interface DashboardMetrics {
-  totalDevices: number;
-  devicesTrend: number; // e.g. +12
-  brokenDevices: number;
+  totalEquipment: number;
+  equipmentTrend: number; // e.g. +12
+  brokenEquipment: number;
   criticalRepairs: number;
   pendingRequests: number;
   avgResponseTimeHours: number;
@@ -79,8 +79,43 @@ export interface HealthStatus {
   broken: number;
 }
 
-export interface TopBrokenItem {
+export interface TopBorrowedItem {
   name: string;
   count: number;
   percentage: number;
+}
+
+export interface RecentBorrowRequest {
+  _id: string;
+  user_id: {
+    _id: string;
+    name: string;
+    avatar?: string;
+    department?: string;
+  };
+  equipment_id: {
+    _id: string;
+    name: string;
+  };
+  status: string;
+  borrow_date: string;
+  return_date: string;
+  createdAt: string;
+}
+
+export interface RecentDamageReport {
+  _id: string;
+  user_id: {
+    _id: string;
+    name: string;
+    avatar?: string;
+  };
+  equipment_id: {
+    _id: string;
+    name: string;
+  };
+  description: string;
+  priority: string;
+  status: string;
+  createdAt: string;
 }
