@@ -11,4 +11,16 @@ export const adminService = {
     const res = await api.get("/admin/dashboard/chart");
     return res.data;
   },
+  getHealthStatus: async (): Promise<any> => {
+    const res = await api.get("/admin/dashboard/health");
+    return res.data;
+  },
+  getRecentBorrowRequests: async (): Promise<any[]> => {
+    const res = await api.get("/admin/dashboard/borrow-requests");
+    return res.data;
+  },
+  getRecentDamageReports: async (): Promise<any[]> => {
+    const res = await api.get("/admin/dashboard/damage-reports");
+    return res.data;
+  },
 };

@@ -133,42 +133,51 @@ const BorrowingManagement: React.FC = () => {
                     {/* Active Loans Card */}
                     <button
                         onClick={() => setStatusFilter(statusFilter === 'handed_over' ? 'All' : 'handed_over')}
-                        className="group relative p-6 ambient-shadow flex items-center justify-between rounded-[24px] border transition-all duration-300 hover:scale-[1.02] active:scale-95 text-left w-full backdrop-blur-xl bg-white/60 dark:bg-slate-800/60 border-white/60 dark:border-white/10"
+                        className="dashboard-card p-5 rounded-2xl transition-all duration-300 flex items-center justify-between hover:scale-[1.02] active:scale-95 text-left"
                     >
                         <div>
                             <p className="text-[10px] font-medium uppercase tracking-[0.2em] text-slate-500 mb-1">Active Loans</p>
                             <h3 className="text-3xl font-bold text-[#1A2B56] dark:text-white tracking-tight">{activeLoansCount}</h3>
                         </div>
-                        <div className={`p-3 rounded-2xl transition-all duration-300 ${statusFilter === 'approved' ? 'text-blue-500 bg-blue-50 dark:bg-blue-900/40' : 'text-slate-400 dark:text-slate-500 bg-slate-50 dark:bg-slate-700/30 group-hover:text-blue-500 group-hover:bg-blue-50 dark:group-hover:bg-blue-900/40'}`}>
-                            <span className="material-symbols-outlined text-3xl">swap_horiz</span>
+                        <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300
+                            ${statusFilter === 'handed_over'
+                                ? 'bg-blue-50 dark:bg-blue-900/20 text-[#1A2B56]'
+                                : 'bg-slate-50 dark:bg-slate-700/30 text-slate-400 dark:text-slate-500'}`}>
+                            <span className="material-symbols-outlined">swap_horiz</span>
                         </div>
                     </button>
 
                     {/* Pending Approvals Card */}
                     <button
                         onClick={() => setStatusFilter(statusFilter === 'pending' ? 'All' : 'pending')}
-                        className="group relative p-6 ambient-shadow flex items-center justify-between rounded-[24px] border transition-all duration-300 hover:scale-[1.02] active:scale-95 text-left w-full backdrop-blur-xl bg-white/60 dark:bg-slate-800/60 border-white/60 dark:border-white/10"
+                        className="dashboard-card p-5 rounded-2xl transition-all duration-300 flex items-center justify-between hover:scale-[1.02] active:scale-95 text-left"
                     >
                         <div>
                             <p className="text-[10px] font-medium uppercase tracking-[0.2em] text-slate-500 mb-1">Pending Approvals</p>
                             <h3 className="text-3xl font-bold text-[#1A2B56] dark:text-white tracking-tight">{pendingCount}</h3>
                         </div>
-                        <div className={`p-3 rounded-2xl transition-all duration-300 ${statusFilter === 'pending' ? 'text-amber-500 bg-amber-50 dark:bg-amber-900/40' : 'text-slate-400 dark:text-slate-500 bg-slate-50 dark:bg-slate-700/30 group-hover:text-amber-500 group-hover:bg-amber-50 dark:group-hover:bg-amber-900/40'}`}>
-                            <span className="material-symbols-outlined text-3xl">pending_actions</span>
+                        <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300
+                            ${statusFilter === 'pending'
+                                ? 'bg-amber-50 dark:bg-amber-900/40 text-amber-500'
+                                : 'bg-slate-50 dark:bg-slate-700/30 text-slate-400 dark:text-slate-500'}`}>
+                            <span className="material-symbols-outlined">pending_actions</span>
                         </div>
                     </button>
 
                     {/* Overdue Returns Card */}
                     <button
                         onClick={() => setStatusFilter(statusFilter === 'overdue' ? 'All' : 'overdue')}
-                        className="group relative p-6 ambient-shadow flex items-center justify-between rounded-[24px] border transition-all duration-300 hover:scale-[1.02] active:scale-95 text-left w-full backdrop-blur-xl bg-white/60 dark:bg-slate-800/60 border-white/60 dark:border-white/10"
+                        className="dashboard-card p-5 rounded-2xl transition-all duration-300 flex items-center justify-between hover:scale-[1.02] active:scale-95 text-left"
                     >
                         <div>
                             <p className="text-[10px] font-medium uppercase tracking-[0.2em] text-slate-500 mb-1">Overdue Returns</p>
                             <h3 className="text-3xl font-bold text-[#1A2B56] dark:text-white tracking-tight">{overdueCount}</h3>
                         </div>
-                        <div className={`p-3 rounded-2xl transition-all duration-300 ${statusFilter === 'overdue' ? 'text-red-500 bg-red-50 dark:bg-red-900/40' : 'text-slate-400 dark:text-slate-500 bg-slate-50 dark:bg-slate-700/30 group-hover:text-red-500 group-hover:bg-red-50 dark:group-hover:bg-red-900/40'}`}>
-                            <span className="material-symbols-outlined text-3xl">warning</span>
+                        <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300
+                            ${statusFilter === 'overdue'
+                                ? 'bg-red-50 dark:bg-red-900/40 text-red-500'
+                                : 'bg-slate-50 dark:bg-slate-700/30 text-slate-400 dark:text-slate-500'}`}>
+                            <span className="material-symbols-outlined">warning</span>
                         </div>
                     </button>
                 </div>

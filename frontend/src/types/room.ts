@@ -14,7 +14,7 @@ export interface Room {
   updatedAt?: string;
 }
 
-export interface RoomDevice {
+export interface RoomEquipment {
   name: string;
   status: 'ACTIVE' | 'FAULTY' | 'MAINTENANCE';
 }
@@ -27,9 +27,9 @@ export interface RoomStatusCenterItem {
   floor: number;
   labels: string[];
   operationalSummary: string;
-  displayDevices: RoomDevice[];
-  totalDevices: number;
-  faultyDevices: number;
+  displayEquipment: RoomEquipment[];
+  totalEquipment: number;
+  faultyEquipment: number;
 }
 
 export interface BuildingGroup {

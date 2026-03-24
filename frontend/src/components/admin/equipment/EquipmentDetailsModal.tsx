@@ -3,16 +3,16 @@ import { createPortal } from 'react-dom';
 import type { Equipment } from '../../../types/equipment';
 import { getDerivedStatus, getDerivedEquipmentType } from '../../../utils/equipmentHelpers';
 
-interface DeviceDetailsModalProps {
+interface EquipmentDetailsModalProps {
     isOpen: boolean;
-    device: Equipment | null;
+    equipment: Equipment | null;
     onClose: () => void;
-    onEdit?: (device: Equipment) => void;
-    onReportDamage?: (device: Equipment) => void;
+    onEdit?: (equipment: Equipment) => void;
+    onReportDamage?: (equipment: Equipment) => void;
 }
 
-const DeviceDetailsModal: React.FC<DeviceDetailsModalProps> = ({ isOpen, device, onClose, onEdit, onReportDamage }) => {
-    if (!isOpen || !device) return null;
+const EquipmentDetailsModal: React.FC<EquipmentDetailsModalProps> = ({ isOpen, equipment, onClose, onEdit, onReportDamage }) => {
+    if (!isOpen || !equipment) return null;
 
     const getStatusStyle = (status: string) => {
         const s = status.toLowerCase();
@@ -35,19 +35,19 @@ const DeviceDetailsModal: React.FC<DeviceDetailsModalProps> = ({ isOpen, device,
         }
     };
 
-    const vStatus = getDerivedStatus(device);
-    const vType = getDerivedEquipmentType(device);
+    const vStatus = getDerivedStatus(equipment);
+    const vType = getDerivedEquipmentType(equipment);
     const dotClasses = getVirtualStatusDotClass(vStatus);
 
     const [activeRequest, setActiveRequest] = useState<any>(null);
 
     useEffect(() => {
-        if (!isOpen || !device) return;
+        if (!isOpen || !equipment) return;
         if (['Reserved', 'In Use'].includes(vStatus)) {
             import('../../../services/borrowRequestService').then(({ borrowRequestService }) => {
                 borrowRequestService.getAllBorrowRequests().then((reqs: any[]) => {
                     const active = reqs.find(r =>
-                        (r.equipment_id?._id === device._id || r.equipment_id === device._id) &&
+                        (r.equipment_id?._id === equipment._id || r.equipment_id === equipment._id) &&
                         ['approved', 'handed_over', 'borrowing'].includes(r.status)
                     );
                     setActiveRequest(active);
@@ -56,7 +56,7 @@ const DeviceDetailsModal: React.FC<DeviceDetailsModalProps> = ({ isOpen, device,
         } else {
             setActiveRequest(null);
         }
-    }, [device, isOpen, vStatus]);
+    }, [equipment, isOpen, vStatus]);
 
     const formatDate = (dateString?: string) => {
         if (!dateString) return 'Not Set';
@@ -94,19 +94,24 @@ const DeviceDetailsModal: React.FC<DeviceDetailsModalProps> = ({ isOpen, device,
                     </button>
 
                     <div className="flex items-center gap-4 mb-3">
-                        <span className={`px-4 py-1.5 rounded-2xl text-[10px] font-black uppercase tracking-widest border-2 shadow-sm ${getStatusStyle(device.status)}`}>
-                            {device.status}
+                        <span className={`px-4 py-1.5 rounded-2xl text-[10px] font-black uppercase tracking-widest border-2 shadow-sm ${getStatusStyle(equipment.status)}`}>
+                            {equipment.status}
                         </span>
                         <span className="px-4 py-1.5 rounded-2xl text-[10px] font-black uppercase tracking-widest border-2 border-indigo-100 dark:border-indigo-900/30 bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 shadow-sm">
                             {vType}
                         </span>
                         <span className="px-4 py-1.5 rounded-2xl text-[10px] font-black uppercase tracking-widest border-2 border-blue-100 dark:border-blue-900/30 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 shadow-sm">
-                            {device.category}
+                            {equipment.category}
                         </span>
                     </div>
 
+<<<<<<< HEAD:frontend/src/components/admin/equipment/DeviceDetailsModal.tsx
                     <h3 className="text-2xl font-black text-[#1E2B58] dark:text-white tracking-tight">{device.name}</h3>
                     <p className="text-[0.625rem] font-black text-[#1E2B58]/50 dark:text-white/40 uppercase tracking-widest mt-1">Equipment Code: {device.code || "#" + device._id.slice(-6).toUpperCase()}</p>
+=======
+                    <h3 className="text-2xl font-black text-[#1E2B58] dark:text-white tracking-tight">{equipment.name}</h3>
+                    <p className="text-[0.625rem] font-black text-[#1E2B58]/50 dark:text-white/40 uppercase tracking-widest mt-1">Asset ID: {equipment._id}</p>
+>>>>>>> fd555ff (admin dashboard &  API updates):frontend/src/components/admin/equipment/EquipmentDetailsModal.tsx
                 </div>
 
                 <div className="p-10 pt-0 overflow-y-auto no-scrollbar space-y-8 relative z-10 mt-6">
@@ -114,8 +119,8 @@ const DeviceDetailsModal: React.FC<DeviceDetailsModalProps> = ({ isOpen, device,
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div className="relative group rounded-3xl overflow-hidden aspect-video border-2 border-white dark:border-slate-700 shadow-lg">
                             <img
-                                src={device.imageUrl || 'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?auto=format&fit=crop&q=80&w=1026'}
-                                alt={device.name}
+                                src={equipment.imageUrl || 'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?auto=format&fit=crop&q=80&w=1026'}
+                                alt={equipment.name}
                                 className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                             />
                             <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex items-end p-6">
@@ -131,8 +136,13 @@ const DeviceDetailsModal: React.FC<DeviceDetailsModalProps> = ({ isOpen, device,
                                         <span className="material-symbols-outlined text-xl">location_on</span>
                                     </div>
                                     <div className="flex flex-col">
+<<<<<<< HEAD:frontend/src/components/admin/equipment/DeviceDetailsModal.tsx
                                         <p className="font-black text-slate-800 dark:text-white leading-tight">{(device.room_id as any)?.name || 'N/A'}</p>
                                         <p className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mt-0.5">Asset Code: {device.code || "#" + device._id.slice(-6).toUpperCase()}</p>
+=======
+                                        <p className="font-black text-slate-800 dark:text-white leading-tight">{(equipment.room_id as any)?.name || 'N/A'}</p>
+                                        <p className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mt-0.5">Asset Code: {equipment.code || 'N/A'}</p>
+>>>>>>> fd555ff (admin dashboard &  API updates):frontend/src/components/admin/equipment/EquipmentDetailsModal.tsx
                                     </div>
                                 </div>
                             </div>
@@ -142,7 +152,7 @@ const DeviceDetailsModal: React.FC<DeviceDetailsModalProps> = ({ isOpen, device,
                                     <div className="w-10 h-10 rounded-2xl bg-emerald-50 dark:bg-emerald-900/20 text-emerald-500 flex items-center justify-center border-2 border-emerald-100 dark:border-emerald-900/30">
                                         <span className="material-symbols-outlined text-xl">calendar_today</span>
                                     </div>
-                                    <p className="font-black text-slate-800 dark:text-white leading-tight">{formatDate(device.createdAt)}</p>
+                                    <p className="font-black text-slate-800 dark:text-white leading-tight">{formatDate(equipment.createdAt)}</p>
                                 </div>
                             </div>
                         </div>
@@ -191,16 +201,16 @@ const DeviceDetailsModal: React.FC<DeviceDetailsModalProps> = ({ isOpen, device,
                     <div className="flex gap-3">
                         {onEdit && (
                             <button
-                                onClick={() => onEdit(device)}
+                                onClick={() => onEdit(equipment)}
                                 className="px-6 py-2.5 bg-white dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-700 text-[#1E2B58] dark:text-white rounded-xl font-black text-[10px] uppercase tracking-widest transition-all shadow-sm hover:shadow-md hover:bg-slate-50 dark:hover:bg-slate-700/80 flex items-center gap-2"
                             >
                                 <span className="material-symbols-outlined text-lg">edit_square</span>
                                 Edit Asset
                             </button>
                         )}
-                        {onReportDamage && device.status !== 'Broken' && device.status !== 'Repairing' && (
+                        {onReportDamage && equipment.status !== 'Broken' && equipment.status !== 'Repairing' && (
                             <button
-                                onClick={() => onReportDamage(device)}
+                                onClick={() => onReportDamage(equipment)}
                                 className="px-6 py-2.5 bg-red-50 text-red-600 dark:bg-red-900/20 dark:text-red-400 border-2 border-red-100 dark:border-red-900/30 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all shadow-sm hover:shadow-red-500/10 hover:bg-red-100 flex items-center gap-2"
                             >
                                 <span className="material-symbols-outlined text-lg">report</span>
@@ -221,4 +231,4 @@ const DeviceDetailsModal: React.FC<DeviceDetailsModalProps> = ({ isOpen, device,
     );
 };
 
-export default DeviceDetailsModal;
+export default EquipmentDetailsModal;

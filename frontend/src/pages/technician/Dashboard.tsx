@@ -1,4 +1,4 @@
-import DeviceHealth from '../../components/technician/dashboard/DeviceHealth';
+import EquipmentHealth from '../../components/technician/dashboard/EquipmentHealth';
 import StatsOverview from '../../components/technician/dashboard/StatsOverview';
 import TaskQueue from '../../components/technician/dashboard/TaskQueue';
 import TicketPipeline from '../../components/technician/dashboard/TicketPipeline';
@@ -26,7 +26,7 @@ const Dashboard: React.FC = () => {
           <TicketPipeline />
         </div>
         <div className="lg:col-span-2">
-          <DeviceHealth />
+          <EquipmentHealth />
         </div>
       </AnimatedSection>
 
