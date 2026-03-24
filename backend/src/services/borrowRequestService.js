@@ -16,10 +16,10 @@ import { notificationService } from './notificationService.js'
  * @returns {string} 9-character candidate code
  */
 const generateBorrowRequestCode = () => {
-  const now   = new Date()
-  const year  = String(now.getFullYear()).slice(-2)           // e.g. "26"
+  const now = new Date()
+  const year = String(now.getFullYear()).slice(-2)           // e.g. "26"
   const month = String(now.getMonth() + 1).padStart(2, '0')  // e.g. "03"
-  const CHARS  = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+  const CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
   const random = Array.from({ length: 3 }, () => CHARS[Math.floor(Math.random() * CHARS.length)]).join('')
   return `BR${year}${month}${random}`
 }
@@ -34,7 +34,7 @@ const generateUniqueCode = async () => {
   let code
   let exists = true
   while (exists) {
-    code   = generateBorrowRequestCode()
+    code = generateBorrowRequestCode()
     exists = !!(await BorrowRequest.findOne({ code }))
   }
   return code
@@ -49,11 +49,11 @@ const autoCancelExpiredRequests = async () => {
   for (const req of approvedRequests) {
     // Lấy ngày hẹn mượn
     const borrowDate = new Date(req.borrow_date)
-    
+
     // Deadline auto-cancel: kết thúc giờ hành chính 17:00:00 của đúng ngày handover (borrow_date)
     const deadline = new Date(borrowDate)
     deadline.setHours(17, 0, 0, 0)
-    
+
     if (now > deadline) {
       req.status = 'cancelled'
       req.decision_note = 'Yêu cầu đã bị hệ thống tự động hủy do người mượn không đến nhận thiết bị trễ nhất vào lúc 17:00:00 của ngày handover hẹn trước.'
@@ -432,7 +432,7 @@ const handoverBorrowRequest = async (id) => {
 }
 
 const returnBorrowRequest = async (id) => {
-  const request = await BorrowRequest.findById(id)
+  const request = await BorrowRequest.findById(id).populate('user_id', 'displayName username')
   if (!request) {
     throw new ApiError(StatusCodes.NOT_FOUND, 'Borrow request not found')
   }
@@ -446,6 +446,7 @@ const returnBorrowRequest = async (id) => {
       available: true,
       borrowed_by: null,
     })
+    c
   } else if (request.room_id) {
     const room = await Room.findById(request.room_id)
     if (room) {
@@ -456,6 +457,26 @@ const returnBorrowRequest = async (id) => {
 
   request.status = 'returned'
   await request.save()
+
+  // Notify admins and technicians
+  try {
+    const adminsAndTechs = await User.find({ role: { $in: ['admin', 'technician'] } })
+    const borrowerName = request.user_id?.displayName || request.user_id?.username || 'System'
+    const targetLabel = request.equipment_id ? 'equipment' : 'room'
+    const notifyPromises = adminsAndTechs.map(staff =>
+      notificationService.createNotification({
+        user_id: staff._id,
+        type: 'info',
+        title: 'Asset Returned',
+        message: `${borrowerName} has returned their borrowed ${targetLabel} (Request #${request.code || request._id.toString().slice(-6).toUpperCase()}).`,
+        to: staff.role === 'admin' ? '/admin/history' : '/technician/history',
+        state: { type: 'borrow', id: request._id, tab: 'borrow' }
+      })
+    )
+    await Promise.allSettled(notifyPromises)
+  } catch (err) {
+    console.error('Failed to notify staff about return:', err)
+  }
 
   return { message: 'Equipment returned and asset released', request }
 }
@@ -545,7 +566,7 @@ const rejectBorrowRequest = async (id, approverId, decisionNote) => {
     throw new ApiError(StatusCodes.BAD_REQUEST, 'Request is not pending')
   }
 
-  request.status       = 'rejected'
+  request.status = 'rejected'
   request.processed_by = approverId
   request.processed_at = new Date()
   // Save reason in decision_note — consistent with approve and cancel

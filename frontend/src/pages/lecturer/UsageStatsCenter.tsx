@@ -1,10 +1,7 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { TrendingUp, Zap, Clock, Package } from 'lucide-react';
 
 import { StatsHeader, Period } from '../../components/lecturer/stats/StatsHeader';
 import { StatsOverview, SubjectData } from '../../components/lecturer/stats/StatsOverview';
-import { StatsMetrics, MetricItem } from '../../components/lecturer/stats/StatsMetrics';
 
 // ─── Data ─────────────────────────────────────────────────────────────────────
 
@@ -32,31 +29,10 @@ const CHART_DATA: Record<Period, SubjectData[]> = {
     ],
 };
 
-const METRICS_DATA: Record<Period, MetricItem[]> = {
-    week: [
-        { icon: TrendingUp, title: 'Efficiency Gain',   value: '14.2%', subtitle: 'vs last week',        trend: '+14.2%', trendPositive: true,  navigateTo: '/lecturer/history'     },
-        { icon: Zap,        title: 'Active Requests',   value: '342',   subtitle: 'Processing real-time',                                       navigateTo: '/lecturer/approval'    },
-        { icon: Clock,      title: 'Avg. Return Time',  value: '2.4 d', subtitle: 'Within target limit',                                        navigateTo: '/lecturer/history'     },
-        { icon: Package,    title: 'Stock Health',      value: '98%',   subtitle: 'Operational readiness', trend: 'Good',  trendPositive: true,  navigateTo: '/lecturer/room-status' },
-    ],
-    month: [
-        { icon: TrendingUp, title: 'Efficiency Gain',   value: '11.8%', subtitle: 'vs last month',        trend: '+11.8%', trendPositive: true,  navigateTo: '/lecturer/history'     },
-        { icon: Zap,        title: 'Active Requests',   value: '1,284', subtitle: 'Processing real-time',                                        navigateTo: '/lecturer/approval'    },
-        { icon: Clock,      title: 'Avg. Return Time',  value: '2.1 d', subtitle: 'Within target limit',                                         navigateTo: '/lecturer/history'     },
-        { icon: Package,    title: 'Stock Health',      value: '96%',   subtitle: 'Operational readiness', trend: 'Good',  trendPositive: true,  navigateTo: '/lecturer/room-status' },
-    ],
-    semester: [
-        { icon: TrendingUp, title: 'Efficiency Gain',   value: '9.5%',  subtitle: 'vs last semester',      trend: '+9.5%',  trendPositive: true,  navigateTo: '/lecturer/history'     },
-        { icon: Zap,        title: 'Active Requests',   value: '5,420', subtitle: 'Processing real-time',                                         navigateTo: '/lecturer/approval'    },
-        { icon: Clock,      title: 'Avg. Return Time',  value: '2.8 d', subtitle: 'Slightly above avg.',   trend: 'Watch',  trendPositive: false, navigateTo: '/lecturer/history'     },
-        { icon: Package,    title: 'Stock Health',      value: '94%',   subtitle: 'Operational readiness',  trend: 'Fair',  trendPositive: true,  navigateTo: '/lecturer/room-status' },
-    ],
-};
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export const UsageStatsCenter: React.FC = () => {
-    const navigate = useNavigate();
 
     // ── State ──────────────────────────────────────────────────────────────────
     const [activePeriod,   setActivePeriod]   = useState<Period>('week');
@@ -64,9 +40,7 @@ export const UsageStatsCenter: React.FC = () => {
     const [showCurrent,    setShowCurrent]    = useState(true);
     const [showAverage,    setShowAverage]    = useState(true);
 
-    // ── Derived data ───────────────────────────────────────────────────────────
-    const currentChartData   = CHART_DATA[activePeriod];
-    const currentMetrics     = METRICS_DATA[activePeriod];
+    const currentChartData = CHART_DATA[activePeriod];
 
     // ── Period change resets subject selection ─────────────────────────────────
     const handlePeriodChange = (p: Period) => {
@@ -83,12 +57,7 @@ export const UsageStatsCenter: React.FC = () => {
             .map(d => `"${d.name}","${d.label}","${d.avg}","${d.cur}"`)
             .join('\n');
 
-        const metricsHeader = '\n\nMetric,Value,Note\n';
-        const metricsRows   = currentMetrics
-            .map(m => `"${m.title}","${m.value}","${m.subtitle}"`)
-            .join('\n');
-
-        const content = `F-EMS Usage Statistics Report — ${periodLabel}\nGenerated: ${new Date().toLocaleString()}\n\n${chartHeader}${chartRows}${metricsHeader}${metricsRows}`;
+        const content = `F-EMS Usage Statistics Report — ${periodLabel}\nGenerated: ${new Date().toLocaleString()}\n\n${chartHeader}${chartRows}`;
 
         const blob = new Blob([content], { type: 'text/csv' });
         const url  = URL.createObjectURL(blob);
@@ -123,11 +92,6 @@ export const UsageStatsCenter: React.FC = () => {
                         onToggleAverage={() => setShowAverage(p => !p)}
                     />
 
-                    {/* 4 metric cards */}
-                    <StatsMetrics
-                        metrics={currentMetrics}
-                        onNavigate={navigate}
-                    />
 
                 </div>
             </main>
