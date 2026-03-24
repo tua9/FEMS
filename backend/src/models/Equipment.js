@@ -43,18 +43,22 @@ const assetSchema = new mongoose.Schema(
       sparse: true, // allows existing docs without code; new ones always get one
       trim: true,
     },
+    img: {
+      type: String,
+      default: null,
+    },
   },
   {
     timestamps: true,
   },
 )
 
-// If equipment is assigned to a room, borrowed, or not in 'good' status, it's not available
+// Equipment availability logic: only depends on condition status and borrow status
 assetSchema.pre('save', function () {
-  if (this.room_id || this.borrowed_by || this.status !== 'good') {
+  if (this.status === 'broken' || this.status === 'maintenance') {
     this.available = false
-  } else {
-    this.available = true
+  } else if (this.status === 'good') {
+    this.available = !this.borrowed_by
   }
 })
 

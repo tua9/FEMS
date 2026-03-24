@@ -33,9 +33,9 @@ const BrokenAttentionCard: React.FC<BrokenAttentionCardProps> = ({ items, onView
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {items.map(item => (
                     <div key={item._id} className="bg-white/80 dark:bg-slate-700/60 p-4 rounded-2xl border border-white dark:border-slate-600 flex gap-4 transition-all duration-300 cursor-pointer backdrop-blur-sm hover:-translate-y-1.5 hover:shadow-2xl hover:bg-white dark:hover:bg-slate-700 hover:border-blue-200 dark:hover:border-slate-500 active:scale-95 group">
-                        <div className="w-16 h-16 rounded-xl bg-slate-50 dark:bg-slate-800 p-1 flex-shrink-0">
-                            <img alt={item.name} className="w-full h-full object-cover rounded-lg" src={(item as any).imageUrl || 'https://via.placeholder.com/150'} />
-                        </div>
+                        <div className="w-12 h-12 rounded-2xl overflow-hidden shrink-0 border-2 border-white dark:border-slate-700 shadow-sm">
+                        <img src={item.img || 'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?auto=format&fit=crop&q=80&w=1026'} alt={item.name} className="w-full h-full object-cover" />
+                    </div>
                         <div className="flex-1">
                             <div className="flex justify-between items-start">
                                 <p className="text-sm font-bold text-slate-800 dark:text-white">{item.name}</p>

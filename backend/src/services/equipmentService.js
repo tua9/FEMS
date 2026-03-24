@@ -1,5 +1,5 @@
-// (crypto removed — no longer needed after code generator refactor)
 import { StatusCodes } from 'http-status-codes'
+import mongoose from 'mongoose'
 import Equipment from '../models/Equipment.js'
 import ApiError from '../utils/ApiError.js'
 
@@ -52,7 +52,7 @@ const generateUniqueCode = async (category) => {
 
 const createEquipment = async (body) => {
   // Destructure body — `code` from frontend is intentionally ignored
-  const { name, category, available, status, room_id } = body
+  const { name, category, available, status, room_id, img } = body
 
   if (!name) {
     throw new ApiError(StatusCodes.BAD_REQUEST, 'Name is required')
@@ -68,6 +68,7 @@ const createEquipment = async (body) => {
     status,
     room_id,
     code,
+    img,
   })
 
   return {
@@ -90,10 +91,10 @@ const getEquipmentById = async (id) => {
 }
 
 const updateEquipment = async (id, body) => {
-  const { name, category, available, status, room_id, code } = body
+  const { name, category, available, status, room_id, code, img } = body
   const equipment = await Equipment.findByIdAndUpdate(
     id,
-    { name, category, available, status, room_id, code },
+    { name, category, available, status, room_id, code, img },
     { new: true, runValidators: true },
   )
   if (!equipment) {
@@ -207,7 +208,8 @@ const getEquipmentInventory = async (queries) => {
         category: 1,
         available: 1,
         status: 1,
-        qr_code: 1,
+        code: 1,
+        img: 1,
         borrowed_by: 1,
         room_id: {
           _id: '$room._id',

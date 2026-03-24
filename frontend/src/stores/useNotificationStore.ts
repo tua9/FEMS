@@ -7,8 +7,9 @@ interface NotificationStore {
   unreadCount: number;
   loading: boolean;
   error: string | null;
+  lastFetchedAt: number | null;
 
-  fetchNotifications: () => Promise<void>;
+  fetchNotifications: (force?: boolean) => Promise<void>;
   markAsRead: (id: string) => Promise<void>;
   markAllAsRead: () => Promise<void>;
   deleteNotification: (id: string) => Promise<void>;
@@ -21,18 +22,31 @@ interface NotificationStore {
   closeDetailModal: () => void;
 }
 
-export const useNotificationStore = create<NotificationStore>((set) => ({
+export const useNotificationStore = create<NotificationStore>((set, get) => ({
   notifications: [],
   unreadCount: 0,
   loading: false,
   error: null,
+  lastFetchedAt: null,
 
-  fetchNotifications: async () => {
+  fetchNotifications: async (force = false) => {
+    const state = get();
+    // Cache for 60 seconds
+    if (!force && !state.loading && state.lastFetchedAt) {
+      if (Date.now() - state.lastFetchedAt < 60000) {
+        return;
+      }
+    }
+
     try {
       set({ loading: true, error: null });
       const data = await notificationService.getNotifications();
       const unread = data.filter((n) => !n.read).length;
-      set({ notifications: data, unreadCount: unread });
+      set({ 
+        notifications: data, 
+        unreadCount: unread,
+        lastFetchedAt: Date.now()
+      });
     } catch (error: any) {
       set({ error: error?.response?.data?.message || "Failed to fetch notifications" });
     } finally {

@@ -46,7 +46,7 @@ const EquipmentTable: React.FC<EquipmentTableProps> = ({ equipments, onOpenDetai
                                 <td className={`p-4 rounded-l-2xl ${rowBg}`}>
                                     <div className="flex items-center gap-4">
                                         <div className="w-12 h-12 rounded-xl bg-white dark:bg-slate-700 p-1 shadow-sm overflow-hidden flex-shrink-0">
-                                            <img alt={item.name} className="w-full h-full object-cover rounded-lg" src={(item as any).imageUrl || 'https://via.placeholder.com/150'} />
+                                            <img alt={item.name} className="w-full h-full object-cover rounded-lg" src={item.img || 'https://via.placeholder.com/150'} />
                                         </div>
                                         <div className="min-w-0 flex-1">
                                             <p className="text-sm font-semibold text-slate-800 dark:text-white truncate" title={item.name}>{item.name}</p>

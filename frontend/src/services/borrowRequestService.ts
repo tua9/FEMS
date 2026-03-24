@@ -43,6 +43,11 @@ export const borrowRequestService = {
     return res.data;
   },
 
+  async editBorrowRequest(id: string, payload: Partial<CreateBorrowRequestPayload>): Promise<{ message: string, borrowRequest: BorrowRequest }> {
+    const res = await api.patch(`/requests/${id}/edit`, payload);
+    return res.data;
+  },
+
   async getAllBorrowRequests(): Promise<BorrowRequest[]> {
     const res = await api.get("/requests");
     return res.data;

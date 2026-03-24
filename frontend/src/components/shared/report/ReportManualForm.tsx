@@ -1,4 +1,5 @@
 import React, { useState, useRef, useCallback, useEffect, useMemo } from "react";
+import { toast } from "sonner";
 import {
   Monitor,
   Armchair,
@@ -167,9 +168,14 @@ export const ReportManualForm: React.FC<ReportManualFormProps> = ({
   const addFiles = useCallback((incoming: FileList | null) => {
     if (!incoming) return;
     const valid = Array.from(incoming).filter(f => f.type.startsWith("image/") && f.size <= 10 * 1024 * 1024);
-    setFiles(prev => [...prev, ...valid].slice(0, 5));
+    
+    if (valid.length > 2 || (files.length + valid.length) > 2) {
+      toast.warning("Hệ thống chỉ cho phép nộp tối đa 2 hình ảnh bằng chứng!");
+    }
+
+    setFiles(prev => [...prev, ...valid].slice(0, 2));
     setErrors(prev => ({ ...prev, files: undefined }));
-  }, []);
+  }, [files]);
 
   const removeFile = (index: number) => setFiles(prev => prev.filter((_, i) => i !== index));
 
@@ -452,7 +458,7 @@ export const ReportManualForm: React.FC<ReportManualFormProps> = ({
       {/* 5. Evidence ──────────────────────────────────────────────────── */}
       <div>
         <h3 className="mb-[1rem] text-[0.625rem] font-black tracking-[0.2em] text-slate-500 uppercase dark:text-slate-400 opacity-60">
-          5. Upload Evidence <span className="font-medium normal-case opacity-60 tracking-normal">(optional, max 5 files)</span>
+          5. Upload Evidence <span className="font-medium normal-case opacity-60 tracking-normal">(optional, max 2 files)</span>
         </h3>
         <input ref={fileInputRef} type="file" accept="image/*" multiple className="hidden" onChange={(e) => addFiles(e.target.files)} />
         <div

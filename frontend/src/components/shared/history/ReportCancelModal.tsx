@@ -4,7 +4,7 @@
  */
 import React, { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
-import { X, Ban, FileText } from "lucide-react";
+import { X, Ban, FileText, Loader2 } from "lucide-react";
 import type { ReportHistoryItem } from "./ReportHistoryTable";
 
 // ── Lý do gợi ý ───────────────────────────────────────────────────────────────
@@ -86,31 +86,35 @@ const ReportCancelModal: React.FC<ReportCancelModalProps> = ({
 
         {/* Header */}
         <div className="mb-6">
-          <p className="mb-1 text-[0.625rem] font-black uppercase tracking-widest text-red-500/70 dark:text-red-400/70">
-            Cancel Report
-          </p>
-          <h3 className="text-2xl font-black text-[#1E2B58] dark:text-white leading-tight">
-            Confirm Cancellation
-          </h3>
-          <p className="mt-1 text-xs font-bold uppercase tracking-widest text-[#1E2B58]/50 dark:text-white/40">
-            {item.id} • {item.category}
-          </p>
-          <p className="mt-3 text-sm text-slate-500 dark:text-slate-400">
-            Please choose or enter a reason before confirming cancellation.
+          <div className="flex flex-col">
+            <p className="mb-1 text-[0.625rem] font-black uppercase tracking-[0.2em] text-red-500/80 dark:text-red-400/80">
+              Action Required
+            </p>
+            <h3 className="text-2xl font-black text-[#1E2B58] dark:text-white leading-tight">
+              Confirm Cancellation
+            </h3>
+          </div>
+          <div className="mt-2 flex items-center gap-2 py-1.5 px-3 rounded-xl bg-[#1E2B58]/5 dark:bg-white/5 w-fit">
+            <span className="text-[0.625rem] font-black text-[#1E2B58]/40 dark:text-white/40 uppercase tracking-widest">{item.id}</span>
+            <div className="w-1 h-1 rounded-full bg-[#1E2B58]/20 dark:bg-white/20" />
+            <span className="text-[0.625rem] font-black text-[#1E2B58]/60 dark:text-white/60 uppercase tracking-widest">{item.category}</span>
+          </div>
+          <p className="mt-4 text-sm font-medium text-slate-500 dark:text-slate-400 leading-relaxed">
+            Please choose or enter a reason for cancelling this report.
           </p>
         </div>
 
         {/* Suggested reasons */}
-        <div className="mb-5 flex flex-wrap gap-2">
+        <div className="mb-6 flex flex-wrap gap-2">
           {SUGGESTED_REASONS.map((reason) => (
             <button
               key={reason}
               type="button"
               onClick={() => handleSelectReason(reason)}
-              className={`rounded-full border px-3 py-1.5 text-[0.6875rem] font-bold transition-all hover:scale-[1.02] active:scale-95 ${
+              className={`rounded-xl border px-3.5 py-2 text-[0.6875rem] font-bold transition-all hover:scale-[1.02] active:scale-95 ${
                 decisionNote === reason
-                  ? "border-red-400 bg-red-50 text-red-600 dark:border-red-500/50 dark:bg-red-900/20 dark:text-red-400"
-                  : "border-black/10 bg-white/40 text-[#1E2B58]/70 hover:border-black/20 dark:border-white/10 dark:bg-white/5 dark:text-white/60"
+                  ? "border-red-400 bg-red-50 text-red-600 shadow-sm shadow-red-500/10 dark:border-red-500/50 dark:bg-red-900/30 dark:text-red-400"
+                  : "border-black/5 bg-white/40 text-[#1E2B58]/60 hover:border-black/10 hover:bg-white/60 dark:border-white/5 dark:bg-white/5 dark:text-white/50"
               }`}
             >
               {reason}
@@ -121,16 +125,16 @@ const ReportCancelModal: React.FC<ReportCancelModalProps> = ({
         {/* Form */}
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <div className="flex flex-col gap-2">
-            <label className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-[#1E2B58]/70 dark:text-white/60">
-              <FileText className="h-3.5 w-3.5" />
-              Cancellation Reason
+            <label className="flex items-center gap-2 text-[0.625rem] font-black uppercase tracking-[0.2em] text-[#1E2B58]/40 dark:text-white/40">
+              <FileText className="h-3 w-3" />
+              Reason Details
             </label>
             <textarea
               rows={3}
-              placeholder="Enter your reason for cancelling this report..."
+              placeholder="Enter details (optional)..."
               value={decisionNote}
               onChange={(e) => { setDecisionNote(e.target.value); setFormError(""); }}
-              className="w-full resize-none rounded-2xl border border-white/40 bg-white/40 px-4 py-3 text-sm font-medium text-[#1E2B58] outline-none transition-all placeholder:text-[#1E2B58]/30 focus:ring-2 focus:ring-red-400/30 dark:border-slate-700/50 dark:bg-slate-800/50 dark:text-white dark:placeholder:text-white/30"
+              className="w-full resize-none rounded-[1.25rem] border border-[#1E2B58]/10 bg-white/50 px-4 py-3 text-sm font-bold text-[#1E2B58] outline-none transition-all placeholder:text-[#1E2B58]/20 focus:ring-4 focus:ring-red-500/10 dark:border-white/10 dark:bg-black/20 dark:text-white dark:placeholder:text-white/20"
             />
           </div>
 
@@ -141,22 +145,22 @@ const ReportCancelModal: React.FC<ReportCancelModalProps> = ({
           )}
 
           {/* Buttons */}
-          <div className="mt-1 flex gap-3">
+          <div className="mt-2 flex gap-3">
             <button
               type="button"
               onClick={onClose}
               disabled={isSubmitting}
-              className="flex-1 rounded-[1.25rem] bg-white/20 py-3.5 text-sm font-bold text-[#1E2B58] transition hover:bg-white/40 disabled:opacity-50 dark:bg-slate-800/20 dark:text-white dark:hover:bg-slate-800/40"
+              className="flex-1 rounded-[1.25rem] py-3.5 text-sm font-bold border border-[#1E2B58]/10 dark:border-white/10 text-[#1E2B58]/70 dark:text-white/70 bg-white/40 dark:bg-white/5 hover:bg-white/60 dark:hover:bg-white/10 transition-all active:scale-95 disabled:opacity-50"
             >
               Close
             </button>
             <button
               type="submit"
               disabled={!decisionNote.trim() || isSubmitting}
-              className="flex flex-[2] items-center justify-center gap-2 rounded-[1.25rem] bg-red-500 py-3.5 text-sm font-bold text-white shadow-xl shadow-red-500/20 transition-all hover:scale-[1.02] hover:bg-red-600 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:scale-100"
+              className="flex flex-[2] items-center justify-center gap-2 rounded-[1.25rem] bg-red-500 py-3.5 text-sm font-bold text-white shadow-lg shadow-red-500/20 transition-all hover:bg-red-600 hover:scale-[1.02] active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
             >
               {isSubmitting ? (
-                <span className="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />
+                <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
                 <Ban className="h-4 w-4" />
               )}

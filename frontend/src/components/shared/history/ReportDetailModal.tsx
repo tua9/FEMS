@@ -57,11 +57,21 @@ export const ReportDetailModal: React.FC<ReportDetailModalProps> = ({ item: r, o
                     </div>
                 )}
 
-                {r.img && (
+                {((r.original as any)?.images?.length > 0 || r.img) && (
                     <div className="pt-2 border-t border-[#1E2B58]/10 dark:border-white/10">
-                        <span className="text-[#1E2B58]/60 dark:text-white/50 font-medium text-sm block mb-2">Evidence Image</span>
-                        <div className="rounded-xl overflow-hidden border border-[#1E2B58]/10 dark:border-white/10 max-h-48 flex justify-center bg-black/5 dark:bg-black/20">
-                            <img src={r.img} alt="Evidence" className="object-contain max-h-48 w-full" />
+                        <span className="text-[#1E2B58]/60 dark:text-white/50 font-medium text-sm block mb-2">Evidence Images</span>
+                        <div className={`grid ${(r.original as any)?.images?.length > 1 ? 'grid-cols-2' : 'grid-cols-1'} gap-2`}>
+                            {(r.original as any)?.images?.length > 0 ? (
+                                (r.original as any).images.map((imgUrl: string, idx: number) => (
+                                    <div key={idx} className="rounded-xl overflow-hidden border border-[#1E2B58]/10 dark:border-white/10 max-h-48 flex justify-center bg-black/5 dark:bg-black/20">
+                                        <img src={imgUrl} alt={`Evidence ${idx + 1}`} className="object-contain max-h-48 w-full" />
+                                    </div>
+                                ))
+                            ) : (
+                                <div className="rounded-xl overflow-hidden border border-[#1E2B58]/10 dark:border-white/10 max-h-48 flex justify-center bg-black/5 dark:bg-black/20">
+                                    <img src={r.img} alt="Evidence" className="object-contain max-h-48 w-full" />
+                                </div>
+                            )}
                         </div>
                     </div>
                 )}

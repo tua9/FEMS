@@ -256,6 +256,80 @@ const cancelBorrowRequest = async (id, userId, decisionNote) => {
   return { message: 'Borrow request cancelled', request }
 }
 
+const editBorrowRequest = async (id, userId, body) => {
+  const { borrow_date, return_date, note } = body
+
+  const request = await BorrowRequest.findById(id)
+  if (!request) {
+    throw new ApiError(StatusCodes.NOT_FOUND, 'Borrow request not found')
+  }
+
+  if (request.user_id.toString() !== userId.toString()) {
+    throw new ApiError(StatusCodes.FORBIDDEN, 'You can only edit your own requests')
+  }
+
+  if (request.status !== 'pending') {
+    throw new ApiError(StatusCodes.BAD_REQUEST, 'Only pending requests can be edited')
+  }
+
+  // Validate dates if they are provided
+  let newBorrowDate = request.borrow_date;
+  let newReturnDate = request.return_date;
+
+  if (borrow_date) newBorrowDate = new Date(borrow_date);
+  if (return_date) newReturnDate = new Date(return_date);
+
+  if (isNaN(newBorrowDate.getTime()) || isNaN(newReturnDate.getTime())) {
+    throw new ApiError(StatusCodes.UNPROCESSABLE_ENTITY, 'Invalid dates provided')
+  }
+
+  const now = new Date()
+  if (newBorrowDate < new Date(now.getTime() - 5 * 60 * 1000) && borrow_date) {
+    throw new ApiError(StatusCodes.UNPROCESSABLE_ENTITY, 'Borrow date cannot be in the past')
+  }
+
+  if (newBorrowDate >= newReturnDate) {
+    throw new ApiError(StatusCodes.UNPROCESSABLE_ENTITY, 'Borrow date must be before return date')
+  }
+
+  // Check conflicts
+  if (borrow_date || return_date) {
+    if (request.equipment_id) {
+      const conflictingRequests = await BorrowRequest.find({
+        _id: { $ne: request._id },
+        equipment_id: request.equipment_id,
+        status: { $in: ['approved', 'handed_over', 'borrowing'] },
+        borrow_date: { $lt: newReturnDate },
+        return_date: { $gt: newBorrowDate }
+      })
+
+      if (conflictingRequests.length > 0) {
+        throw new ApiError(StatusCodes.BAD_REQUEST, 'Date conflicts with existing borrow')
+      }
+    }
+    request.borrow_date = newBorrowDate;
+    request.return_date = newReturnDate;
+  }
+
+  if (note !== undefined) {
+    request.note = note;
+  }
+
+  await request.save();
+
+  const populatedRequest = await BorrowRequest.findById(request._id)
+    .populate('user_id', 'username displayName email role')
+    .populate('equipment_id')
+    .populate({
+      path: 'room_id',
+      select: 'name type building_id',
+      populate: { path: 'building_id', select: 'name' }
+    })
+    .populate('processed_by', 'username displayName')
+
+  return { message: 'Borrow request updated successfully', borrowRequest: populatedRequest }
+}
+
 const approveBorrowRequest = async (id, approverId, decisionNote) => {
   const request = await BorrowRequest.findById(id)
   if (!request) {
@@ -513,6 +587,7 @@ export const borrowRequestService = {
   getPersonalBorrowRequests,
   getBorrowRequestById,
   updateBorrowRequest,
+  editBorrowRequest,
   cancelBorrowRequest,
   approveBorrowRequest,
   rejectBorrowRequest,

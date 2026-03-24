@@ -15,7 +15,7 @@ import type { ApprovalHistoryItem } from './ApprovalHistoryTable';
 
 export type ModalItem =
     | { type: 'report';   item: ReportHistoryItem }
-    | { type: 'borrow';   item: BorrowHistoryItem }
+    | { type: 'borrow';   item: BorrowHistoryItem; mode?: 'view' | 'edit' }
     | { type: 'approval'; item: ApprovalHistoryItem };
 
 // ─── Props ────────────────────────────────────────────────────────────────────
@@ -55,6 +55,7 @@ export const HistoryDetailModal: React.FC<HistoryDetailModalProps> = ({ modal, o
                 {modal.type === 'borrow' && (
                     <BorrowDetailModal
                         item={modal.item}
+                        initialMode={modal.mode || 'view'}
                         onClose={onClose}
                         onBorrowAgain={() => { onClose(); navigate(`/${user?.role}/equipment`); }}
                     />

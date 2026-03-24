@@ -6,17 +6,9 @@ import { PageHeader } from '@/components/shared/PageHeader';
 import type { Notification, NotificationType } from '@/types/notification';
 import { formatDistanceToNow } from 'date-fns';
 import NotificationDetailModal from '@/components/shared/notifications/NotificationDetailModal';
+import { NOTIFICATION_TYPE_CONFIG, getNotificationAction } from '@/utils/notificationHelper';
 
 // ─── Type config ──────────────────────────────────────────────────────────────
-
-const TYPE_CONFIG: Record<NotificationType, { icon: string; bg: string; color: string; label: string }> = {
-    approval:  { icon: 'check_circle',      bg: 'bg-emerald-50 dark:bg-emerald-900/20', color: 'text-emerald-500',  label: 'Approval'  },
-    borrow:    { icon: 'inventory_2',       bg: 'bg-blue-50   dark:bg-blue-900/20',     color: 'text-blue-500',    label: 'Borrow'    },
-    return:    { icon: 'assignment_return', bg: 'bg-amber-50  dark:bg-amber-900/20',    color: 'text-amber-500',   label: 'Return'    },
-    equipment: { icon: 'devices',           bg: 'bg-violet-50 dark:bg-violet-900/20',   color: 'text-violet-500',  label: 'Equipment' },
-    report:    { icon: 'build_circle',      bg: 'bg-rose-50   dark:bg-rose-900/20',     color: 'text-rose-500',    label: 'Report'    },
-    general:   { icon: 'notifications',    bg: 'bg-slate-100 dark:bg-slate-700/40',    color: 'text-slate-500',   label: 'General'   },
-};
 
 const FILTER_TABS: { value: 'all' | NotificationType; label: string }[] = [
     { value: 'all',       label: 'All'       },
@@ -39,21 +31,20 @@ interface RowProps {
 
 const NotificationRow: React.FC<RowProps> = ({ notification, onRead, onDelete, onOpenDetail, isHighlighted }) => {
     const navigate = useNavigate();
-    const cfg = TYPE_CONFIG[notification.type] || TYPE_CONFIG.general;
+    const cfg = NOTIFICATION_TYPE_CONFIG[notification.type] || NOTIFICATION_TYPE_CONFIG.general;
 
-    // Notification state may contain { type: 'borrow'|'report', id: '...' }
-    const entityState = notification.state as { type?: 'borrow' | 'report'; id?: string } | null;
-    const hasDetail   = !!(entityState?.type && entityState?.id);
+    const action = getNotificationAction(notification);
+    const hasDetail = action.type === 'modal';
 
     const handleClick = () => {
         if (!notification.read) {
             onRead(notification._id);
         }
-        if (hasDetail) {
+        if (action.type === 'modal') {
             // Open inline modal
-            onOpenDetail(entityState!.type!, entityState!.id!);
-        } else if (notification.to) {
-            navigate(notification.to, { state: notification.state ?? {} });
+            onOpenDetail(action.modalType, action.id);
+        } else if (action.type === 'navigate') {
+            navigate(action.to, { state: action.state ?? {} });
         }
     };
 
