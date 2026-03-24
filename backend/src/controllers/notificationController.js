@@ -26,3 +26,8 @@ export const clearAll = asyncHandler(async (req, res) => {
   const result = await notificationService.clearAllNotifications(req.user._id)
   res.status(StatusCodes.OK).json(result)
 })
+
+export const broadcastNotification = asyncHandler(async (req, res) => {
+  const result = await notificationService.broadcastNotification(req.body)
+  res.status(StatusCodes.OK).json(result)
+})

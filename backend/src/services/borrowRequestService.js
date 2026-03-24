@@ -604,6 +604,24 @@ const remindBorrowRequest = async (id) => {
   return { message: 'Reminder sent successfully' }
 }
 
+const checkOverdueHandedOverRequests = async () => {
+  const now = new Date()
+  const overdueRequests = await BorrowRequest.find({
+    status: 'handed_over',
+    return_date: { $lt: now }
+  }).populate('user_id', 'displayName')
+
+  if (overdueRequests.length > 0) {
+    await notificationService.notifyAdmins({
+      type: 'borrow',
+      title: 'Overdue Equipment Alert',
+      message: `There are ${overdueRequests.length} equipment borrow(s) currently overdue. Please check the management console for details.`,
+      to: '/admin/borrows',
+      state: { type: 'borrow', tab: 'overdue' }
+    }).catch(err => console.error('Failed to notify admins about overdue borrows:', err))
+  }
+}
+
 export const borrowRequestService = {
   createBorrowRequest,
   getAllBorrowRequests,
@@ -620,4 +638,6 @@ export const borrowRequestService = {
   remindBorrowRequest,
   getPendingBorrowRequests,
   getApprovedByMe,
+  autoCancelExpiredRequests,
+  checkOverdueHandedOverRequests,
 }

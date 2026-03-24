@@ -65,6 +65,17 @@ const createReport = async (body) => {
 
   const populated = await populateReport(Report.findById(newReport._id))
 
+  // Notify Admins for High/Critical Severity
+  if (severity === 'high' || severity === 'critical') {
+    await notificationService.notifyAdmins({
+      type: 'report',
+      title: `Priority Alert: ${severity.toUpperCase()} Report`,
+      message: `A new ${severity} report #${code} has been submitted by ${populated.user_id?.displayName || 'a user'}.`,
+      to: '/admin/reports',
+      state: { type: 'report', id: newReport._id, tab: 'report' }
+    }).catch(err => console.error('Failed to notify admins:', err))
+  }
+
   return {
     message: 'Create report success',
     report_id: newReport._id,

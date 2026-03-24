@@ -28,5 +28,15 @@ export const initCronJobs = () => {
     }
   })
 
+  // Run daily at 08:00 to check for overdue borrows
+  cron.schedule('0 8 * * *', async () => {
+    console.log('🔍 [CRON] Daily check for overdue borrows...')
+    try {
+      await borrowRequestService.checkOverdueHandedOverRequests()
+    } catch (error) {
+      console.error('❌ [CRON] Error in overdue borrow check:', error)
+    }
+  })
+
   console.log('✅ Cron jobs scheduled successfully.')
 }
