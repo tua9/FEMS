@@ -15,5 +15,6 @@ router.get('/dashboard/stats', getDashboardStats)
 router.get('/dashboard/chart', getDashboardChart)
 router.get('/dashboard/health', getHealthStatus)
 router.get('/dashboard/borrow-requests', getRecentBorrowRequests)
+router.get('/dashboard/damage-reports', getRecentDamageReports)
 
 export default router

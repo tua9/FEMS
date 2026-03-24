@@ -72,11 +72,23 @@ const getHealthStatus = async () => {
 }
 
 const getRecentBorrowRequests = async () => {
-  return await BorrowRequest.find({ status: 'pending' })
+  const requests = await BorrowRequest.find({ status: 'pending' })
     .sort({ createdAt: -1 })
     .limit(5)
-    .populate('user_id', 'name avatar department')
+    .populate('user_id', 'displayName avatarUrl username')
     .populate('equipment_id', 'name')
+    .lean()
+
+  return requests.map((req) => ({
+    ...req,
+    user_id: req.user_id
+      ? {
+          ...req.user_id,
+          name: req.user_id.displayName || req.user_id.username,
+          avatar: req.user_id.avatarUrl,
+        }
+      : null,
+  }))
 }
 
 const getRecentDamageReports = async () => {
@@ -119,8 +131,8 @@ const getRecentDamageReports = async () => {
     { $unwind: { path: '$equipment_id', preserveNullAndEmptyArrays: true } },
     {
       $project: {
-        'user_id.name': 1,
-        'user_id.avatar': 1,
+        'user_id.name': { $ifNull: ['$user_id.displayName', '$user_id.username'] },
+        'user_id.avatar': '$user_id.avatarUrl',
         'equipment_id.name': 1,
         description: 1,
         priority: 1,
