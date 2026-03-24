@@ -6,11 +6,11 @@ import { useReportStore } from '@/stores/useReportStore';
 import { useRoomStore } from '@/stores/useRoomStore';
 import type { ReportFormData, IssueCategory } from '@/components/shared/report/ReportManualForm';
 import type { QRResult } from '@/components/shared/report/QuickScanReport';
-import type { ReportType } from '@/types/report';
+import { uploadImages } from '@/utils/uploadHelper';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
-export const CATEGORY_TO_TYPE: Record<IssueCategory, ReportType> = {
+export const CATEGORY_TO_TYPE: Record<IssueCategory, any> = {
     equipment:      'equipment',
     infrastructure: 'infrastructure',
     other:          'other',
@@ -21,16 +21,6 @@ export const CATEGORY_LABELS: Record<IssueCategory, string> = {
     infrastructure: 'Infrastructure',
     other:          'Other',
 };
-
-// ─── Helpers ──────────────────────────────────────────────────────────────────
-
-const fileToBase64 = (file: File): Promise<string> =>
-    new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload  = () => resolve(reader.result as string);
-        reader.onerror = reject;
-        reader.readAsDataURL(file);
-    });
 
 // ─── Navigation state (from Room Status page) ─────────────────────────────────
 
@@ -97,9 +87,11 @@ export function useReportForm(): ReportFormState {
     const handleFormSubmit = async (data: ReportFormData) => {
         setIsSubmitting(true);
         try {
-            let imgBase64: string | null = null;
+            let imageUrls: string[] = [];
             if (data.files && data.files.length > 0) {
-                imgBase64 = await fileToBase64(data.files[0]);
+                // Limit to 2 files as per requirement
+                const filesToUpload = data.files.slice(0, 2);
+                imageUrls = await uploadImages(filesToUpload);
             }
 
             const response = await createReport({
@@ -108,7 +100,8 @@ export function useReportForm(): ReportFormState {
                 type:         CATEGORY_TO_TYPE[data.category],
                 description:  data.description,
                 severity:     data.severity,
-                img:          imgBase64 ?? undefined,
+                images:       imageUrls,
+                img:          imageUrls.length > 0 ? imageUrls[0] : undefined,
             }) as any;
 
             const newReport = response.report;

@@ -43,6 +43,10 @@ const assetSchema = new mongoose.Schema(
       sparse: true, // allows existing docs without code; new ones always get one
       trim: true,
     },
+    img: {
+      type: String,
+      default: null,
+    },
   },
   {
     timestamps: true,

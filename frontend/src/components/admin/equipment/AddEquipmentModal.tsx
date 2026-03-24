@@ -5,6 +5,7 @@ import type { Equipment, CreateEquipmentPayload } from '../../../types/equipment
 import { useEquipmentStore } from '../../../stores/useEquipmentStore';
 import { useRoomStore } from '../../../stores/useRoomStore';
 import { toast } from 'sonner';
+import { uploadImages } from '../../../utils/uploadHelper';
 
 interface AddEquipmentModalProps {
     isOpen: boolean;
@@ -55,6 +56,8 @@ const AddEquipmentModal: React.FC<AddEquipmentModalProps> = ({ isOpen, onClose, 
             setRoomId('');
             setCode('');
         }
+        setPreviewUrl(equipment?.img || null);
+        setImages([]);
     }, [equipment, isOpen]);
 
     // ── Room Selection Logic ──────────────────────────────────────────────────
@@ -87,17 +90,41 @@ const AddEquipmentModal: React.FC<AddEquipmentModalProps> = ({ isOpen, onClose, 
         setRoomId(''); // Reset room when building changes
     };
 
+    const [images, setImages] = useState<File[]>([]);
+    const [previewUrl, setPreviewUrl] = useState<string | null>(equipment?.img || null);
+    const fileInputRef = React.useRef<HTMLInputElement>(null);
+
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const selectedFiles = Array.from(e.target.files || []);
+        if (selectedFiles.length > 1) {
+            toast.warning("Chỉ được phép chọn tối đa 1 hình ảnh cho thiết bị!");
+        }
+        
+        const validFile = selectedFiles.find(f => f.type.startsWith('image/'));
+        if (validFile) {
+            setImages([validFile]);
+            setPreviewUrl(URL.createObjectURL(validFile));
+        }
+    };
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setIsSubmitting(true);
 
         try {
+            let uploadedImageUrl = equipment?.img || null;
+            if (images.length > 0) {
+                const urls = await uploadImages(images);
+                if (urls.length > 0) uploadedImageUrl = urls[0];
+            }
+
             const payload: CreateEquipmentPayload = {
                 name,
                 category,
                 status: (equipment?.status as any) || 'good',
                 available: isEdit ? equipment?.available : true,
                 room_id: roomId || null,
+                img: uploadedImageUrl,
                 ...(isEdit && { code: code || undefined })
             };
 
@@ -252,12 +279,44 @@ const AddEquipmentModal: React.FC<AddEquipmentModalProps> = ({ isOpen, onClose, 
                         {/* Image Upload Aesthetic */}
                         <div className="space-y-1.5 pt-2">
                             <label className={labelClasses}>Visual Documentation</label>
-                            <div className="border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-3xl p-8 flex flex-col items-center justify-center text-center bg-slate-50/30 dark:bg-black/10 hover:bg-slate-50/50 transition-colors cursor-pointer group">
-                                <div className="w-12 h-12 rounded-2xl bg-white dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-700 flex items-center justify-center text-blue-500 mb-3 group-hover:scale-110 transition-transform shadow-sm">
-                                    <span className="material-symbols-outlined text-2xl font-light">camera_enhance</span>
-                                </div>
-                                <p className="text-xs font-black text-slate-700 dark:text-slate-300">Register asset image</p>
-                                <p className="text-[10px] text-slate-400 font-bold mt-1 uppercase tracking-tight italic">WebP, PNG or JPG supported</p>
+                            <input 
+                                ref={fileInputRef}
+                                type="file" 
+                                accept="image/*" 
+                                className="hidden" 
+                                onChange={handleFileChange}
+                            />
+                            <div 
+                                onClick={() => fileInputRef.current?.click()}
+                                className="border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-3xl p-8 flex flex-col items-center justify-center text-center bg-slate-50/30 dark:bg-black/10 hover:bg-slate-50/50 transition-colors cursor-pointer group relative overflow-hidden"
+                            >
+                                {previewUrl ? (
+                                    <div className="relative group/preview w-full flex flex-col items-center">
+                                        <div className="relative">
+                                            <img src={previewUrl} alt="Preview" className="h-32 w-auto rounded-2xl object-cover shadow-lg border-4 border-white dark:border-slate-800" />
+                                            <button 
+                                                type="button"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    setImages([]);
+                                                    setPreviewUrl(null);
+                                                }}
+                                                className="absolute -top-3 -right-3 w-8 h-8 rounded-full bg-red-500 text-white flex items-center justify-center shadow-lg hover:bg-red-600 transition-colors"
+                                            >
+                                                <span className="material-symbols-outlined text-lg">close</span>
+                                            </button>
+                                        </div>
+                                        <p className="mt-4 text-[10px] font-black text-slate-400 uppercase tracking-widest italic opacity-60">Click to replace image</p>
+                                    </div>
+                                ) : (
+                                    <>
+                                        <div className="w-12 h-12 rounded-2xl bg-white dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-700 flex items-center justify-center text-blue-500 mb-3 group-hover:scale-110 transition-transform shadow-sm">
+                                            <span className="material-symbols-outlined text-2xl font-light">camera_enhance</span>
+                                        </div>
+                                        <p className="text-xs font-black text-slate-700 dark:text-slate-300">Register asset image</p>
+                                        <p className="text-[10px] text-slate-400 font-bold mt-1 uppercase tracking-tight italic">WebP, PNG or JPG supported</p>
+                                    </>
+                                )}
                             </div>
                         </div>
                     </form>

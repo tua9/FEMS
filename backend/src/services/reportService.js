@@ -45,7 +45,7 @@ const populateReport = (query) => {
 }
 
 const createReport = async (body) => {
-  const { user_id, equipment_id, room_id, type, severity, description, img, priority } = body
+  const { user_id, equipment_id, room_id, type, severity, description, img, priority, images } = body
 
   const code = await generateUniqueCode()
 
@@ -57,7 +57,8 @@ const createReport = async (body) => {
     severity: severity || 'medium',
     priority: priority || severity || 'medium',
     description: description || null,
-    img: img || null,
+    img: img || (images && images.length > 0 ? images[0] : null),
+    images: images || [],
     code,
   })
 

@@ -19,7 +19,7 @@ export interface Equipment {
     email: string;
   } | string | null;
   code?: string | null;
-  imageUrl?: string;
+  img?: string | null;
   description?: string;
   issueDescription?: string;
   createdAt?: string;
@@ -33,4 +33,5 @@ export interface CreateEquipmentPayload {
   available?: boolean;
   room_id?: string | null;
   code?: string | null;
+  img?: string | null;
 }

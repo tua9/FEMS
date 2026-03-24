@@ -26,7 +26,7 @@ const EquipmentQRCodeModal: React.FC<EquipmentQRCodeModalProps> = ({ isOpen, onC
                 <div className="text-center mb-6">
                     <p className="text-[0.625rem] font-black uppercase tracking-widest text-[#1E2B58]/50 dark:text-white/40 mb-3">QR Code</p>
                     <div className="w-16 h-16 mx-auto bg-white/40 dark:bg-slate-800/40 rounded-2xl p-1.5 shadow-sm mb-4">
-                        <img src={equipment.imageUrl} alt={equipment.name} className="w-full h-full object-cover rounded-xl" />
+                        <img src={equipment.img || undefined} alt={equipment.name} className="w-full h-full object-cover rounded-xl" />
                     </div>
                     <h3 className="text-xl font-extrabold text-[#1A2B56] dark:text-white">{equipment.name}</h3>
                     <p className="text-sm font-semibold text-slate-500 dark:text-slate-400">ID: {equipment._id}</p>

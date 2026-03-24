@@ -45,17 +45,19 @@ const BorrowingTable: React.FC<BorrowingTableProps> = ({ records, onApprove, onH
         <div>
             <table className="w-full text-left border-separate border-spacing-y-3">
                 <colgroup>
-                    <col className="w-[22%]" />
-                    <col className="w-[22%]" />
-                    <col className="w-[16%]" />
+                    <col className="w-[18%]" />
+                    <col className="w-[18%]" />
                     <col className="w-[14%]" />
-                    <col className="w-[26%]" />
+                    <col className="w-[14%]" />
+                    <col className="w-[12%]" />
+                    <col className="w-[24%]" />
                 </colgroup>
                 <thead>
                     <tr className="text-slate-800 dark:text-slate-300">
                         <th className="px-3 pb-2 text-[10px] font-semibold uppercase tracking-[0.15em] opacity-80">Borrower</th>
                         <th className="px-3 pb-2 text-[10px] font-semibold uppercase tracking-[0.15em] opacity-80">Equipment</th>
-                        <th className="px-3 pb-2 text-[10px] font-semibold uppercase tracking-[0.15em] opacity-80">Due Date</th>
+                        <th className="px-3 pb-2 text-[10px] font-semibold uppercase tracking-[0.15em] opacity-80">Start Date</th>
+                        <th className="px-3 pb-2 text-[10px] font-semibold uppercase tracking-[0.15em] opacity-80">End Date</th>
                         <th className="px-3 pb-2 text-[10px] font-semibold uppercase tracking-[0.15em] opacity-80">Status</th>
                         <th className="px-3 pb-2 text-[10px] font-semibold uppercase tracking-[0.15em] opacity-80 text-right">Actions</th>
                     </tr>
@@ -66,6 +68,7 @@ const BorrowingTable: React.FC<BorrowingTableProps> = ({ records, onApprove, onH
                         const equipment = typeof record.equipment_id === 'object' ? record.equipment_id : null;
                         const borrowerName = borrower?.displayName || 'Unknown';
                         const equipmentName = equipment?.name || 'Unknown Item';
+                        const equipmentCode = (equipment as any)?.code || (equipment as any)?.qr_code || 'N/A';
                         const isOverdue = record.status === 'overdue' || (record.status === 'handed_over' && new Date(record.return_date) < new Date());
                         const displayStatus = isOverdue ? 'overdue' : (record.status as string);
 
@@ -76,24 +79,27 @@ const BorrowingTable: React.FC<BorrowingTableProps> = ({ records, onApprove, onH
                                 className="group cursor-pointer transition-all hover:scale-[1.002] active:scale-[0.998]"
                             >
                                 <td className={`p-3 rounded-l-lg ${rowBg}`}>
-                                    <div className="flex items-center gap-3 max-w-[200px]">
+                                    <div className="flex items-center gap-3">
                                         <div className="w-8 h-8 rounded-full bg-[#1A2B56] text-white flex items-center justify-center font-semibold text-xs flex-shrink-0">
                                             {borrowerName.charAt(0)}
                                         </div>
-                                        <div className="min-w-0 flex-1">
+                                        <div className="min-w-0">
                                             <p className="text-xs font-semibold text-slate-800 dark:text-white truncate">{borrowerName}</p>
-                                            <p className="text-[10px] text-slate-500 dark:text-slate-400 font-medium truncate">ID: {borrower?._id || 'N/A'}</p>
+                                            <p className="text-[10px] text-slate-500 dark:text-slate-400 font-medium truncate">ID: {borrower?._id?.slice(-8).toUpperCase() || 'N/A'}</p>
                                         </div>
                                     </div>
                                 </td>
                                 <td className={`p-3 ${rowBg}`}>
-                                    <div className="max-w-[200px]">
+                                    <div className="min-w-0">
                                         <p className="text-xs font-semibold text-slate-800 dark:text-white truncate">{equipmentName}</p>
-                                        <p className="text-[10px] text-slate-500 dark:text-slate-400 font-medium mt-0.5 truncate">ID: {record._id.substring(0, 8)}...</p>
+                                        <p className="text-[10px] text-[#1A2B56] dark:text-blue-400 font-black tracking-wider mt-0.5 truncate uppercase">CODE: {equipmentCode}</p>
                                     </div>
                                 </td>
-                                <td className={`p-3 text-xs font-medium ${isOverdue ? 'text-red-500 font-bold' : 'text-slate-400 dark:text-slate-500'} ${rowBg}`}>
-                                    <div>{new Date(record.return_date).toLocaleDateString()}</div>
+                                <td className={`p-3 text-xs font-medium text-slate-500 dark:text-slate-400 ${rowBg}`}>
+                                    <div>{record.borrow_date ? new Date(record.borrow_date).toLocaleDateString('vi-VN') : 'N/A'}</div>
+                                </td>
+                                <td className={`p-3 text-xs font-medium ${isOverdue ? 'text-red-500 font-bold' : 'text-slate-500 dark:text-slate-400'} ${rowBg}`}>
+                                    <div>{record.return_date ? new Date(record.return_date).toLocaleDateString('vi-VN') : 'N/A'}</div>
                                 </td>
                             <td className={`p-3 ${rowBg}`}>
                                 <span className={`px-2 py-1 rounded-full text-[10px] font-medium uppercase tracking-wider inline-flex items-center justify-center whitespace-nowrap ${getStatusStyle(displayStatus)}`}>

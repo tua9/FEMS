@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { Loader2 } from "lucide-react";
@@ -228,6 +228,25 @@ export const EquipmentCatalog: React.FC = () => {
     );
   };
 
+  // ── Handled Over (Currently Borrowed) ──────────────────────────────────
+  const borrowedItems = useMemo(() => {
+    return mappedBorrow.filter((b: any) => b.status === "BORROWED" || b.status === "OVERDUE");
+  }, [mappedBorrow]);
+
+  const handleReturnBorrowed = async (borrowRequestId: string) => {
+    try {
+      await useBorrowRequestStore.getState().returnBorrowRequest(borrowRequestId);
+      toast.success("Đã gửi yêu cầu hoàn trả thiết bị.");
+      await fetchMyBorrowRequests();
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || "Không thể thực hiện hoàn trả.");
+    }
+  };
+
+  const handleViewHistoryItem = (item: any) => {
+    setHistoryModalItem({ type: 'borrow', item, mode: 'view' });
+  };
+
   return (
     <div className="w-full">
       <main className="mx-auto flex w-full max-w-[90vw] flex-1 flex-col px-4 pt-6 sm:pt-24 pb-10 sm:px-6 xl:max-w-7xl">
@@ -278,11 +297,15 @@ export const EquipmentCatalog: React.FC = () => {
         {renderPageButtons()}
 
         {/* Borrowed equipment */}
-        <BorrowedEquipmentGrid
-          items={[]} // This would eventually come from a store too
-          onViewHistory={() => navigate(historyPath)}
-          onItemClick={() => navigate(historyPath)}
-        />
+        {borrowedItems.length > 0 && (
+          <BorrowedEquipmentGrid
+            items={borrowedItems}
+            user={user}
+            onViewHistory={() => navigate(historyPath)}
+            onReturn={handleReturnBorrowed}
+            onView={handleViewHistoryItem}
+          />
+        )}
       </main>
 
       {/* ── Borrow Request Modal ───────────────────────────────────────── */}

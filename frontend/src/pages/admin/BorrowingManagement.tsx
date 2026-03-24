@@ -24,7 +24,8 @@ const BorrowingManagement: React.FC = () => {
     const [selectedRecord, setSelectedRecord] = useState<BorrowRequest | null>(null);
     const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
-    const [statusFilter, setStatusFilter] = useState<string>('All');
+    const [statusFilter, setStatusFilter] = useState<string>('pending');
+    const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
 
     useEffect(() => {
         fetchAll();
@@ -88,7 +89,11 @@ const BorrowingManagement: React.FC = () => {
 
             return matchesSearch && matchesStatus;
         })
-        .sort((a, b) => parseDateRaw(a.return_date) - parseDateRaw(b.return_date));
+        .sort((a, b) => {
+            const timeA = parseDateRaw(a.borrow_date);
+            const timeB = parseDateRaw(b.borrow_date);
+            return sortOrder === 'asc' ? timeA - timeB : timeB - timeA;
+        });
 
     if (loading) {
         return (
@@ -202,6 +207,16 @@ const BorrowingManagement: React.FC = () => {
                                         </div>
                                     </div>
                                     <div className="dashboard-card rounded-[1.25rem]! flex items-center">
+                                        <button
+                                            onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
+                                            className="p-2 hover:bg-slate-100 dark:hover:bg-slate-700/50 rounded-lg transition-colors flex items-center justify-center text-slate-500"
+                                            title={sortOrder === 'asc' ? "Oldest First" : "Newest First"}
+                                        >
+                                            <span className="material-symbols-outlined text-[1.25rem]">
+                                                {sortOrder === 'asc' ? 'south_east' : 'north_east'}
+                                            </span>
+                                        </button>
+                                        <div className="w-px h-6 bg-slate-200 dark:bg-slate-700 mx-1" />
                                         <CustomDropdown
                                             value={statusFilter as string}
                                             options={[

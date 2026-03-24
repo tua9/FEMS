@@ -32,8 +32,12 @@ export const BorrowDetailModal: React.FC<BorrowDetailModalProps> = ({ item: b, i
     return (
         <>
             <div className="flex items-center gap-3 mb-6">
-                <div className="w-12 h-12 rounded-[1rem] bg-[#1E2B58]/10 dark:bg-white/5 flex items-center justify-center">
-                    <Icon className="w-6 h-6 text-[#1E2B58] dark:text-white" />
+                <div className="w-12 h-12 rounded-[1rem] bg-[#1E2B58]/10 dark:bg-white/5 flex items-center justify-center overflow-hidden">
+                    {(b.original?.equipment_id as any)?.img ? (
+                        <img src={(b.original.equipment_id as any).img} alt={b.equipmentName} className="w-full h-full object-cover" />
+                    ) : (
+                        <Icon className="w-6 h-6 text-[#1E2B58] dark:text-white" />
+                    )}
                 </div>
                 <div>
                     <p className="text-[0.625rem] font-black uppercase tracking-widest text-[#1E2B58]/50 dark:text-white/40">Borrow Detail</p>

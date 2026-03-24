@@ -87,6 +87,14 @@ const BorrowModal: React.FC<BorrowModalProps> = ({ item, onClose, onSubmit, isLo
           </div>
         </div>
 
+        {/* Equipment Image Preview (if available) */}
+        {item.img && (
+          <div className="mb-6 relative z-10 w-full aspect-video rounded-3xl overflow-hidden border border-black/5 dark:border-white/10 shadow-sm">
+            <img src={item.img} alt={item.name} className="w-full h-full object-cover" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
+          </div>
+        )}
+
         {/* Form Group */}
         <form onSubmit={handleSubmit} className="flex flex-col gap-6 relative z-10">
           

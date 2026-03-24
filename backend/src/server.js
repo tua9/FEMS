@@ -17,6 +17,8 @@ import dashboardRoutes from './routes/dashboardRoute.js'
 import scheduleRoutes from './routes/scheduleRoute.js'
 import notificationRoutes from './routes/notificationRoute.js'
 import technicianRoutes from './routes/technicianRoute.js'
+import uploadRoutes from './routes/uploadRoute.js'
+
 
 import { protectedRoute } from './middlewares/authMiddlewares.js'
 
@@ -37,6 +39,7 @@ app.use((req, res, next) => {
 // API Routes
 app.use('/api/auth', authRoutes)
 app.use('/api/tickets', reportRoutes)
+app.use('/api/upload', uploadRoutes)
 app.use('/api/equipments', equipmentRouters)
 app.use('/api/requests', borrowRequestRouters)
 app.use('/api/technician', technicianRoutes)
