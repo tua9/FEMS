@@ -26,4 +26,9 @@ export const notificationService = {
     const res = await api.delete("/notifications/clear-all");
     return res.data;
   },
+  
+  async broadcast(data: any): Promise<{ message: string }> {
+    const res = await api.post("/notifications/broadcast", data);
+    return res.data;
+  },
 };

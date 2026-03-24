@@ -1,5 +1,6 @@
 import { StatusCodes } from 'http-status-codes'
 import Notification from '../models/Notification.js'
+import User from '../models/User.js'
 import ApiError from '../utils/ApiError.js'
 
 const getUserNotifications = async (userId) => {
@@ -51,6 +52,38 @@ const createNotification = async (data) => {
   })
 }
 
+const notifyAdmins = async (data) => {
+  const admins = await User.find({ role: 'admin', isActive: true })
+  const notifications = admins.map(admin => ({
+    ...data,
+    user_id: admin._id
+  }))
+  return await Notification.insertMany(notifications)
+}
+
+const broadcastNotification = async (data) => {
+  const { targetType, targetId, title, message, type, to, state } = data
+  let query = { isActive: true }
+
+  if (targetType === 'role') {
+    query.role = targetId
+  } else if (targetType === 'user') {
+    query._id = targetId
+  }
+
+  const users = await User.find(query)
+  const notifications = users.map(user => ({
+    user_id: user._id,
+    type: type || 'general',
+    title,
+    message,
+    to,
+    state
+  }))
+
+  return await Notification.insertMany(notifications)
+}
+
 export const notificationService = {
   getUserNotifications,
   markAsRead,
@@ -58,4 +91,6 @@ export const notificationService = {
   deleteNotification,
   clearAllNotifications,
   createNotification,
+  notifyAdmins,
+  broadcastNotification
 }

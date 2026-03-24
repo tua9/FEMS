@@ -7,6 +7,9 @@ import type { Notification, NotificationType } from '@/types/notification';
 import { formatDistanceToNow } from 'date-fns';
 import NotificationDetailModal from '@/components/shared/notifications/NotificationDetailModal';
 import { NOTIFICATION_TYPE_CONFIG, getNotificationAction } from '@/utils/notificationHelper';
+import { useAuthStore } from '@/stores/useAuthStore';
+import { Radio } from 'lucide-react';
+import BroadcastModal from '@/components/admin/notifications/BroadcastModal';
 
 // ─── Type config ──────────────────────────────────────────────────────────────
 
@@ -143,10 +146,13 @@ const NotificationsPage: React.FC = () => {
     const [activeFilter, setActiveFilter] = useState<'all' | NotificationType>('all');
     const [showUnreadOnly, setShowUnreadOnly] = useState(false);
     const [highlightId, setHighlightId] = useState<string | null>(null);
-    const location = useLocation();
+    const location = useLocation() as any;
+    const { user } = useAuthStore();
+    const isAdmin = user?.role === 'admin';
 
     // Detail modal state
     const [detailModal, setDetailModal] = useState<{ type: 'borrow' | 'report'; id: string } | null>(null);
+    const [isBroadcastModalOpen, setIsBroadcastModalOpen] = useState(false);
 
     useEffect(() => {
         fetchNotifications();
@@ -200,6 +206,16 @@ const NotificationsPage: React.FC = () => {
 
                     {/* Actions */}
                     <div className="flex items-center gap-2 mt-1">
+                        {isAdmin && (
+                            <button
+                                type="button"
+                                onClick={() => setIsBroadcastModalOpen(true)}
+                                className="flex items-center gap-2 px-4 py-2.5 bg-blue-500 text-white rounded-xl! font-bold text-[0.8125rem] hover:bg-blue-600 transition-colors shadow-lg shadow-blue-500/20 mr-2"
+                            >
+                                <Radio className="w-4 h-4" />
+                                Broadcast
+                            </button>
+                        )}
                         {unreadCount > 0 && (
                             <button
                                 type="button"
@@ -315,6 +331,14 @@ const NotificationsPage: React.FC = () => {
                     entityType={detailModal.type}
                     entityId={detailModal.id}
                     onClose={() => setDetailModal(null)}
+                />
+            )}
+
+            {isAdmin && (
+                <BroadcastModal 
+                    isOpen={isBroadcastModalOpen}
+                    onClose={() => setIsBroadcastModalOpen(false)}
+                    onSuccess={() => fetchNotifications(true)}
                 />
             )}
         </div>
