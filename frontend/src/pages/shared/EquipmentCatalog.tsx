@@ -151,8 +151,8 @@ export const EquipmentCatalog: React.FC = () => {
 
   const handleSubmitBorrow = async (borrowDate: string, returnDate: string, purpose: string) => {
     try {
-      const roomIdFromItem = (borrowingItem?.room_id as any)?._id || (borrowingItem?.room_id as any);
-      const roomId = roomIdFromItem ? String(roomIdFromItem) : "";
+      const tempRoom = borrowingItem?.room_id as any;
+      const roomId = tempRoom?._id ? String(tempRoom._id) : (typeof tempRoom === 'string' ? tempRoom : "");
 
       await createMyBorrowRequest({
         equipment_id: borrowingItem!._id,
@@ -230,7 +230,11 @@ export const EquipmentCatalog: React.FC = () => {
 
   // ── Handled Over (Currently Borrowed) ──────────────────────────────────
   const borrowedItems = useMemo(() => {
-    return mappedBorrow.filter((b: any) => b.status === "BORROWED" || b.status === "OVERDUE");
+    return mappedBorrow.filter((b: any) => 
+      b.status === "BORROWED" || 
+      b.status === "OVERDUE" || 
+      b.status === "APPROVED"
+    );
   }, [mappedBorrow]);
 
   const handleReturnBorrowed = async (borrowRequestId: string) => {

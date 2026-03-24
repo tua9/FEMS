@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from "react";
-import { X, ArrowRight, FileText, Clock, Timer } from "lucide-react";
+import { X, ArrowRight, FileText, Clock, Timer, MapPin, Hash, Info } from "lucide-react";
 import type { Equipment } from "@/types/equipment";
+import { createPortal } from "react-dom";
 
 interface BorrowModalProps {
   item: Equipment;
@@ -32,8 +33,8 @@ const BorrowModal: React.FC<BorrowModalProps> = ({ item, onClose, onSubmit, isLo
     return {
       borrow: borrow.toISOString(),
       return: returnDateObj.toISOString(),
-      displayBorrow: borrow.toLocaleString('vi-VN', { weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }),
-      displayReturn: returnDateObj.toLocaleString('vi-VN', { weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+      displayBorrow: borrow.toLocaleString('vi-VN', { weekday: 'narrow', day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }),
+      displayReturn: returnDateObj.toLocaleString('vi-VN', { weekday: 'narrow', day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })
     };
   }, [startDateOption, durationOption]);
 
@@ -46,174 +47,199 @@ const BorrowModal: React.FC<BorrowModalProps> = ({ item, onClose, onSubmit, isLo
     onSubmit(calculatedDates.borrow, calculatedDates.return, purpose);
   };
 
-  return (
+  const labelClasses = "text-[10px] font-black tracking-widest text-slate-400 dark:text-slate-500 uppercase flex items-center gap-1.5 mb-2";
+
+  return createPortal(
     <div
-      className="fixed inset-0 z-[100] flex items-center justify-center bg-[#1E2B58]/40 px-4 backdrop-blur-md transition-all"
+      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 px-4 backdrop-blur-sm transition-all"
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
-      <div className="animate-in fade-in zoom-in-95 relative w-full max-w-lg rounded-[2.5rem] bg-white/95 dark:bg-slate-900/95 p-8 shadow-2xl shadow-[#1E2B58]/30 dark:shadow-black/50 overflow-hidden backdrop-blur-2xl ring-1 ring-white/50 dark:ring-white/10 duration-300">
+      <div className="animate-in fade-in zoom-in-95 relative w-full max-w-3xl rounded-[2.5rem] bg-white dark:bg-[#1a2340] shadow-2xl flex flex-col max-h-[95vh] overflow-hidden duration-300">
         
-        {/* Decorative Background Elements */}
-        <div className="absolute top-0 right-0 -mr-16 -mt-16 w-48 h-48 bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute bottom-0 left-0 -ml-16 -mb-16 w-48 h-48 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
-
-        {/* Close Button */}
-        <button
-          onClick={onClose}
-          className="absolute top-6 right-6 flex h-10 w-10 items-center justify-center rounded-full bg-slate-100/50 dark:bg-slate-800/50 text-slate-500 transition hover:bg-slate-200 dark:hover:bg-slate-700 dark:text-slate-300 z-20"
-          aria-label="Close modal"
-        >
-          <X className="h-5 w-5" />
-        </button>
-
-        {/* Header Ribbon */}
-        <div className="mb-6 relative z-10">
-          <div className="inline-flex items-center gap-2 mb-3 px-3 py-1 rounded-full bg-blue-50 dark:bg-blue-400/10 border border-blue-100 dark:border-blue-400/20">
-            <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
-            <span className="text-[10px] font-black tracking-widest text-blue-700 dark:text-blue-400 uppercase">
-              New Borrow Request
-            </span>
+        {/* Header Section */}
+        <div className="px-8 pt-8 pb-6 flex items-center justify-between border-b border-slate-100 dark:border-white/5">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 rounded-2xl bg-[#1E2B58] dark:bg-blue-600 flex items-center justify-center shadow-lg shadow-blue-500/20">
+              <Clock className="w-6 h-6 text-white" />
+            </div>
+            <div>
+              <div className="inline-flex items-center gap-2 mb-1 px-2.5 py-0.5 rounded-full bg-blue-50 dark:bg-blue-400/10 border border-blue-100 dark:border-blue-400/20">
+                <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse" />
+                <span className="text-[9px] font-black tracking-widest text-blue-700 dark:text-blue-400 uppercase">
+                  New Borrow Request
+                </span>
+              </div>
+              <h3 className="text-xl font-black text-[#1E2B58] dark:text-white leading-tight">
+                {item.name}
+              </h3>
+            </div>
           </div>
-          <h3 className="text-[1.75rem] leading-tight font-black text-[#1E2B58] dark:text-white mb-2">
-            {item.name}
-          </h3>
-          <div className="flex items-center gap-3 text-[10px] font-black tracking-widest text-slate-400 uppercase">
-            <span className="flex items-center gap-1.5 bg-slate-100 dark:bg-slate-800 px-2.5 py-1.5 rounded-xl border border-black/5 dark:border-white/5">
-              <AsteriskIcon className="w-3 h-3" /> {item._id.slice(-6).toUpperCase()}
-            </span>
-            <span className="flex items-center gap-1.5 bg-emerald-50 text-emerald-600 dark:bg-emerald-400/10 dark:text-emerald-400 px-2.5 py-1.5 rounded-xl border border-emerald-100 dark:border-emerald-400/20">
-              <MapPinIcon className="w-3 h-3" /> {(item.room_id as any)?.name || "Store"}
-            </span>
+          <button
+            onClick={onClose}
+            className="flex h-10 w-10 items-center justify-center rounded-full text-slate-400 hover:bg-slate-100 dark:hover:bg-white/10 transition-all"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        </div>
+
+        {/* Body Content - Two Column Layout */}
+        <div className="flex-1 overflow-y-auto no-scrollbar p-8">
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-8">
+            
+            {/* Left Column: Preview & Info */}
+            <div className="md:col-span-2 space-y-6">
+              {item.img ? (
+                <div className="aspect-[4/3] rounded-3xl overflow-hidden border border-slate-100 dark:border-white/5 shadow-sm bg-slate-50 dark:bg-slate-900/50">
+                  <img src={item.img} alt={item.name} className="w-full h-full object-cover" />
+                </div>
+              ) : (
+                <div className="aspect-[4/3] rounded-3xl bg-slate-50 dark:bg-slate-900/50 flex flex-col items-center justify-center border-2 border-dashed border-slate-200 dark:border-white/5 text-slate-300">
+                  <span className="material-symbols-outlined text-4xl mb-2">image_not_supported</span>
+                  <span className="text-[10px] font-bold uppercase tracking-widest">No preview available</span>
+                </div>
+              )}
+
+              <div className="p-5 rounded-3xl bg-slate-50 dark:bg-white/5 border border-slate-200/50 dark:border-white/5 space-y-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-500">
+                    <Hash className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Equipment ID</p>
+                    <p className="text-xs font-black text-[#1E2B58] dark:text-white uppercase">{item._id.slice(-8)}</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-500">
+                    <MapPin className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Location</p>
+                    <p className="text-xs font-black text-[#1E2B58] dark:text-white">{(item.room_id as any)?.name || "Central Store"}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Right Column: Form Fields */}
+            <form id="borrowForm" onSubmit={handleSubmit} className="md:col-span-3 space-y-6">
+              
+              {/* Timing Options Grid */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {/* Start Date */}
+                <div className="space-y-3">
+                  <label className={labelClasses}><Clock className="w-3.5 h-3.5" /> Start Time</label>
+                  <div className="flex p-1 bg-slate-100 dark:bg-slate-800/50 rounded-2xl border border-slate-200 dark:border-white/5">
+                    {(['today', 'tomorrow'] as const).map(option => (
+                      <button
+                        key={option}
+                        type="button"
+                        onClick={() => setStartDateOption(option)}
+                        className={`flex-1 py-2.5 rounded-xl text-xs font-black transition-all ${
+                          startDateOption === option
+                            ? "bg-white dark:bg-blue-600 text-blue-600 dark:text-white shadow-md"
+                            : "text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
+                        }`}
+                      >
+                        {option === 'today' ? 'Hôm nay' : 'Ngày mai'}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Duration */}
+                <div className="space-y-3">
+                  <label className={labelClasses}><Timer className="w-3.5 h-3.5" /> Duration</label>
+                  <div className="flex p-1 bg-slate-100 dark:bg-slate-800/50 rounded-2xl border border-slate-200 dark:border-white/5">
+                    {(['1', '3', '7'] as const).map(option => (
+                      <button
+                        key={option}
+                        type="button"
+                        onClick={() => setDurationOption(option)}
+                        className={`flex-1 py-2.5 rounded-xl text-xs font-black transition-all ${
+                          durationOption === option
+                            ? "bg-white dark:bg-indigo-600 text-indigo-600 dark:text-white shadow-md"
+                            : "text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
+                        }`}
+                      >
+                        {option}d
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Purpose */}
+              <div className="space-y-3">
+                <label className={labelClasses}><FileText className="w-3.5 h-3.5" /> Purpose</label>
+                <textarea
+                  required
+                  rows={3}
+                  placeholder="Mô tả mục đích sử dụng..."
+                  value={purpose}
+                  onChange={(e) => setPurpose(e.target.value)}
+                  className="w-full resize-none rounded-2xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-slate-900/50 px-4 py-3.5 text-sm font-bold text-[#1E2B58] dark:text-white outline-none focus:ring-2 focus:ring-blue-500/20 transition-all placeholder:text-slate-300"
+                />
+              </div>
+
+              {/* Summary Box */}
+              <div className="p-5 rounded-2xl bg-blue-50/50 dark:bg-blue-400/5 border border-blue-100 dark:border-blue-400/10">
+                <div className="flex items-start gap-3">
+                  <Info className="w-4 h-4 text-blue-500 mt-1 shrink-0" />
+                  <div className="space-y-3 flex-1">
+                    <p className="text-[10px] font-black uppercase tracking-widest text-blue-800/60 dark:text-blue-400/60">Schedule Summary</p>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <p className="text-[9px] font-bold text-slate-400 uppercase mb-0.5">Pickup</p>
+                        <p className="text-xs font-black text-[#1E2B58] dark:text-blue-200">{calculatedDates.displayBorrow}</p>
+                      </div>
+                      <div>
+                        <p className="text-[9px] font-bold text-slate-400 uppercase mb-0.5">Return</p>
+                        <p className="text-xs font-black text-[#1E2B58] dark:text-blue-200">{calculatedDates.displayReturn}</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {formError && (
+                <div className="p-3 rounded-xl bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 text-xs font-bold border border-red-100 dark:border-red-900/30 animate-in slide-in-from-top-1">
+                  {formError}
+                </div>
+              )}
+            </form>
           </div>
         </div>
 
-        {/* Equipment Image Preview (if available) */}
-        {item.img && (
-          <div className="mb-6 relative z-10 w-full aspect-video rounded-3xl overflow-hidden border border-black/5 dark:border-white/10 shadow-sm">
-            <img src={item.img} alt={item.name} className="w-full h-full object-cover" />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
-          </div>
-        )}
-
-        {/* Form Group */}
-        <form onSubmit={handleSubmit} className="flex flex-col gap-6 relative z-10">
-          
-          {/* Start Date Option */}
-          <div className="space-y-3">
-            <label className="text-[10px] font-black tracking-widest text-[#1E2B58]/60 dark:text-slate-400 uppercase flex items-center gap-1.5">
-              <Clock className="w-3.5 h-3.5" /> Start Time
-            </label>
-            <div className="grid grid-cols-2 gap-3 p-1.5 bg-slate-100/50 dark:bg-slate-800/50 rounded-2xl border border-black/5 dark:border-white/5">
-              {(['today', 'tomorrow'] as const).map(option => (
-                <button
-                  key={option}
-                  type="button"
-                  onClick={() => setStartDateOption(option)}
-                  className={`py-3 rounded-[1.125rem] text-sm font-bold transition-all duration-300 ${
-                    startDateOption === option
-                      ? "bg-white dark:bg-blue-600 text-blue-600 dark:text-white shadow-xl shadow-blue-500/10 ring-1 ring-blue-500/10"
-                      : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
-                  }`}
-                >
-                  {option === 'today' ? 'Hôm nay' : 'Ngày mai'}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Duration Option */}
-          <div className="space-y-3">
-            <label className="text-[10px] font-black tracking-widest text-[#1E2B58]/60 dark:text-slate-400 uppercase flex items-center gap-1.5">
-              <Timer className="w-3.5 h-3.5" /> Borrow Duration
-            </label>
-            <div className="grid grid-cols-3 gap-3 p-1.5 bg-slate-100/50 dark:bg-slate-800/50 rounded-2xl border border-black/5 dark:border-white/5">
-              {(['1', '3', '7'] as const).map(option => (
-                <button
-                  key={option}
-                  type="button"
-                  onClick={() => setDurationOption(option)}
-                  className={`py-3 rounded-[1.125rem] text-sm font-bold transition-all duration-300 ${
-                    durationOption === option
-                      ? "bg-white dark:bg-indigo-600 text-indigo-600 dark:text-white shadow-xl shadow-indigo-500/10 ring-1 ring-indigo-500/10"
-                      : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
-                  }`}
-                >
-                  {option} ngày
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Detailed Preview */}
-          <div className="p-5 rounded-[1.75rem] bg-indigo-50/50 dark:bg-indigo-900/10 border border-indigo-100 dark:border-indigo-400/20 space-y-3">
-              <div className="flex justify-between items-center text-xs">
-                <span className="font-bold text-indigo-900/40 dark:text-indigo-400/40 uppercase tracking-widest">Bắt đầu</span>
-                <span className="font-black text-[#1E2B58] dark:text-indigo-200">{calculatedDates.displayBorrow}</span>
-              </div>
-              <div className="h-px bg-indigo-200/50 dark:bg-white/5 w-full" />
-              <div className="flex justify-between items-center text-xs">
-                <span className="font-bold text-indigo-900/40 dark:text-indigo-400/40 uppercase tracking-widest">Kết thúc</span>
-                <span className="font-black text-[#1E2B58] dark:text-indigo-200">{calculatedDates.displayReturn}</span>
-              </div>
-          </div>
-
-          {/* Purpose */}
-          <div className="space-y-3">
-            <label className="text-[10px] font-black tracking-widest text-[#1E2B58]/60 dark:text-slate-400 uppercase flex items-center gap-1.5">
-              <FileText className="w-3.5 h-3.5" /> Purpose
-            </label>
-            <textarea
-              required
-              rows={2}
-              placeholder="Mục đích mượn thiết bị..."
-              value={purpose}
-              onChange={(e) => setPurpose(e.target.value)}
-              className="w-full resize-none rounded-[1.5rem] border-2 border-slate-200/60 dark:border-slate-800 bg-white/60 dark:bg-slate-900/50 px-4 py-4 text-sm font-bold text-[#1E2B58] dark:text-white outline-none transition-all placeholder:text-slate-400 hover:border-slate-300 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10"
-            />
-          </div>
-
-          {formError && (
-            <div className="rounded-xl border border-red-200 dark:border-red-900/50 bg-red-50 dark:bg-red-900/20 px-4 py-3 text-xs font-bold text-red-600 dark:text-red-400 animate-in slide-in-from-bottom-1 fade-in">
-              {formError}
-            </div>
-          )}
-
-          {/* Actions */}
-          <div className="flex gap-4">
-            <button
-              type="button"
-              onClick={onClose}
-              className="flex-[1] rounded-[1.25rem] bg-slate-100 dark:bg-slate-800 py-4 text-sm font-black text-slate-500 dark:text-slate-400 transition-all hover:bg-slate-200 dark:hover:bg-slate-700 active:scale-95"
-            >
-              Hủy bỏ
-            </button>
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="group flex flex-[2] items-center justify-center gap-3 rounded-[1.25rem] bg-[#1E2B58] dark:bg-blue-600 py-4 text-sm font-black text-white shadow-xl shadow-blue-500/20 transition-all hover:scale-[1.02] hover:bg-blue-900 dark:hover:bg-blue-500 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {isLoading ? (
-                  <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-              ) : (
-                <>
-                  Submit Request
-                  <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" strokeWidth={3} />
-                </>
-              )}
-            </button>
-          </div>
-        </form>
+        {/* Footer Actions */}
+        <div className="px-8 py-6 border-t border-slate-100 dark:border-white/5 bg-slate-50/50 dark:bg-white/2 flex gap-4">
+          <button
+            type="button"
+            onClick={onClose}
+            className="flex-1 py-3.5 rounded-2xl border border-slate-200 dark:border-white/10 text-sm font-black text-slate-500 dark:text-slate-400 hover:bg-white dark:hover:bg-white/5 transition-all"
+          >
+            Hủy bỏ
+          </button>
+          <button
+            type="submit"
+            form="borrowForm"
+            disabled={isLoading}
+            className="flex-2 flex items-center justify-center gap-3 py-3.5 rounded-2xl bg-[#1E2B58] dark:bg-blue-600 text-sm font-black text-white shadow-xl shadow-blue-500/20 hover:scale-[1.02] active:scale-95 disabled:opacity-50 transition-all"
+          >
+            {isLoading ? (
+              <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+            ) : (
+              <>
+                Confirm Request
+                <ArrowRight className="w-4 h-4" />
+              </>
+            )}
+          </button>
+        </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };
-
-// Quick mock icons that don't need imports from lucide directly if they fail, but they exist in lucide-react
-const AsteriskIcon = ({ className }: { className?: string }) => (
-  <svg className={className} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 6v12"/><path d="M17.196 9 6.804 15"/><path d="m6.804 9 10.392 6"/></svg>
-);
-const MapPinIcon = ({ className }: { className?: string }) => (
-  <svg className={className} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"/><circle cx="12" cy="10" r="3"/></svg>
-);
 
 export default BorrowModal;

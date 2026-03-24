@@ -212,9 +212,15 @@ const getEquipmentInventory = async (queries) => {
         img: 1,
         borrowed_by: 1,
         room_id: {
-          _id: '$room._id',
-          name: '$room.name',
-          floor: '$room.floor',
+          $cond: {
+            if: "$room._id",
+            then: {
+              _id: '$room._id',
+              name: '$room.name',
+              floor: '$room.floor',
+            },
+            else: null
+          }
         },
       },
     }
