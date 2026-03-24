@@ -18,13 +18,11 @@ import scheduleRoutes from './routes/scheduleRoute.js'
 import notificationRoutes from './routes/notificationRoute.js'
 import technicianRoutes from './routes/technicianRoute.js'
 import uploadRoutes from './routes/uploadRoute.js'
-
-
+import aiRoute from './routes/aiRoute.js'
 import { protectedRoute } from './middlewares/authMiddlewares.js'
 
 const app = express()
 const PORT = env.PORT || 5001
-
 // middlewares
 app.use(express.json({ limit: '50mb' }))
 app.use(cookieParser())
@@ -44,6 +42,7 @@ app.use('/api/equipments', equipmentRouters)
 app.use('/api/requests', borrowRequestRouters)
 app.use('/api/technician', technicianRoutes)
 
+app.use('/api/ai', aiRoute)
 app.use('/api/admin/users', protectedRoute, userRoutes)
 app.use('/api/admin', adminRoutes)
 
