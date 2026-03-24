@@ -397,6 +397,11 @@ const handoverBorrowRequest = async (id) => {
       throw new ApiError(StatusCodes.NOT_FOUND, 'Equipment not found')
     }
 
+    // Auto-heal legacy data
+    if (!['good', 'broken', 'maintenance'].includes(equipment.status)) {
+      equipment.status = 'good'
+    }
+
     // Handover triggers request status change to 'handed_over' (which UI maps to Borrowing)
     equipment.available = false
     equipment.borrowed_by = request.user_id
@@ -409,7 +414,7 @@ const handoverBorrowRequest = async (id) => {
 }
 
 const returnBorrowRequest = async (id) => {
-  const request = await BorrowRequest.findById(id)
+  const request = await BorrowRequest.findById(id).populate('user_id', 'displayName username')
   if (!request) {
     throw new ApiError(StatusCodes.NOT_FOUND, 'Borrow request not found')
   }
@@ -420,6 +425,12 @@ const returnBorrowRequest = async (id) => {
   if (request.equipment_id) {
     const equipment = await Equipment.findById(request.equipment_id)
     if (equipment) {
+      // Auto-heal legacy data
+      if (!['good', 'broken', 'maintenance'].includes(equipment.status)) {
+        equipment.status = 'good'
+      }
+
+      equipment.available = true
       equipment.borrowed_by = null
       await equipment.save()
     }
@@ -433,6 +444,26 @@ const returnBorrowRequest = async (id) => {
 
   request.status = 'returned'
   await request.save()
+
+  // Notify admins and technicians
+  try {
+    const adminsAndTechs = await User.find({ role: { $in: ['admin', 'technician'] } })
+    const borrowerName = request.user_id?.displayName || request.user_id?.username || 'System'
+    const targetLabel = request.equipment_id ? 'equipment' : 'room'
+    const notifyPromises = adminsAndTechs.map(staff => 
+      notificationService.createNotification({
+        user_id: staff._id,
+        type: 'info',
+        title: 'Asset Returned',
+        message: `${borrowerName} has returned their borrowed ${targetLabel} (Request #${request.code || request._id.toString().slice(-6).toUpperCase()}).`,
+        to: staff.role === 'admin' ? '/admin/history' : '/technician/history',
+        state: { type: 'borrow', id: request._id, tab: 'borrow' }
+      })
+    )
+    await Promise.allSettled(notifyPromises)
+  } catch (err) {
+    console.error('Failed to notify staff about return:', err)
+  }
 
   return { message: 'Equipment returned and asset released', request }
 }

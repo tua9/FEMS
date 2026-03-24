@@ -78,12 +78,12 @@ router.patch(
 )
 router.patch(
   '/:id/handover',
-  restrictTo('technician', 'student', 'admin'),
+  restrictTo('technician', 'student', 'admin', 'lecturer'),
   handoverBorrowRequest,
 )
 router.patch(
   '/:id/return',
-  restrictTo('student', 'technician', 'admin'),
+  restrictTo('student', 'technician', 'admin', 'lecturer'),
   returnBorrowRequest,
 )
 
