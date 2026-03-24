@@ -14,6 +14,11 @@ import { useBorrowRequestStore } from "@/stores/useBorrowRequestStore";
 import { useRoomStore } from "@/stores/useRoomStore";
 import { useAuthStore } from "@/stores/useAuthStore";
 import type { Equipment } from "@/types/equipment";
+import type { BorrowRequest } from "@/types/borrowRequest";
+import { sortEquipmentByAvailability, hasActiveBorrowRequest } from "@/utils/equipmentHelper";
+import { DuplicateBorrowModal } from "@/components/shared/equipment/DuplicateBorrowModal";
+import { HistoryDetailModal, type ModalItem } from "@/components/shared/history/HistoryDetailModal";
+import { useHistoryMappings } from "@/hooks/useHistoryMappings";
 
 // Category id → EquipmentType (or 'all')
 // Must match the `category` values stored in MongoDB
@@ -41,7 +46,7 @@ export const EquipmentCatalog: React.FC = () => {
 
   const { inventoryData, fetchInventory, loading: equipmentLoading } = useEquipmentStore();
   const { fetchAll: fetchRooms } = useRoomStore();
-  const { createMyBorrowRequest, fetchMyBorrowRequests, loading: borrowLoading } = useBorrowRequestStore();
+  const { createMyBorrowRequest, fetchMyBorrowRequests, borrowRequests, loading: borrowLoading } = useBorrowRequestStore();
 
   // ── Filter state ──────────────────────────────────────────────────────────
   const [searchText, setSearchText] = useState("");
@@ -52,13 +57,19 @@ export const EquipmentCatalog: React.FC = () => {
 
   // ── Borrow modal state ────────────────────────────────────────────────────
   const [borrowingItem, setBorrowingItem] = useState<Equipment | null>(null);
+  const [duplicateModalOpen, setDuplicateModalOpen] = useState(false);
+  const [activeRequestToView, setActiveRequestToView] = useState<BorrowRequest | null>(null);
+  const [historyModalItem, setHistoryModalItem] = useState<ModalItem | null>(null);
+
+  const { mappedBorrow } = useHistoryMappings(null, borrowRequests, []);
 
   const ITEMS_PER_PAGE = 8;
 
   // ── Initial Fetch ─────────────────────────────────────────────────────────
   useEffect(() => {
     fetchRooms();
-  }, [fetchRooms]);
+    fetchMyBorrowRequests();
+  }, [fetchRooms, fetchMyBorrowRequests]);
 
   useEffect(() => {
     const params: any = {
@@ -100,8 +111,9 @@ export const EquipmentCatalog: React.FC = () => {
   // ── Pagination ────────────────────────────────────────────────────────────
   const totalPages = inventoryData?.pagination.totalPages || 1;
   const safePage = Math.min(currentPage, totalPages);
-  // Sorting is now handled by the backend to ensure correct pagination
-  const pagedItems = inventoryData?.items || [];
+  // Sorting is now handled by the custom helper before rendering
+  const rawPagedItems = inventoryData?.items || [];
+  const pagedItems = sortEquipmentByAvailability(rawPagedItems);
 
   const handlePageChange = (page: number) => {
     if (page < 1 || page > totalPages) return;
@@ -112,11 +124,29 @@ export const EquipmentCatalog: React.FC = () => {
   // ── Borrow modal ──────────────────────────────────────────────────────────
 
   const openBorrowModal = (item: Equipment) => {
+    const activeReq = hasActiveBorrowRequest(item._id, borrowRequests);
+    if (activeReq) {
+      setActiveRequestToView(activeReq);
+      setDuplicateModalOpen(true);
+      return;
+    }
     setBorrowingItem(item);
   };
 
   const closeBorrowModal = () => {
     setBorrowingItem(null);
+  };
+
+  const handleViewPreviousRequest = () => {
+    setDuplicateModalOpen(false);
+    if (activeRequestToView) {
+      const item = mappedBorrow.find(b => b.original._id === activeRequestToView._id);
+      if (item) {
+        setHistoryModalItem({ type: 'borrow', item, mode: 'view' });
+      } else {
+        toast.error("Không tìm thấy đơn mượn.");
+      }
+    }
   };
 
   const handleSubmitBorrow = async (borrowDate: string, returnDate: string, purpose: string) => {
@@ -262,6 +292,21 @@ export const EquipmentCatalog: React.FC = () => {
           onClose={closeBorrowModal}
           onSubmit={handleSubmitBorrow}
           isLoading={borrowLoading}
+        />
+      )}
+
+      {/* ── Duplicate Borrow Modal ─────────────────────────────────────── */}
+      <DuplicateBorrowModal
+        isOpen={duplicateModalOpen}
+        onClose={() => setDuplicateModalOpen(false)}
+        onViewPrevious={handleViewPreviousRequest}
+      />
+
+      {/* ── History Detail Modal ───────────────────────────────────────── */}
+      {historyModalItem && (
+        <HistoryDetailModal
+          modal={historyModalItem}
+          onClose={() => setHistoryModalItem(null)}
         />
       )}
     </div>

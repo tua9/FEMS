@@ -30,6 +30,7 @@ export interface CreateEquipmentPayload {
   name: string;
   category: string;
   status?: EquipmentStatus;
+  available?: boolean;
   room_id?: string | null;
   code?: string | null;
 }

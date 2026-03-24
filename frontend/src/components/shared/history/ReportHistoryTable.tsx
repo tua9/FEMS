@@ -1,4 +1,4 @@
-import { Ban, ChevronLeft, ChevronRight, Eye } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Eye } from 'lucide-react';
 import React from 'react';
 import { StatusBadge } from '@/components/shared/ui/StatusBadge';
 import type { Report } from '@/types/report';
@@ -54,13 +54,14 @@ interface ReportHistoryTableProps {
     totalItems: number;
     onPageChange: (page: number) => void;
     onViewDetail: (item: ReportHistoryItem) => void;
+    onEdit?: (item: ReportHistoryItem) => void;
     onCancel?: (item: ReportHistoryItem) => void;
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export const ReportHistoryTable: React.FC<ReportHistoryTableProps> = ({
-    items, currentPage, totalPages, totalItems, onPageChange, onViewDetail, onCancel,
+    items, currentPage, totalPages, totalItems, onPageChange, onViewDetail, onEdit, onCancel,
 }) => {
     const showing = items.length;
 
@@ -128,14 +129,23 @@ export const ReportHistoryTable: React.FC<ReportHistoryTableProps> = ({
                                     </td>
                                     <td className="px-[2rem] py-[1.5rem] text-right">
                                         <div className="flex items-center justify-end gap-[0.25rem]">
-                                            {item.original.status === 'pending' && onCancel && (
-                                                <button
-                                                    onClick={e => { e.stopPropagation(); onCancel(item); }}
-                                                    className="p-[0.5rem] rounded-full hover:bg-red-100 dark:hover:bg-red-900/30 transition-all hover:scale-110 active:scale-90"
-                                                    title="Cancel Report"
-                                                >
-                                                    <Ban className="w-[1rem] h-[1rem] text-red-400" strokeWidth={2.5} />
-                                                </button>
+                                            {item.original.status === 'pending' && (
+                                                <>
+                                                    <button
+                                                        onClick={e => { e.stopPropagation(); onEdit && onEdit(item); }}
+                                                        className="p-[0.5rem] rounded-full hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-all hover:scale-110 active:scale-90"
+                                                        title="Edit Report"
+                                                    >
+                                                        <span className="material-symbols-outlined text-[1.1rem] text-[#1E2B58] dark:text-blue-400">edit</span>
+                                                    </button>
+                                                    <button
+                                                        onClick={e => { e.stopPropagation(); onCancel && onCancel(item); }}
+                                                        className="p-[0.5rem] rounded-full hover:bg-red-50 dark:hover:bg-red-900/30 transition-all hover:scale-110 active:scale-90"
+                                                        title="Cancel Report"
+                                                    >
+                                                        <span className="material-symbols-outlined text-[1.1rem] text-red-500">delete_forever</span>
+                                                    </button>
+                                                </>
                                             )}
                                             <button
                                                 onClick={e => { e.stopPropagation(); onViewDetail(item); }}

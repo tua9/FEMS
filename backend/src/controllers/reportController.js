@@ -1,6 +1,7 @@
 import { StatusCodes } from 'http-status-codes'
 import { reportService } from '../services/reportService.js'
 import { asyncHandler } from '../middlewares/asyncHandler.js'
+import ApiError from '../utils/ApiError.js'
 
 export const createReport = async (req, res) => {
   const data = { ...req.body }
@@ -19,6 +20,11 @@ export const getAllReports = async (req, res) => {
 
 export const getReportById = async (req, res) => {
   const result = await reportService.getReportById(req.params.id)
+
+  if (req.user.role === 'student' && result.user_id?._id?.toString() !== req.user._id.toString()) {
+    throw new ApiError(StatusCodes.FORBIDDEN, 'You do not have permission to view this report.')
+  }
+
   res.status(StatusCodes.OK).json(result)
 }
 

@@ -96,8 +96,9 @@ const AddEquipmentModal: React.FC<AddEquipmentModalProps> = ({ isOpen, onClose, 
                 name,
                 category,
                 status: (equipment?.status as any) || 'good',
+                available: isEdit ? equipment?.available : true,
                 room_id: roomId || null,
-                code: code || undefined
+                ...(isEdit && { code: code || undefined })
             };
 
             if (isEdit && equipment) {
@@ -178,17 +179,19 @@ const AddEquipmentModal: React.FC<AddEquipmentModalProps> = ({ isOpen, onClose, 
                                 />
                             </div>
 
-                            <div className="space-y-1.5">
-                                <label className={labelClasses}>Asset Code (Backend will auto-ignore if creating)</label>
-                                <input
-                                    type="text"
-                                    value={code}
-                                    onChange={e => setCode(e.target.value)}
-                                    disabled={!isEdit}
-                                    className={`${inputClasses} ${!isEdit ? 'opacity-50 bg-slate-100 dark:bg-slate-800 cursor-not-allowed' : ''}`}
-                                    placeholder={!isEdit ? "Auto-generated" : "e.g. LA2603XYZ"}
-                                />
-                            </div>
+                            {isEdit && (
+                                <div className="space-y-1.5">
+                                    <label className={labelClasses}>Asset Code</label>
+                                    <input
+                                        type="text"
+                                        value={code}
+                                        onChange={e => setCode(e.target.value)}
+                                        disabled={!isEdit}
+                                        className={`${inputClasses} ${!isEdit ? 'opacity-50 bg-slate-100 dark:bg-slate-800 cursor-not-allowed' : ''}`}
+                                        placeholder={!isEdit ? "Auto-generated" : "e.g. LA2603XYZ"}
+                                    />
+                                </div>
+                            )}
 
                             <div className="space-y-1.5 relative">
                                 <label className={labelClasses}>Primary Category <span className="text-red-500">*</span></label>
