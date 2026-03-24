@@ -114,7 +114,7 @@ const EquipmentDetailsModal: React.FC<EquipmentDetailsModalProps> = ({ isOpen, e
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div className="relative group rounded-3xl overflow-hidden aspect-video border-2 border-white dark:border-slate-700 shadow-lg">
                             <img
-                                src={equipment.imageUrl || 'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?auto=format&fit=crop&q=80&w=1026'}
+                                src={equipment.img || 'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?auto=format&fit=crop&q=80&w=1026'}
                                 alt={equipment.name}
                                 className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                             />

@@ -351,6 +351,7 @@ const DamageReports: React.FC = () => {
             <TechnicianAssignmentModal
                 isOpen={isAssignModalOpen}
                 technicians={users.filter(u => u.role === 'technician')}
+                reports={reports}
                 onClose={() => setIsAssignModalOpen(false)}
                 onAssign={handleConfirmAssign}
                 equipmentName={typeof selectedReport?.equipment_id === 'object' ? selectedReport?.equipment_id?.name || '' : ''}

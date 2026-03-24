@@ -19,6 +19,7 @@ type BorrowRequestStore = {
   fetchApprovedByMe: () => Promise<void>;
   fetchBorrowRequestById: (id: string) => Promise<void>;
   createMyBorrowRequest: (payload: CreateBorrowRequestPayload) => Promise<void>;
+  editMyBorrowRequest: (id: string, payload: Partial<CreateBorrowRequestPayload>) => Promise<void>;
   cancelMyBorrowRequest: (id: string, decisionNote: string) => Promise<void>;
   fetchAllBorrowRequests: () => Promise<void>;
   approveBorrowRequest: (id: string) => Promise<void>;
@@ -139,6 +140,31 @@ export const useBorrowRequestStore = create<BorrowRequestStore>((set, get) => ({
       set({
         error:
           error?.response?.data?.message || "Không hủy được borrow request",
+      });
+      throw error;
+    } finally {
+      set({ loading: false });
+    }
+  },
+
+  editMyBorrowRequest: async (id: string, payload: Partial<CreateBorrowRequestPayload>) => {
+    try {
+      set({ loading: true, error: null });
+      const updated = await borrowRequestService.editBorrowRequest(id, payload);
+      if (updated && updated.borrowRequest) {
+        set((state) => ({
+          borrowRequests: state.borrowRequests.map((item) =>
+            item._id === id ? updated.borrowRequest : item
+          ),
+          selectedBorrowRequest:
+            state.selectedBorrowRequest?._id === id
+              ? updated.borrowRequest
+              : state.selectedBorrowRequest,
+        }));
+      }
+    } catch (error: any) {
+      set({
+        error: error?.response?.data?.message || "Không cập nhật được borrow request",
       });
       throw error;
     } finally {

@@ -1,4 +1,4 @@
-import { Ban, ChevronLeft, ChevronRight, Eye, Projector } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Eye, Projector } from 'lucide-react';
 import React from 'react';
 import { StatusBadge } from '@/components/shared/ui/StatusBadge';
 import type { BorrowRequest } from '@/types/borrowRequest';
@@ -43,13 +43,14 @@ interface BorrowHistoryTableProps {
     totalItems: number;
     onPageChange: (page: number) => void;
     onViewDetail: (item: BorrowHistoryItem) => void;
+    onEdit?: (item: BorrowHistoryItem) => void;
     onCancel?: (item: BorrowHistoryItem) => void;
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export const BorrowHistoryTable: React.FC<BorrowHistoryTableProps> = ({
-    items, currentPage, totalPages, totalItems, onPageChange, onViewDetail, onCancel,
+    items, currentPage, totalPages, totalItems, onPageChange, onViewDetail, onEdit, onCancel,
 }) => {
     return (
         <div className="dashboard-card rounded-[1.5rem] sm:rounded-[2rem] overflow-hidden mb-[4rem]">
@@ -119,14 +120,23 @@ export const BorrowHistoryTable: React.FC<BorrowHistoryTableProps> = ({
                                     </td>
                                     <td className="px-[2rem] py-[1.5rem] text-right">
                                         <div className="flex items-center justify-end gap-[0.25rem]">
-                                            {item.original.status === 'pending' && onCancel && (
-                                                <button
-                                                    onClick={e => { e.stopPropagation(); onCancel(item); }}
-                                                    className="p-[0.5rem] rounded-full hover:bg-red-100 dark:hover:bg-red-900/30 transition-all hover:scale-110 active:scale-90"
-                                                    title="Cancel Request"
-                                                >
-                                                    <Ban className="w-[1rem] h-[1rem] text-red-400 dark:text-red-400" strokeWidth={2.5} />
-                                                </button>
+                                            {item.original.status === 'pending' && (
+                                                <>
+                                                    <button
+                                                        onClick={e => { e.stopPropagation(); onEdit && onEdit(item); }}
+                                                        className="p-[0.5rem] rounded-full hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-all hover:scale-110 active:scale-90"
+                                                        title="Edit Request"
+                                                    >
+                                                        <span className="material-symbols-outlined text-[1.1rem] text-[#1E2B58] dark:text-blue-400">edit</span>
+                                                    </button>
+                                                    <button
+                                                        onClick={e => { e.stopPropagation(); onCancel && onCancel(item); }}
+                                                        className="p-[0.5rem] rounded-full hover:bg-red-50 dark:hover:bg-red-900/30 transition-all hover:scale-110 active:scale-90"
+                                                        title="Cancel Request"
+                                                    >
+                                                        <span className="material-symbols-outlined text-[1.1rem] text-red-500">delete_forever</span>
+                                                    </button>
+                                                </>
                                             )}
                                             <button
                                                 onClick={e => { e.stopPropagation(); onViewDetail(item); }}

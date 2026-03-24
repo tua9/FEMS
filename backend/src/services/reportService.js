@@ -1,5 +1,6 @@
 import { StatusCodes } from 'http-status-codes'
 import Report from '../models/Report.js'
+import Equipment from '../models/Equipment.js'
 import ApiError from '../utils/ApiError.js'
 import { notificationService } from './notificationService.js'
 
@@ -45,7 +46,7 @@ const populateReport = (query) => {
 }
 
 const createReport = async (body) => {
-  const { user_id, equipment_id, room_id, type, severity, description, img, priority } = body
+  const { user_id, equipment_id, room_id, type, severity, description, img, priority, images } = body
 
   const code = await generateUniqueCode()
 
@@ -57,7 +58,8 @@ const createReport = async (body) => {
     severity: severity || 'medium',
     priority: priority || severity || 'medium',
     description: description || null,
-    img: img || null,
+    img: img || (images && images.length > 0 ? images[0] : null),
+    images: images || [],
     code,
   })
 
@@ -157,9 +159,22 @@ const updateReportStatus = async (id, status, approverId, technicianId) => {
 
   await report.save()
 
+  // Sync Equipment Status based on report status
+  if (report.equipment_id) {
+    let eqStatus = null
+    if (status === 'approved') eqStatus = 'broken'
+    else if (status === 'processing') eqStatus = 'maintenance'
+    else if (status === 'fixed') eqStatus = 'good'
+
+    if (eqStatus) {
+      await Equipment.findByIdAndUpdate(report.equipment_id, { status: eqStatus })
+    }
+  }
+
   // Notify User
   let notificationTitle = 'Report Update'
   const shortId = report._id.toString().slice(-6).toUpperCase()
+  let notificationMessage = `Your report #${shortId} status has been updated to ${status}.`
   if (status === 'fixed') {
     notificationTitle = 'Issue Resolved'
     notificationMessage = `Your reported issue #${shortId} with ${report.equipment_id ? 'equipment' : 'room'} has been resolved.`
@@ -169,8 +184,6 @@ const updateReportStatus = async (id, status, approverId, technicianId) => {
   } else if (status === 'processing') {
     notificationTitle = 'Repair in Progress'
     notificationMessage = `Your report #${shortId} is now being processed by our technician.`
-  } else {
-    notificationMessage = `Your report #${shortId} status has been updated to ${status}.`
   }
 
   await notificationService.createNotification({

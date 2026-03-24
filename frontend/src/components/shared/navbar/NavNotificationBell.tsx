@@ -9,46 +9,9 @@ import { Bell, CheckCheck, Loader2 } from "lucide-react";
 import { Link } from "react-router";
 import { useAuthStore } from "@/stores/useAuthStore";
 import { useNotificationStore } from "@/stores/useNotificationStore";
-import type { Notification, NotificationType } from "@/types/notification";
+import type { Notification } from "@/types/notification";
 import { formatDistanceToNow } from "date-fns";
-
-// ── Per-type config ───────────────────────────────────────────────────────────
-
-const TYPE_CONFIG: Record<
-  NotificationType,
-  { icon: string; bg: string; color: string }
-> = {
-  approval: {
-    icon: "check_circle",
-    bg: "bg-emerald-50 dark:bg-emerald-900/20",
-    color: "text-emerald-500",
-  },
-  borrow: {
-    icon: "inventory_2",
-    bg: "bg-blue-50 dark:bg-blue-900/20",
-    color: "text-blue-500",
-  },
-  return: {
-    icon: "assignment_return",
-    bg: "bg-amber-50 dark:bg-amber-900/20",
-    color: "text-amber-500",
-  },
-  equipment: {
-    icon: "devices",
-    bg: "bg-violet-50 dark:bg-violet-900/20",
-    color: "text-violet-500",
-  },
-  report: {
-    icon: "build_circle",
-    bg: "bg-rose-50 dark:bg-rose-900/20",
-    color: "text-rose-500",
-  },
-  general: {
-    icon: "notifications",
-    bg: "bg-slate-100 dark:bg-slate-700/40",
-    color: "text-slate-500",
-  },
-};
+import { NOTIFICATION_TYPE_CONFIG } from "@/utils/notificationHelper";
 
 // ── NotificationItem ──────────────────────────────────────────────────────────
 
@@ -65,7 +28,7 @@ const NotificationItem: React.FC<ItemProps> = ({
   onClose,
   role,
 }) => {
-  const { icon, bg, color } = TYPE_CONFIG[notification.type] || TYPE_CONFIG.general;
+  const { icon, bg, color } = NOTIFICATION_TYPE_CONFIG[notification.type] || NOTIFICATION_TYPE_CONFIG.general;
 
   return (
     <Link
@@ -304,40 +267,43 @@ const NavNotificationBell: React.FC = () => {
                          <Loader2 className="h-6 w-6 animate-spin text-blue-500" />
                          <p className="text-xs font-bold text-slate-400">Updating...</p>
                     </div>
-                  ) : notifications.length > 0 ? (
-                    notifications.slice(0, 10).map((n) => (
-                      <NotificationItem
-                        key={n._id}
-                        notification={n}
-                        onRead={markAsRead}
-                        onClose={() => setIsOpen(false)}
-                        role={role}
-                      />
-                    ))
-                  ) : (
-                    <div className="flex flex-col items-center gap-3 px-6 py-14 text-center">
-                      <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-black/5 dark:bg-white/8">
-                        <Bell className="h-6 w-6 text-slate-400 dark:text-slate-500" />
-                      </div>
-                      <p className="text-sm font-semibold text-slate-400 dark:text-slate-500">
-                        No notifications
-                      </p>
-                    </div>
-                  )}
+                  ) : (() => {
+                    const unreadList = notifications.filter(n => !n.read);
+                    if (unreadList.length > 0) {
+                      return unreadList.slice(0, 10).map((n) => (
+                        <NotificationItem
+                          key={n._id}
+                          notification={n}
+                          onRead={markAsRead}
+                          onClose={() => setIsOpen(false)}
+                          role={role}
+                        />
+                      ));
+                    } else {
+                      return (
+                        <div className="flex flex-col items-center gap-3 px-6 py-14 text-center">
+                          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-black/5 dark:bg-white/8">
+                            <CheckCheck className="h-6 w-6 text-emerald-400 dark:text-emerald-500" />
+                          </div>
+                          <p className="text-sm font-semibold text-slate-400 dark:text-slate-500">
+                            Không có thông báo mới
+                          </p>
+                        </div>
+                      );
+                    }
+                  })()}
                 </div>
 
                 {/* Footer */}
-                {notifications.length > 0 && (
-                  <div className="border-t border-black/10 bg-black/3 px-5 py-3.5 text-center dark:border-white/15 dark:bg-white/5">
-                    <Link
-                      to={`/${role}/notifications`}
-                      onClick={() => setIsOpen(false)}
-                      className="inline-block text-[0.8125rem] font-bold text-[#1E2B58] transition-colors hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300"
-                    >
-                      View All Notifications →
-                    </Link>
-                  </div>
-                )}
+                <div className="border-t border-black/10 bg-black/3 px-5 py-3.5 text-center dark:border-white/15 dark:bg-white/5">
+                  <Link
+                    to={`/${role}/notifications`}
+                    onClick={() => setIsOpen(false)}
+                    className="inline-block text-[0.8125rem] font-bold text-[#1E2B58] transition-colors hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300"
+                  >
+                    Xem tất cả thông báo →
+                  </Link>
+                </div>
               </motion.div>
             </motion.div>
           )}

@@ -1,7 +1,6 @@
 import React, { useState, useMemo } from "react";
-import { X, ArrowRight, CalendarDays, FileText, Clock, Timer } from "lucide-react";
+import { X, ArrowRight, FileText, Clock, Timer } from "lucide-react";
 import type { Equipment } from "@/types/equipment";
-import { differenceInMinutes } from "date-fns";
 
 interface BorrowModalProps {
   item: Equipment;
@@ -11,77 +10,65 @@ interface BorrowModalProps {
 }
 
 const BorrowModal: React.FC<BorrowModalProps> = ({ item, onClose, onSubmit, isLoading }) => {
-  // Initialize with current local date/time natively
-  const now = new Date();
-  const pad = (n: number) => n.toString().padStart(2, '0');
-  const currentDateStr = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
-  const currentTimeStr = `${pad(now.getHours())}:${pad(now.getMinutes())}`;
-
-  const [borrowDate, setBorrowDate] = useState(currentDateStr);
-  const [borrowTime, setBorrowTime] = useState(currentTimeStr);
-  const [returnDate, setReturnDate] = useState("");
-  const [returnTime, setReturnTime] = useState("");
-  
-  const [purpose, setPurpose] = useState("");
+  const [startDateOption, setStartDateOption] = useState<'today' | 'tomorrow'>('today');
+  const [durationOption, setDurationOption] = useState<'1' | '3' | '7'>('1');
+  const [purpose, setPurpose] = useState("mượn với mục đích phục vụ học tập");
   const [formError, setFormError] = useState("");
 
-  const borrowDateTime = borrowDate && borrowTime ? `${borrowDate}T${borrowTime}` : "";
-  const returnDateTime = returnDate && returnTime ? `${returnDate}T${returnTime}` : "";
-
-  // Dynamic duration calculation
-  const durationText = useMemo(() => {
-    if (!borrowDateTime || !returnDateTime) return null;
-    const start = new Date(borrowDateTime);
-    const end = new Date(returnDateTime);
-    
-    if (end <= start) return null;
-
-    const mins = differenceInMinutes(end, start);
-    const hours = Math.floor(mins / 60);
-    const remainingMins = mins % 60;
-    const days = Math.floor(hours / 24);
-    const remainingHours = hours % 24;
-
-    if (days > 0) {
-      return `${days} day${days > 1 ? 's' : ''} ${remainingHours > 0 ? `${remainingHours} hr${remainingHours > 1 ? 's' : ''}` : ''}`;
-    } else if (hours > 0) {
-      return `${hours} hr${hours > 1 ? 's' : ''} ${remainingMins > 0 ? `${remainingMins} min` : ''}`;
+  const calculatedDates = useMemo(() => {
+    const borrow = new Date();
+    if (startDateOption === 'tomorrow') {
+      borrow.setDate(borrow.getDate() + 1);
     }
-    return `${mins} min`;
-  }, [borrowDateTime, returnDateTime]);
+    // Set to 07:00 AM fixed
+    borrow.setHours(7, 0, 0, 0);
+
+    const durationDays = parseInt(durationOption);
+    const returnDateObj = new Date(borrow);
+    returnDateObj.setDate(returnDateObj.getDate() + durationDays);
+    // Set to 17:00 (5:00 PM) fixed
+    returnDateObj.setHours(17, 0, 0, 0);
+
+    return {
+      borrow: borrow.toISOString(),
+      return: returnDateObj.toISOString(),
+      displayBorrow: borrow.toLocaleString('vi-VN', { weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }),
+      displayReturn: returnDateObj.toLocaleString('vi-VN', { weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+    };
+  }, [startDateOption, durationOption]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!borrowDateTime || !returnDateTime || !purpose.trim()) {
-      setFormError("Please fill in all details completely.");
+    if (!purpose.trim()) {
+      setFormError("Vui lòng nhập mục đích mượn.");
       return;
     }
-    if (new Date(returnDateTime) <= new Date(borrowDateTime)) {
-      setFormError("Return time must be logically after borrow time.");
-      return;
-    }
-    onSubmit(borrowDateTime, returnDateTime, purpose);
+    onSubmit(calculatedDates.borrow, calculatedDates.return, purpose);
   };
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-[#1E2B58]/40 px-4 backdrop-blur-md transition-all"
+      className="fixed inset-0 z-[100] flex items-center justify-center bg-[#1E2B58]/40 px-4 backdrop-blur-md transition-all"
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
-      <div className="animate-in fade-in zoom-in-95 relative w-full max-w-lg rounded-[2.5rem] bg-white/90 dark:bg-slate-900/90 p-8 shadow-2xl shadow-[#1E2B58]/30 dark:shadow-black/50 overflow-hidden backdrop-blur-2xl ring-1 ring-white/50 dark:ring-white/10 duration-300">
+      <div className="animate-in fade-in zoom-in-95 relative w-full max-w-lg rounded-[2.5rem] bg-white/95 dark:bg-slate-900/95 p-8 shadow-2xl shadow-[#1E2B58]/30 dark:shadow-black/50 overflow-hidden backdrop-blur-2xl ring-1 ring-white/50 dark:ring-white/10 duration-300">
         
+        {/* Decorative Background Elements */}
+        <div className="absolute top-0 right-0 -mr-16 -mt-16 w-48 h-48 bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute bottom-0 left-0 -ml-16 -mb-16 w-48 h-48 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
+
         {/* Close Button */}
         <button
           onClick={onClose}
-          className="absolute top-6 right-6 flex h-10 w-10 items-center justify-center rounded-full bg-slate-100/50 dark:bg-slate-800/50 text-slate-500 transition hover:bg-slate-200 dark:hover:bg-slate-700 dark:text-slate-300"
+          className="absolute top-6 right-6 flex h-10 w-10 items-center justify-center rounded-full bg-slate-100/50 dark:bg-slate-800/50 text-slate-500 transition hover:bg-slate-200 dark:hover:bg-slate-700 dark:text-slate-300 z-20"
           aria-label="Close modal"
         >
           <X className="h-5 w-5" />
         </button>
 
         {/* Header Ribbon */}
-        <div className="mb-8">
-          <div className="inline-flex items-center gap-2 mb-3 px-3 py-1 rounded-full bg-blue-50 dark:bg-blue-900/30 border border-blue-100 dark:border-blue-800/50">
+        <div className="mb-6 relative z-10">
+          <div className="inline-flex items-center gap-2 mb-3 px-3 py-1 rounded-full bg-blue-50 dark:bg-blue-400/10 border border-blue-100 dark:border-blue-400/20">
             <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
             <span className="text-[10px] font-black tracking-widest text-blue-700 dark:text-blue-400 uppercase">
               New Borrow Request
@@ -90,114 +77,99 @@ const BorrowModal: React.FC<BorrowModalProps> = ({ item, onClose, onSubmit, isLo
           <h3 className="text-[1.75rem] leading-tight font-black text-[#1E2B58] dark:text-white mb-2">
             {item.name}
           </h3>
-          <div className="flex items-center gap-3 text-xs font-bold tracking-widest text-slate-400 uppercase">
-            <span className="flex items-center gap-1.5 bg-slate-100 dark:bg-slate-800 px-2.5 py-1 rounded-lg">
+          <div className="flex items-center gap-3 text-[10px] font-black tracking-widest text-slate-400 uppercase">
+            <span className="flex items-center gap-1.5 bg-slate-100 dark:bg-slate-800 px-2.5 py-1.5 rounded-xl border border-black/5 dark:border-white/5">
               <AsteriskIcon className="w-3 h-3" /> {item._id.slice(-6).toUpperCase()}
             </span>
-            <span>•</span>
-            <span className="flex items-center gap-1.5 bg-emerald-50 text-emerald-600 dark:bg-emerald-900/20 dark:text-emerald-400 px-2.5 py-1 rounded-lg">
-              <MapPinIcon className="w-3 h-3" /> {(item.room_id as any)?.name || "Phòng kho"}
+            <span className="flex items-center gap-1.5 bg-emerald-50 text-emerald-600 dark:bg-emerald-400/10 dark:text-emerald-400 px-2.5 py-1.5 rounded-xl border border-emerald-100 dark:border-emerald-400/20">
+              <MapPinIcon className="w-3 h-3" /> {(item.room_id as any)?.name || "Store"}
             </span>
           </div>
         </div>
 
+        {/* Equipment Image Preview (if available) */}
+        {item.img && (
+          <div className="mb-6 relative z-10 w-full aspect-video rounded-3xl overflow-hidden border border-black/5 dark:border-white/10 shadow-sm">
+            <img src={item.img} alt={item.name} className="w-full h-full object-cover" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
+          </div>
+        )}
+
         {/* Form Group */}
         <form onSubmit={handleSubmit} className="flex flex-col gap-6 relative z-10">
           
-          <div className="grid grid-cols-2 gap-4">
-            {/* Borrow Time */}
-            <div className="space-y-3">
-              <label className="text-[10px] font-black tracking-widest text-[#1E2B58]/60 dark:text-slate-400 uppercase flex items-center gap-1.5">
-                <Clock className="w-3.5 h-3.5" /> Start Time
-              </label>
-              <div className="flex flex-col gap-2">
-                <div className="relative group">
-                  <CalendarDays className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-blue-500 transition-colors" />
-                  <input
-                    type="date"
-                    required
-                    min={currentDateStr}
-                    value={borrowDate}
-                    onChange={(e) => setBorrowDate(e.target.value)}
-                    className="w-full rounded-2xl border-2 border-slate-200/60 dark:border-slate-700 bg-white/60 dark:bg-slate-800 pl-10 pr-4 py-3 text-sm font-bold text-[#1E2B58] dark:text-white outline-none transition-all hover:border-slate-300 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10"
-                  />
-                </div>
-                <div className="relative group">
-                  <Clock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-blue-500 transition-colors" />
-                  <input
-                    type="time"
-                    required
-                    value={borrowTime}
-                    onChange={(e) => setBorrowTime(e.target.value)}
-                    className="w-full rounded-2xl border-2 border-slate-200/60 dark:border-slate-700 bg-white/60 dark:bg-slate-800 pl-10 pr-4 py-3 text-sm font-bold text-[#1E2B58] dark:text-white outline-none transition-all hover:border-slate-300 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10"
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* Return Time */}
-            <div className="space-y-3">
-              <label className="text-[10px] font-black tracking-widest text-[#1E2B58]/60 dark:text-slate-400 uppercase flex items-center gap-1.5">
-                <CalendarDays className="w-3.5 h-3.5" /> End Time
-              </label>
-              <div className="flex flex-col gap-2">
-                <div className="relative group">
-                  <CalendarDays className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
-                  <input
-                    type="date"
-                    required
-                    min={borrowDate || currentDateStr}
-                    value={returnDate}
-                    onChange={(e) => setReturnDate(e.target.value)}
-                    className="w-full rounded-2xl border-2 border-slate-200/60 dark:border-slate-700 bg-white/60 dark:bg-slate-800 pl-10 pr-4 py-3 text-sm font-bold text-[#1E2B58] dark:text-white outline-none transition-all hover:border-slate-300 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10"
-                  />
-                </div>
-                <div className="relative group">
-                  <Clock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
-                  <input
-                    type="time"
-                    required
-                    value={returnTime}
-                    onChange={(e) => setReturnTime(e.target.value)}
-                    className="w-full rounded-2xl border-2 border-slate-200/60 dark:border-slate-700 bg-white/60 dark:bg-slate-800 pl-10 pr-4 py-3 text-sm font-bold text-[#1E2B58] dark:text-white outline-none transition-all hover:border-slate-300 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10"
-                  />
-                </div>
-              </div>
+          {/* Start Date Option */}
+          <div className="space-y-3">
+            <label className="text-[10px] font-black tracking-widest text-[#1E2B58]/60 dark:text-slate-400 uppercase flex items-center gap-1.5">
+              <Clock className="w-3.5 h-3.5" /> Start Time
+            </label>
+            <div className="grid grid-cols-2 gap-3 p-1.5 bg-slate-100/50 dark:bg-slate-800/50 rounded-2xl border border-black/5 dark:border-white/5">
+              {(['today', 'tomorrow'] as const).map(option => (
+                <button
+                  key={option}
+                  type="button"
+                  onClick={() => setStartDateOption(option)}
+                  className={`py-3 rounded-[1.125rem] text-sm font-bold transition-all duration-300 ${
+                    startDateOption === option
+                      ? "bg-white dark:bg-blue-600 text-blue-600 dark:text-white shadow-xl shadow-blue-500/10 ring-1 ring-blue-500/10"
+                      : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
+                  }`}
+                >
+                  {option === 'today' ? 'Hôm nay' : 'Ngày mai'}
+                </button>
+              ))}
             </div>
           </div>
 
-          {/* Dynamic Duration Display */}
-          {durationText && (
-            <div className="flex items-center gap-3 px-4 py-3.5 rounded-2xl bg-indigo-50/80 dark:bg-indigo-900/20 border border-indigo-100 dark:border-indigo-500/20 animate-in slide-in-from-bottom-2 fade-in">
-              <div className="w-8 h-8 rounded-full bg-indigo-100 dark:bg-indigo-900/50 flex items-center justify-center">
-                <Timer className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
-              </div>
-              <div>
-                <p className="text-[10px] font-black tracking-widest text-indigo-800/60 dark:text-indigo-400/60 uppercase">
-                  Proposed Duration
-                </p>
-                <p className="text-sm font-bold text-indigo-900 dark:text-indigo-300">
-                  {durationText}
-                </p>
-              </div>
+          {/* Duration Option */}
+          <div className="space-y-3">
+            <label className="text-[10px] font-black tracking-widest text-[#1E2B58]/60 dark:text-slate-400 uppercase flex items-center gap-1.5">
+              <Timer className="w-3.5 h-3.5" /> Borrow Duration
+            </label>
+            <div className="grid grid-cols-3 gap-3 p-1.5 bg-slate-100/50 dark:bg-slate-800/50 rounded-2xl border border-black/5 dark:border-white/5">
+              {(['1', '3', '7'] as const).map(option => (
+                <button
+                  key={option}
+                  type="button"
+                  onClick={() => setDurationOption(option)}
+                  className={`py-3 rounded-[1.125rem] text-sm font-bold transition-all duration-300 ${
+                    durationOption === option
+                      ? "bg-white dark:bg-indigo-600 text-indigo-600 dark:text-white shadow-xl shadow-indigo-500/10 ring-1 ring-indigo-500/10"
+                      : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
+                  }`}
+                >
+                  {option} ngày
+                </button>
+              ))}
             </div>
-          )}
+          </div>
+
+          {/* Detailed Preview */}
+          <div className="p-5 rounded-[1.75rem] bg-indigo-50/50 dark:bg-indigo-900/10 border border-indigo-100 dark:border-indigo-400/20 space-y-3">
+              <div className="flex justify-between items-center text-xs">
+                <span className="font-bold text-indigo-900/40 dark:text-indigo-400/40 uppercase tracking-widest">Bắt đầu</span>
+                <span className="font-black text-[#1E2B58] dark:text-indigo-200">{calculatedDates.displayBorrow}</span>
+              </div>
+              <div className="h-px bg-indigo-200/50 dark:bg-white/5 w-full" />
+              <div className="flex justify-between items-center text-xs">
+                <span className="font-bold text-indigo-900/40 dark:text-indigo-400/40 uppercase tracking-widest">Kết thúc</span>
+                <span className="font-black text-[#1E2B58] dark:text-indigo-200">{calculatedDates.displayReturn}</span>
+              </div>
+          </div>
 
           {/* Purpose */}
           <div className="space-y-3">
             <label className="text-[10px] font-black tracking-widest text-[#1E2B58]/60 dark:text-slate-400 uppercase flex items-center gap-1.5">
               <FileText className="w-3.5 h-3.5" /> Purpose
             </label>
-            <div className="relative group">
-              <textarea
-                required
-                rows={2}
-                placeholder="Briefly describe what you'll use this for..."
-                value={purpose}
-                onChange={(e) => setPurpose(e.target.value)}
-                className="w-full resize-none rounded-2xl border-2 border-slate-200/60 dark:border-slate-700 bg-white/60 dark:bg-slate-800 px-4 py-3.5 text-sm font-medium text-[#1E2B58] dark:text-white outline-none transition-all placeholder:text-slate-400 hover:border-slate-300 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10"
-              />
-            </div>
+            <textarea
+              required
+              rows={2}
+              placeholder="Mục đích mượn thiết bị..."
+              value={purpose}
+              onChange={(e) => setPurpose(e.target.value)}
+              className="w-full resize-none rounded-[1.5rem] border-2 border-slate-200/60 dark:border-slate-800 bg-white/60 dark:bg-slate-900/50 px-4 py-4 text-sm font-bold text-[#1E2B58] dark:text-white outline-none transition-all placeholder:text-slate-400 hover:border-slate-300 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10"
+            />
           </div>
 
           {formError && (
@@ -207,21 +179,27 @@ const BorrowModal: React.FC<BorrowModalProps> = ({ item, onClose, onSubmit, isLo
           )}
 
           {/* Actions */}
-          <div className="mt-2 flex gap-4">
+          <div className="flex gap-4">
             <button
               type="button"
               onClick={onClose}
-              className="flex-[1] rounded-2xl bg-slate-100 dark:bg-slate-800/80 py-4 text-sm font-bold text-slate-600 dark:text-slate-300 transition-all hover:bg-slate-200 dark:hover:bg-slate-700"
+              className="flex-[1] rounded-[1.25rem] bg-slate-100 dark:bg-slate-800 py-4 text-sm font-black text-slate-500 dark:text-slate-400 transition-all hover:bg-slate-200 dark:hover:bg-slate-700 active:scale-95"
             >
-              Cancel
+              Hủy bỏ
             </button>
             <button
               type="submit"
               disabled={isLoading}
-              className="group flex flex-[2] items-center justify-center gap-2 rounded-2xl bg-[#1E2B58] dark:bg-blue-600 py-4 text-sm font-bold text-white shadow-xl shadow-[#1E2B58]/20 dark:shadow-blue-900/20 transition-all hover:scale-[1.02] hover:bg-blue-900 dark:hover:bg-blue-500 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+              className="group flex flex-[2] items-center justify-center gap-3 rounded-[1.25rem] bg-[#1E2B58] dark:bg-blue-600 py-4 text-sm font-black text-white shadow-xl shadow-blue-500/20 transition-all hover:scale-[1.02] hover:bg-blue-900 dark:hover:bg-blue-500 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isLoading ? "Submitting..." : "Submit Request"}
-              {!isLoading && <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" strokeWidth={3} />}
+              {isLoading ? (
+                  <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+              ) : (
+                <>
+                  Submit Request
+                  <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" strokeWidth={3} />
+                </>
+              )}
             </button>
           </div>
         </form>

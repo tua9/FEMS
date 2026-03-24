@@ -254,7 +254,8 @@ export const HistoryPage: React.FC = () => {
                                         totalPages={borrowPages}
                                         totalItems={filteredBorrow.length}
                                         onPageChange={setBorrowPage}
-                                        onViewDetail={item => setModal({ type: 'borrow', item })}
+                                        onViewDetail={item => setModal({ type: 'borrow', item, mode: 'view' })}
+                                        onEdit={item => setModal({ type: 'borrow', item, mode: 'edit' })}
                                         onCancel={item => setCancelTargetItem(item.original)}
                                     />
                                 )}

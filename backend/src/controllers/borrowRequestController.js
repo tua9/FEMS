@@ -1,6 +1,7 @@
 import { StatusCodes } from 'http-status-codes'
 import { borrowRequestService } from '../services/borrowRequestService.js'
 import { asyncHandler } from '../middlewares/asyncHandler.js'
+import ApiError from '../utils/ApiError.js'
 
 export const createBorrowRequest = asyncHandler(async (req, res) => {
   console.log('📕 create borrow request')
@@ -18,12 +19,26 @@ export const getAllBorrowRequests = asyncHandler(async (req, res) => {
 
 export const getBorrowRequestById = asyncHandler(async (req, res) => {
   const result = await borrowRequestService.getBorrowRequestById(req.params.id)
+
+  if (req.user.role === 'student' && result.user_id?._id?.toString() !== req.user._id.toString()) {
+    throw new ApiError(StatusCodes.FORBIDDEN, 'You do not have permission to view this request.')
+  }
+
   res.status(StatusCodes.OK).json(result)
 })
 
 export const updateBorrowRequest = asyncHandler(async (req, res) => {
   const result = await borrowRequestService.updateBorrowRequest(
     req.params.id,
+    req.body,
+  )
+  res.status(StatusCodes.OK).json(result)
+})
+
+export const editBorrowRequest = asyncHandler(async (req, res) => {
+  const result = await borrowRequestService.editBorrowRequest(
+    req.params.id,
+    req.user._id,
     req.body,
   )
   res.status(StatusCodes.OK).json(result)

@@ -82,16 +82,24 @@ export const EquipmentGrid: React.FC<EquipmentGridProps> = ({
             <div key={item._id} className="flex flex-col gap-[1.5rem]">
               <div className="glass-card aspect-[4/3] rounded-[2rem] relative flex items-center justify-center p-[2rem] group overflow-hidden border border-white/30 dark:border-slate-700/50">
                 <span
-                  className={`absolute top-[1.5rem] right-[1.5rem] px-[0.75rem] py-[0.25rem] rounded-full text-[0.65rem] font-bold uppercase tracking-[0.05em] ${cfg.color}`}
+                  className={`absolute top-[1.5rem] right-[1.5rem] px-[0.75rem] py-[0.25rem] rounded-full text-[0.65rem] font-bold uppercase tracking-[0.05em] z-10 ${cfg.color}`}
                 >
                   {mappedStatus}
                 </span>
 
-                <Icon
-                  className={`w-[6rem] h-[6rem] text-[#1E2B58] dark:text-white opacity-20 transition-transform duration-300 ${!cfg.disabled ? "group-hover:scale-110" : ""
-                    }`}
-                  strokeWidth={1}
-                />
+                {item.img ? (
+                  <img 
+                    src={item.img} 
+                    alt={item.name} 
+                    className={`absolute inset-0 w-full h-full object-cover transition-transform duration-500 ${!cfg.disabled ? "group-hover:scale-110" : ""}`}
+                  />
+                ) : (
+                  <Icon
+                    className={`w-[6rem] h-[6rem] text-[#1E2B58] dark:text-white opacity-20 transition-transform duration-300 ${!cfg.disabled ? "group-hover:scale-110" : ""
+                      }`}
+                    strokeWidth={1}
+                  />
+                )}
               </div>
 
               <div className="px-[0.5rem]">
