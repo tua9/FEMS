@@ -142,7 +142,7 @@ const updateReportStatus = async (id, status, approverId, technicianId) => {
     throw new ApiError(StatusCodes.BAD_REQUEST, 'Invalid status')
   }
 
-  const report = await Report.findById(id)
+  const report = await Report.findById(id).populate('equipment_id', 'code')
   if (!report) {
     throw new ApiError(StatusCodes.NOT_FOUND, 'Report not found')
   }
@@ -150,6 +150,17 @@ const updateReportStatus = async (id, status, approverId, technicianId) => {
   report.status = status
   if (status === 'processing' && technicianId) {
     report.assigned_to = technicianId
+    
+    // Notify Technician
+    const eqCode = report.equipment_id?.code || report.equipment_id?.toString()?.slice(-6).toUpperCase()
+    await notificationService.createNotification({
+      user_id: technicianId,
+      type: 'report',
+      title: 'New Maintenance Task Assigned',
+      message: `Equipment ${eqCode} has been assigned to you for repair. Please check it now.`,
+      to: '/admin/reports', // As requested by user
+      state: { type: 'report', id: report._id, tab: 'report' }
+    }).catch(err => console.error('Failed to notify technician:', err))
   }
 
   if (approverId) {
@@ -173,17 +184,18 @@ const updateReportStatus = async (id, status, approverId, technicianId) => {
 
   // Notify User
   let notificationTitle = 'Report Update'
-  const shortId = report._id.toString().slice(-6).toUpperCase()
-  let notificationMessage = `Your report #${shortId} status has been updated to ${status}.`
-  if (status === 'fixed') {
+  const reportCode = report.code || report._id.toString().slice(-6).toUpperCase()
+  let notificationMessage = `Your report #${reportCode} status has been updated to ${status}.`
+  
+  if (status === 'approved' || status === 'processing') {
+    notificationTitle = 'Report Processing'
+    notificationMessage = `Your report ${reportCode} is being processed. Thank you for your report.`
+  } else if (status === 'fixed') {
     notificationTitle = 'Issue Resolved'
-    notificationMessage = `Your reported issue #${shortId} with ${report.equipment_id ? 'equipment' : 'room'} has been resolved.`
+    notificationMessage = `Your reported issue #${reportCode} has been resolved. Thank you for your patience.`
   } else if (status === 'rejected') {
     notificationTitle = 'Report Rejected'
-    notificationMessage = `Your report #${shortId} for ${report.equipment_id ? 'equipment' : 'room'} was rejected.`
-  } else if (status === 'processing') {
-    notificationTitle = 'Repair in Progress'
-    notificationMessage = `Your report #${shortId} is now being processed by our technician.`
+    notificationMessage = `Your report #${reportCode} was rejected. Please contact the administrator for more details.`
   }
 
   await notificationService.createNotification({
