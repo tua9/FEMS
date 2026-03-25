@@ -1,6 +1,5 @@
 import React from 'react';
-import { Asset } from '@/data/technician/mockEquipment';
-import AssetCard from './AssetCard';
+import AssetCard, { type Asset } from './AssetCard';
 
 interface Props {
   assets: Asset[];

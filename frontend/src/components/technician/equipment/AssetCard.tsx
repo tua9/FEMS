@@ -1,5 +1,15 @@
 import React from 'react';
-import { type Asset, getAssetStatusStyle } from '@/data/technician/mockEquipment';
+import { getAssetStatusStyle } from '@/data/technician/mockEquipment';
+
+/** Shape of mock / API equipment rows used by technician asset UI */
+export type Asset = {
+  id: string;
+  name: string;
+  serial: string;
+  status: string;
+  imageUrl?: string;
+  icon: string;
+};
 
 interface Props {
   asset: Asset;

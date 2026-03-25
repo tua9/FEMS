@@ -43,6 +43,29 @@ const assetSchema = new mongoose.Schema(
       sparse: true, // allows existing docs without code; new ones always get one
       trim: true,
     },
+
+    model: {
+      type: String,
+      default: '',
+      trim: true,
+    },
+
+    serial_number: {
+      type: String,
+      default: '',
+      trim: true,
+    },
+
+    purchase_date: {
+      type: Date,
+      default: null,
+    },
+
+    last_maintenance_date: {
+      type: Date,
+      default: null,
+    },
+
     img: {
       type: String,
       default: null,

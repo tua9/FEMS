@@ -16,3 +16,17 @@ export const getTechnicianTickets = asyncHandler(async (req, res) => {
   })
   res.status(StatusCodes.OK).json(data)
 })
+
+// PATCH /api/technician/tickets/:id
+export const updateTechnicianTicket = asyncHandler(async (req, res) => {
+  const { status, cause, outcome, decision_note: decisionNote } = req.body
+  const data = await technicianTicketService.updateTicket({
+    id: req.params.id,
+    status,
+    cause,
+    outcome,
+    decisionNote,
+    technicianId: req.user._id,
+  })
+  res.status(StatusCodes.OK).json(data)
+})

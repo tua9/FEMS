@@ -58,7 +58,42 @@ const getTickets = async ({ user, status }) => {
   return reports
 }
 
+const VALID_TRANSITIONS = {
+  pending:    ['approved', 'rejected'],
+  approved:   ['processing', 'rejected'],
+  processing: ['fixed'],
+}
+
+const updateTicket = async ({ id, status, cause, outcome, decisionNote, assignedTo, technicianId }) => {
+  const report = await Report.findById(id)
+  if (!report) throw new Error('Ticket not found')
+
+  const allowed = VALID_TRANSITIONS[report.status] ?? []
+  if (status && !allowed.includes(status)) {
+    throw new Error(`Cannot transition from "${report.status}" to "${status}"`)
+  }
+
+  const update = {}
+  if (status) {
+    update.status = status
+    if (['approved', 'fixed', 'rejected'].includes(status)) {
+      update.processed_at = new Date()
+      update.processed_by = technicianId
+    }
+    if (status === 'processing') update.assigned_to = assignedTo ?? technicianId
+  }
+  if (cause) update.cause = cause
+  if (outcome) update.outcome = outcome
+  if (decisionNote) update.decision_note = decisionNote
+
+  return Report.findByIdAndUpdate(id, { $set: update }, { new: true })
+    .populate('user_id', 'displayName username')
+    .populate('equipment_id', 'name category')
+    .populate('room_id', 'name')
+}
+
 export const technicianTicketService = {
   getStats,
   getTickets,
+  updateTicket,
 }

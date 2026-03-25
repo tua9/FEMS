@@ -51,8 +51,19 @@ const generateUniqueCode = async (category) => {
 // ─── CRUD ─────────────────────────────────────────────────────────────────────
 
 const createEquipment = async (body) => {
-  // Destructure body — `code` from frontend is intentionally ignored
-  const { name, category, available, status, room_id, img } = body
+  // Destructure body — `code` from frontend is intentionally ignored (auto-generated)
+  const {
+    name,
+    category,
+    available,
+    status,
+    room_id,
+    img,
+    model,
+    serial_number,
+    purchase_date,
+    last_maintenance_date,
+  } = body
 
   if (!name) {
     throw new ApiError(StatusCodes.BAD_REQUEST, 'Name is required')
@@ -65,10 +76,16 @@ const createEquipment = async (body) => {
     name,
     category,
     available,
-    status,
+    status: status || 'good',
     room_id,
     code,
     img,
+    model: model ?? '',
+    serial_number: serial_number ?? '',
+    purchase_date: purchase_date ? new Date(purchase_date) : null,
+    last_maintenance_date: last_maintenance_date
+      ? new Date(last_maintenance_date)
+      : null,
   })
 
   return {
@@ -91,12 +108,49 @@ const getEquipmentById = async (id) => {
 }
 
 const updateEquipment = async (id, body) => {
-  const { name, category, available, status, room_id, code, img } = body
-  const equipment = await Equipment.findByIdAndUpdate(
-    id,
-    { name, category, available, status, room_id, code, img },
-    { new: true, runValidators: true },
-  )
+  const {
+    name,
+    category,
+    available,
+    status,
+    room_id,
+    code,
+    img,
+    model,
+    serial_number,
+    purchase_date,
+    last_maintenance_date,
+  } = body
+  const patch = {
+    ...(name !== undefined && { name }),
+    ...(category !== undefined && { category }),
+    ...(available !== undefined && { available }),
+    ...(status !== undefined && { status }),
+    ...(room_id !== undefined && { room_id }),
+    ...(code !== undefined && { code }),
+    ...(img !== undefined && { img }),
+    ...(model !== undefined && { model }),
+    ...(serial_number !== undefined && { serial_number }),
+    ...(purchase_date !== undefined && {
+      purchase_date: purchase_date ? new Date(purchase_date) : null,
+    }),
+    ...(last_maintenance_date !== undefined && {
+      last_maintenance_date: last_maintenance_date
+        ? new Date(last_maintenance_date)
+        : null,
+    }),
+  }
+  if (Object.keys(patch).length === 0) {
+    const existing = await Equipment.findById(id)
+    if (!existing) {
+      throw new ApiError(StatusCodes.NOT_FOUND, 'Equipment not found')
+    }
+    return existing
+  }
+  const equipment = await Equipment.findByIdAndUpdate(id, patch, {
+    new: true,
+    runValidators: true,
+  })
   if (!equipment) {
     throw new ApiError(StatusCodes.NOT_FOUND, 'Equipment not found')
   }
