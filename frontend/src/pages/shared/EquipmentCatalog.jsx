@@ -69,12 +69,12 @@ export const EquipmentCatalog = () => {
  fetchMyBorrowRequests();
  }, [fetchRooms, fetchMyBorrowRequests]);
 
- useEffect(() => {
- const params= {
- page: currentPage,
- limit,
- search: searchText,
- };
+  useEffect(() => {
+    const params = {
+      page: currentPage,
+      limit: ITEMS_PER_PAGE,
+      search: searchText,
+    };
 
  if (typeFilter !== "all-types") {
  params.category = typeFilter;
@@ -225,14 +225,15 @@ export const EquipmentCatalog = () => {
  );
  };
 
- // ── Handled Over (Currently Borrowed) ──────────────────────────────────
- const borrowedItems = useMemo(() => {
- return mappedBorrow.filter((b) => 
- b.status === "BORROWED" || 
- b.status === "OVERDUE" || 
- b.status === "APPROVED"
- );
- }, [mappedBorrow]);
+  // ── Handled Over (Currently Borrowed) ──────────────────────────────────
+  const borrowedItems = useMemo(() => {
+    if (!Array.isArray(mappedBorrow)) return [];
+    return mappedBorrow.filter((b) => 
+      b.status === "BORROWED" || 
+      b.status === "OVERDUE" || 
+      b.status === "APPROVED"
+    );
+  }, [mappedBorrow]);
 
  const handleReturnBorrowed = async (borrowRequestId) => {
  try {

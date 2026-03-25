@@ -66,6 +66,7 @@ export const EquipmentGrid: React.FC<EquipmentGridProps> = ({
 }) => {
 
   const filteredItems = useMemo(() => {
+    if (!Array.isArray(items)) return [];
     if (!showOnlyAvailable) return items;
 
     return items.filter((item: Equipment) => item.status === "good");

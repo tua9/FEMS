@@ -18,9 +18,12 @@ export const EASE_EXPO= {
 };
 
 export const EASE_SMOOTH= {
- duration: 0.35,
- ease: [0.4, 0, 0.2, 1],
+  duration: 0.35,
+  ease: [0.4, 0, 0.2, 1],
 };
+
+// Default transition for simple variants
+const transition = EASE_EXPO;
 
 // ── Page transition (Fade + Slide Y) ─────────────────────────────────────────
 export const pageVariants= {
