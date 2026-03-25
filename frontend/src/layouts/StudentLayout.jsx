@@ -1,5 +1,5 @@
 import StudentNavBar from "@/components/navbar/StudentNavbar";
-import StudentFooter from "@/components/student/common/StudentFooter";
+import StudentFooter from "@/features/student/components/common/StudentFooter";
 import { RouteTransitionWrapper } from "@/components/motion";
 
 export default function StudentLayout() {

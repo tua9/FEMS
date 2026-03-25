@@ -1,16 +1,16 @@
 import { Route } from "react-router";
 import LecturerLayout from "@/layouts/LecturerLayout";
-import ProtectedRoute from "@/components/auth/ProtectedRoute";
-import LecturerDashboard from "@/pages/lecturer/LecturerDashboard";
-import { EquipmentCatalog } from "@/pages/shared/EquipmentCatalog";
-import { HistoryPage } from "@/pages/shared/HistoryPage";
-import { ApprovalCenter } from "@/pages/lecturer/ApprovalCenter";
-import UsageStats from "@/pages/lecturer/UsageStats";
-import ReportIssuePage from "@/pages/shared/ReportIssuePage";
-import AcademicCalendar from "@/pages/lecturer/AcademicCalendar";
-import ProfilePage from "@/pages/lecturer/Profile";
-import ChangePasswordPage from "@/pages/shared/ChangePasswordPage";
-import NotificationsPage from "@/pages/shared/NotificationsPage";
+import ProtectedRoute from "@/features/auth/components/ProtectedRoute";
+import LecturerDashboard from "@/features/lecturer/pages/LecturerDashboard";
+import { EquipmentCatalog } from "@/features/shared/pages/EquipmentCatalog";
+import { HistoryPage } from "@/features/shared/pages/HistoryPage";
+import { ApprovalCenter } from "@/features/lecturer/pages/ApprovalCenter";
+import UsageStats from "@/features/lecturer/pages/UsageStats";
+import ReportIssuePage from "@/features/shared/pages/ReportIssuePage";
+import AcademicCalendar from "@/features/lecturer/pages/AcademicCalendar";
+import ProfilePage from "@/features/lecturer/pages/Profile";
+import ChangePasswordPage from "@/features/shared/pages/ChangePasswordPage";
+import NotificationsPage from "@/features/shared/pages/NotificationsPage";
 
 const LecturerRoutes = () => (
  <Route element={<ProtectedRoute allowRoles={["lecturer"]} />}>

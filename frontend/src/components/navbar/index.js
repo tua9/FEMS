@@ -1,6 +1,6 @@
 // ─── Navbar — barrel export ────────────────────────────────────────────────────
 // Single import point for all role-specific Navbar wrappers.
-// Sub-components live in @/components/shared/navbar/.
+// Sub-components live in @/features/shared/components/navbar/.
 
 export { default } from "./AppNavbar";
 export { default } from "./AdminNavbar";

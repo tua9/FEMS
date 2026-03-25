@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { Outlet } from "react-router-dom";
 import { Toaster } from "sonner";
-import { ThemeProvider } from "./components/common/theme-provider";
+import { ThemeProvider } from "@/features/shared/components/theme-provider";
 import { useAuthStore } from "./stores/useAuthStore";
 import ChatBox from "./components/chat/ChatBox";
 

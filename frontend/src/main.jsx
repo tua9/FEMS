@@ -6,8 +6,8 @@ import App from "./App";
 import "./styles/index.css";
 
 // Auth guards
-import RoleRedirect from "./components/auth/RoleRedirect";
-import RootHome from "./components/auth/RootHome";
+import RoleRedirect from "@/features/auth/components/RoleRedirect";
+import RootHome from "@/features/auth/components/RootHome";
 
 // Route Modules
 import PublicRoutes from "./routes/publicRoutes";

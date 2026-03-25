@@ -1,5 +1,5 @@
 import TechnicianNavbar from "@/components/navbar/TechnicianNavbar";
-import TechnicianFooter from "@/components/technician/TechnicianFooter";
+import TechnicianFooter from "@/features/technician/components/TechnicianFooter";
 import { RouteTransitionWrapper } from "@/components/motion";
 
 export default function TechnicianLayout() {

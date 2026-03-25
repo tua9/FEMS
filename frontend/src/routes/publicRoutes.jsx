@@ -1,8 +1,8 @@
 import { Route } from "react-router";
-import GuestRoute from "@/components/auth/GuestRoute";
-import LoginPage from "@/pages/student/LoginPage";
-import ForgotPasswordPage from "@/pages/student/ForgotPasswordPage";
-import GuestReportPage from "@/pages/guest/GuestReportPage";
+import GuestRoute from "@/features/auth/components/GuestRoute";
+import LoginPage from "@/features/auth/pages/LoginPage";
+import ForgotPasswordPage from "@/features/auth/pages/ForgotPasswordPage";
+import GuestReportPage from "@/features/guest/pages/GuestReportPage";
 
 const PublicRoutes = () => (
  <>

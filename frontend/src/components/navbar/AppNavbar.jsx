@@ -1,15 +1,15 @@
 /**
  * AppNavbar — Shared navbar for all roles (admin | lecturer | student | technician).
- * Uses unified sub-components from @/components/shared/navbar/.
+ * Uses unified sub-components from @/features/shared/components/navbar/.
  */
 import React from "react";
 import { useAuthStore } from "@/stores/useAuthStore";
 import { cn } from "@/lib/utils";
-import NavBrand from "@/components/shared/navbar/NavBrand";
-import NavLinks from "@/components/shared/navbar/NavLinks";
-import DarkModeToggle from "@/components/shared/navbar/DarkModeToggle";
-import NavNotificationBell from "@/components/shared/navbar/NavNotificationBell";
-import NavUserDropdown from "@/components/shared/navbar/NavUserDropdown";
+import NavBrand from "@/features/shared/components/navbar/NavBrand";
+import NavLinks from "@/features/shared/components/navbar/NavLinks";
+import DarkModeToggle from "@/features/shared/components/navbar/DarkModeToggle";
+import NavNotificationBell from "@/features/shared/components/navbar/NavNotificationBell";
+import NavUserDropdown from "@/features/shared/components/navbar/NavUserDropdown";
 
 const AppNavbar = ({
  portalLabel,

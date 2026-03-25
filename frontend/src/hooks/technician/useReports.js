@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { technicianApi } from '@/services/api/technicianApi';
+import { technicianApi } from '@/services/technicianApi';
 
 export const useReports = () => {
  const [reports, setReports] = useState([]);

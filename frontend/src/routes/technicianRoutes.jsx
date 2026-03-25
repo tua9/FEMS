@@ -1,15 +1,15 @@
 import { Route } from "react-router";
 import TechnicianLayout from "@/layouts/TechnicianLayout";
-import ProtectedRoute from "@/components/auth/ProtectedRoute";
-import TechnicianDashboard from "@/pages/technician/Dashboard";
-import TechnicianTaskList from "@/pages/technician/TaskList";
-import TechnicianTaskDetails from "@/pages/technician/TaskDetails";
-import TechnicianEquipment from "@/pages/technician/EquipmentInventory";
-import TechnicianHandover from "@/pages/technician/HandoverManagement";
-import TechnicianReports from "@/pages/technician/PerformanceInsights";
-import TechnicianProfile from "@/pages/technician/Profile";
-import ChangePasswordPage from "@/pages/shared/ChangePasswordPage";
-import NotificationsPage from "@/pages/shared/NotificationsPage";
+import ProtectedRoute from "@/features/auth/components/ProtectedRoute";
+import TechnicianDashboard from "@/features/technician/pages/Dashboard";
+import TechnicianTaskList from "@/features/technician/pages/TaskList";
+import TechnicianTaskDetails from "@/features/technician/pages/TaskDetails";
+import TechnicianEquipment from "@/features/technician/pages/EquipmentInventory";
+import TechnicianHandover from "@/features/technician/pages/HandoverManagement";
+import TechnicianReports from "@/features/technician/pages/PerformanceInsights";
+import TechnicianProfile from "@/features/technician/pages/Profile";
+import ChangePasswordPage from "@/features/shared/pages/ChangePasswordPage";
+import NotificationsPage from "@/features/shared/pages/NotificationsPage";
 
 const TechnicianRoutes = () => (
  <Route element={<ProtectedRoute allowRoles={["technician"]} />}>

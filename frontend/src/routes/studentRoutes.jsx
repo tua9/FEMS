@@ -1,13 +1,13 @@
 import { Route } from "react-router";
 import StudentLayout from "@/layouts/StudentLayout";
-import ProtectedRoute from "@/components/auth/ProtectedRoute";
-import HomePage from "@/pages/student/HomePage";
-import { EquipmentCatalog } from "@/pages/shared/EquipmentCatalog";
-import { HistoryPage } from "@/pages/shared/HistoryPage";
-import ReportIssuePage from "@/pages/shared/ReportIssuePage";
-import ProfilePage from "@/pages/student/Profile";
-import ChangePasswordPage from "@/pages/shared/ChangePasswordPage";
-import NotificationsPage from "@/pages/shared/NotificationsPage";
+import ProtectedRoute from "@/features/auth/components/ProtectedRoute";
+import HomePage from "@/features/student/pages/HomePage";
+import { EquipmentCatalog } from "@/features/shared/pages/EquipmentCatalog";
+import { HistoryPage } from "@/features/shared/pages/HistoryPage";
+import ReportIssuePage from "@/features/shared/pages/ReportIssuePage";
+import ProfilePage from "@/features/student/pages/Profile";
+import ChangePasswordPage from "@/features/shared/pages/ChangePasswordPage";
+import NotificationsPage from "@/features/shared/pages/NotificationsPage";
 
 const StudentRoutes = () => (
  <Route element={<ProtectedRoute allowRoles={["student"]} />}>

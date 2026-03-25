@@ -1,4 +1,4 @@
-import { technicianApi } from '@/services/api/technicianApi';
+import { technicianApi } from '@/services/technicianApi';
 import { useState } from 'react';
 
 export const useTaskUpdate = (taskId) => {

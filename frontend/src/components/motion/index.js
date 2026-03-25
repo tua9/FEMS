@@ -7,7 +7,7 @@ export { RouteTransitionWrapper } from "./RouteTransitionWrapper";
 export { PageShell } from "./PageShell";
 
 // ── Shared UI ─────────────────────────────────────────────────────────────────
-export { PageHeader } from "@/components/shared/PageHeader";
+export { PageHeader } from "@/features/shared/components/PageHeader";
 
 // ── Legacy (backward-compatible) ─────────────────────────────────────────────
 export { PageTransition } from "./PageTransition";

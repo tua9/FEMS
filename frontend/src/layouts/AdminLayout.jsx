@@ -1,4 +1,4 @@
-import AdminFooter from "@/components/admin/common/AdminFooter";
+import AdminFooter from "@/features/admin/components/common/AdminFooter";
 import AdminNavbar from "@/components/navbar/AdminNavbar";
 import { RouteTransitionWrapper } from "@/components/motion";
 

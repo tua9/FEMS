@@ -27,7 +27,7 @@ import { AnimatedPage } from "./AnimatedPage";
 import { AnimatedSection } from "./AnimatedSection";
 import { AnimatedList, AnimatedListItem } from "./AnimatedList";
 import { Link } from "react-router";
-import { PageHeader } from "@/components/shared/PageHeader";
+import { PageHeader } from "@/features/shared/components/PageHeader";
 
 // ── Breadcrumb ──────────────────────────────────────────────────────────────
 const Breadcrumb = ({ items }) => (

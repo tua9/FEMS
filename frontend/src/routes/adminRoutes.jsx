@@ -1,15 +1,15 @@
 import { Route } from "react-router";
 import AdminLayout from "@/layouts/AdminLayout";
-import ProtectedRoute from "@/components/auth/ProtectedRoute";
-import AdminDashboard from "@/pages/admin/Dashboard";
-import AdminEquipment from "@/pages/admin/EquipmentManagement";
-import AdminBorrowing from "@/pages/admin/BorrowingManagement";
-import AdminUsers from "@/pages/admin/UserManagement";
-import AdminReports from "@/pages/admin/DamageReports";
-import RepairManagement from "@/pages/admin/RepairManagement";
-import NotificationsPage from "@/pages/shared/NotificationsPage";
-import ProfilePage from "@/pages/admin/Profile";
-import ChangePasswordPage from "@/pages/shared/ChangePasswordPage";
+import ProtectedRoute from "@/features/auth/components/ProtectedRoute";
+import AdminDashboard from "@/features/admin/pages/Dashboard";
+import AdminEquipment from "@/features/admin/pages/EquipmentManagement";
+import AdminBorrowing from "@/features/admin/pages/BorrowingManagement";
+import AdminUsers from "@/features/admin/pages/UserManagement";
+import AdminReports from "@/features/admin/pages/DamageReports";
+import RepairManagement from "@/features/admin/pages/RepairManagement";
+import NotificationsPage from "@/features/shared/pages/NotificationsPage";
+import ProfilePage from "@/features/admin/pages/Profile";
+import ChangePasswordPage from "@/features/shared/pages/ChangePasswordPage";
 
 const AdminRoutes = () => (
  <Route element={<ProtectedRoute allowRoles={["admin"]} />}>

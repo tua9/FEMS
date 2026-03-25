@@ -1,4 +1,4 @@
-import Footer from "@/components/common/Footer";
+import Footer from "@/features/shared/components/Footer";
 import LecturerNavbar from "@/components/navbar/LecturerNavbar";
 import { RouteTransitionWrapper } from "@/components/motion";
 
