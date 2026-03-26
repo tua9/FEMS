@@ -14,6 +14,26 @@ const MONTH_NAMES = [
 const DAY_SHORT = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
 const HOURS = Array.from({ length: 14 }, (_, i) => i + 7); // 07–20
 
+// Fixed university time slots
+const FIXED_SLOTS = [
+  { order: 1, name: 'Slot 1', startH: 7,  startM: 0,  endH: 9,  endM: 15 },
+  { order: 2, name: 'Slot 2', startH: 9,  startM: 30, endH: 11, endM: 45 },
+  { order: 3, name: 'Slot 3', startH: 12, startM: 30, endH: 14, endM: 45 },
+  { order: 4, name: 'Slot 4', startH: 15, startM: 0,  endH: 17, endM: 15 },
+];
+
+function getActiveSlotOrder() {
+  const vnNow = new Date(Date.now() + 7 * 60 * 60 * 1000);
+  const cur = vnNow.getUTCHours() * 60 + vnNow.getUTCMinutes();
+  const s = FIXED_SLOTS.find(sl => cur >= sl.startH * 60 + sl.startM && cur <= sl.endH * 60 + sl.endM);
+  return s ? s.order : null;
+}
+
+function eventMatchesSlot(ev, slot) {
+  const evStart = ev.startHour * 60 + ev.startMin;
+  return evStart >= slot.startH * 60 + slot.startM && evStart < slot.endH * 60 + slot.endM;
+}
+
 // ─── Map backend schedule → internal event ───────────────────────────────────
 
 function mapSchedule(s) {
@@ -286,6 +306,89 @@ const DayView = ({ date, events, onEventClick }) => {
   );
 };
 
+// ── Slot Grid View ────────────────────────────────────────────────────────────
+const SlotGridView = ({ viewDate, events, onEventClick }) => {
+  const mon = startOfWeek(viewDate);
+  const days = Array.from({ length: 7 }, (_, i) => addDays(mon, i));
+  const activeSlotOrder = getActiveSlotOrder();
+  const isThisWeek = days.some(d => isSameDay(d, TODAY));
+
+  return (
+    <div className="glass-card rounded-[2rem] overflow-hidden p-4 md:p-6">
+      {/* Header: day columns */}
+      <div className="grid grid-cols-[88px_repeat(7,1fr)] border-b border-[#1E2B58]/10 dark:border-white/10 pb-3 mb-2">
+        <div className="text-[9px] font-black uppercase tracking-widest text-slate-400 flex items-end pb-1">Slot</div>
+        {days.map((date, i) => {
+          const isToday = isSameDay(date, TODAY);
+          return (
+            <div key={i} className="text-center">
+              <div className="text-[9px] font-black uppercase tracking-widest text-slate-400">{DAY_SHORT[i]}</div>
+              <div className={`text-sm md:text-base font-black mx-auto mt-0.5 w-7 h-7 md:w-8 md:h-8 flex items-center justify-center rounded-full transition-all ${
+                isToday ? 'bg-[#1E2B58] text-white' : 'text-[#1E2B58] dark:text-white'
+              }`}>
+                {date.getDate()}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Slot rows */}
+      {FIXED_SLOTS.map(slot => {
+        const isActive = isThisWeek && activeSlotOrder === slot.order;
+        return (
+          <div
+            key={slot.order}
+            className={`grid grid-cols-[88px_repeat(7,1fr)] border-b border-[#1E2B58]/5 dark:border-white/5 min-h-[88px] ${
+              isActive ? 'bg-blue-50/60 dark:bg-blue-900/10 rounded-xl' : ''
+            }`}
+          >
+            {/* Slot label */}
+            <div className="p-2 md:p-3 flex flex-col justify-center gap-0.5 shrink-0">
+              <div className="flex items-center gap-1">
+                <p className="text-[10px] font-black uppercase tracking-widest text-[#1E2B58] dark:text-white">{slot.name}</p>
+                {isActive && (
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse shrink-0" />
+                )}
+              </div>
+              <p className="text-[9px] text-slate-400 dark:text-slate-500 font-semibold leading-snug">
+                {String(slot.startH).padStart(2,'0')}:{String(slot.startM).padStart(2,'0')}
+                <span className="mx-0.5">–</span>
+                {String(slot.endH).padStart(2,'0')}:{String(slot.endM).padStart(2,'0')}
+              </p>
+            </div>
+
+            {/* Day cells */}
+            {days.map((date, dayIdx) => {
+              const isToday = isSameDay(date, TODAY);
+              const cellEvents = getEventsForDate(events, date).filter(ev => eventMatchesSlot(ev, slot));
+              return (
+                <div
+                  key={dayIdx}
+                  className={`border-l border-[#1E2B58]/5 dark:border-white/5 p-1 flex flex-col gap-1 ${
+                    isToday && isActive ? 'bg-emerald-50/40 dark:bg-emerald-900/10' : ''
+                  }`}
+                >
+                  {cellEvents.map((ev, eIdx) => (
+                    <button
+                      key={eIdx}
+                      onClick={() => onEventClick(ev)}
+                      className={`w-full text-left p-1.5 rounded-lg text-[8px] md:text-[9px] font-bold leading-tight text-white hover:opacity-90 transition-all hover:scale-[1.02] ${TYPE_STYLE[ev.type]?.bg || 'bg-[#1E2B58]'}`}
+                    >
+                      <div className="truncate font-extrabold">{ev.title}</div>
+                      <div className="opacity-70 truncate mt-0.5">{ev.location}</div>
+                    </button>
+                  ))}
+                </div>
+              );
+            })}
+          </div>
+        );
+      })}
+    </div>
+  );
+};
+
 // ── Event Detail Modal ────────────────────────────────────────────────────────
 const EventModal = ({ event, onClose, onNavigateEquipment }) => {
   const style = TYPE_STYLE[event.type] || TYPE_STYLE.class;
@@ -406,7 +509,7 @@ const AcademicCalendar = () => {
         endDate:   new Date(y, m + 1,  6).toISOString().slice(0, 10),
       };
     }
-    if (viewMode === 'week') {
+    if (viewMode === 'week' || viewMode === 'slot') {
       const mon = startOfWeek(viewDate);
       return {
         startDate: mon.toISOString().slice(0, 10),
@@ -435,7 +538,7 @@ const AcademicCalendar = () => {
   const goToPrev = () => {
     const d = new Date(viewDate);
     if (viewMode === 'month') { d.setMonth(d.getMonth() - 1); d.setDate(1); }
-    if (viewMode === 'week')  d.setDate(d.getDate() - 7);
+    if (viewMode === 'week' || viewMode === 'slot') d.setDate(d.getDate() - 7);
     if (viewMode === 'day')   d.setDate(d.getDate() - 1);
     setViewDate(d);
   };
@@ -443,7 +546,7 @@ const AcademicCalendar = () => {
   const goToNext = () => {
     const d = new Date(viewDate);
     if (viewMode === 'month') { d.setMonth(d.getMonth() + 1); d.setDate(1); }
-    if (viewMode === 'week')  d.setDate(d.getDate() + 7);
+    if (viewMode === 'week' || viewMode === 'slot') d.setDate(d.getDate() + 7);
     if (viewMode === 'day')   d.setDate(d.getDate() + 1);
     setViewDate(d);
   };
@@ -455,7 +558,7 @@ const AcademicCalendar = () => {
   const headerLabel = () => {
     if (viewMode === 'month')
       return `${MONTH_NAMES[viewDate.getMonth()]} ${viewDate.getFullYear()}`;
-    if (viewMode === 'week') {
+    if (viewMode === 'week' || viewMode === 'slot') {
       const mon = startOfWeek(viewDate);
       const sun = addDays(mon, 6);
       if (mon.getMonth() === sun.getMonth())
@@ -517,17 +620,22 @@ const AcademicCalendar = () => {
 
             {/* View mode switcher */}
             <div className="flex glass-card rounded-full p-1 gap-1">
-              {['month', 'week', 'day'].map(mode => (
+              {[
+                { key: 'month', label: 'Month' },
+                { key: 'slot', label: 'Slots' },
+                { key: 'week', label: 'Week' },
+                { key: 'day', label: 'Day' },
+              ].map(({ key, label }) => (
                 <button
-                  key={mode}
-                  onClick={() => setViewMode(mode)}
+                  key={key}
+                  onClick={() => setViewMode(key)}
                   className={`px-3 h-6 rounded-full text-[10px] font-black uppercase tracking-widest transition-all ${
-                    viewMode === mode
+                    viewMode === key
                       ? 'bg-[#1E2B58] text-white shadow-sm'
                       : 'text-[#1E2B58]/50 dark:text-white/50 hover:text-[#1E2B58] dark:hover:text-white'
                   }`}
                 >
-                  {mode}
+                  {label}
                 </button>
               ))}
             </div>
@@ -549,6 +657,9 @@ const AcademicCalendar = () => {
           <div className="flex-1 min-w-0">
             {viewMode === 'month' && (
               <MonthView viewDate={viewDate} events={events} onDayClick={handleDayClick} onEventClick={setSelectedEvent} />
+            )}
+            {viewMode === 'slot' && (
+              <SlotGridView viewDate={viewDate} events={events} onEventClick={setSelectedEvent} />
             )}
             {viewMode === 'week' && (
               <WeekView viewDate={viewDate} events={events} onDayClick={handleDayClick} onEventClick={setSelectedEvent} />

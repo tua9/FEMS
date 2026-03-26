@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { Laptop, Monitor, CheckCircle2, X, AlertTriangle, Loader2 } from 'lucide-react';
+import { Laptop, Monitor, CheckCircle2, X, AlertTriangle, Loader2, ArrowRightLeft, Undo2 } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { ApprovalFilter } from '../components/approval/ApprovalFilter';
@@ -54,6 +54,59 @@ export const ApprovalCenter = () => {
 
  const requests = mappedRequests;
 
+ // Active loans: approved (waiting handover) or handed_over (in use)
+ const mappedActiveLoans = useMemo(() => {
+   return approvedByMe
+     .filter(r => r.status === 'approved' || r.status === 'handed_over')
+     .map(r => ({
+       id: r._id,
+       status: r.status,
+       student: {
+         name: r.borrowerId?.displayName || r.borrowerId?.username || 'Unknown',
+         id: (r.borrowerId?._id || 'UID').substring(18).toUpperCase(),
+         initials: (r.borrowerId?.displayName || r.borrowerId?.username || 'US').substring(0, 2).toUpperCase(),
+         avatar: r.borrowerId?.avatarUrl,
+       },
+       equipment: {
+         name: r.equipmentId?.name || r.roomId?.name || 'Unknown',
+         icon: r.roomId ? Monitor : Laptop,
+       },
+       returnDate: r.expectedReturnDate
+         ? new Date(r.expectedReturnDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
+         : '—',
+       isOverdue: r.expectedReturnDate && new Date(r.expectedReturnDate) < new Date(),
+     }));
+ }, [approvedByMe]);
+
+ const [handoveringId, setHandoveringId] = useState(null);
+ const [returningId, setReturningId] = useState(null);
+
+ const handleHandover = async (id) => {
+   setHandoveringId(id);
+   try {
+     await handoverAction(id);
+     await fetchApprovedByMe();
+     toast.success('Equipment handed over successfully.');
+   } catch (err) {
+     toast.error(err?.response?.data?.message || 'Failed to handover equipment.');
+   } finally {
+     setHandoveringId(null);
+   }
+ };
+
+ const handleReturn = async (id) => {
+   setReturningId(id);
+   try {
+     await returnAction(id);
+     await fetchApprovedByMe();
+     toast.success('Equipment returned successfully.');
+   } catch (err) {
+     toast.error(err?.response?.data?.message || 'Failed to confirm return.');
+   } finally {
+     setReturningId(null);
+   }
+ };
+
  const [searchText, setSearchText] = useState('');
  const [showPanel, setShowPanel] = useState(false);
  const [statusFilter, setStatusFilter] = useState('all');
@@ -104,6 +157,8 @@ export const ApprovalCenter = () => {
 
  const approveAction = useBorrowRequestStore(state => state.approveBorrowRequest);
  const rejectAction = useBorrowRequestStore(state => state.rejectBorrowRequest);
+ const handoverAction = useBorrowRequestStore(state => state.handoverBorrowRequest);
+ const returnAction = useBorrowRequestStore(state => state.returnBorrowRequest);
 
  // ── Approve logic ─────────────────────────────────────────────────────────
  const handleApprove = (req) => setApprovingReq(req);
@@ -181,18 +236,22 @@ export const ApprovalCenter = () => {
  />
 
  {/* Stats */}
- <div className="flex flex-row items-center gap-4 shrink-0">
- <div className="dashboard-card px-6 md:px-10 py-5 md:py-7 rounded-3xl md:rounded-4xl flex flex-col items-center justify-center min-w-32 md:min-w-40">
- <span className="text-4xl md:text-5xl font-black text-[#1E2B58] dark:text-white leading-none mb-1.5">
- {pendingCount}
- </span>
+ <div className="flex flex-row items-center gap-3 shrink-0 flex-wrap">
+ <div className="dashboard-card px-5 md:px-8 py-4 md:py-6 rounded-3xl flex flex-col items-center justify-center min-w-28">
+ <span className="text-3xl md:text-4xl font-black text-amber-500 leading-none mb-1">{pendingCount}</span>
  <span className="text-[0.625rem] font-bold uppercase tracking-[0.2em] text-[#1E2B58]/50 dark:text-white/50">Pending</span>
  </div>
- <div className="dashboard-card px-6 md:px-10 py-5 md:py-7 rounded-3xl md:rounded-4xl flex flex-col items-center justify-center min-w-32 md:min-w-40">
- <span className="text-4xl md:text-5xl font-black text-slate-500 dark:text-slate-300 leading-none mb-1.5">
- {approvedByMe.length}
+ <div className="dashboard-card px-5 md:px-8 py-4 md:py-6 rounded-3xl flex flex-col items-center justify-center min-w-28">
+ <span className="text-3xl md:text-4xl font-black text-blue-500 leading-none mb-1">
+ {mappedActiveLoans.filter(l => l.status === 'approved').length}
  </span>
- <span className="text-[0.625rem] font-bold uppercase tracking-[0.2em] text-slate-500/70 dark:text-slate-400/70">My History</span>
+ <span className="text-[0.625rem] font-bold uppercase tracking-[0.2em] text-[#1E2B58]/50 dark:text-white/50">Awaiting Handover</span>
+ </div>
+ <div className="dashboard-card px-5 md:px-8 py-4 md:py-6 rounded-3xl flex flex-col items-center justify-center min-w-28">
+ <span className="text-3xl md:text-4xl font-black text-indigo-500 leading-none mb-1">
+ {mappedActiveLoans.filter(l => l.status === 'handed_over').length}
+ </span>
+ <span className="text-[0.625rem] font-bold uppercase tracking-[0.2em] text-[#1E2B58]/50 dark:text-white/50">In Use</span>
  </div>
  </div>
  </div>
@@ -224,6 +283,103 @@ export const ApprovalCenter = () => {
  onApprove={handleApprove}
  onReject={handleReject}
  />
+ )}
+
+ {/* ── Active Loans ─────────────────────────────────────────── */}
+ {mappedActiveLoans.length > 0 && (
+ <div className="mt-10">
+ <h3 className="text-base font-extrabold text-[#1E2B58] dark:text-white mb-4 px-1">Active Loans</h3>
+ <div className="dashboard-card rounded-3xl sm:rounded-4xl overflow-hidden">
+ <div className="overflow-x-auto hide-scrollbar">
+ <table className="w-full border-collapse min-w-[640px]">
+ <thead>
+ <tr className="thead-tint">
+ <th className="px-6 py-4 text-left text-[0.625rem] font-black uppercase tracking-[0.2em] text-[#1E2B58]/50 dark:text-slate-400">Student</th>
+ <th className="px-6 py-4 text-left text-[0.625rem] font-black uppercase tracking-[0.2em] text-[#1E2B58]/50 dark:text-slate-400">Equipment</th>
+ <th className="px-6 py-4 text-left text-[0.625rem] font-black uppercase tracking-[0.2em] text-[#1E2B58]/50 dark:text-slate-400">Due Date</th>
+ <th className="px-6 py-4 text-left text-[0.625rem] font-black uppercase tracking-[0.2em] text-[#1E2B58]/50 dark:text-slate-400">Status</th>
+ <th className="px-6 py-4 text-right text-[0.625rem] font-black uppercase tracking-[0.2em] text-[#1E2B58]/50 dark:text-slate-400">Action</th>
+ </tr>
+ </thead>
+ <tbody className="divide-y divide-black/5 dark:divide-white/5">
+ {mappedActiveLoans.map(loan => {
+ const Icon = loan.equipment.icon;
+ const isApproved = loan.status === 'approved';
+ const isHandedOver = loan.status === 'handed_over';
+ const isLoading = handoveringId === loan.id || returningId === loan.id;
+ return (
+ <tr key={loan.id} className="hover:bg-white/50 dark:hover:bg-white/5 transition-colors">
+ <td className="px-6 py-4">
+ <div className="flex items-center gap-3">
+ <div className="w-9 h-9 rounded-full bg-[#1E2B58]/10 dark:bg-slate-700 flex items-center justify-center text-sm font-black text-[#1E2B58] dark:text-white shrink-0">
+ {loan.student.avatar ? (
+ <img src={loan.student.avatar} alt={loan.student.name} className="w-full h-full rounded-full object-cover" />
+ ) : loan.student.initials}
+ </div>
+ <div>
+ <p className="text-sm font-bold text-[#1E2B58] dark:text-white leading-none">{loan.student.name}</p>
+ <p className="text-[0.625rem] text-slate-400 font-medium mt-0.5 uppercase tracking-wide">ID: {loan.student.id}</p>
+ </div>
+ </div>
+ </td>
+ <td className="px-6 py-4">
+ <div className="flex items-center gap-2">
+ <div className="w-8 h-8 rounded-full bg-[#1E2B58]/10 dark:bg-slate-800 flex items-center justify-center shrink-0">
+ <Icon className="w-4 h-4 text-[#1E2B58] dark:text-slate-300" strokeWidth={2} />
+ </div>
+ <p className="text-sm font-bold text-slate-800 dark:text-slate-200">{loan.equipment.name}</p>
+ </div>
+ </td>
+ <td className="px-6 py-4">
+ <p className={`text-sm font-bold ${loan.isOverdue ? 'text-red-500' : 'text-slate-700 dark:text-slate-300'}`}>
+ {loan.returnDate}
+ </p>
+ {loan.isOverdue && (
+ <p className="text-[0.625rem] font-black text-red-400 uppercase tracking-wide mt-0.5">Overdue</p>
+ )}
+ </td>
+ <td className="px-6 py-4">
+ {isApproved && (
+ <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400 text-[0.5625rem] font-black uppercase tracking-widest">
+ <ArrowRightLeft className="w-3 h-3" /> Awaiting Handover
+ </span>
+ )}
+ {isHandedOver && (
+ <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-indigo-100 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400 text-[0.5625rem] font-black uppercase tracking-widest">
+ <CheckCircle2 className="w-3 h-3" /> In Use
+ </span>
+ )}
+ </td>
+ <td className="px-6 py-4 text-right">
+ {isApproved && (
+ <button
+ onClick={() => handleHandover(loan.id)}
+ disabled={isLoading}
+ className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-blue-500 text-white text-[0.6875rem] font-bold hover:bg-blue-600 hover:scale-105 active:scale-95 transition-all disabled:opacity-50 shadow-sm shadow-blue-500/20"
+ >
+ {isLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : <ArrowRightLeft className="w-3 h-3" />}
+ Handover
+ </button>
+ )}
+ {isHandedOver && (
+ <button
+ onClick={() => handleReturn(loan.id)}
+ disabled={isLoading}
+ className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-emerald-500 text-white text-[0.6875rem] font-bold hover:bg-emerald-600 hover:scale-105 active:scale-95 transition-all disabled:opacity-50 shadow-sm shadow-emerald-500/20"
+ >
+ {isLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : <Undo2 className="w-3 h-3" />}
+ Confirm Return
+ </button>
+ )}
+ </td>
+ </tr>
+ );
+ })}
+ </tbody>
+ </table>
+ </div>
+ </div>
+ </div>
  )}
  </div>
  </main>

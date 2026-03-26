@@ -1,6 +1,9 @@
 import Equipment from '../models/Equipment.js'
 import Report from '../models/Report.js'
 import BorrowRequest from '../models/BorrowRequest.js'
+import Schedule from '../models/Schedule.js'
+import Slot from '../models/Slot.js'
+import User from '../models/User.js'
 
 const getDashboardStats = async () => {
   const totalEquipment = await Equipment.countDocuments()
@@ -365,6 +368,144 @@ const getReportAnalytics = async () => {
   return { mttrHours, fixedCount: fixedReports.length, causeDistribution, topBrokenEquipment, repairOutcomes, damageReportRate }
 }
 
+// ── Technician Performance ────────────────────────────────────────────────────
+
+const getTechnicianPerformance = async () => {
+  // Start of the current Monday (local week)
+  const now = new Date()
+  const day = now.getDay() // 0 = Sunday
+  const diff = day === 0 ? -6 : 1 - day
+  const startOfWeek = new Date(now)
+  startOfWeek.setDate(now.getDate() + diff)
+  startOfWeek.setHours(0, 0, 0, 0)
+  const endOfWeek = new Date(startOfWeek)
+  endOfWeek.setDate(startOfWeek.getDate() + 7)
+
+  // Reports touched/updated this week that have an assigned technician
+  const reports = await Report.find({
+    assigned_to: { $exists: true, $ne: null },
+    updatedAt: { $gte: startOfWeek, $lt: endOfWeek },
+  })
+    .populate('assigned_to', 'displayName username avatarUrl role')
+    .lean()
+
+  const techMap = {}
+  for (const r of reports) {
+    if (!r.assigned_to) continue
+    const tid = r.assigned_to._id.toString()
+    if (!techMap[tid]) {
+      techMap[tid] = { technician: r.assigned_to, total: 0, completed: 0 }
+    }
+    techMap[tid].total++
+    if (r.status === 'fixed') techMap[tid].completed++
+  }
+
+  let technicians = Object.values(techMap).map((t) => ({
+    ...t,
+    percentage: t.total > 0 ? Math.round((t.completed / t.total) * 100) : 0,
+  }))
+
+  // If nothing assigned this week, show all active technicians with zero stats
+  if (technicians.length === 0) {
+    const allTechs = await User.find(
+      { role: 'technician', isActive: true },
+      'displayName username avatarUrl'
+    ).lean()
+    technicians = allTechs.map((t) => ({
+      technician: t,
+      total: 0,
+      completed: 0,
+      percentage: 0,
+    }))
+  }
+
+  return { technicians, weekStart: startOfWeek, weekEnd: endOfWeek }
+}
+
+// ── Active Borrowing (current time slot) ─────────────────────────────────────
+
+const SLOT_RANGES = [
+  { order: 1, start: 7 * 60, end: 9 * 60 + 15 },        // 07:00 – 09:15
+  { order: 2, start: 9 * 60 + 30, end: 11 * 60 + 45 },  // 09:30 – 11:45
+  { order: 3, start: 12 * 60 + 30, end: 14 * 60 + 45 }, // 12:30 – 14:45
+  { order: 4, start: 15 * 60, end: 17 * 60 + 15 },      // 15:00 – 17:15
+]
+
+const getActiveBorrowing = async () => {
+  // Current time in Vietnam (UTC+7)
+  const vnOffset = 7 * 60 * 60 * 1000
+  const vnNow = new Date(Date.now() + vnOffset)
+  const timeInMinutes = vnNow.getUTCHours() * 60 + vnNow.getUTCMinutes()
+
+  const activeRange = SLOT_RANGES.find(
+    (s) => timeInMinutes >= s.start && timeInMinutes <= s.end
+  )
+
+  // Today's date boundaries in UTC (compensate for VN offset)
+  const todayStart = new Date(
+    Date.UTC(vnNow.getUTCFullYear(), vnNow.getUTCMonth(), vnNow.getUTCDate()) - vnOffset
+  )
+  const todayEnd = new Date(todayStart.getTime() + 24 * 60 * 60 * 1000)
+
+  if (!activeRange) {
+    return { active: false, sessions: [], currentSlot: null, currentTimeMinutes: timeInMinutes }
+  }
+
+  const dbSlot = await Slot.findOne({ order: activeRange.order }).lean()
+
+  const scheduleQuery = {
+    date: { $gte: todayStart, $lt: todayEnd },
+    status: { $in: ['scheduled', 'ongoing'] },
+  }
+  if (dbSlot) scheduleQuery.slotId = dbSlot._id
+
+  const schedules = await Schedule.find(scheduleQuery)
+    .populate('roomId', 'name')
+    .populate('lecturerId', 'displayName username avatarUrl')
+    .populate('classId', 'code name')
+    .populate('slotId', 'name startTime endTime order')
+    .lean()
+
+  const sessions = await Promise.all(
+    schedules.map(async (schedule) => {
+      const requests = await BorrowRequest.find({
+        scheduleId: schedule._id,
+        status: { $in: ['pending', 'approved', 'handed_over', 'returned'] },
+      })
+        .populate('borrowerId', 'displayName username avatarUrl')
+        .populate('equipmentId', 'name code category status img')
+        .lean()
+
+      const equipment = requests.map((req) => ({
+        requestId: req._id,
+        requestCode: req.code,
+        equipment: req.equipmentId,
+        borrowedBy: req.borrowerId,
+        startTime: req.borrowDate || schedule.startAt,
+        requestStatus: req.status,
+      }))
+
+      return {
+        scheduleId: schedule._id,
+        course: schedule.title,
+        class: schedule.classId,
+        room: schedule.roomId,
+        lecturer: schedule.lecturerId,
+        slot: schedule.slotId || dbSlot,
+        equipment,
+      }
+    })
+  )
+
+  return {
+    active: true,
+    currentSlot: dbSlot,
+    slotRange: activeRange,
+    currentTimeMinutes: timeInMinutes,
+    sessions,
+  }
+}
+
 export const adminService = {
   getDashboardStats,
   getDashboardChart,
@@ -373,4 +514,6 @@ export const adminService = {
   getRecentDamageReports,
   getEquipmentAnalytics,
   getReportAnalytics,
+  getTechnicianPerformance,
+  getActiveBorrowing,
 }

@@ -12,6 +12,7 @@ import MTTRCard from '../components/dashboard/MTTRCard';
 import DamageCauseChart from '../components/dashboard/DamageCauseChart';
 import TopBrokenList from '../components/dashboard/TopBrokenList';
 import RepairOutcomeChart from '../components/dashboard/RepairOutcomeChart';
+import TechnicianPerformanceCard from '../components/dashboard/TechnicianPerformanceCard';
 import { useAdminStore } from '@/stores/useAdminStore';
 import { useNavigate } from 'react-router-dom';
 import { PageShell, AnimatedSection, AnimatedList, AnimatedListItem } from '@/components/motion';
@@ -26,6 +27,7 @@ const AdminDashboard = () => {
         damageReports, fetchDamageReports,
         equipmentAnalytics, fetchEquipmentAnalytics,
         reportAnalytics, fetchReportAnalytics,
+        technicianPerformance, fetchTechnicianPerformance,
         loading: statsLoading
     } = useAdminStore();
 
@@ -34,8 +36,7 @@ const AdminDashboard = () => {
     useEffect(() => {
         const fetchDashboardData = async () => {
             try {
-                // Fetch from real store
-                        await Promise.all([
+                await Promise.all([
                     fetchStats(),
                     fetchHealthStatus(),
                     fetchChartData(),
@@ -43,6 +44,7 @@ const AdminDashboard = () => {
                     fetchDamageReports(),
                     fetchEquipmentAnalytics(),
                     fetchReportAnalytics(),
+                    fetchTechnicianPerformance(),
                 ]);
             } catch (error) {
                 console.error("Failed to fetch dashboard data", error);
@@ -52,7 +54,7 @@ const AdminDashboard = () => {
         };
 
         fetchDashboardData();
-    }, [fetchStats, fetchHealthStatus, fetchChartData, fetchBorrowRequests, fetchDamageReports, fetchEquipmentAnalytics, fetchReportAnalytics]);
+    }, [fetchStats, fetchHealthStatus, fetchChartData, fetchBorrowRequests, fetchDamageReports, fetchEquipmentAnalytics, fetchReportAnalytics, fetchTechnicianPerformance]);
 
     const topBorrowedDisplay = React.useMemo(() => {
         const raw =
@@ -257,9 +259,14 @@ const AdminDashboard = () => {
                             <RepairOutcomeChart data={reportAnalytics.repairOutcomes} />
                         </div>
                     </div>
-                    {/* Top broken */}
-                    <div className="dashboard-card p-6 rounded-4xl">
-                        <TopBrokenList items={reportAnalytics.topBrokenEquipment} />
+                    {/* Top broken + Technician performance */}
+                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                        <div className="lg:col-span-8 dashboard-card p-6 rounded-4xl">
+                            <TopBrokenList items={reportAnalytics.topBrokenEquipment} />
+                        </div>
+                        <div className="lg:col-span-4 dashboard-card p-6 rounded-4xl">
+                            <TechnicianPerformanceCard data={technicianPerformance} />
+                        </div>
                     </div>
                 </AnimatedSection>
             )}

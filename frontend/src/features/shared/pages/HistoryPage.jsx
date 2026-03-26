@@ -32,6 +32,7 @@ export const HistoryPage = () => {
  const location = useLocation();
  const { user } = useAuthStore();
  const isStudent = user?.role === 'student';
+ const isLecturer = user?.role === 'lecturer';
 
  // ── Stores ────────────────────────────────────────────────────────────────
  const {
@@ -204,7 +205,7 @@ export const HistoryPage = () => {
  <div className="w-full">
  <HistoryHeader />
 
- <HistoryTabs activeTab={activeTab} onTabChange={handleTabChange} hideApproval={isStudent} />
+ <HistoryTabs activeTab={activeTab} onTabChange={handleTabChange} hideApproval={isStudent} hideBorrow={isLecturer} />
 
  <HistoryFilterBar
  searchPlaceholder={cfg.placeholder}
