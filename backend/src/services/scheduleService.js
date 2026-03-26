@@ -119,10 +119,24 @@ const getMySchedules = async (userId, filter = {}) => {
     if (f.endDate)   query.date.$lte = vnRangeEnd(f.endDate)
   }
 
-  return Schedule.find(query)
+  const schedules = await Schedule.find(query)
     .populate('slotId', 'code name startTime endTime order')
     .populate('roomId', 'name type')
     .populate('classId', 'code name')
+    .lean()
+
+  // Attach studentIds for the frontend to count enrolled students
+  for (const sch of schedules) {
+    if (sch.classId?._id) {
+      sch.studentIds = await User.find({ role: 'student', classId: sch.classId._id })
+        .select('_id')
+        .lean()
+    } else {
+      sch.studentIds = []
+    }
+  }
+
+  return schedules
 }
 
 // ── Borrow-permission helpers ─────────────────────────────────────────────────

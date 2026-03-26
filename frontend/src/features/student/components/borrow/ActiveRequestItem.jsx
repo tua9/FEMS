@@ -36,10 +36,10 @@ const ActiveRequestItem = ({ req, onReturn, onConfirmReceived, onCancel }) => {
             onClick={() => onReturn(req)}
             className="px-4 py-2 rounded-xl bg-[#1E2B58] dark:bg-blue-700 text-white font-black text-[10px] uppercase tracking-widest hover:bg-[#2A3B66] transition-all active:scale-95 shadow-md shadow-blue-900/20"
           >
-            Trả thiết bị
+            Yêu cầu trả thiết bị
           </button>
         )}
-        {req.status === 'approved' && req.handoverInfo?.submittedAt && (
+        {req.status === 'approved' && (
           <button
             onClick={() => onConfirmReceived(req)}
             className="px-4 py-2 rounded-xl bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 font-black text-[10px] uppercase tracking-widest hover:bg-emerald-100 transition-all active:scale-95 border border-emerald-100 dark:border-emerald-900/30"

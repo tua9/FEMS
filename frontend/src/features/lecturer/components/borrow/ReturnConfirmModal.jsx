@@ -1,17 +1,76 @@
-import React from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { X, LogOut, Loader2, CheckCircle2 } from 'lucide-react';
+import { X, LogOut, Loader2, CheckCircle2, Package } from 'lucide-react';
+import { toast } from 'sonner';
 import { getStudentName, getEquipmentName } from './borrowUtils';
 
 const ReturnConfirmModal = ({ isOpen, onClose, request, onConfirm, submitting }) => {
+  const [returnNote, setReturnNote] = useState('Xác nhận nhận lại thiết bị');
+  const [returnChecklist, setReturnChecklist] = useState({ appearance: true, functioning: true, accessories: true });
+  const [returnFiles, setReturnFiles] = useState([]);
+  const [returnPreviews, setReturnPreviews] = useState([]);
+  const fileInputRef = useRef(null);
+
+  useEffect(() => {
+    if (!isOpen) {
+      setReturnNote('Xác nhận nhận lại thiết bị');
+      setReturnChecklist({ appearance: true, functioning: true, accessories: true });
+      setReturnFiles([]);
+      returnPreviews.forEach(url => URL.revokeObjectURL(url));
+      setReturnPreviews([]);
+    }
+  }, [isOpen]);
+
   if (!isOpen || !request) return null;
+
+  const isAllChecked = returnChecklist.appearance && returnChecklist.functioning && returnChecklist.accessories;
+
+  const handleFileChange = (e) => {
+    const files = Array.from(e.target.files);
+    if (!files.length) return;
+
+    if (returnFiles.length + files.length > 2) {
+      toast.error('Chỉ được tải lên tối đa 2 ảnh.');
+      return;
+    }
+
+    const newFiles = [...returnFiles, ...files];
+    setReturnFiles(newFiles);
+
+    const newPreviews = files.map(file => URL.createObjectURL(file));
+    setReturnPreviews(prev => [...prev, ...newPreviews]);
+  };
+
+  const removeFile = (index) => {
+    const newFiles = [...returnFiles];
+    newFiles.splice(index, 1);
+    setReturnFiles(newFiles);
+
+    const newPreviews = [...returnPreviews];
+    URL.revokeObjectURL(newPreviews[index]);
+    newPreviews.splice(index, 1);
+    setReturnPreviews(newPreviews);
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (!isAllChecked && returnFiles.length === 0) {
+      toast.error('Vui lòng cung cấp ảnh minh chứng nếu có mục không đạt yêu cầu.');
+      return;
+    }
+    onConfirm({
+      checklist: returnChecklist,
+      notes: returnNote.trim() || null,
+      files: returnFiles,
+    });
+  };
 
   return createPortal(
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm px-4"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm px-4 overflow-y-auto"
       onClick={e => { if (e.target === e.currentTarget) onClose(); }}
     >
-      <div className="dashboard-card rounded-4xl p-8 w-full max-w-md shadow-2xl shadow-[#1E2B58]/20 relative animate-in fade-in zoom-in-95 duration-200">
+      <div className="dashboard-card rounded-4xl p-8 w-full max-w-md shadow-2xl shadow-[#1E2B58]/20 relative animate-in fade-in zoom-in-95 duration-200 my-8">
         <button onClick={onClose}
           className="absolute top-5 right-5 w-8 h-8 flex items-center justify-center rounded-full hover:bg-[#1E2B58]/10 dark:hover:bg-white/10 transition">
           <X className="w-4 h-4 text-[#1E2B58]/60 dark:text-white/60" />
@@ -30,33 +89,71 @@ const ReturnConfirmModal = ({ isOpen, onClose, request, onConfirm, submitting })
           </div>
         </div>
 
-        <div className="p-4 rounded-2xl bg-amber-50 dark:bg-amber-900/10 border border-amber-100 dark:border-amber-900/20 mb-5 text-center">
-          <p className="text-xs font-bold text-amber-600 dark:text-amber-400">
-            Kiểm tra thiết bị & minh chứng bên dưới trước khi xác nhận.
-          </p>
+        {/* Checklist */}
+        <div className="bg-white/40 dark:bg-slate-800/40 rounded-[1.25rem] p-4 mb-4 space-y-2.5">
+          <p className="text-[0.625rem] font-black uppercase tracking-widest text-[#1E2B58]/50 dark:text-white/40 mb-2">Kiểm tra tình trạng lúc nhận lại</p>
+          {[
+            { key: 'appearance',  label: 'Ngoại hình bình thường (không nứt vỡ)' },
+            { key: 'functioning', label: 'Chức năng hoạt động tốt' },
+            { key: 'accessories', label: 'Không thiếu phụ kiện' },
+          ].map(({ key, label }) => (
+            <label key={key} className="flex items-center gap-3 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={returnChecklist[key]}
+                onChange={e => setReturnChecklist(prev => ({ ...prev, [key]: e.target.checked }))}
+                className="w-4 h-4 rounded accent-[#1E2B58] dark:accent-blue-500 cursor-pointer"
+              />
+              <span className="text-sm font-medium text-[#1E2B58]/80 dark:text-white/70">{label}</span>
+            </label>
+          ))}
         </div>
 
-        {/* Evidence from student */}
-        <div className="mb-6 space-y-4">
-          {request.returnRequest?.notes && (
-            <div className="bg-white/40 dark:bg-slate-800/40 rounded-[1.25rem] p-4 text-sm font-medium text-[#1E2B58]/80 dark:text-white/70">
-              <p className="text-[10px] font-black uppercase tracking-widest text-[#1E2B58]/50 dark:text-white/40 mb-1.5">Ghi chú của sinh viên</p>
-              {request.returnRequest.notes}
-            </div>
-          )}
+        {/* Conditional Image Upload */}
+        {!isAllChecked && (
+          <div className="mb-4 p-4 rounded-2xl bg-amber-50 dark:bg-amber-900/10 border border-amber-100 dark:border-amber-900/20 animate-in fade-in slide-in-from-top-2">
+            <label className="text-[0.625rem] font-black uppercase tracking-widest text-amber-600 dark:text-amber-400 mb-2 block text-left">
+              Ảnh minh chứng <span className="text-red-500">*</span>
+            </label>
+            <p className="text-[10px] text-amber-600/80 dark:text-amber-400/80 mb-3">
+              Vui lòng chụp lại tình trạng thiết bị không đạt yêu cầu (tối đa 2 ảnh).
+            </p>
+            
+            <input type="file" ref={fileInputRef} onChange={handleFileChange} accept="image/*" multiple className="hidden" />
 
-          {request.returnRequest?.images?.length > 0 && (
-            <div>
-              <p className="text-[10px] font-black uppercase tracking-widest text-[#1E2B58]/50 dark:text-white/40 mb-2 px-1">Ảnh minh chứng hoàn trả</p>
-              <div className="grid grid-cols-2 gap-2">
-                {request.returnRequest.images.map((url, i) => (
-                  <div key={i} className="aspect-video rounded-xl overflow-hidden bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm">
-                    <img src={url} alt="" className="w-full h-full object-cover hover:scale-105 transition-transform duration-300" />
+            <div className="grid grid-cols-2 gap-3">
+              {returnPreviews.map((src, idx) => (
+                <div key={idx} className="relative group aspect-video rounded-2xl overflow-hidden border border-amber-200 dark:border-amber-700 bg-white dark:bg-slate-900 shadow-sm">
+                  <img src={src} alt="" className="w-full h-full object-cover" />
+                  <button type="button" onClick={() => removeFile(idx)} className="absolute top-2 right-2 w-6 h-6 rounded-full bg-red-500 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              ))}
+              
+              {returnFiles.length < 2 && (
+                <button type="button" onClick={() => fileInputRef.current?.click()} className="aspect-video rounded-2xl border-2 border-dashed border-amber-200 dark:border-amber-700 hover:border-amber-400 dark:hover:border-amber-500 hover:bg-white dark:hover:bg-white/5 transition-all flex flex-col items-center justify-center gap-2 group">
+                  <div className="w-8 h-8 rounded-full bg-amber-100 dark:bg-amber-900/40 flex items-center justify-center group-hover:scale-110 transition-transform">
+                    <Package className="w-4 h-4 text-amber-500" />
                   </div>
-                ))}
-              </div>
+                  <span className="text-[10px] font-bold text-amber-500 uppercase tracking-widest text-center px-2">Tải ảnh lên</span>
+                </button>
+              )}
             </div>
-          )}
+          </div>
+        )}
+
+        {/* Notes */}
+        <div className="flex flex-col gap-2 mb-6">
+          <label className="text-[0.625rem] font-black uppercase tracking-widest text-[#1E2B58]/50 dark:text-white/40">
+            Ghi chú
+          </label>
+          <textarea
+            rows={2}
+            value={returnNote}
+            onChange={e => setReturnNote(e.target.value)}
+            className="w-full bg-white/40 dark:bg-slate-800/50 border border-white/40 dark:border-slate-700/50 rounded-[1rem] px-4 py-3 text-sm font-medium text-[#1E2B58] dark:text-white placeholder:text-[#1E2B58]/30 dark:placeholder:text-white/30 outline-none focus:ring-2 focus:ring-[#1E2B58]/20 transition-all resize-none"
+          />
         </div>
 
         <div className="flex gap-3">
@@ -64,7 +161,7 @@ const ReturnConfirmModal = ({ isOpen, onClose, request, onConfirm, submitting })
             className="flex-1 py-3.5 rounded-[1.25rem] font-bold text-sm border border-[#1E2B58]/20 dark:border-white/20 text-[#1E2B58]/70 dark:text-white/70 hover:bg-[#1E2B58]/5 dark:hover:bg-white/5 transition-all">
             Hủy
           </button>
-          <button onClick={onConfirm} disabled={submitting}
+          <button onClick={handleSubmit} disabled={submitting}
             className="flex-[2] py-3.5 rounded-[1.25rem] font-bold text-sm bg-[#1E2B58] text-white hover:bg-[#2A3B66] transition-all shadow-lg shadow-blue-900/20 flex items-center justify-center gap-2 disabled:opacity-60 active:scale-95">
             {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
             Xác nhận đã nhận lại

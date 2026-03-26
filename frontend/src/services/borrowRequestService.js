@@ -42,35 +42,19 @@ export const borrowRequestService = {
   },
 
   /**
-   * Lecturer submits handover form.
-   * @param {string} id
-   * @param {{ checklist: {appearance, functioning, accessories}, notes: string, images: string[] }} formData
-   */
-  async submitHandoverForm(id, formData) {
-    const res = await api.patch(`/requests/${id}/handover`, formData);
-    return res.data;
-  },
-
-  async handoverBorrowRequest(id, formData) {
-    return this.submitHandoverForm(id, formData);
-  },
-
-  /**
    * Student confirms receipt of equipment.
-   * Transitions: approved (with handoverInfo) → handed_over
+   * Transitions: approved → handed_over
    */
-  async confirmReceived(id) {
-    const res = await api.patch(`/requests/${id}/confirm-received`);
+  async confirmReceived(id, formData) {
+    const res = await api.patch(`/requests/${id}/confirm-received`, formData);
     return res.data;
   },
 
   /**
-   * Student submits return form.
-   * @param {string} id
-   * @param {{ checklist: {appearance, functioning, accessories}, notes: string, images: string[] }} formData
+   * Student submits return request (no form data).
    */
-  async submitReturn(id, formData) {
-    const res = await api.patch(`/requests/${id}/submit-return`, formData);
+  async submitReturn(id) {
+    const res = await api.patch(`/requests/${id}/submit-return`);
     return res.data;
   },
 
@@ -78,8 +62,8 @@ export const borrowRequestService = {
    * Lecturer/Admin confirms return after inspecting equipment.
    * Transitions: returning → returned
    */
-  async returnBorrowRequest(id) {
-    const res = await api.patch(`/requests/${id}/return`);
+  async returnBorrowRequest(id, formData) {
+    const res = await api.patch(`/requests/${id}/return`, formData);
     return res.data;
   },
 

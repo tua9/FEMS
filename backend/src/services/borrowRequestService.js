@@ -228,25 +228,31 @@ const rejectRequest = async (id, approverId, decisionNote) => {
 }
 
 /**
- * Lecturer submits handover form (checklist + images + notes).
- * Status stays 'approved' — student must still confirm receipt.
+ * Student confirms they have received the equipment and submits handover checklist/images.
+ * Transitions: approved → handed_over.
  *
  * @param {string} id           — BorrowRequest id
- * @param {string} lecturerId   — User id of lecturer submitting the form
- * @param {object} handoverInfo — { checklist: {appearance, functioning, accessories}, notes, images[] }
+ * @param {string} studentId    — User id of the student
+ * @param {object} handoverForm — { checklist: {appearance, functioning, accessories}, notes, images[] }
  */
-const submitHandoverForm = async (id, lecturerId, handoverInfo) => {
+const studentConfirmReceived = async (id, studentId, handoverForm) => {
   const request = await BorrowRequest.findById(id)
   if (!request) throw new ApiError(StatusCodes.NOT_FOUND, 'Borrow request not found')
-  if (request.status !== 'approved') throw new ApiError(StatusCodes.BAD_REQUEST, 'Request must be approved before handover')
-
-  const { checklist = {}, notes = null, images = [] } = handoverInfo || {}
-
-  if (!Array.isArray(images) || images.length === 0) {
-    throw new ApiError(StatusCodes.UNPROCESSABLE_ENTITY, 'Ít nhất một ảnh bàn giao là bắt buộc')
+  if (request.status !== 'approved') throw new ApiError(StatusCodes.BAD_REQUEST, 'Request phải ở trạng thái đã duyệt')
+  if (request.borrowerId.toString() !== studentId.toString()) {
+    throw new ApiError(StatusCodes.FORBIDDEN, 'Chỉ người mượn mới có thể xác nhận nhận thiết bị')
   }
 
-  request.handedOverBy = lecturerId
+  const { checklist = {}, notes = null, images = [] } = handoverForm || {}
+  const isAllChecked = checklist.appearance && checklist.functioning && checklist.accessories
+
+  if (!isAllChecked && (!Array.isArray(images) || images.length === 0)) {
+    throw new ApiError(StatusCodes.UNPROCESSABLE_ENTITY, 'Vui lòng cung cấp ảnh minh chứng nếu có mục không đạt yêu cầu')
+  }
+
+  request.status = 'handed_over'
+  request.handedOverAt = new Date() // Set when student confirms
+  request.studentConfirmedAt = new Date()
   request.handoverInfo = {
     checklist: {
       appearance:  !!checklist.appearance,
@@ -261,44 +267,9 @@ const submitHandoverForm = async (id, lecturerId, handoverInfo) => {
 
   const equipment = await Equipment.findById(request.equipmentId).select('name').lean()
   await notificationService.createNotification({
-    userId: request.borrowerId,
+    userId: request.approvedBy,
     type: 'borrow',
-    title: 'Giảng viên đã điền form bàn giao',
-    message: `Giảng viên đã điền form bàn giao thiết bị ${equipment?.name || ''} (#${request.code}). Vui lòng xem và xác nhận đã nhận.`,
-    action: { type: 'open_detail', resource: 'borrow', resourceId: request._id },
-  }).catch(err => console.error('Notify borrower failed:', err))
-
-  return { message: 'Handover form submitted', request: await populateRequest(BorrowRequest.findById(request._id)) }
-}
-
-/**
- * Student confirms they have received the equipment.
- * Transitions: approved (with handoverInfo) → handed_over.
- *
- * @param {string} id        — BorrowRequest id
- * @param {string} studentId — User id of the student
- */
-const studentConfirmReceived = async (id, studentId) => {
-  const request = await BorrowRequest.findById(id)
-  if (!request) throw new ApiError(StatusCodes.NOT_FOUND, 'Borrow request not found')
-  if (request.status !== 'approved') throw new ApiError(StatusCodes.BAD_REQUEST, 'Request phải ở trạng thái đã duyệt')
-  if (request.borrowerId.toString() !== studentId.toString()) {
-    throw new ApiError(StatusCodes.FORBIDDEN, 'Chỉ người mượn mới có thể xác nhận nhận thiết bị')
-  }
-  if (!request.handoverInfo?.submittedAt) {
-    throw new ApiError(StatusCodes.BAD_REQUEST, 'Giảng viên chưa điền form bàn giao')
-  }
-
-  request.status = 'handed_over'
-  request.handedOverAt = new Date()
-  request.studentConfirmedAt = new Date()
-  await request.save()
-
-  const equipment = await Equipment.findById(request.equipmentId).select('name').lean()
-  await notificationService.createNotification({
-    userId: request.handedOverBy,
-    type: 'borrow',
-    title: 'Sinh viên đã xác nhận nhận hàng',
+    title: 'Sinh viên đã xác nhận nhận thiết bị',
     message: `Sinh viên đã xác nhận nhận thiết bị ${equipment?.name || ''} (#${request.code}).`,
     action: { type: 'open_detail', resource: 'borrow', resourceId: request._id },
   }).catch(err => console.error('Notify lecturer failed:', err))
@@ -307,14 +278,13 @@ const studentConfirmReceived = async (id, studentId) => {
 }
 
 /**
- * Student submits return form (checklist + images + notes).
+ * Student submits return request (status only, no form data).
  * Transitions: handed_over → returning.
  *
  * @param {string} id         — BorrowRequest id
  * @param {string} studentId  — User id of the student
- * @param {object} returnForm — { checklist: {appearance, functioning, accessories}, notes, images[] }
  */
-const studentSubmitReturn = async (id, studentId, returnForm) => {
+const studentSubmitReturn = async (id, studentId) => {
   const request = await BorrowRequest.findById(id)
   if (!request) throw new ApiError(StatusCodes.NOT_FOUND, 'Borrow request not found')
   if (request.status !== 'handed_over') throw new ApiError(StatusCodes.BAD_REQUEST, 'Thiết bị chưa được bàn giao')
@@ -322,27 +292,11 @@ const studentSubmitReturn = async (id, studentId, returnForm) => {
     throw new ApiError(StatusCodes.FORBIDDEN, 'Chỉ người mượn mới có thể gửi yêu cầu trả')
   }
 
-  const { checklist = {}, notes = null, images = [] } = returnForm || {}
-
-  if (!Array.isArray(images) || images.length === 0) {
-    throw new ApiError(StatusCodes.UNPROCESSABLE_ENTITY, 'Ít nhất một ảnh khi trả là bắt buộc')
-  }
-
   request.status = 'returning'
-  request.returnRequest = {
-    checklist: {
-      appearance:  !!checklist.appearance,
-      functioning: !!checklist.functioning,
-      accessories: !!checklist.accessories,
-    },
-    notes:       notes || null,
-    images,
-    submittedAt: new Date(),
-  }
   await request.save()
 
-  // Notify the lecturer who handed over (if available), otherwise notify admins
-  const notifyTarget = request.handedOverBy || null
+  // Notify the lecturer who approved it (or handed it over), otherwise notify admins
+  const notifyTarget = request.handedOverBy || request.approvedBy || null
   if (notifyTarget) {
     await notificationService.createNotification({
       userId: notifyTarget,
@@ -370,18 +324,36 @@ const studentSubmitReturn = async (id, studentId, returnForm) => {
  *
  * @param {string} id          — BorrowRequest id
  * @param {string} confirmedBy — User id of lecturer confirming
+ * @param {object} returnForm  — { checklist: {appearance, functioning, accessories}, notes, images[] }
  */
-const confirmReturn = async (id, confirmedBy) => {
+const confirmReturn = async (id, confirmedBy, returnForm) => {
   const request = await BorrowRequest.findById(id).populate('borrowerId', 'displayName username')
   if (!request) throw new ApiError(StatusCodes.NOT_FOUND, 'Borrow request not found')
   if (request.status !== 'returning') {
     throw new ApiError(StatusCodes.BAD_REQUEST, 'Sinh viên chưa gửi yêu cầu trả thiết bị')
   }
 
+  const { checklist = {}, notes = null, images = [] } = returnForm || {}
+  const isAllChecked = checklist.appearance && checklist.functioning && checklist.accessories
+
+  if (!isAllChecked && (!Array.isArray(images) || images.length === 0)) {
+    throw new ApiError(StatusCodes.UNPROCESSABLE_ENTITY, 'Vui lòng cung cấp ảnh minh chứng nếu có mục không đạt yêu cầu')
+  }
+
   request.status = 'returned'
   request.returnedConfirmedBy = confirmedBy
   request.returnedAt = new Date()
   request.actualReturnDate = new Date()
+  request.returnRequest = {
+    checklist: {
+      appearance:  !!checklist.appearance,
+      functioning: !!checklist.functioning,
+      accessories: !!checklist.accessories,
+    },
+    notes:       notes || null,
+    images,
+    submittedAt: new Date(),
+  }
   await request.save()
 
   const borrowerName = request.borrowerId?.displayName || request.borrowerId?.username || 'Unknown'
@@ -557,7 +529,6 @@ export const borrowRequestService = {
   createLecturerRequest,
   approveRequest,
   rejectRequest,
-  submitHandoverForm,
   studentConfirmReceived,
   studentSubmitReturn,
   confirmReturn,

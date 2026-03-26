@@ -112,7 +112,7 @@ const borrowRequestSchema = new mongoose.Schema(
     },
 
     // ── Handover ──────────────────────────────────────────────────────────────
-    // Lecturer submits handover form (status stays 'approved' until student confirms)
+    // Status stays 'approved' until student confirms receipt
     handedOverBy: {
       type: ObjectId,
       ref: 'User',
@@ -124,7 +124,7 @@ const borrowRequestSchema = new mongoose.Schema(
       default: null,
     },
 
-    // Checklist + evidence filled by lecturer when handing over equipment
+    // Checklist + evidence filled by STUDENT when confirming receipt of equipment
     handoverInfo: {
       checklist: {
         appearance:  { type: Boolean, default: false },
@@ -136,14 +136,17 @@ const borrowRequestSchema = new mongoose.Schema(
       submittedAt: { type: Date, default: null },
     },
 
-    // When student ticked "Confirm Received" (status becomes 'handed_over')
+    // When student clicked "Confirm Received" (status becomes 'handed_over')
     studentConfirmedAt: {
       type: Date,
       default: null,
     },
 
     // ── Return submission (from student) ──────────────────────────────────────
-    // Filled by student when submitting return (status becomes 'returning')
+    // Student simply requests return (no form) (status becomes 'returning')
+
+    // ── Return confirmation (by lecturer) ─────────────────────────────────────
+    // Filled by LECTURER when confirming return (status becomes 'returned')
     returnRequest: {
       checklist: {
         appearance:  { type: Boolean, default: false },
@@ -155,7 +158,6 @@ const borrowRequestSchema = new mongoose.Schema(
       submittedAt: { type: Date, default: null },
     },
 
-    // ── Return confirmation (by lecturer) ─────────────────────────────────────
     returnedConfirmedBy: {
       type: ObjectId,
       ref: 'User',

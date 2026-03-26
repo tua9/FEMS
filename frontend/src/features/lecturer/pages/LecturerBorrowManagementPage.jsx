@@ -17,9 +17,9 @@ import BorrowBadge from '../components/borrow/BorrowBadge';
 import BorrowAvatar from '../components/borrow/BorrowAvatar';
 import ApproveModal from '../components/borrow/ApproveModal';
 import RejectModal from '../components/borrow/RejectModal';
-import HandoverModal from '../components/borrow/HandoverModal';
 import ReturnConfirmModal from '../components/borrow/ReturnConfirmModal';
 import RequestDetailModal from '../components/borrow/RequestDetailModal';
+import ConfirmModal from '@/features/shared/components/ConfirmModal';
 
 // Utilities
 import {
@@ -50,9 +50,9 @@ const LecturerBorrowManagementPage = () => {
   // ── Modal state ───────────────────────────────────────────────────────────
   const [approvingReq, setApprovingReq] = useState(null);
   const [rejectingReq, setRejectingReq] = useState(null);
-  const [handoverReq, setHandoverReq] = useState(null);
   const [confirmReturnReq, setConfirmReturnReq] = useState(null);
   const [viewDetailReq, setViewDetailReq] = useState(null);
+  const [showEndSessionModal, setShowEndSessionModal] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
   // ── Derived: active (ongoing) teaching schedule ───────────────────────────
@@ -68,6 +68,7 @@ const LecturerBorrowManagementPage = () => {
 
   const isSessionOngoing = useMemo(() => {
     if (!activeSchedule) return false;
+    if (activeSchedule.status === 'completed') return false;
     const now = new Date();
     return new Date(activeSchedule.startAt) <= now && new Date(activeSchedule.endAt) >= now;
   }, [activeSchedule]);
@@ -187,10 +188,12 @@ const LecturerBorrowManagementPage = () => {
       toast.success('Đã kết thúc buổi dạy.');
       const res = await attendanceService.getMyCheckInStatus(activeSchedule._id);
       setCheckInStatus(res);
+      await loadSchedules(); // Reload to get updated schedule status
     } catch (err) {
       toast.error(err?.response?.data?.message || 'Không thể kết thúc buổi dạy.');
     } finally {
       setCheckingIn(false);
+      setShowEndSessionModal(false);
     }
   };
 
@@ -226,44 +229,21 @@ const LecturerBorrowManagementPage = () => {
     }
   };
 
-  // ── Handover ──────────────────────────────────────────────────────────────
-  const confirmHandover = async (files) => {
-    if (!handoverReq) return;
-    setSubmitting(true);
-    try {
-      // 1. Upload images first
-      const imageUrls = await uploadImages(files);
-
-      // 2. Submit handover form
-      const formData = {
-        checklist: {
-          appearance: true,
-          functioning: true,
-          accessories: true,
-        },
-        notes: handoverReq.note || '',
-        images: imageUrls,
-      };
-
-      await borrowRequestService.submitHandoverForm(handoverReq._id, formData);
-      toast.success(`Đã bàn giao "${getEquipmentName(handoverReq)}" cho ${getStudentName(handoverReq)}.`);
-      
-      setHandoverReq(null);
-      await loadRequests();
-    } catch (err) {
-      console.error('Handover error:', err);
-      toast.error(err?.response?.data?.message || 'Không thể xác nhận bàn giao.');
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
   // ── Confirm Return ────────────────────────────────────────────────────────
-  const confirmReturn = async () => {
+  const confirmReturn = async (formData) => {
     if (!confirmReturnReq) return;
     setSubmitting(true);
     try {
-      await borrowRequestService.returnBorrowRequest(confirmReturnReq._id);
+      let imageUrls = [];
+      if (formData.files && formData.files.length > 0) {
+        imageUrls = await uploadImages(formData.files);
+      }
+
+      await borrowRequestService.returnBorrowRequest(confirmReturnReq._id, {
+        checklist: formData.checklist,
+        notes: formData.notes,
+        images: imageUrls,
+      });
       toast.success(`Đã xác nhận hoàn trả "${getEquipmentName(confirmReturnReq)}".`);
       setConfirmReturnReq(null);
       await loadRequests();
@@ -381,7 +361,7 @@ const LecturerBorrowManagementPage = () => {
                       </span>
                       <span className="flex items-center gap-1.5 text-xs font-bold text-slate-500 dark:text-slate-400">
                         <Clock className="w-3.5 h-3.5 shrink-0" />
-                        {fmtTime(activeSchedule.startAt)} – {fmtTime(activeSchedule.endAt)}
+                        {activeSchedule.slotId?.startTime || fmtTime(activeSchedule.startAt)} – {activeSchedule.slotId?.endTime || fmtTime(activeSchedule.endAt)}
                       </span>
                       {activeSchedule.slotId && (
                         <span className="text-xs font-bold text-slate-400">
@@ -396,12 +376,17 @@ const LecturerBorrowManagementPage = () => {
                 <div className="flex flex-col items-end gap-3 shrink-0">
                   {/* Session status badge */}
                   <span className={`flex items-center gap-2 px-4 py-2 rounded-2xl text-[10px] font-black uppercase tracking-widest border ${
-                    isSessionOngoing
-                      ? 'bg-emerald-50 text-emerald-600 border-emerald-200 dark:bg-emerald-900/20 dark:text-emerald-400 dark:border-emerald-900/30'
-                      : 'bg-amber-50 text-amber-600 border-amber-200 dark:bg-amber-900/20 dark:text-amber-400 dark:border-amber-900/30'
+                    activeSchedule.status === 'completed'
+                      ? 'bg-slate-50 text-slate-500 border-slate-200 dark:bg-slate-900/40 dark:text-slate-400 dark:border-slate-800'
+                      : isSessionOngoing
+                        ? 'bg-emerald-50 text-emerald-600 border-emerald-200 dark:bg-emerald-900/20 dark:text-emerald-400 dark:border-emerald-900/30'
+                        : 'bg-amber-50 text-amber-600 border-amber-200 dark:bg-amber-900/20 dark:text-amber-400 dark:border-amber-900/30'
                   }`}>
-                    <span className={`w-1.5 h-1.5 rounded-full ${isSessionOngoing ? 'bg-emerald-500 animate-pulse' : 'bg-amber-500'}`} />
-                    {isSessionOngoing ? 'Đang diễn ra' : 'Sắp diễn ra'}
+                    <span className={`w-1.5 h-1.5 rounded-full ${
+                      activeSchedule.status === 'completed' ? 'bg-slate-400' :
+                      isSessionOngoing ? 'bg-emerald-500 animate-pulse' : 'bg-amber-500'
+                    }`} />
+                    {activeSchedule.status === 'completed' ? 'Đã kết thúc' : isSessionOngoing ? 'Đang diễn ra' : 'Sắp diễn ra'}
                   </span>
 
                   {/* Check-in button */}
@@ -411,14 +396,18 @@ const LecturerBorrowManagementPage = () => {
                     </div>
                   ) : isCheckedIn ? (
                     <div className="flex items-center gap-3">
-                      <span className="flex items-center gap-2 text-xs font-black text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20 px-3 py-1.5 rounded-xl border border-emerald-200 dark:border-emerald-900/30">
+                      <span className={`flex items-center gap-2 text-xs font-black px-3 py-1.5 rounded-xl border ${
+                        activeSchedule.status === 'completed' 
+                          ? 'text-slate-500 bg-slate-50 border-slate-200 dark:bg-slate-900/40 dark:text-slate-400 dark:border-slate-800'
+                          : 'text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-900/30'
+                      }`}>
                         <CheckCircle2 className="w-3.5 h-3.5" />
                         Đã điểm danh
                         {checkInStatus?.checkInTime && ` lúc ${fmtTime(checkInStatus.checkInTime)}`}
                       </span>
-                      {isSessionOngoing && (
+                      {activeSchedule.status !== 'completed' && (
                         <button
-                          onClick={handleCheckOut}
+                          onClick={() => setShowEndSessionModal(true)}
                           disabled={checkingIn}
                           className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-black text-[10px] uppercase tracking-widest hover:bg-slate-200 dark:hover:bg-slate-700 transition-all active:scale-95 disabled:opacity-60"
                         >
@@ -466,15 +455,27 @@ const LecturerBorrowManagementPage = () => {
                 }
               </div>
               <div>
-                <p className={`font-black text-sm ${isCheckedIn ? 'text-emerald-700 dark:text-emerald-400' : 'text-amber-700 dark:text-amber-400'}`}>
-                  {isCheckedIn
-                    ? 'Cho phép mượn thiết bị đã được kích hoạt'
-                    : 'Sinh viên chưa thể mượn thiết bị'}
+                <p className={`font-black text-sm ${
+                  activeSchedule.status === 'completed'
+                    ? 'text-slate-600 dark:text-slate-300'
+                    : isCheckedIn ? 'text-emerald-700 dark:text-emerald-400' : 'text-amber-700 dark:text-amber-400'
+                }`}>
+                  {activeSchedule.status === 'completed'
+                    ? 'Buổi dạy đã kết thúc'
+                    : isCheckedIn
+                      ? 'Cho phép mượn thiết bị đã được kích hoạt'
+                      : 'Sinh viên chưa thể mượn thiết bị'}
                 </p>
-                <p className={`text-xs mt-0.5 ${isCheckedIn ? 'text-emerald-600/70 dark:text-emerald-400/60' : 'text-amber-600/70 dark:text-amber-400/60'}`}>
-                  {isCheckedIn
-                    ? 'Bạn đã điểm danh. Sinh viên trong phòng có thể gửi yêu cầu mượn thiết bị.'
-                    : 'Bạn cần điểm danh trước khi sinh viên có thể gửi yêu cầu mượn thiết bị.'}
+                <p className={`text-xs mt-0.5 ${
+                  activeSchedule.status === 'completed'
+                    ? 'text-slate-500 dark:text-slate-400'
+                    : isCheckedIn ? 'text-emerald-600/70 dark:text-emerald-400/60' : 'text-amber-600/70 dark:text-amber-400/60'
+                }`}>
+                  {activeSchedule.status === 'completed'
+                    ? 'Sinh viên không thể gửi thêm yêu cầu mượn thiết bị trong ca học này.'
+                    : isCheckedIn
+                      ? 'Bạn đã điểm danh. Sinh viên trong phòng có thể gửi yêu cầu mượn thiết bị.'
+                      : 'Bạn cần điểm danh trước khi sinh viên có thể gửi yêu cầu mượn thiết bị.'}
                 </p>
               </div>
             </div>
@@ -538,12 +539,12 @@ const LecturerBorrowManagementPage = () => {
           </section>
         )}
 
-        {/* ══ SECTION 4: Approved — Awaiting Handover ══════════════════════════ */}
+        {/* ══ SECTION 4: Approved — Awaiting Student Handover Confirm ══════════ */}
         {activeSchedule && approvedRequests.length > 0 && (
           <section className="mb-8">
             <div className="flex items-center gap-3 mb-5 px-1">
               <div className="w-1.5 h-8 bg-blue-500 rounded-full" />
-              <h3 className="text-xl font-black text-[#1E2B58] dark:text-white">Chờ bàn giao</h3>
+              <h3 className="text-xl font-black text-[#1E2B58] dark:text-white">Chờ sinh viên xác nhận</h3>
               <span className="text-[10px] font-black px-2.5 py-1 rounded-full bg-blue-50 dark:bg-blue-400/10 text-blue-600 dark:text-blue-400 border border-blue-100 dark:border-blue-400/20">
                 {approvedRequests.length}
               </span>
@@ -553,12 +554,9 @@ const LecturerBorrowManagementPage = () => {
               <div className="divide-y divide-[#1E2B58]/5 dark:divide-white/5">
                 {approvedRequests.map(req =>
                   renderRequestRow(req, (
-                    <button
-                      onClick={() => setHandoverReq(req)}
-                      className="px-4 py-2 rounded-xl bg-[#1E2B58] dark:bg-blue-700 text-white font-black text-[10px] uppercase tracking-widest hover:bg-[#2A3B66] dark:hover:bg-blue-600 transition-all active:scale-95 shadow-md shadow-blue-900/20 flex items-center gap-1.5"
-                    >
-                      <HandMetal className="w-3.5 h-3.5" /> Bàn giao
-                    </button>
+                    <span className="px-3 py-1.5 rounded-lg bg-blue-50 dark:bg-blue-900/20 text-[10px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-widest border border-blue-100 dark:border-blue-900/30">
+                      Chờ xác nhận
+                    </span>
                   ))
                 )}
               </div>
@@ -641,20 +639,24 @@ const LecturerBorrowManagementPage = () => {
         submitting={submitting}
       />
 
-      <HandoverModal
-        isOpen={!!handoverReq}
-        onClose={() => setHandoverReq(null)}
-        request={handoverReq}
-        onConfirm={confirmHandover}
-        submitting={submitting}
-      />
-
       <ReturnConfirmModal
         isOpen={!!confirmReturnReq}
         onClose={() => setConfirmReturnReq(null)}
         request={confirmReturnReq}
         onConfirm={confirmReturn}
         submitting={submitting}
+      />
+
+      <ConfirmModal
+        isOpen={showEndSessionModal}
+        onClose={() => setShowEndSessionModal(false)}
+        title="Kết thúc buổi học"
+        message="Bạn có thực sự muốn kết thúc buổi học này? Sinh viên sẽ không thể gửi thêm yêu cầu mượn thiết bị sau khi kết thúc."
+        confirmText="Kết thúc ngay"
+        cancelText="Để sau"
+        onConfirm={handleCheckOut}
+        submitting={checkingIn}
+        type="warning"
       />
 
       <RequestDetailModal

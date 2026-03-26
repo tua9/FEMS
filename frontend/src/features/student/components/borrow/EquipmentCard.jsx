@@ -64,7 +64,7 @@ const EquipmentCard = ({
               onClick={() => onReturn(myReq)}
               className="w-full py-2.5 rounded-2xl bg-[#1E2B58] dark:bg-blue-700 text-white font-black text-xs uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-[#2A3B66] dark:hover:bg-blue-600 transition-all active:scale-95 shadow-md shadow-blue-900/20"
             >
-              <LogOut className="w-3.5 h-3.5" /> Trả thiết bị
+              <LogOut className="w-3.5 h-3.5" /> Yêu cầu trả thiết bị
             </button>
           )}
           {myReq.status === 'returning' && (
@@ -72,18 +72,13 @@ const EquipmentCard = ({
               <CheckCircle2 className="w-3.5 h-3.5" /> Chờ giảng viên xác nhận
             </div>
           )}
-          {myReq.status === 'approved' && myReq.handoverInfo?.submittedAt && (
+          {myReq.status === 'approved' && (
             <button
               onClick={() => onConfirmReceived(myReq)}
               className="w-full py-2.5 rounded-2xl bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 font-black text-xs uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-emerald-100 dark:hover:bg-emerald-900/30 transition-all active:scale-95 border border-emerald-100 dark:border-emerald-900/30"
             >
               <CheckCircle2 className="w-3.5 h-3.5" /> Xác nhận nhận hàng
             </button>
-          )}
-          {myReq.status === 'approved' && !myReq.handoverInfo?.submittedAt && (
-            <div className="w-full py-2.5 rounded-2xl bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 font-black text-xs uppercase tracking-widest flex items-center justify-center gap-2 border border-blue-100 dark:border-blue-900/30">
-              <CheckCircle2 className="w-3.5 h-3.5" /> Chờ giảng viên bàn giao
-            </div>
           )}
           {myReq.status === 'pending' && (
             <button

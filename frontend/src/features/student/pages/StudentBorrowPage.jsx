@@ -17,7 +17,6 @@ import { fmtTime, fmtDateTime } from '../components/borrow/borrowUtils';
 import BorrowBadge from '../components/borrow/BorrowBadge';
 import AvailabilityLabel from '../components/borrow/AvailabilityLabel';
 import BorrowModal from '../components/borrow/BorrowModal';
-import ReturnModal from '../components/borrow/ReturnModal';
 import HandoverConfirmModal from '../components/borrow/HandoverConfirmModal';
 import RequestDetailModal from '../components/borrow/RequestDetailModal';
 import EquipmentCard from '../components/borrow/EquipmentCard';
@@ -42,7 +41,6 @@ const StudentBorrowPage = () => {
 
   // ── Modal state ───────────────────────────────────────────────────────────
   const [borrowTarget, setBorrowTarget] = useState(null);
-  const [returnTarget, setReturnTarget] = useState(null);
   const [handoverViewTarget, setHandoverViewTarget] = useState(null);
   const [viewRequest, setViewRequest] = useState(null);
   const [submitting, setSubmitting] = useState(false);
@@ -51,7 +49,13 @@ const StudentBorrowPage = () => {
   const activeSchedule = useMemo(() => {
     if (!schedules.length) return null;
     const now = new Date();
+    console.log('schedules: ', schedules);
+    console.log('bay gio: ', now);
+    console.log('ket qua: ', schedules.find(s => new Date(s.startAt) <= now && new Date(s.endAt) >= now) ||
+      schedules.find(s => new Date(s.startAt) > now) ||
+      schedules[0]);
     return (
+
       schedules.find(s => new Date(s.startAt) <= now && new Date(s.endAt) >= now) ||
       schedules.find(s => new Date(s.startAt) > now) ||
       schedules[0]
@@ -159,10 +163,19 @@ const StudentBorrowPage = () => {
   };
 
   // ── Confirm received (student) ────────────────────────────────────────────
-  const handleConfirmReceived = async (req) => {
+  const handleConfirmReceived = async (formData) => {
+    if (!handoverViewTarget) return;
     setSubmitting(true);
     try {
-      await borrowRequestService.confirmReceived(req._id);
+      let imageUrls = [];
+      if (formData.files && formData.files.length > 0) {
+        imageUrls = await uploadImages(formData.files);
+      }
+      await borrowRequestService.confirmReceived(handoverViewTarget._id, {
+        checklist: formData.checklist,
+        notes: formData.notes,
+        images: imageUrls,
+      });
       toast.success('Đã xác nhận nhận thiết bị.');
       setHandoverViewTarget(null);
       await loadMyRequests();
@@ -173,23 +186,13 @@ const StudentBorrowPage = () => {
     }
   };
 
-  // ── Return submit (student submits return form) ────────────────────────────
-  const handleReturnSubmit = async (formData) => {
-    if (!returnTarget) return;
+  // ── Return submit (student submits return request) ───────────────────────
+  const handleReturnSubmit = async (req) => {
+    if (!window.confirm(`Bạn muốn yêu cầu trả thiết bị "${req.equipmentId?.name}"?`)) return;
     setSubmitting(true);
     try {
-      let imageUrls = [];
-      if (formData.files && formData.files.length > 0) {
-        imageUrls = await uploadImages(formData.files);
-      }
-
-      await borrowRequestService.submitReturn(returnTarget._id, {
-        checklist: formData.checklist,
-        notes: formData.notes,
-        images: imageUrls,
-      });
+      await borrowRequestService.submitReturn(req._id);
       toast.success('Đã gửi yêu cầu hoàn trả. Chờ giảng viên xác nhận.');
-      setReturnTarget(null);
       await loadMyRequests();
     } catch (err) {
       toast.error(err?.response?.data?.message || 'Không thể gửi yêu cầu hoàn trả.');
@@ -260,7 +263,7 @@ const StudentBorrowPage = () => {
                       </span>
                       <span className="flex items-center gap-1.5 text-xs font-bold text-slate-500 dark:text-slate-400">
                         <Clock className="w-3.5 h-3.5 shrink-0" />
-                        {fmtTime(activeSchedule.startAt)} – {fmtTime(activeSchedule.endAt)}
+                        {activeSchedule.slotId?.startTime || fmtTime(activeSchedule.startAt)} – {activeSchedule.slotId?.endTime || fmtTime(activeSchedule.endAt)}
                       </span>
                       {activeSchedule.slotId && (
                         <span className="text-xs font-bold text-slate-400 dark:text-slate-500">
@@ -272,11 +275,10 @@ const StudentBorrowPage = () => {
                 </div>
 
                 {/* Status badge */}
-                <span className={`flex items-center gap-2 px-4 py-2 rounded-2xl text-[10px] font-black uppercase tracking-widest border shrink-0 ${
-                  isSessionOngoing
-                    ? 'bg-emerald-50 text-emerald-600 border-emerald-200 dark:bg-emerald-900/20 dark:text-emerald-400 dark:border-emerald-900/30'
-                    : 'bg-amber-50 text-amber-600 border-amber-200 dark:bg-amber-900/20 dark:text-amber-400 dark:border-amber-900/30'
-                }`}>
+                <span className={`flex items-center gap-2 px-4 py-2 rounded-2xl text-[10px] font-black uppercase tracking-widest border shrink-0 ${isSessionOngoing
+                  ? 'bg-emerald-50 text-emerald-600 border-emerald-200 dark:bg-emerald-900/20 dark:text-emerald-400 dark:border-emerald-900/30'
+                  : 'bg-amber-50 text-amber-600 border-amber-200 dark:bg-amber-900/20 dark:text-amber-400 dark:border-amber-900/30'
+                  }`}>
                   <span className={`w-1.5 h-1.5 rounded-full ${isSessionOngoing ? 'bg-emerald-500 animate-pulse' : 'bg-amber-500'}`} />
                   {isSessionOngoing ? 'Đang diễn ra' : 'Sắp diễn ra'}
                 </span>
@@ -334,7 +336,7 @@ const StudentBorrowPage = () => {
                       }
                       setBorrowTarget(it);
                     }}
-                    onReturn={setReturnTarget}
+                    onReturn={handleReturnSubmit}
                     onConfirmReceived={setHandoverViewTarget}
                     onCancel={handleCancelRequest}
                     onViewDetail={setViewRequest}
@@ -368,7 +370,7 @@ const StudentBorrowPage = () => {
                   <ActiveRequestItem
                     key={req._id}
                     req={req}
-                    onReturn={setReturnTarget}
+                    onReturn={handleReturnSubmit}
                     onConfirmReceived={setHandoverViewTarget}
                     onCancel={handleCancelRequest}
                   />
@@ -394,21 +396,13 @@ const StudentBorrowPage = () => {
         submitting={submitting}
       />
 
-      {/* Return Modal */}
-      <ReturnModal
-        isOpen={!!returnTarget}
-        onClose={() => setReturnTarget(null)}
-        target={returnTarget}
-        onConfirm={handleReturnSubmit}
-        submitting={submitting}
-      />
-
       {/* Handover Confirm Modal */}
       <HandoverConfirmModal
         isOpen={!!handoverViewTarget}
         onClose={() => setHandoverViewTarget(null)}
         request={handoverViewTarget}
         onConfirm={handleConfirmReceived}
+        onCancelRequest={handleCancelRequest}
         submitting={submitting}
       />
 

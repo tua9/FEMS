@@ -10,7 +10,6 @@ import {
   approveBorrowRequest,
   rejectBorrowRequest,
   directAllocateEquipment,
-  handoverBorrowRequest,
   confirmReceivedBorrowRequest,
   submitReturnBorrowRequest,
   returnBorrowRequest,
@@ -38,13 +37,10 @@ router.patch('/:id/cancel', restrictTo('student', 'lecturer', 'technician', 'adm
 router.patch('/:id/approve', restrictTo('lecturer', 'technician', 'admin'), approveBorrowRequest)
 router.patch('/:id/reject', restrictTo('lecturer', 'technician', 'admin'), rejectBorrowRequest)
 
-// Lecturer submits handover form (checklist + images). Status stays 'approved'.
-router.patch('/:id/handover', restrictTo('lecturer', 'technician', 'admin'), handoverBorrowRequest)
-
-// Student confirms they received the equipment. Status: approved → handed_over.
+// Student confirms they received the equipment (fills checklist + images). Status: approved → handed_over.
 router.patch('/:id/confirm-received', restrictTo('student', 'lecturer'), confirmReceivedBorrowRequest)
 
-// Student submits return form (checklist + images). Status: handed_over → returning.
+// Student requests return (no form). Status: handed_over → returning.
 router.patch('/:id/submit-return', restrictTo('student', 'lecturer'), submitReturnBorrowRequest)
 
 // Lecturer/Admin confirms return after inspection. Status: returning → returned.
