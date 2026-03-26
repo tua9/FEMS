@@ -46,8 +46,7 @@ const StudentBorrowPage = () => {
   const [viewRequest, setViewRequest] = useState(null);
   const [submitting, setSubmitting] = useState(false);
 
-  // ── Search & Pagination for My Requests ───────────────────────────────────
-  const [reqSearchQuery, setReqSearchQuery] = useState('');
+  // ── Pagination for My Requests ────────────────────────────────────────────
   const [reqCurrentPage, setReqCurrentPage] = useState(1);
   const REQ_ITEMS_PER_PAGE = 3;
 
@@ -55,23 +54,19 @@ const StudentBorrowPage = () => {
   const activeSchedule = useMemo(() => {
     if (!schedules.length) return null;
     const now = new Date();
-    console.log('schedules: ', schedules);
-    console.log('bay gio: ', now);
-    console.log('ket qua: ', schedules.find(s => new Date(s.startAt) <= now && new Date(s.endAt) >= now) ||
-      schedules.find(s => new Date(s.startAt) > now) ||
-      schedules[0]);
-    return (
-
-      schedules.find(s => new Date(s.startAt) <= now && new Date(s.endAt) >= now) ||
-      schedules.find(s => new Date(s.startAt) > now) ||
-      schedules[0]
-    );
+    
+    // First, try to find an ongoing session (or one that should be ongoing by time and isn't completed yet)
+    const ongoing = schedules.find(s => s.status === 'ongoing' || (new Date(s.startAt) <= now && new Date(s.endAt) >= now && s.status !== 'completed'));
+    if (ongoing) return ongoing;
+    
+    // Next, try to find the next upcoming session
+    const upcoming = schedules.find(s => new Date(s.startAt) > now && s.status !== 'completed');
+    return upcoming || null;
   }, [schedules]);
 
   const isSessionOngoing = useMemo(() => {
     if (!activeSchedule) return false;
-    const now = new Date();
-    return new Date(activeSchedule.startAt) <= now && new Date(activeSchedule.endAt) >= now;
+    return activeSchedule.status === 'ongoing';
   }, [activeSchedule]);
 
   // ── Load schedules ────────────────────────────────────────────────────────
@@ -144,29 +139,14 @@ const StudentBorrowPage = () => {
     [myRequests]
   );
 
-  // ── Filter and paginate active requests ───────────────────────────────────
-  const filteredActiveRequests = useMemo(() => {
-    if (!reqSearchQuery) return activeRequests;
-    const q = reqSearchQuery.toLowerCase();
-    return activeRequests.filter(req => {
-      const equipName = req.equipmentId?.name?.toLowerCase() || '';
-      const equipCode = req.equipmentId?.code?.toLowerCase() || '';
-      return equipName.includes(q) || equipCode.includes(q);
-    });
-  }, [activeRequests, reqSearchQuery]);
-
-  const reqTotalPages = Math.max(1, Math.ceil(filteredActiveRequests.length / REQ_ITEMS_PER_PAGE));
+  // ── Pagination active requests ────────────────────────────────────────────
+  const reqTotalPages = Math.max(1, Math.ceil(activeRequests.length / REQ_ITEMS_PER_PAGE));
   const validReqCurrentPage = Math.min(Math.max(1, reqCurrentPage), reqTotalPages);
 
   const paginatedActiveRequests = useMemo(() => {
     const start = (validReqCurrentPage - 1) * REQ_ITEMS_PER_PAGE;
-    return filteredActiveRequests.slice(start, start + REQ_ITEMS_PER_PAGE);
-  }, [filteredActiveRequests, validReqCurrentPage]);
-
-  // Reset page when search changes
-  useEffect(() => {
-    setReqCurrentPage(1);
-  }, [reqSearchQuery]);
+    return activeRequests.slice(start, start + REQ_ITEMS_PER_PAGE);
+  }, [activeRequests, validReqCurrentPage]);
 
   // ── Borrow submit ─────────────────────────────────────────────────────────
   const handleBorrowSubmit = async (note) => {
@@ -265,7 +245,7 @@ const StudentBorrowPage = () => {
             <div className="dashboard-card rounded-4xl p-12 flex flex-col items-center justify-center text-center gap-4">
               <BookOpen className="w-12 h-12 text-[#1E2B58]/15 dark:text-white/15" />
               <div>
-                <p className="font-black text-[#1E2B58]/50 dark:text-white/40">Không có buổi học nào hôm nay</p>
+                <p className="font-black text-[#1E2B58]/50 dark:text-white/40">Không có buổi học nào tiếp theo</p>
                 <p className="text-xs text-[#1E2B58]/30 dark:text-white/30 mt-1">
                   Việc mượn thiết bị chỉ khả dụng trong buổi học được lên lịch.
                 </p>
@@ -305,21 +285,30 @@ const StudentBorrowPage = () => {
                 </div>
 
                 {/* Status badge */}
-                <span className={`flex items-center gap-2 px-4 py-2 rounded-2xl text-[10px] font-black uppercase tracking-widest border shrink-0 ${isSessionOngoing
-                  ? 'bg-emerald-50 text-emerald-600 border-emerald-200 dark:bg-emerald-900/20 dark:text-emerald-400 dark:border-emerald-900/30'
-                  : 'bg-amber-50 text-amber-600 border-amber-200 dark:bg-amber-900/20 dark:text-amber-400 dark:border-amber-900/30'
-                  }`}>
-                  <span className={`w-1.5 h-1.5 rounded-full ${isSessionOngoing ? 'bg-emerald-500 animate-pulse' : 'bg-amber-500'}`} />
-                  {isSessionOngoing ? 'Đang diễn ra' : 'Sắp diễn ra'}
+                <span className={`flex items-center gap-2 px-4 py-2 rounded-2xl text-[10px] font-black uppercase tracking-widest border shrink-0 ${
+                  activeSchedule.status === 'ongoing'
+                    ? 'bg-emerald-50 text-emerald-600 border-emerald-200 dark:bg-emerald-900/20 dark:text-emerald-400 dark:border-emerald-900/30'
+                    : activeSchedule.status === 'completed'
+                    ? 'bg-slate-100 text-slate-500 border-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700'
+                    : 'bg-amber-50 text-amber-600 border-amber-200 dark:bg-amber-900/20 dark:text-amber-400 dark:border-amber-900/30'
+                }`}>
+                  <span className={`w-1.5 h-1.5 rounded-full ${
+                    activeSchedule.status === 'ongoing' ? 'bg-emerald-500 animate-pulse' :
+                    activeSchedule.status === 'completed' ? 'bg-slate-400' : 'bg-amber-500'
+                  }`} />
+                  {activeSchedule.status === 'ongoing' ? 'Đang diễn ra' : 
+                   activeSchedule.status === 'completed' ? 'Đã kết thúc' : 'Sắp diễn ra'}
                 </span>
               </div>
 
-              {/* Warning banner if session not yet started */}
+              {/* Warning banner if session not yet started or ended */}
               {!isSessionOngoing && (
                 <div className="mt-5 p-3 rounded-2xl bg-amber-50 dark:bg-amber-900/10 border border-amber-100 dark:border-amber-900/20 flex items-start gap-2.5">
                   <AlertTriangle className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
                   <p className="text-xs font-bold text-amber-600 dark:text-amber-400">
-                    Chức năng mượn thiết bị chỉ hoạt động trong giờ học. Vui lòng chờ đến khi buổi học bắt đầu.
+                    {activeSchedule.status === 'completed'
+                      ? 'Buổi học này đã kết thúc. Bạn không thể yêu cầu mượn thiết bị nữa.'
+                      : 'Chức năng mượn thiết bị chưa được mở. Vui lòng đợi giảng viên bắt đầu điểm danh (Check-in).'}
                   </p>
                 </div>
               )}
@@ -328,85 +317,68 @@ const StudentBorrowPage = () => {
         </section>
 
         {/* ══ SECTION 2: My Active Requests ═══════════════════════════════════ */}
-        {(requestsLoading || activeRequests.length > 0) && (
-          <section className="mb-10">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 px-1">
-              <div className="flex items-center gap-3">
-                <div className="w-1.5 h-8 bg-amber-400 dark:bg-amber-500 rounded-full" />
-                <h3 className="text-xl font-black text-[#1E2B58] dark:text-white">Yêu cầu của tôi</h3>
-                {!requestsLoading && (
-                  <span className="text-[10px] font-black px-2.5 py-1 rounded-full bg-amber-50 dark:bg-amber-400/10 text-amber-600 dark:text-amber-400 border border-amber-100 dark:border-amber-400/20">
-                    {activeRequests.length}
+        <section className="mb-10">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 px-1">
+            <div className="flex items-center gap-3">
+              <div className="w-1.5 h-8 bg-amber-400 dark:bg-amber-500 rounded-full" />
+              <h3 className="text-xl font-black text-[#1E2B58] dark:text-white">Yêu cầu của tôi</h3>
+              {!requestsLoading && (
+                <span className="text-[10px] font-black px-2.5 py-1 rounded-full bg-amber-50 dark:bg-amber-400/10 text-amber-600 dark:text-amber-400 border border-amber-100 dark:border-amber-400/20">
+                  {activeRequests.length}
+                </span>
+              )}
+            </div>
+          </div>
+
+          {requestsLoading ? (
+            <div className="flex justify-center py-10">
+              <Loader2 className="w-6 h-6 animate-spin text-[#1E2B58]/20 dark:text-white/20" />
+            </div>
+          ) : activeRequests.length === 0 ? (
+            <div className="dashboard-card rounded-3xl p-8 flex flex-col items-center justify-center text-center gap-3 bg-white/50 dark:bg-[#1E2B58]/20">
+              <BookOpen className="w-8 h-8 text-slate-300 dark:text-slate-600" />
+              <p className="text-sm font-bold text-slate-400 dark:text-slate-500">
+                Bạn chưa có yêu cầu mượn thiết bị nào!
+              </p>
+            </div>
+          ) : (
+            <div className="flex flex-col gap-3">
+              {paginatedActiveRequests.map(req => (
+                <ActiveRequestItem
+                  key={req._id}
+                  req={req}
+                  onReturn={handleReturnSubmit}
+                  onConfirmReceived={setHandoverViewTarget}
+                  onCancel={handleCancelRequest}
+                  onViewDetail={() => setViewRequest(req)}
+                />
+              ))}
+
+              {/* Pagination */}
+              {reqTotalPages > 1 && (
+                <div className="flex items-center justify-center gap-2 mt-4">
+                  <button
+                    onClick={() => setReqCurrentPage(p => Math.max(1, p - 1))}
+                    disabled={reqCurrentPage === 1}
+                    className="w-8 h-8 flex items-center justify-center rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 disabled:opacity-50 hover:bg-slate-200 dark:hover:bg-slate-700 transition"
+                  >
+                    <ChevronLeft className="w-4 h-4" />
+                  </button>
+                  <span className="text-xs font-bold text-slate-500 dark:text-slate-400">
+                    Trang {reqCurrentPage} / {reqTotalPages}
                   </span>
-                )}
-              </div>
-              
-              {!requestsLoading && activeRequests.length > 0 && (
-                <div className="relative w-full sm:w-64">
-                  <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
-                    <Search className="w-4 h-4 text-slate-400" />
-                  </div>
-                  <input
-                    type="text"
-                    placeholder="Tìm theo tên/mã thiết bị..."
-                    value={reqSearchQuery}
-                    onChange={(e) => setReqSearchQuery(e.target.value)}
-                    className="w-full pl-9 py-2 bg-white dark:bg-[#1E2B58]/40 border border-[#1E2B58]/10 dark:border-white/10 rounded-2xl text-sm font-medium text-[#1E2B58] dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all shadow-sm"
-                  />
+                  <button
+                    onClick={() => setReqCurrentPage(p => Math.min(reqTotalPages, p + 1))}
+                    disabled={reqCurrentPage === reqTotalPages}
+                    className="w-8 h-8 flex items-center justify-center rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 disabled:opacity-50 hover:bg-slate-200 dark:hover:bg-slate-700 transition"
+                  >
+                    <ChevronRight className="w-4 h-4" />
+                  </button>
                 </div>
               )}
             </div>
-
-            {requestsLoading ? (
-              <div className="flex justify-center py-10">
-                <Loader2 className="w-6 h-6 animate-spin text-[#1E2B58]/20 dark:text-white/20" />
-              </div>
-            ) : filteredActiveRequests.length === 0 ? (
-              <div className="dashboard-card rounded-3xl p-8 flex flex-col items-center justify-center text-center gap-3 bg-white/50 dark:bg-[#1E2B58]/20">
-                <Search className="w-8 h-8 text-slate-300 dark:text-slate-600" />
-                <p className="text-sm font-bold text-slate-400 dark:text-slate-500">
-                  Không tìm thấy yêu cầu nào phù hợp.
-                </p>
-              </div>
-            ) : (
-              <div className="flex flex-col gap-3">
-                {paginatedActiveRequests.map(req => (
-                  <ActiveRequestItem
-                    key={req._id}
-                    req={req}
-                    onReturn={handleReturnSubmit}
-                    onConfirmReceived={setHandoverViewTarget}
-                    onCancel={handleCancelRequest}
-                    onViewDetail={() => setViewRequest(req)}
-                  />
-                ))}
-
-                {/* Pagination */}
-                {reqTotalPages > 1 && (
-                  <div className="flex items-center justify-center gap-2 mt-4">
-                    <button
-                      onClick={() => setReqCurrentPage(p => Math.max(1, p - 1))}
-                      disabled={reqCurrentPage === 1}
-                      className="w-8 h-8 flex items-center justify-center rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 disabled:opacity-50 hover:bg-slate-200 dark:hover:bg-slate-700 transition"
-                    >
-                      <ChevronLeft className="w-4 h-4" />
-                    </button>
-                    <span className="text-xs font-bold text-slate-500 dark:text-slate-400">
-                      Trang {reqCurrentPage} / {reqTotalPages}
-                    </span>
-                    <button
-                      onClick={() => setReqCurrentPage(p => Math.min(reqTotalPages, p + 1))}
-                      disabled={reqCurrentPage === reqTotalPages}
-                      className="w-8 h-8 flex items-center justify-center rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 disabled:opacity-50 hover:bg-slate-200 dark:hover:bg-slate-700 transition"
-                    >
-                      <ChevronRight className="w-4 h-4" />
-                    </button>
-                  </div>
-                )}
-              </div>
-            )}
-          </section>
-        )}
+          )}
+        </section>
 
         {/* ══ SECTION 3: Equipment in Room ════════════════════════════════════ */}
         {activeSchedule && (

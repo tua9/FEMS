@@ -1,6 +1,6 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import { Package, History, AlertCircle, TrendingUp } from "lucide-react";
+import { Package, Clock, AlertCircle } from "lucide-react";
 import { AnimatedList, AnimatedListItem } from "@/components/motion";
 import { useBorrowRequestStore } from "@/stores/useBorrowRequestStore";
 import { useReportStore } from "@/stores/useReportStore";
@@ -12,10 +12,10 @@ const StudentStatCard = () => {
   const statCards = [
     {
       id: "active-borrows",
-      title: "Active Borrows",
+      title: "Active Borrowings",
       value: String(
         borrowRequests.filter((r) =>
-          ["approved", "handed_over"].includes(r.status)
+          ["approved", "handed_over", "returning"].includes(r.status)
         ).length
       ),
       icon: Package,
@@ -26,42 +26,31 @@ const StudentStatCard = () => {
       route: "/student/borrow-history",
     },
     {
-      id: "history",
-      title: "Total History",
-      value: String(borrowRequests.length),
-      icon: History,
-      color: "bg-purple-500",
-      iconShadow: "shadow-purple-500/40",
-      dot: "bg-purple-400",
-      glow: "glow-purple",
+      id: "pending-requests",
+      title: "Pending Requests",
+      value: String(borrowRequests.filter((r) => r.status === "pending").length),
+      icon: Clock,
+      color: "bg-amber-500",
+      iconShadow: "shadow-amber-500/40",
+      dot: "bg-amber-400",
+      glow: "glow-amber",
       route: "/student/borrow-history",
     },
     {
-      id: "pending-reports",
-      title: "Pending Reports",
-      value: String(myReports.filter((r) => r.status === "pending").length),
+      id: "reports-submitted",
+      title: "Reports Submitted",
+      value: String(myReports.length),
       icon: AlertCircle,
-      color: "bg-orange-500",
-      iconShadow: "shadow-orange-500/40",
-      dot: "bg-orange-400",
-      glow: "glow-orange",
+      color: "bg-rose-500",
+      iconShadow: "shadow-rose-500/40",
+      dot: "bg-rose-400",
+      glow: "glow-rose",
       route: "/student/borrow-history?tab=report",
-    },
-    {
-      id: "usage",
-      title: "Usage Score",
-      value: "0%",
-      icon: TrendingUp,
-      color: "bg-emerald-500",
-      iconShadow: "shadow-emerald-500/40",
-      dot: "bg-emerald-400",
-      glow: "glow-emerald",
-      route: "/student/borrow-history",
     },
   ];
 
   return (
-    <AnimatedList className="mb-12 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4 lg:gap-7">
+    <AnimatedList className="mb-12 grid grid-cols-1 gap-6 sm:grid-cols-3 lg:grid-cols-3 lg:gap-7">
       {statCards.map((card) => {
         const Icon = card.icon;
         return (

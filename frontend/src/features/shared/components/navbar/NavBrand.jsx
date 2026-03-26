@@ -14,7 +14,7 @@ const NavBrand = ({ portalLabel, brandIcon: _brandIcon }) => (
       <h1 className="text-base font-extrabold leading-none tracking-tight text-[#1E2B58] dark:text-white">
         F-EMS
       </h1>
-      <p className="mt-1 text-[8px] font-black tracking-[0.15em] text-[#1E2B58]/70 uppercase dark:text-slate-400">
+      <p className="mt-1 text-[8px] font-black tracking-[0.15em] text-[#1E2B58]/70 uppercase dark:text-slate-400 hidden sm:block">
         {portalLabel}
       </p>
     </div>

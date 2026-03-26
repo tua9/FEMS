@@ -8,6 +8,7 @@ import ReportIssuePage from "@/features/shared/pages/ReportIssuePage";
 import ProfilePage from "@/features/student/pages/Profile";
 import ChangePasswordPage from "@/features/shared/pages/ChangePasswordPage";
 import NotificationsPage from "@/features/shared/pages/NotificationsPage";
+import StudentSchedulePage from "@/features/student/pages/StudentSchedulePage";
 
 const StudentRoutes = () => (
  <Route element={<ProtectedRoute allowRoles={["student"]} />}>
@@ -20,6 +21,7 @@ const StudentRoutes = () => (
  <Route path="/student/profile" element={<ProfilePage />} />
  <Route path="/student/change-password" element={<ChangePasswordPage />} />
  <Route path="/student/notifications" element={<NotificationsPage />} />
+ <Route path="/student/schedule" element={<StudentSchedulePage />} />
  </Route>
  </Route>
 );

@@ -9,7 +9,7 @@ const NavLinks = ({ links }) => {
  const location = useLocation();
 
  return (
- <nav className="hide-scrollbar hidden flex-1 items-center justify-center gap-1 overflow-x-auto overflow-y-visible py-1 lg:flex">
+  <nav className="hide-scrollbar hidden flex-1 items-center justify-center gap-1 overflow-x-auto overflow-y-visible py-1 lg:flex">
  {links.map((link) => {
  const isActive = location.pathname.startsWith(link.path);
  return (

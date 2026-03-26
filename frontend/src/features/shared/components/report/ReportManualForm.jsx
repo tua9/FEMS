@@ -98,6 +98,17 @@ export const ReportManualForm = ({
  if (prefillDescription) setDescription(prefillDescription);
  }, [prefillDescription]);
 
+  // Sync selectedBuildingId whenever roomId is set (from prefill or equipment resolve)
+  useEffect(() => {
+    if (roomId && rooms.length > 0) {
+      const room = rooms.find(r => r._id === roomId);
+      if (room && room.buildingId) {
+        const bId = typeof room.buildingId === 'object' ? room.buildingId._id : room.buildingId;
+        setSelectedBuildingId(prev => (prev !== bId ? bId : prev));
+      }
+    }
+  }, [roomId, rooms]);
+
  // Extract unique buildings from rooms
  const buildings = React.useMemo(() => {
  const map = new Map();
@@ -187,6 +198,7 @@ export const ReportManualForm = ({
  }
 
  if (description.length < 10) newErrors.description = "Description must be at least 10 characters.";
+ if (description.length > 200) newErrors.description = "Description cannot exceed 200 characters.";
  
  if (Object.keys(newErrors).length > 0) {
  setErrors(newErrors);
@@ -229,12 +241,15 @@ export const ReportManualForm = ({
  checked={isSelected}
  onChange={() => {
  setCategory(cat.id);
- setErrors((p) => ({ ...p, category, equipmentCode, roomId: undefined }));
+ setErrors((p) => ({ ...p, equipmentCode: undefined, roomId: undefined, description: undefined }));
  if (cat.id !== 'equipment') {
  setEquipmentId("");
  setEqSearch("");
  }
- }}
+                  // Clear room and building to avoid stale state from previous category
+                  setRoomId("");
+                  setSelectedBuildingId("");
+                }}
  />
  <div
  className={`flex items-center gap-[0.75rem] px-[1.25rem] py-[0.75rem] rounded-2xl border transition-all hover:scale-[1.02] active:scale-95 ${isSelected
@@ -422,6 +437,7 @@ export const ReportManualForm = ({
  </h3>
  <textarea
  value={description}
+ maxLength={200}
  onChange={(e) => {
  setDescription(e.target.value);
  setErrors((p) => ({ ...p, description: undefined }));
@@ -434,7 +450,7 @@ export const ReportManualForm = ({
  />
  <div className="mt-1.5 flex justify-between px-1">
  {errors.description ? <p className="text-[10px] font-black text-red-500 dark:text-red-400 uppercase tracking-widest">{errors.description}</p> : <span />}
- <span className={`text-[0.625rem] font-bold ${description.length < 10 ? "text-slate-400" : "text-emerald-500"}`}>{description.length} / 500</span>
+ <span className={`text-[0.625rem] font-bold ${description.length < 10 ? "text-slate-400" : description.length >= 200 ? "text-amber-500" : "text-emerald-500"}`}>{description.length} / 200</span>
  </div>
  </div>
 

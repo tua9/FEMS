@@ -34,6 +34,20 @@ export const useAuthStore = create((set, get) => ({
     }
   },
 
+  signInWithGoogle: async (googleAccessToken) => {
+    try {
+      set({ loading: true });
+      const { data } = await authService.signInWithGoogle(googleAccessToken);
+      get().setAccessToken(data.accessToken);
+      toast.success("Login successful!");
+      await get().fetchUserProfile();
+    } catch (error) {
+      throw error;
+    } finally {
+      set({ loading: false });
+    }
+  },
+
   signOut: async () => {
     try {
       get().clearState();
