@@ -118,10 +118,14 @@ const getEquipmentByCode = async (code) => {
  * Status filter: available | reserved | in_use | broken | maintenance
  */
 const getEquipmentInventory = async (queries) => {
-  const { search, category, buildingId, status, page = 1, limit = 12 } = queries
+  const { search, category, buildingId, roomId, status, page = 1, limit = 12 } = queries
 
   const skip = (Number(page) - 1) * Number(limit)
   const matchQuery = {}
+
+  if (roomId) {
+    matchQuery.roomId = new mongoose.Types.ObjectId(roomId)
+  }
 
   if (search) {
     matchQuery.$or = [

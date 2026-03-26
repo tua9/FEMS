@@ -33,10 +33,10 @@ router.post('/direct-allocation', restrictTo('technician', 'admin'), directAlloc
 
 // ── Workflow actions ──────────────────────────────────────────────────────────
 router.patch('/:id/cancel', restrictTo('student', 'lecturer', 'technician', 'admin'), cancelBorrowRequest)
-router.patch('/:id/approve', restrictTo('technician', 'admin'), approveBorrowRequest)
-router.patch('/:id/reject', restrictTo('technician', 'admin'), rejectBorrowRequest)
-router.patch('/:id/handover', restrictTo('technician', 'admin'), handoverBorrowRequest)
-router.patch('/:id/return', restrictTo('technician', 'admin'), returnBorrowRequest)
-router.post('/:id/remind', restrictTo('technician', 'admin'), remindBorrowRequest)
+router.patch('/:id/approve', restrictTo('lecturer', 'technician', 'admin'), approveBorrowRequest)
+router.patch('/:id/reject', restrictTo('lecturer', 'technician', 'admin'), rejectBorrowRequest)
+router.patch('/:id/handover', restrictTo('lecturer', 'technician', 'admin'), handoverBorrowRequest)
+router.patch('/:id/return', restrictTo('student', 'lecturer', 'technician', 'admin'), returnBorrowRequest)
+router.post('/:id/remind', restrictTo('lecturer', 'technician', 'admin'), remindBorrowRequest)
 
 export default router

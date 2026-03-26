@@ -2,7 +2,7 @@ import { Route } from "react-router";
 import LecturerLayout from "@/layouts/LecturerLayout";
 import ProtectedRoute from "@/features/auth/components/ProtectedRoute";
 import LecturerDashboard from "@/features/lecturer/pages/LecturerDashboard";
-import { EquipmentCatalog } from "@/features/shared/pages/EquipmentCatalog";
+import LecturerBorrowManagementPage from "@/features/lecturer/pages/LecturerBorrowManagementPage";
 import { HistoryPage } from "@/features/shared/pages/HistoryPage";
 import { ApprovalCenter } from "@/features/lecturer/pages/ApprovalCenter";
 import UsageStats from "@/features/lecturer/pages/UsageStats";
@@ -16,7 +16,7 @@ const LecturerRoutes = () => (
  <Route element={<ProtectedRoute allowRoles={["lecturer"]} />}>
  <Route element={<LecturerLayout />}>
  <Route path="/lecturer/dashboard" element={<LecturerDashboard />} />
- <Route path="/lecturer/equipment" element={<EquipmentCatalog />} />
+ <Route path="/lecturer/equipment" element={<LecturerBorrowManagementPage />} />
  <Route path="/lecturer/history" element={<HistoryPage />} />
  <Route path="/lecturer/approval" element={<ApprovalCenter />} />
  <Route path="/lecturer/usage-stats" element={<UsageStats />} />
