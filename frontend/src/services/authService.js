@@ -50,5 +50,14 @@ export const authService = {
  changePassword: async (currentPassword, newPassword) => {
  const response = await api.post("/auth/change-password", { currentPassword, newPassword });
  return response.data;
+ },
+
+ signInWithGoogle: async (accessToken) => {
+ const response = await api.post(
+ "/auth/google",
+ { accessToken },
+ { withCredentials: true }
+ );
+ return response.data;
  }
 };

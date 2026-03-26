@@ -14,295 +14,322 @@ import { useLocation } from 'react-router-dom';
 import { PageHeader } from '@/features/shared/components/PageHeader';
 
 const EquipmentManagement = () => {
- const location = useLocation();
- const equipments = useEquipmentStore(state => state.equipments);
- const loading = useEquipmentStore(state => state.loading);
- const fetchAll = useEquipmentStore(state => state.fetchAll);
- const deleteEquipment = useEquipmentStore(state => state.deleteEquipment);
- const updateEquipment = useEquipmentStore(state => state.updateEquipment);
+    const location = useLocation();
+    const equipments = useEquipmentStore(state => state.equipments);
+    const loading = useEquipmentStore(state => state.loading);
+    const fetchAll = useEquipmentStore(state => state.fetchAll);
+    const deleteEquipment = useEquipmentStore(state => state.deleteEquipment);
+    const updateEquipment = useEquipmentStore(state => state.updateEquipment);
 
- const [isAddModalOpen, setIsAddModalOpen] = useState(false);
- const [selectedEquipment, setSelectedEquipment] = useState(null);
- const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
- const [qrEquipment, setQrEquipment] = useState(null);
- const [equipmentToDelete, setEquipmentToDelete] = useState(null);
- const [activeRequests, setActiveRequests] = useState([]);
+    const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+    const [selectedEquipment, setSelectedEquipment] = useState(null);
+    const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+    const [qrEquipment, setQrEquipment] = useState(null);
+    const [equipmentToDelete, setEquipmentToDelete] = useState(null);
+    const [activeRequests, setActiveRequests] = useState([]);
 
- const [searchQuery, setSearchQuery] = useState('');
- const [statusFilter, setStatusFilter] = useState('All Status');
- const [categoryFilter, setCategoryFilter] = useState('All Categories');
- const [sortBy, setSortBy] = useState('Newest');
- const [currentPage, setCurrentPage] = useState(1);
- const ITEMS_PER_PAGE = 5;
+    const [searchQuery, setSearchQuery] = useState('');
+    const [statusFilter, setStatusFilter] = useState('All Status');
+    const [categoryFilter, setCategoryFilter] = useState('All Categories');
+    const [sortBy, setSortBy] = useState('Newest');
+    const [currentPage, setCurrentPage] = useState(1);
+    const ITEMS_PER_PAGE = 5;
+    
+    const statusCards = [
+        { 
+            label: 'Total Assets', 
+            value: equipments.length, 
+            filter: 'All Status', 
+            icon: 'inventory_2', 
+            color: 'text-blue-600 dark:text-blue-400', 
+            bg: 'bg-blue-50 dark:bg-blue-900/20' 
+        },
+        { 
+            label: 'Available', 
+            value: equipments.filter(e => getDerivedStatus(e, activeRequests) === 'Available').length, 
+            filter: 'Available', 
+            icon: 'check_circle', 
+            color: 'text-green-600 dark:text-green-400', 
+            bg: 'bg-green-50 dark:bg-green-900/20' 
+        },
+        { 
+            label: 'Maintenance', 
+            value: equipments.filter(e => e.status === 'maintenance').length, 
+            filter: 'Maintenance', 
+            icon: 'settings', 
+            color: 'text-purple-600 dark:text-purple-400', 
+            bg: 'bg-purple-50 dark:bg-purple-900/20' 
+        },
+        { 
+            label: 'Broken', 
+            value: equipments.filter(e => e.status === 'broken').length, 
+            filter: 'Broken', 
+            icon: 'error', 
+            color: 'text-red-600 dark:text-red-400', 
+            bg: 'bg-red-50 dark:bg-red-900/20' 
+        },
+        { 
+            label: 'Under Review', 
+            value: equipments.filter(e => e.status === 'under_review').length, 
+            filter: 'Under Review', 
+            icon: 'history_edu', 
+            color: 'text-amber-600 dark:text-amber-400', 
+            bg: 'bg-amber-50 dark:bg-amber-900/20' 
+        },
+    ];
 
- useEffect(() => {
- if (location.state && (location.state).status) {
- setStatusFilter((location.state).status);
- }
- }, [location.state]);
+    useEffect(() => {
+        if (location.state && (location.state).status) {
+            setStatusFilter((location.state).status);
+        }
+    }, [location.state]);
 
- useEffect(() => {
- fetchAll();
- borrowRequestService.getAllBorrowRequests().then(reqs => {
- setActiveRequests(reqs);
- }).catch(console.error);
- }, [fetchAll]);
+    useEffect(() => {
+        fetchAll();
+        borrowRequestService.getAllBorrowRequests().then(reqs => {
+            setActiveRequests(reqs);
+        }).catch(console.error);
+    }, [fetchAll]);
 
- // Reset to page 1 when filters change
- useEffect(() => {
- setCurrentPage(1);
- }, [searchQuery, statusFilter, categoryFilter, sortBy]);
+    // Reset to page 1 when filters change
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [searchQuery, statusFilter, categoryFilter, sortBy]);
 
- const handleOpenDetails = (asset) => {
- setSelectedEquipment(asset);
- setIsDetailModalOpen(true);
- };
+    const handleOpenDetails = (asset) => {
+        setSelectedEquipment(asset);
+        setIsDetailModalOpen(true);
+    };
 
- const handleOpenQRCode = (asset) => setQrEquipment(asset);
- const handleEditEquipment = (asset) => handleOpenDetails(asset);
- const handleDeleteClick = (asset) => setEquipmentToDelete(asset);
+    const handleOpenQRCode = (asset) => setQrEquipment(asset);
+    const handleEditEquipment = (asset) => handleOpenDetails(asset);
+    const handleDeleteClick = (asset) => setEquipmentToDelete(asset);
 
- const confirmDelete = async () => {
- if (equipmentToDelete) {
- await deleteEquipment(equipmentToDelete._id);
- setEquipmentToDelete(null);
- }
- };
+    const confirmDelete = async () => {
+        if (equipmentToDelete) {
+            await deleteEquipment(equipmentToDelete._id);
+            setEquipmentToDelete(null);
+        }
+    };
 
- const handleUpdateStatus = async (id, newStatus) => {
- await updateEquipment(id, { status: newStatus });
- };
+    const handleUpdateStatus = async (id, newStatus) => {
+        await updateEquipment(id, { status: newStatus });
+    };
 
- // Broken components for attention
- const brokenAttention = equipments.filter(e => e.status === 'broken' || e.status === 'maintenance').slice(0, 5);
+    // Broken components for attention
+    const brokenAttention = equipments.filter(e => e.status === 'broken' || e.status === 'maintenance').slice(0, 5);
 
- // Status summary counts
- const totalCount = equipments.length;
- const availableCount = equipments.filter(e => {
- const vs = getDerivedStatus(e, activeRequests);
- return vs === 'Available' || vs === 'Reserved';
- }).length;
- const inUseCount = equipments.filter(e => getDerivedStatus(e, activeRequests) === 'In Use').length;
- const maintenanceCount = equipments.filter(e => e.status === 'maintenance').length;
- const brokenCount = equipments.filter(e => e.status === 'broken').length;
+    const categories = [
+        'PC Lab',
+        'IoT Kit',
+        'Infrastructure',
+        'Others',
+    ];
+    const statuses = ['Available', 'Maintenance', 'Broken'];
 
- const statusCards = [
- { label: 'Total', value: totalCount, icon: 'devices', color: 'text-[#1A2B56] dark:text-blue-300', bg: 'bg-blue-50 dark:bg-blue-900/20', filter: 'All Status' },
- { label: 'Available', value: availableCount, icon: 'check_circle', color: 'text-emerald-600 dark:text-emerald-400', bg: 'bg-emerald-50 dark:bg-emerald-900/20', filter: 'Available' },
- { label: 'In Use', value: inUseCount, icon: 'swap_horiz', color: 'text-indigo-600 dark:text-indigo-400', bg: 'bg-indigo-50 dark:bg-indigo-900/20', filter: 'Borrowed' },
- { label: 'Maintenance', value: maintenanceCount, icon: 'build', color: 'text-amber-600 dark:text-amber-400', bg: 'bg-amber-50 dark:bg-amber-900/20', filter: 'Maintenance' },
- { label: 'Broken', value: brokenCount, icon: 'warning', color: 'text-red-600 dark:text-red-400', bg: 'bg-red-50 dark:bg-red-900/20', filter: 'Broken' },
- ];
+    const filteredEquipments = equipments
+        .filter(item => {
+            const vStatus = getDerivedStatus(item, activeRequests);
+            const q = searchQuery.toLowerCase();
+            const roomName = ((item.roomId)?.name || '').toLowerCase();
+            const matchesSearch =
+                item.name.toLowerCase().includes(q) ||
+                item._id.toLowerCase().includes(q) ||
+                item.category.toLowerCase().includes(q) ||
+                roomName.includes(q);
+            let matchesStatus = statusFilter === 'All Status';
+            if (!matchesStatus) {
+                if (statusFilter === 'Available') {
+                    matchesStatus = vStatus === 'Available';
+                } else if (statusFilter === 'Maintenance') {
+                    matchesStatus = vStatus === 'Maintenance';
+                } else if (statusFilter === 'Broken') {
+                    matchesStatus = vStatus === 'Broken';
+                }
+            }
+            const matchesCategory = categoryFilter === 'All Categories' || item.category === categoryFilter;
+            return matchesSearch && matchesStatus && matchesCategory;
+        })
+        .sort((a, b) => {
+            if (sortBy === 'Name') return a.name.localeCompare(b.name);
+            if (sortBy === 'Status') {
+                const sA = getDerivedStatus(a, activeRequests);
+                const sB = getDerivedStatus(b, activeRequests);
+                return sA.localeCompare(sB);
+            }
+            return 0;
+        });
 
- const categories = Array.from(new Set(equipments.map(e => e.category)));
- const statuses = ['Available', 'Borrowed', 'Maintenance', 'Broken'];
+    const totalPages = Math.ceil(filteredEquipments.length / ITEMS_PER_PAGE);
+    const paginatedEquipments = filteredEquipments.slice(
+        (currentPage - 1) * ITEMS_PER_PAGE,
+        currentPage * ITEMS_PER_PAGE
+    );
 
- const filteredEquipments = equipments
- .filter(item => {
- const vStatus = getDerivedStatus(item, activeRequests);
- const q = searchQuery.toLowerCase();
- const matchesSearch =
- item.name.toLowerCase().includes(q) ||
- item._id.toLowerCase().includes(q) ||
- item.category.toLowerCase().includes(q) ||
- (item.model || '').toLowerCase().includes(q) ||
- (item.serial_number || '').toLowerCase().includes(q);
- let matchesStatus = statusFilter === 'All Status';
- if (!matchesStatus) {
- if (statusFilter === 'Available') {
- matchesStatus = vStatus === 'Available' || vStatus === 'Reserved';
- } else if (statusFilter === 'Borrowed') {
- matchesStatus = vStatus === 'In Use';
- } else if (statusFilter === 'Maintenance') {
- matchesStatus = vStatus === 'Maintenance';
- } else if (statusFilter === 'Broken') {
- matchesStatus = vStatus === 'Broken';
- }
- }
- const matchesCategory = categoryFilter === 'All Categories' || item.category === categoryFilter;
- return matchesSearch && matchesStatus && matchesCategory;
- })
- .sort((a, b) => {
- if (sortBy === 'Name') return a.name.localeCompare(b.name);
- if (sortBy === 'Status') {
- const sA = getDerivedStatus(a, activeRequests);
- const sB = getDerivedStatus(b, activeRequests);
- return sA.localeCompare(sB);
- }
- return 0;
- });
+    if (loading) {
+        return (
+            <div className="flex items-center justify-center min-h-[60vh]">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#1A2B56] dark:border-blue-400"></div>
+            </div>
+        );
+    }
 
- const totalPages = Math.ceil(filteredEquipments.length / ITEMS_PER_PAGE);
- const paginatedEquipments = filteredEquipments.slice(
- (currentPage - 1) * ITEMS_PER_PAGE,
- currentPage * ITEMS_PER_PAGE
- );
+    const isBlurred = isAddModalOpen || isDetailModalOpen || !!qrEquipment || !!equipmentToDelete;
 
- if (loading) {
- return (
- <div className="flex items-center justify-center min-h-[60vh]">
- <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#1A2B56] dark:border-blue-400"></div>
- </div>
- );
- }
+    return (
+        <div className="max-w-7xl mx-auto px-6 pt-6 sm:pt-8 pb-16 relative z-0">
+            <div className={`transition-all duration-300 ${isBlurred ? 'filter blur-sm opacity-50 pointer-events-none' : ''}`}>
+                <div className="mb-8 px-2 flex flex-col md:flex-row md:items-center justify-between gap-6 mt-2">
+                    <PageHeader
+                        title="Equipment Management"
+                        subtitle="Track, manage and audit university assets and hardware."
+                        className="items-start text-left mb-0!"
+                    />
+                    <button
+                        onClick={() => { setSelectedEquipment(null); setIsAddModalOpen(true); }}
+                        className="flex items-center gap-2 px-6 py-3 bg-[#1A2B56] text-white rounded-2xl font-semibold text-sm shadow-[0_10px_20px_rgba(26,43,86,0.3)] hover:opacity-90 transition-all border border-white/10 shrink-0"
+                    >
+                        <span className="material-symbols-outlined text-lg">add</span>
+                        Add Equipment
+                    </button>
+                </div>
 
- const isBlurred = isAddModalOpen || isDetailModalOpen || !!qrEquipment || !!equipmentToDelete;
+                {/* Status Summary Cards */}
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 mb-6">
+                    {statusCards.map(card => (
+                        <button
+                            key={card.label}
+                            onClick={() => setStatusFilter(statusFilter === card.filter ? 'All Status' : card.filter)}
+                            className={`dashboard-card p-4 rounded-2xl transition-all duration-200 flex items-center justify-between hover:scale-[1.02] active:scale-95 text-left border-2 ${statusFilter === card.filter ? 'border-[#1A2B56]/20 dark:border-blue-400/30' : 'border-transparent'
+                                }`}
+                        >
+                            <div>
+                                <p className="text-[10px] font-semibold uppercase tracking-[0.15em] text-slate-500 dark:text-slate-400 mb-1">
+                                    {card.label}
+                                </p>
+                                <p className={`text-2xl font-extrabold tracking-tight ${card.color}`}>{card.value}</p>
+                            </div>
+                            <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${card.bg}`}>
+                                <span className={`material-symbols-outlined text-lg ${card.color}`}>{card.icon}</span>
+                            </div>
+                        </button>
+                    ))}
+                </div>
 
- return (
- <div className="max-w-7xl mx-auto px-6 pt-6 sm:pt-8 pb-16 relative z-0">
- <div className={`transition-all duration-300 ${isBlurred ? 'filter blur-sm opacity-50 pointer-events-none' : ''}`}>
- <div className="mb-8 px-2 flex flex-col md:flex-row md:items-center justify-between gap-6 mt-2">
- <PageHeader
- title="Equipment Management"
- subtitle="Track, manage and audit university assets and hardware."
- className="items-start text-left mb-0!"
- />
- <button
- onClick={() => { setSelectedEquipment(null); setIsAddModalOpen(true); }}
- className="flex items-center gap-2 px-6 py-3 bg-[#1A2B56] text-white rounded-2xl font-semibold text-sm shadow-[0_10px_20px_rgba(26,43,86,0.3)] hover:opacity-90 transition-all border border-white/10 shrink-0"
- >
- <span className="material-symbols-outlined text-lg">add</span>
- Add Equipment
- </button>
- </div>
+                <div className="dashboard-card p-8 rounded-4xl transition-all duration-300">
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-10">
+                        <div className="relative max-w-md w-full bg-white/60 dark:bg-slate-700/50 rounded-2xl border border-white/80 dark:border-slate-600 p-0.5">
+                            <div className="relative flex items-center">
+                                <span className="material-symbols-outlined absolute left-4 text-slate-400">search</span>
+                                <input
+                                    className="w-full pl-12 pr-4 py-3 bg-transparent border-none rounded-2xl text-xs font-medium focus:ring-0 transition-all outline-none placeholder:text-slate-400 dark:text-white"
+                                    placeholder="Search equipment..."
+                                    type="text"
+                                    value={searchQuery}
+                                    onChange={e => setSearchQuery(e.target.value)}
+                                />
+                            </div>
+                        </div>
 
- {/* Status Summary Cards */}
- <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 mb-6">
- {statusCards.map(card => (
- <button
- key={card.label}
- onClick={() => setStatusFilter(statusFilter === card.filter ? 'All Status' : card.filter)}
- className={`dashboard-card p-4 rounded-2xl transition-all duration-200 flex items-center justify-between hover:scale-[1.02] active:scale-95 text-left border-2 ${
- statusFilter === card.filter ? 'border-[#1A2B56]/20 dark:border-blue-400/30' : 'border-transparent'
- }`}
- >
- <div>
- <p className="text-[10px] font-semibold uppercase tracking-[0.15em] text-slate-500 dark:text-slate-400 mb-1">
- {card.label}
- </p>
- <p className={`text-2xl font-extrabold tracking-tight ${card.color}`}>{card.value}</p>
- </div>
- <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${card.bg}`}>
- <span className={`material-symbols-outlined text-lg ${card.color}`}>{card.icon}</span>
- </div>
- </button>
- ))}
- </div>
+                        {/* Dropdown Section */}
+                        <div className="dashboard-card rounded-3xl flex items-center gap-0 p-1">
+                            <CustomDropdown
+                                value={categoryFilter}
+                                options={[
+                                    { value: 'All Categories', label: 'All Categories' },
+                                    ...categories.map(c => ({ value: c, label: c })),
+                                ]}
+                                onChange={setCategoryFilter}
+                                align="left"
+                            />
 
- <div className="dashboard-card p-8 rounded-4xl transition-all duration-300">
- <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-10">
- <div className="relative max-w-md w-full bg-white/60 dark:bg-slate-700/50 rounded-2xl border border-white/80 dark:border-slate-600 p-0.5">
- <div className="relative flex items-center">
- <span className="material-symbols-outlined absolute left-4 text-slate-400">search</span>
- <input
- className="w-full pl-12 pr-4 py-3 bg-transparent border-none rounded-2xl text-xs font-medium focus:ring-0 transition-all outline-none placeholder:text-slate-400 dark:text-white"
- placeholder="Search equipment..."
- type="text"
- value={searchQuery}
- onChange={e => setSearchQuery(e.target.value)}
- />
- </div>
- </div>
+                            <div className="h-5 w-px bg-[#1E2B58]/10 dark:bg-white/10 mx-1" />
 
- {/* Dropdown Section */}
- <div className="dashboard-card rounded-3xl flex items-center gap-0 p-1">
- <CustomDropdown
- value={categoryFilter}
- options={[
- { value: 'All Categories', label: 'All Categories' },
- ...categories.map(c => ({ value: c, label: c })),
- ]}
- onChange={setCategoryFilter}
- align="left"
- />
+                            <CustomDropdown
+                                value={statusFilter}
+                                options={[
+                                    { value: 'All Status', label: 'All Status' },
+                                    ...statuses.map(s => ({ value: s, label: s })),
+                                ]}
+                                onChange={setStatusFilter}
+                                align="left"
+                            />
 
- <div className="h-5 w-px bg-[#1E2B58]/10 dark:bg-white/10 mx-1" />
+                            <div className="h-5 w-px bg-[#1E2B58]/10 dark:bg-white/10 mx-1" />
 
- <CustomDropdown
- value={statusFilter}
- options={[
- { value: 'All Status', label: 'All Status' },
- ...statuses.map(s => ({ value: s, label: s })),
- ]}
- onChange={setStatusFilter}
- align="left"
- />
+                            <CustomDropdown
+                                value={sortBy}
+                                options={[
+                                    { value: 'Newest', label: 'Sort: Newest' },
+                                    { value: 'Name', label: 'Sort: Name' },
+                                    { value: 'Status', label: 'Sort: Status' },
+                                ]}
+                                onChange={setSortBy}
+                                align="right"
+                            />
 
- <div className="h-5 w-px bg-[#1E2B58]/10 dark:bg-white/10 mx-1" />
+                            <div className="h-5 w-px bg-[#1E2B58]/10 dark:bg-white/10 mx-1" />
 
- <CustomDropdown
- value={sortBy}
- options={[
- { value: 'Newest', label: 'Sort: Newest' },
- { value: 'Name', label: 'Sort: Name' },
- { value: 'Status', label: 'Sort: Status' },
- ]}
- onChange={setSortBy}
- align="right"
- />
+                            <button
+                                onClick={() => { setSearchQuery(''); setStatusFilter('All Status'); setCategoryFilter('All Categories'); setSortBy('Newest'); }}
+                                className="flex items-center justify-center w-9 h-9 rounded-xl text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all"
+                                title="Reset filters"
+                            >
+                                <span className="material-symbols-outlined text-[18px]">filter_alt_off</span>
+                            </button>
+                        </div>
+                    </div>
 
- <div className="h-5 w-px bg-[#1E2B58]/10 dark:bg-white/10 mx-1" />
+                    <EquipmentTable
+                        equipments={paginatedEquipments}
+                        onOpenDetails={handleOpenDetails}
+                        onOpenQRCode={handleOpenQRCode}
+                        onEdit={handleEditEquipment}
+                        onDelete={handleDeleteClick}
+                        onReportDamage={(item) => handleUpdateStatus(item._id, 'broken')}
+                        activeRequests={activeRequests}
+                    />
 
- <button
- onClick={() => { setSearchQuery(''); setStatusFilter('All Status'); setCategoryFilter('All Categories'); setSortBy('Newest'); }}
- className="flex items-center justify-center w-9 h-9 rounded-xl text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all"
- title="Reset filters"
- >
- <span className="material-symbols-outlined text-[18px]">filter_alt_off</span>
- </button>
- </div>
- </div>
+                    <div className="mt-8 flex items-center justify-between px-2">
+                        <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                            Showing {Math.min(filteredEquipments.length, (currentPage - 1) * ITEMS_PER_PAGE + 1)} - {Math.min(filteredEquipments.length, currentPage * ITEMS_PER_PAGE)} of {filteredEquipments.length} assets
+                        </p>
+                        <Pagination
+                            currentPage={currentPage}
+                            totalPages={totalPages}
+                            onPageChange={setCurrentPage}
+                        />
+                    </div>
+                </div>
 
- <EquipmentTable
- equipments={paginatedEquipments}
- onOpenDetails={handleOpenDetails}
- onOpenQRCode={handleOpenQRCode}
- onEdit={handleEditEquipment}
- onDelete={handleDeleteClick}
- onReportDamage={(item) => handleUpdateStatus(item._id, 'broken')}
- activeRequests={activeRequests}
- />
+                <BrokenAttentionCard
+                    items={brokenAttention}
+                    onViewDetails={handleOpenDetails}
+                    onUpdateStatus={handleUpdateStatus}
+                    onViewAll={() => {
+                        setStatusFilter('Broken');
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                    }}
+                />
+            </div>
 
- <div className="mt-8 flex items-center justify-between px-2">
- <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
- Showing {Math.min(filteredEquipments.length, (currentPage - 1) * ITEMS_PER_PAGE + 1)} - {Math.min(filteredEquipments.length, currentPage * ITEMS_PER_PAGE)} of {filteredEquipments.length} assets
- </p>
- <Pagination
- currentPage={currentPage}
- totalPages={totalPages}
- onPageChange={setCurrentPage}
- />
- </div>
- </div>
-
- <BrokenAttentionCard
- items={brokenAttention}
- onViewDetails={handleOpenDetails}
- onUpdateStatus={handleUpdateStatus}
- onViewAll={() => {
- setStatusFilter('Broken');
- window.scrollTo({ top: 0, behavior: 'smooth' });
- }}
- />
- </div>
-
- <AddEquipmentModal
- isOpen={isAddModalOpen}
- onClose={() => setIsAddModalOpen(false)}
- equipment={selectedEquipment}
- onEquipmentUpdated={fetchAll}
- onCreated={(eq) => {
- setIsAddModalOpen(false);
- setSelectedEquipment(null);
- fetchAll();
- setQrEquipment(eq);
- }}
- />
- <EquipmentDetailsModal isOpen={isDetailModalOpen} equipment={selectedEquipment} onClose={() => setIsDetailModalOpen(false)} onEdit={(e) => { setIsDetailModalOpen(false); setSelectedEquipment(e); setIsAddModalOpen(true); }} onReportDamage={(e) => handleUpdateStatus(e._id, 'broken')} />
- <EquipmentQRCodeModal isOpen={!!qrEquipment} equipment={qrEquipment} onClose={() => setQrEquipment(null)} />
- <DeleteConfirmationModal isOpen={!!equipmentToDelete} title="Decommission Equipment" message="Are you sure you want to remove this equipment?" itemName={equipmentToDelete?.name} onClose={() => setEquipmentToDelete(null)} onConfirm={confirmDelete} />
- </div>
- );
+            <AddEquipmentModal
+                isOpen={isAddModalOpen}
+                onClose={() => setIsAddModalOpen(false)}
+                equipment={selectedEquipment}
+                onEquipmentUpdated={fetchAll}
+                onCreated={(eq) => {
+                    setIsAddModalOpen(false);
+                    setSelectedEquipment(null);
+                    fetchAll();
+                    setQrEquipment(eq);
+                }}
+            />
+            <EquipmentDetailsModal isOpen={isDetailModalOpen} equipment={selectedEquipment} onClose={() => setIsDetailModalOpen(false)} onEdit={(e) => { setIsDetailModalOpen(false); setSelectedEquipment(e); setIsAddModalOpen(true); }} onReportDamage={(e) => handleUpdateStatus(e._id, 'broken')} />
+            <EquipmentQRCodeModal isOpen={!!qrEquipment} equipment={qrEquipment} onClose={() => setQrEquipment(null)} />
+            <DeleteConfirmationModal isOpen={!!equipmentToDelete} title="Decommission Equipment" message="Are you sure you want to remove this equipment?" itemName={equipmentToDelete?.name} onClose={() => setEquipmentToDelete(null)} onConfirm={confirmDelete} />
+        </div>
+    );
 };
 
 export default EquipmentManagement;

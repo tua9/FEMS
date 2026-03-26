@@ -4,7 +4,6 @@ import ProtectedRoute from "@/features/auth/components/ProtectedRoute";
 import LecturerDashboard from "@/features/lecturer/pages/LecturerDashboard";
 import LecturerBorrowManagementPage from "@/features/lecturer/pages/LecturerBorrowManagementPage";
 import { HistoryPage } from "@/features/shared/pages/HistoryPage";
-import { ApprovalCenter } from "@/features/lecturer/pages/ApprovalCenter";
 import UsageStats from "@/features/lecturer/pages/UsageStats";
 import ReportIssuePage from "@/features/shared/pages/ReportIssuePage";
 import AcademicCalendar from "@/features/lecturer/pages/AcademicCalendar";
@@ -18,7 +17,6 @@ const LecturerRoutes = () => (
  <Route path="/lecturer/dashboard" element={<LecturerDashboard />} />
  <Route path="/lecturer/equipment" element={<LecturerBorrowManagementPage />} />
  <Route path="/lecturer/history" element={<HistoryPage />} />
- <Route path="/lecturer/approval" element={<ApprovalCenter />} />
  <Route path="/lecturer/usage-stats" element={<UsageStats />} />
  <Route path="/lecturer/report-issue" element={<ReportIssuePage />} />
  <Route path="/lecturer/calendar" element={<AcademicCalendar />} />

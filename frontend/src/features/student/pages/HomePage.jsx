@@ -10,24 +10,6 @@ import StudentStatCard from "@/features/student/components/dashboard/StudentStat
 import { RecentActivityList } from "@/features/shared/components/dashboard/RecentActivityList";
 import UpcomingDue from "@/features/student/components/dashboard/UpcomingDue";
 
-const STATUS_LABEL = {
-  pending:     "You submitted a borrow request",
-  approved:    "Your request was approved",
-  handed_over: "You received equipment",
-  returned:    "You returned equipment",
-  rejected:    "Your request was rejected",
-  cancelled:   "Your request was cancelled",
-};
-
-const STATUS_TYPE = {
-  pending:     "return",
-  approved:    "access",
-  handed_over: "return",
-  returned:    "return",
-  rejected:    "report",
-  cancelled:   "report",
-};
-
 const HomePage = () => {
   const user = useAuthStore((state) => state.user);
   const { activeSchedule, loading: sessionLoading } = useCurrentSession();
@@ -35,6 +17,7 @@ const HomePage = () => {
   const fetchMyBorrowRequests = useBorrowRequestStore((state) => state.fetchMyBorrowRequests);
   const fetchMyReports = useReportStore((state) => state.fetchMyReports);
   const borrowRequests = useBorrowRequestStore((state) => state.borrowRequests);
+  const myReports = useReportStore((state) => state.myReports) || [];
 
   useEffect(() => {
     fetchMyBorrowRequests();
@@ -42,17 +25,48 @@ const HomePage = () => {
   }, [fetchMyBorrowRequests, fetchMyReports]);
 
   const mappedActivities = useMemo(() => {
-    return [...borrowRequests]
-      .sort((a, b) => new Date(b.createdAt || b.borrowDate) - new Date(a.createdAt || a.borrowDate))
-      .slice(0, 5)
-      .map((req) => ({
-        id:      req._id,
-        type:    STATUS_TYPE[req.status] || "return",
-        title:   STATUS_LABEL[req.status] || "Borrow request",
-        subject: req.equipmentId?.name || req.equipmentId || "Equipment",
-        time:    req.createdAt || req.borrowDate,
-      }));
-  }, [borrowRequests]);
+    const borrowActs = borrowRequests.map(req => {
+      const eqName = req.equipmentId?.name || req.equipmentId?.code || "Equipment";
+      const eqCode = req.equipmentId?.code || "EQ";
+      
+      let title = "";
+      let type = "return";
+      
+      switch (req.status) {
+        case 'pending': title = `You requested ${eqName}`; type = "return"; break;
+        case 'approved': title = `Your request for ${eqName} was approved`; type = "access"; break;
+        case 'handed_over': title = `You received ${eqName}`; type = "return"; break;
+        case 'returning': title = `You are returning ${eqName}`; type = "return"; break;
+        case 'returned': title = `You returned ${eqName}`; type = "return"; break;
+        case 'rejected': title = `Your request for ${eqName} was rejected`; type = "report"; break;
+        case 'cancelled': title = `You cancelled ${eqName} request`; type = "report"; break;
+        default: title = `Borrow request for ${eqName}`; type = "return"; break;
+      }
+      
+      return {
+        id: req._id,
+        type,
+        title,
+        subject: `Code: ${eqCode}`,
+        time: req.updatedAt || req.createdAt || req.borrowDate,
+      };
+    });
+    
+    const reportActs = myReports.map(rep => {
+      const equipInfo = rep.equipmentSnapshot?.name || rep.equipmentId?.name || "Equipment";
+      return {
+        id: rep._id,
+        type: "report",
+        title: `You submitted a report for ${equipInfo}`,
+        subject: `Report ID: ${String(rep._id).slice(-6).toUpperCase()}`,
+        time: rep.createdAt,
+      };
+    });
+    
+    return [...borrowActs, ...reportActs]
+      .sort((a, b) => new Date(b.time) - new Date(a.time))
+      .slice(0, 5);
+  }, [borrowRequests, myReports]);
 
   return (
     <PageShell className="pb-20 px-4 sm:px-6">

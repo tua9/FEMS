@@ -21,7 +21,7 @@ const fmtTime = (d) =>
 // A. Current Teaching Session Card
 // ─────────────────────────────────────────────────────────────────────────────
 
-const SessionCard = ({ schedule, isCheckedIn, isActionLoading, onCheckIn }) => {
+const SessionCard = ({ schedule, isCheckedIn, isSessionOngoing, isActionLoading, onCheckIn }) => {
   const slotLabel =
     schedule.slotId?.name || schedule.slotId?.code || "Slot";
   const timeRange = `${schedule.slotId?.startTime || fmtTime(schedule.startAt)} – ${schedule.slotId?.endTime || fmtTime(schedule.endAt)}`;
@@ -97,32 +97,56 @@ const SessionCard = ({ schedule, isCheckedIn, isActionLoading, onCheckIn }) => {
         {/* ── Check-in Action ── */}
         <div className="flex shrink-0 flex-col items-start gap-2 lg:items-end">
           {isCheckedIn ? (
-            <div className="flex items-center gap-2 rounded-2xl bg-emerald-50 px-5 py-3 dark:bg-emerald-900/20">
+            <div className="flex items-center gap-2 rounded-2xl bg-emerald-50 px-5 py-3 dark:bg-emerald-900/20 border border-emerald-100 dark:border-emerald-900/30">
               <span className="h-2 w-2 animate-pulse rounded-full bg-emerald-500" />
               <span className="text-sm font-black text-emerald-700 dark:text-emerald-400">
                 Session Active
               </span>
             </div>
           ) : (
+            <div className={`flex items-center gap-2 rounded-2xl px-5 py-3 border ${
+              isSessionOngoing 
+                ? 'bg-amber-50 text-amber-700 border-amber-100 dark:bg-amber-900/20 dark:text-amber-400 dark:border-amber-900/30'
+                : 'bg-slate-50 text-slate-500 border-slate-200 dark:bg-slate-800/50 dark:text-slate-400 dark:border-slate-700'
+            }`}>
+              <span className={`h-2 w-2 rounded-full ${isSessionOngoing ? 'bg-amber-500 animate-pulse' : 'bg-slate-400'}`} />
+              <span className="text-sm font-black uppercase tracking-wider">
+                {isSessionOngoing ? 'Ready to Start' : 'Upcoming'}
+              </span>
+            </div>
+          )}
+        </div>
+
+        {/* ── Check-in Action ── */}
+        <div className="flex shrink-0 flex-col items-start gap-2 lg:items-end mt-4 lg:mt-0">
+          {!isCheckedIn && (
             <button
               onClick={onCheckIn}
-              disabled={isActionLoading}
-              className="flex items-center gap-2 rounded-2xl bg-[#1E2B58] px-6 py-3 text-xs font-black uppercase tracking-widest text-white shadow-lg shadow-[#1E2B58]/20 transition-all hover:bg-[#1E2B58]/90 active:scale-[0.98] disabled:opacity-60"
+              disabled={isActionLoading || !isSessionOngoing}
+              className={`flex items-center gap-2 rounded-2xl px-6 py-3 text-xs font-black uppercase tracking-widest transition-all active:scale-[0.98] disabled:opacity-60 ${
+                isSessionOngoing 
+                  ? "bg-[#1E2B58] text-white shadow-lg shadow-[#1E2B58]/20 hover:bg-[#1E2B58]/90" 
+                  : "bg-slate-100 text-slate-400 dark:bg-slate-800 cursor-not-allowed"
+              }`}
             >
               {isActionLoading ? (
                 <span className="material-symbols-rounded animate-spin text-base">
                   refresh
                 </span>
               ) : (
-                <span className="material-symbols-rounded text-base">login</span>
+                <span className="material-symbols-rounded text-base">
+                  {isSessionOngoing ? "login" : "timer"}
+                </span>
               )}
-              Start Session
+              {isSessionOngoing ? "Start Session" : "Too Early"}
             </button>
           )}
           <p className="text-[10px] text-slate-400 dark:text-slate-500">
             {isCheckedIn
               ? "Equipment borrowing is unlocked for students."
-              : "Check in to unlock equipment borrowing."}
+              : isSessionOngoing 
+                ? "Check in to unlock equipment borrowing."
+                : "Session time hasn't arrived yet."}
           </p>
         </div>
       </div>
@@ -307,19 +331,21 @@ const LecturerDashboard = () => {
     if (!schedules.length) return null;
     const now = new Date();
     
-    // Ignore completed or cancelled sessions for the 'active/upcoming' dashboard card
-    const validSchedules = schedules.filter(s => s.status !== 'completed' && s.status !== 'cancelled');
-    
-    // First, try to find a session that is currently ongoing
-    const ongoing = validSchedules.find(
-      (s) => new Date(s.startAt) <= now && new Date(s.endAt) >= now
-    );
+    // First, try to find an ongoing session (or one that should be ongoing by time and isn't completed yet)
+    const ongoing = schedules.find(s => s.status === 'ongoing' || (new Date(s.startAt) <= now && new Date(s.endAt) >= now && s.status !== 'completed'));
     if (ongoing) return ongoing;
     
-    // Else, return the next upcoming session
-    const upcoming = validSchedules.find((s) => new Date(s.startAt) > now);
+    // Next, try to find the next upcoming session
+    const upcoming = schedules.find(s => new Date(s.startAt) > now && s.status !== 'completed');
     return upcoming || null;
   }, [schedules]);
+
+  const isSessionOngoing = useMemo(() => {
+    if (!activeSchedule) return false;
+    if (activeSchedule.status === 'completed') return false;
+    const now = new Date();
+    return new Date(activeSchedule.startAt) <= now && new Date(activeSchedule.endAt) >= now;
+  }, [activeSchedule]);
 
   // ── Load check-in status once session is known ─────────────────────────────
   useEffect(() => {
@@ -422,6 +448,7 @@ const LecturerDashboard = () => {
           <SessionCard
             schedule={activeSchedule}
             isCheckedIn={isCheckedIn}
+            isSessionOngoing={isSessionOngoing}
             isActionLoading={checkInLoading || checkingIn}
             onCheckIn={handleCheckIn}
           />

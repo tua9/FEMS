@@ -15,11 +15,11 @@ const ITEMS_PER_PAGE = 6;
 
 // ── Status mapping: backend → UI ─────────────────────────────────────────────
 const STATUS_MAP = {
-  good:        { label: 'Operational', dot: 'bg-emerald-500', color: 'text-emerald-600 dark:text-emerald-400', border: 'border-emerald-200', bg: 'bg-emerald-50' },
-  in_use:      { label: 'In Use',      dot: 'bg-blue-500',    color: 'text-blue-600 dark:text-blue-400',    border: 'border-blue-200',    bg: 'bg-blue-50' },
+  available:   { label: 'Available',   dot: 'bg-emerald-500', color: 'text-emerald-600 dark:text-emerald-400', border: 'border-emerald-200', bg: 'bg-emerald-50' },
   maintenance: { label: 'Maintenance', dot: 'bg-amber-500',   color: 'text-amber-600 dark:text-amber-400',   border: 'border-amber-200',   bg: 'bg-amber-50' },
-  reserved:    { label: 'Reserved',    dot: 'bg-purple-500',  color: 'text-purple-600 dark:text-purple-400', border: 'border-purple-200',  bg: 'bg-purple-50' },
-  broken:      { label: 'Faulty',      dot: 'bg-red-500',     color: 'text-red-600 dark:text-red-400',      border: 'border-red-200',     bg: 'bg-red-50' },
+  broken:      { label: 'Broken',      dot: 'bg-red-500',     color: 'text-red-600 dark:text-red-400',      border: 'border-red-200',     bg: 'bg-red-50' },
+  // backward compatibility (old data)
+  good:        { label: 'Available',   dot: 'bg-emerald-500', color: 'text-emerald-600 dark:text-emerald-400', border: 'border-emerald-200', bg: 'bg-emerald-50' },
 };
 
 const CATEGORY_ICON = {
@@ -34,8 +34,8 @@ const toAsset = (eq) => ({
   name: eq.name,
   serial: eq.code ?? eq._id?.slice(-8).toUpperCase(),
   category: eq.category ?? 'Other',
-  status: STATUS_MAP[eq.status]?.label ?? 'Operational',
-  _status: eq.status, // raw backend status
+  status: STATUS_MAP[eq.status]?.label ?? 'Available',
+  _status: eq.status,
   icon: CATEGORY_ICON[eq.category] ?? 'category',
   imageUrl: eq.img ?? undefined,
   location: (eq.roomId ?? eq.room_id)?.name ?? undefined,
@@ -44,8 +44,7 @@ const toAsset = (eq) => ({
 
 const STATUS_FILTERS = [
   { key: 'all',         label: 'Tất cả' },
-  { key: 'good',        label: 'Sẵn sàng' },
-  { key: 'in_use',      label: 'Đang mượn' },
+  { key: 'available',   label: 'Sẵn sàng' },
   { key: 'maintenance', label: 'Bảo trì' },
   { key: 'broken',      label: 'Hỏng' },
 ];
@@ -177,7 +176,7 @@ const EquipmentInventory = () => {
         {/* Sidebar */}
         <EquipmentSidebar
           activeCategory={activeCategory}
-          storagePercentage={Math.round((assets.filter((a) => a._status === 'good' || a._status === 'in_use').length / Math.max(assets.length, 1)) * 100)}
+          storagePercentage={Math.round((assets.filter((a) => a._status === 'available').length / Math.max(assets.length, 1)) * 100)}
           onCategorySelect={(cat) => { setActiveCategory(cat); setCurrentPage(1); }}
         />
 

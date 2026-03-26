@@ -2,8 +2,8 @@ import AppNavbar from "./AppNavbar";
 
 const LECTURER_LINKS = [
  { name: "Home", path: "/lecturer/dashboard" },
- { name: "Equipment", path: "/lecturer/equipment" },
- { name: "Borrow Approval", path: "/lecturer/approval" },
+ { name: "Approval Center", path: "/lecturer/equipment" },
+ { name: "Schedule", path: "/lecturer/calendar" },
  { name: "Usage Stats", path: "/lecturer/usage-stats" },
  { name: "Report Issue", path: "/lecturer/report-issue" },
  { name: "My History", path: "/lecturer/history" },

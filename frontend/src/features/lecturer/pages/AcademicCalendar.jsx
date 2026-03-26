@@ -370,16 +370,25 @@ const SlotGridView = ({ viewDate, events, onEventClick }) => {
                     isToday && isActive ? 'bg-emerald-50/40 dark:bg-emerald-900/10' : ''
                   }`}
                 >
-                  {cellEvents.map((ev, eIdx) => (
-                    <button
-                      key={eIdx}
-                      onClick={() => onEventClick(ev)}
-                      className={`w-full text-left p-1.5 rounded-lg text-[8px] md:text-[9px] font-bold leading-tight text-white hover:opacity-90 transition-all hover:scale-[1.02] ${TYPE_STYLE[ev.type]?.bg || 'bg-[#1E2B58]'}`}
-                    >
-                      <div className="truncate font-extrabold">{ev.title}</div>
-                      <div className="opacity-70 truncate mt-0.5">{ev.location}</div>
-                    </button>
-                  ))}
+                  {cellEvents.map((ev, eIdx) => {
+                    const evDate = new Date(ev.year, ev.month, ev.day);
+                    const todayMidnight = new Date(); todayMidnight.setHours(0,0,0,0);
+                    const vnCur = new Date(Date.now() + 7*60*60*1000);
+                    const curMin = vnCur.getUTCHours() * 60 + vnCur.getUTCMinutes();
+                    const isDone = ev.status === 'completed'
+                      || evDate < todayMidnight
+                      || (isSameDay(evDate, TODAY) && curMin > slot.endH * 60 + slot.endM);
+                    return (
+                      <button
+                        key={eIdx}
+                        onClick={() => onEventClick(ev)}
+                        className={`w-full text-left p-1.5 rounded-lg text-[8px] md:text-[9px] font-bold leading-tight text-white hover:opacity-90 transition-all hover:scale-[1.02] ${TYPE_STYLE[ev.type]?.bg || 'bg-[#1E2B58]'} ${isDone ? 'opacity-50' : ''}`}
+                      >
+                        <div className="truncate font-extrabold">{ev.title}</div>
+                        <div className="opacity-70 truncate mt-0.5">{ev.location}</div>
+                      </button>
+                    );
+                  })}
                 </div>
               );
             })}

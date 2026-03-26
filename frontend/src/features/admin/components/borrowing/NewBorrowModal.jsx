@@ -141,7 +141,7 @@ const NewBorrowModal = ({ isOpen, onClose }) => {
  if (!isOpen) return null;
 
  return createPortal(
- <div className="fixed inset-0 z-[100] flex items-center justify-center px-4 py-6 bg-black/30 backdrop-blur-sm">
+ <div className="fixed inset-0 z-100 flex items-center justify-center px-4 py-6 bg-black/30 backdrop-blur-sm">
  <div className="absolute inset-0" onClick={closeAndReset}></div>
 
  <div className="relative w-full max-w-2xl dashboard-card rounded-4xl shadow-2xl shadow-[#1E2B58]/20 overflow-hidden flex flex-col max-h-[90vh] animate-in fade-in zoom-in-95 duration-200">
@@ -281,7 +281,7 @@ const NewBorrowModal = ({ isOpen, onClose }) => {
  disabled
  className="w-full bg-slate-100 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm text-slate-500 outline-none"
  placeholder="Auto-filled"
- value={selectedEquipment ? (selectedEquipment.available ? 'Available' : 'In Use') : ''}
+ value={selectedEquipment ? (selectedEquipment.status || '') : ''}
  />
  </div>
  </div>
@@ -314,7 +314,7 @@ const NewBorrowModal = ({ isOpen, onClose }) => {
  <div className="space-y-1.5">
  <label className="text-xs font-bold text-slate-700 dark:text-slate-300 ml-1">Notes / Purpose</label>
  <textarea
- className="w-full bg-white/50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-[#1A2B56] dark:focus:ring-blue-500 outline-none transition-all dark:text-white min-h-[80px] resize-y"
+ className="w-full bg-white/50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-[#1A2B56] dark:focus:ring-blue-500 outline-none transition-all dark:text-white min-h-20 resize-y"
  placeholder="Purpose of allocation..."
  value={note}
  onChange={(ev) => setNote(ev.target.value)}

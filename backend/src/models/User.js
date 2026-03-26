@@ -20,7 +20,11 @@ const userSchema = new mongoose.Schema(
     },
     hashedPassword: {
       type: String,
-      required: true,
+      default: null,
+    },
+    googleId: {
+      type: String,
+      default: null,
     },
     displayName: {
       type: String,

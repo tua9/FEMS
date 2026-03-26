@@ -59,11 +59,14 @@ const LecturerBorrowManagementPage = () => {
   const activeSchedule = useMemo(() => {
     if (!schedules.length) return null;
     const now = new Date();
-    return (
-      schedules.find(s => new Date(s.startAt) <= now && new Date(s.endAt) >= now) ||
-      schedules.find(s => new Date(s.startAt) > now) ||
-      schedules[0]
-    );
+    
+    // First, try to find an ongoing session (or one that should be ongoing by time and isn't completed yet)
+    const ongoing = schedules.find(s => s.status === 'ongoing' || (new Date(s.startAt) <= now && new Date(s.endAt) >= now && s.status !== 'completed'));
+    if (ongoing) return ongoing;
+    
+    // Next, try to find the next upcoming session
+    const upcoming = schedules.find(s => new Date(s.startAt) > now && s.status !== 'completed');
+    return upcoming || null;
   }, [schedules]);
 
   const isSessionOngoing = useMemo(() => {

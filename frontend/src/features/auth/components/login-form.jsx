@@ -5,6 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useAuthStore } from "@/stores/useAuthStore";
 import { useNavigate, Link } from "react-router";
 import { useState } from "react";
+import { useGoogleLogin } from "@react-oauth/google";
 
 // ── Validation schema ─────────────────────────────────────────────────────────
 
@@ -83,7 +84,7 @@ export function LoginForm({ className, ...props }) {
  defaultValues: { rememberMe: false },
  });
 
- const { signIn } = useAuthStore();
+ const { signIn, signInWithGoogle } = useAuthStore();
  const navigate = useNavigate();
 
  const onSubmit = async (data) => {
@@ -98,6 +99,27 @@ export function LoginForm({ className, ...props }) {
  setLoginError("Incorrect username/email or password. Please try again.");
  }
  };
+
+ const [googleError, setGoogleError] = useState(null);
+ const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+
+ const handleGoogleLogin = useGoogleLogin({
+ onSuccess: async ({ access_token }) => {
+ setGoogleError(null);
+ setIsGoogleLoading(true);
+ try {
+ await signInWithGoogle(access_token);
+ const role = useAuthStore.getState().user?.role ?? "";
+ navigate(ROLE_ROUTES[role] ?? "/");
+ } catch (error) {
+ const msg = error?.response?.data?.message;
+ setGoogleError(msg || "Google login failed. Please try again.");
+ } finally {
+ setIsGoogleLoading(false);
+ }
+ },
+ onError: () => setGoogleError("Google login failed. Please try again."),
+ });
 
  return (
  <div className={cn("w-full", className)} {...props}>
@@ -283,19 +305,33 @@ export function LoginForm({ className, ...props }) {
  {/* Google button */}
  <button
  type="button"
+ onClick={() => { setGoogleError(null); handleGoogleLogin(); }}
+ disabled={isGoogleLoading}
  className={cn(
  "flex h-12 w-full items-center justify-center gap-2.5 rounded-xl",
  "border border-[#1E2B58]/20 bg-white text-[0.9rem] font-medium text-[#1E2B58]",
  "shadow-[0_2px_12px_-3px_rgba(30,43,88,0.08)]",
  "transition-all duration-150 hover:border-[#1E2B58]/40 hover:bg-[#1E2B58]/5",
- "active:scale-[0.99]",
+ "active:scale-[0.99] disabled:opacity-60",
  "dark:border-slate-400/60 dark:bg-slate-800 dark:text-slate-100 dark:shadow-none",
  "dark:hover:border-slate-300 dark:hover:bg-slate-700/60",
  )}
  >
+ {isGoogleLoading ? (
+ <span className="h-4 w-4 animate-spin rounded-full border-2 border-current/30 border-t-current" />
+ ) : (
  <GoogleIcon />
+ )}
  Login with Google
  </button>
+
+ {/* Google error */}
+ {googleError && (
+ <span className="flex items-center gap-1.5 text-[0.75rem] font-medium text-red-500 dark:text-red-400">
+ <span className="material-symbols-rounded text-[14px]">error</span>
+ {googleError}
+ </span>
+ )}
 
  {/* Footer note */}
  <p className="pt-1 text-center text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400 dark:text-slate-500">

@@ -36,10 +36,6 @@ const createEquipment = async (body) => {
     roomId,
     img,
     description,
-    brand,
-    model,
-    serialNumber,
-    purchaseDate,
     lastMaintenanceDate,
   } = body
 
@@ -51,15 +47,11 @@ const createEquipment = async (body) => {
   const equipment = await Equipment.create({
     name,
     category,
-    status: status || 'good',
+    status: status || 'available',
     roomId: roomId || null,
     code,
     img: img || null,
     description: description || null,
-    brand: brand ?? '',
-    model: model ?? '',
-    serialNumber: serialNumber ?? '',
-    purchaseDate: purchaseDate ? new Date(purchaseDate) : null,
     lastMaintenanceDate: lastMaintenanceDate ? new Date(lastMaintenanceDate) : null,
   })
 
@@ -77,12 +69,12 @@ const getEquipmentById = async (id) => {
 }
 
 const updateEquipment = async (id, body) => {
-  const allowed = ['name', 'category', 'status', 'roomId', 'img', 'description', 'brand', 'model', 'serialNumber', 'purchaseDate', 'lastMaintenanceDate']
+  const allowed = ['name', 'category', 'status', 'roomId', 'img', 'description', 'lastMaintenanceDate']
   const patch = {}
 
   for (const key of allowed) {
     if (body[key] !== undefined) {
-      if ((key === 'purchaseDate' || key === 'lastMaintenanceDate') && body[key]) {
+      if (key === 'lastMaintenanceDate' && body[key]) {
         patch[key] = new Date(body[key])
       } else {
         patch[key] = body[key]
@@ -139,16 +131,13 @@ const getEquipmentInventory = async (queries) => {
   }
 
   // Technical status filters map directly; availability filters need a join with BorrowRequest
-  const TECH_STATUSES = ['good', 'broken', 'maintenance']
-  const borrowStatusFilter = null
+  const TECH_STATUSES = ['available', 'broken', 'maintenance']
 
   if (status && status !== 'all-statuses') {
-    if (status === 'broken' || status === 'maintenance') {
+    if (status === 'broken' || status === 'maintenance' || status === 'available') {
       matchQuery.status = status
-    } else if (status === 'good') {
-      matchQuery.status = 'good'
     }
-    // 'available', 'reserved', 'in_use' require cross-collection join — handled below
+    // 'reserved', 'in_use' are derived (handled below)
   }
 
   const pipeline = [
@@ -221,7 +210,7 @@ const getEquipmentInventory = async (queries) => {
   )
 
   // Apply borrow-status filter
-  if (status === 'available' || status === 'reserved' || status === 'in_use') {
+  if (status === 'reserved' || status === 'in_use') {
     pipeline.push({ $match: { borrowStatus: status } })
   }
 
@@ -252,8 +241,7 @@ const getEquipmentInventory = async (queries) => {
         borrowStatus: 1,
         code: 1,
         img: 1,
-        brand: 1,
-        model: 1,
+        description: 1,
         roomId: {
           $cond: {
             if: '$room._id',

@@ -32,17 +32,23 @@ const CurrentSessionCard = ({ schedule, loading }) => {
   const timeRange  = `${fmtTime(schedule.startAt)} – ${fmtTime(schedule.endAt)}`;
   const roomName   = schedule.roomId?.name || '—';
 
+  const isCheckedIn = schedule.status === 'ongoing';
+
   return (
     <AnimatedSection variant="curtain" delay={0.05} className="mb-8">
       <div className="dashboard-card rounded-4xl p-8">
         {/* Header */}
-        <div className="mb-6 flex items-center justify-between">
+        <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <h3 className="text-xl font-extrabold text-[#1E2B58] dark:text-white">
             Current Learning Session
           </h3>
-          <span className="flex items-center gap-1.5 rounded-full bg-emerald-100 px-3 py-1 text-xs font-black text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">
-            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 glow-emerald" />
-            In Progress
+          <span className={`flex w-fit items-center gap-1.5 rounded-full px-3 py-1 text-xs font-black ${
+            isCheckedIn
+              ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400'
+              : 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400'
+          }`}>
+            <span className={`h-1.5 w-1.5 rounded-full ${isCheckedIn ? 'bg-emerald-500 glow-emerald animate-pulse' : 'bg-amber-500'}`} />
+            {isCheckedIn ? 'Session is active' : 'Session not started'}
           </span>
         </div>
 
@@ -77,13 +83,29 @@ const CurrentSessionCard = ({ schedule, loading }) => {
         </div>
 
         {/* CTA */}
-        <button
-          onClick={() => navigate('/student/equipment')}
-          className="btn-navy group flex items-center gap-3 rounded-full px-6 py-3 font-bold shadow-lg shadow-[#1E2B58]/20 hover:scale-105 active:scale-95"
-        >
-          Borrow Equipment
-          <ChevronRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
-        </button>
+        <div className={`mt-6 p-4 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-4 border ${
+          isCheckedIn 
+            ? 'bg-emerald-50 border-emerald-100 dark:bg-emerald-900/10 dark:border-emerald-900/20' 
+            : 'bg-slate-50 border-slate-100 dark:bg-slate-800 dark:border-slate-700'
+        }`}>
+          <div>
+            <p className={`font-bold ${isCheckedIn ? 'text-emerald-700 dark:text-emerald-400' : 'text-slate-500 dark:text-slate-400'}`}>
+              {isCheckedIn ? 'Equipment are available.' : 'Equipment are locked.'}
+            </p>
+            <p className={`text-xs mt-0.5 ${isCheckedIn ? 'text-emerald-600/80 dark:text-emerald-400/80' : 'text-slate-400 dark:text-slate-500'}`}>
+              {isCheckedIn ? 'You can now borrow equipment for this session' : 'Wait for your lecturer to start the session to borrow equipment'}
+            </p>
+          </div>
+          {isCheckedIn && (
+            <button
+              onClick={() => navigate('/student/equipment')}
+              className="btn-navy group flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-bold shadow-md hover:-translate-y-0.5 transition-all"
+            >
+              Borrow Equipment
+              <ChevronRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+            </button>
+          )}
+        </div>
       </div>
     </AnimatedSection>
   );
