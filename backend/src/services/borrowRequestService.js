@@ -12,7 +12,7 @@ import { attendanceService } from './attendanceService.js'
 
 const BORROW_POPULATE = [
   { path: 'borrowerId', select: 'username displayName email role' },
-  { path: 'equipmentId', select: 'name category code status roomId' },
+  { path: 'equipmentId', select: 'name category code status roomId img' },
   { path: 'roomId', select: 'name type' },
   { path: 'approvedBy', select: 'username displayName' },
   { path: 'handedOverBy', select: 'username displayName' },
@@ -41,38 +41,46 @@ const generateUniqueCode = async () => {
 
 const populateRequest = (query) => query.populate(BORROW_POPULATE)
 
-// ── Auto-cancel logic ─────────────────────────────────────────────────────────
+// ── Auto-cancel: slot-based (replaces old 17:00 deadline logic) ───────────────
 
 /**
- * Auto-cancel approved requests that were never picked up by 17:00 on borrowDate.
+ * Auto-cancel pending/approved requests whose session slot has already ended.
+ * Only applies to requests with a scheduleId (i.e., created via session gate).
+ * Admin direct allocations (scheduleId=null) are NOT auto-cancelled here.
+ *
+ * Targets: status in ['pending', 'approved']
+ * Condition: schedule.endAt < now
+ * Does NOT touch: handed_over, returning, returned, rejected, cancelled
  */
-const autoCancelExpiredRequests = async () => {
-  const approvedRequests = await BorrowRequest.find({ status: 'approved' })
+const autoCancelSlotEndedRequests = async () => {
   const now = new Date()
 
-  for (const req of approvedRequests) {
-    const deadline = new Date(req.borrowDate)
-    deadline.setHours(17, 0, 0, 0)
+  const requests = await BorrowRequest.find({
+    status: { $in: ['pending', 'approved'] },
+    scheduleId: { $ne: null },
+  }).populate('scheduleId', 'endAt')
 
-    if (now > deadline) {
-      req.status = 'cancelled'
-      req.decisionNote = 'Yêu cầu đã bị hệ thống tự động hủy do người mượn không đến nhận thiết bị trễ nhất vào lúc 17:00:00 của ngày hẹn trước.'
-      req.cancelledAt = new Date()
-      req.cancelledBy = null // system cancel
-      await req.save()
+  for (const req of requests) {
+    if (!req.scheduleId?.endAt) continue
+    if (now <= new Date(req.scheduleId.endAt)) continue
 
-      await notificationService.createNotification({
-        userId: req.borrowerId,
-        type: 'borrow',
-        title: 'Yêu cầu mượn tự động hủy',
-        message: `Yêu cầu mượn #${req.code || req._id.toString().slice(-6).toUpperCase()} đã bị hệ thống tự động hủy do không đến nhận trước 17:00.`,
-        action: {
-          type: 'open_detail',
-          resource: 'borrow',
-          resourceId: req._id,
-        },
-      }).catch(err => console.error('Failed to send auto-cancel notification:', err))
-    }
+    req.status = 'cancelled'
+    req.decisionNote = 'Yêu cầu đã bị hủy tự động do ca học đã kết thúc mà chưa được xử lý hoàn tất.'
+    req.cancelledAt = new Date()
+    req.cancelledBy = null // system cancellation
+    await req.save()
+
+    await notificationService.createNotification({
+      userId: req.borrowerId,
+      type: 'borrow',
+      title: 'Yêu cầu mượn bị hủy',
+      message: `Yêu cầu mượn #${req.code || req._id.toString().slice(-6).toUpperCase()} đã bị hủy tự động do ca học đã kết thúc.`,
+      action: {
+        type: 'open_detail',
+        resource: 'borrow',
+        resourceId: req._id,
+      },
+    }).catch(err => console.error('Failed to send slot-ended auto-cancel notification:', err))
   }
 }
 
@@ -84,9 +92,6 @@ const autoCancelExpiredRequests = async () => {
  *   1. Equipment borrowability
  *   2. Student has an active session in the equipment's room
  *   3. Lecturer of that session has checked in
- *
- * @param {object} user   — authenticated user (student)
- * @param {object} body   — { equipmentId, purpose, note }
  */
 const createStudentRequest = async (user, body) => {
   const { equipmentId, purpose, note } = body
@@ -94,13 +99,10 @@ const createStudentRequest = async (user, body) => {
   const equipment = await Equipment.findById(equipmentId)
   if (!equipment) throw new ApiError(StatusCodes.NOT_FOUND, 'Equipment not found')
 
-  // 1. Technical availability
   await availabilityService.assertEquipmentBorrowable(equipmentId)
 
-  // 2. User must be in a valid session in the equipment's room
   const session = await scheduleService.assertUserInSession(user, equipment.roomId)
 
-  // 3. Lecturer of the session must have checked in
   await attendanceService.assertTeacherCheckedIn(session._id, session.lecturerId)
 
   const code = await generateUniqueCode()
@@ -120,7 +122,6 @@ const createStudentRequest = async (user, body) => {
     status: 'pending',
   })
 
-  // Notify admins
   await notificationService.notifyAdmins({
     type: 'borrow',
     title: 'Yêu cầu mượn mới',
@@ -136,10 +137,6 @@ const createStudentRequest = async (user, body) => {
  * Validates:
  *   1. Equipment borrowability
  *   2. Lecturer has an active session in the equipment's room
- *   (No check-in gate for lecturer — lecturer creating for themselves)
- *
- * @param {object} user   — authenticated user (lecturer)
- * @param {object} body   — { equipmentId, purpose, note }
  */
 const createLecturerRequest = async (user, body) => {
   const { equipmentId, purpose, note } = body
@@ -147,10 +144,8 @@ const createLecturerRequest = async (user, body) => {
   const equipment = await Equipment.findById(equipmentId)
   if (!equipment) throw new ApiError(StatusCodes.NOT_FOUND, 'Equipment not found')
 
-  // 1. Technical availability
   await availabilityService.assertEquipmentBorrowable(equipmentId)
 
-  // 2. Lecturer must be teaching in the equipment's room right now
   const session = await scheduleService.assertUserInSession(user, equipment.roomId)
 
   const code = await generateUniqueCode()
@@ -180,14 +175,13 @@ const createLecturerRequest = async (user, body) => {
   return { message: 'Borrow request created', borrowRequest: await populateRequest(BorrowRequest.findById(request._id)) }
 }
 
-// ── Admin workflow actions ────────────────────────────────────────────────────
+// ── Lecturer workflow actions ──────────────────────────────────────────────────
 
 const approveRequest = async (id, approverId, decisionNote) => {
   const request = await BorrowRequest.findById(id)
   if (!request) throw new ApiError(StatusCodes.NOT_FOUND, 'Borrow request not found')
   if (request.status !== 'pending') throw new ApiError(StatusCodes.BAD_REQUEST, 'Request is not pending')
 
-  // Re-check availability at approval time
   await availabilityService.assertEquipmentBorrowable(request.equipmentId, {
     borrowDate: request.borrowDate,
     expectedReturnDate: request.expectedReturnDate,
@@ -199,13 +193,12 @@ const approveRequest = async (id, approverId, decisionNote) => {
   if (decisionNote) request.decisionNote = decisionNote.trim()
   await request.save()
 
-  const startDate = request.borrowDate.toISOString().split('T')[0]
-  const baseMsg = `Yêu cầu mượn #${request.code} đã được duyệt. Vui lòng đến nhận thiết bị trước 17:00 ngày ${startDate}.`
+  const baseMsg = `Yêu cầu mượn #${request.code} đã được duyệt. Giảng viên sẽ sớm bàn giao thiết bị cho bạn.`
   await notificationService.createNotification({
     userId: request.borrowerId,
     type: 'approval',
     title: 'Yêu cầu mượn được duyệt',
-    message: decisionNote ? `${baseMsg} Tin nhắn từ giảng viên: "${decisionNote.trim()}"` : baseMsg,
+    message: decisionNote ? `${baseMsg} Ghi chú: "${decisionNote.trim()}"` : baseMsg,
     action: { type: 'open_detail', resource: 'borrow', resourceId: request._id },
   }).catch(err => console.error('Notify borrower failed:', err))
 
@@ -227,39 +220,163 @@ const rejectRequest = async (id, approverId, decisionNote) => {
     userId: request.borrowerId,
     type: 'approval',
     title: 'Yêu cầu mượn bị từ chối',
-    message: `Yêu cầu mượn #${request.code} đã bị từ chối. Lý do: ${decisionNote || 'Không có lý do'}.`,
+    message: `Yêu cầu mượn #${request.code} đã bị từ chối. Lý do: ${decisionNote?.trim() || 'Không có lý do'}.`,
     action: { type: 'open_detail', resource: 'borrow', resourceId: request._id },
   }).catch(err => console.error('Notify borrower failed:', err))
 
   return { message: 'Borrow request rejected', request }
 }
 
-const handoverToStudent = async (id, handedOverBy) => {
+/**
+ * Lecturer submits handover form (checklist + images + notes).
+ * Status stays 'approved' — student must still confirm receipt.
+ *
+ * @param {string} id           — BorrowRequest id
+ * @param {string} lecturerId   — User id of lecturer submitting the form
+ * @param {object} handoverInfo — { checklist: {appearance, functioning, accessories}, notes, images[] }
+ */
+const submitHandoverForm = async (id, lecturerId, handoverInfo) => {
   const request = await BorrowRequest.findById(id)
   if (!request) throw new ApiError(StatusCodes.NOT_FOUND, 'Borrow request not found')
-  if (request.status !== 'approved') throw new ApiError(StatusCodes.BAD_REQUEST, 'Request must be approved first')
+  if (request.status !== 'approved') throw new ApiError(StatusCodes.BAD_REQUEST, 'Request must be approved before handover')
 
-  request.status = 'handed_over'
-  request.handedOverBy = handedOverBy
-  request.handedOverAt = new Date()
+  const { checklist = {}, notes = null, images = [] } = handoverInfo || {}
+
+  if (!Array.isArray(images) || images.length === 0) {
+    throw new ApiError(StatusCodes.UNPROCESSABLE_ENTITY, 'Ít nhất một ảnh bàn giao là bắt buộc')
+  }
+
+  request.handedOverBy = lecturerId
+  request.handoverInfo = {
+    checklist: {
+      appearance:  !!checklist.appearance,
+      functioning: !!checklist.functioning,
+      accessories: !!checklist.accessories,
+    },
+    notes:       notes || null,
+    images,
+    submittedAt: new Date(),
+  }
   await request.save()
 
-  const equipment = await Equipment.findById(request.equipmentId).select('name code').lean()
+  const equipment = await Equipment.findById(request.equipmentId).select('name').lean()
   await notificationService.createNotification({
     userId: request.borrowerId,
     type: 'borrow',
-    title: 'Thiết bị đã được bàn giao',
-    message: `Thiết bị ${equipment?.name || ''} (#${request.code}) đã được bàn giao cho bạn. Vui lòng trả đúng hạn.`,
+    title: 'Giảng viên đã điền form bàn giao',
+    message: `Giảng viên đã điền form bàn giao thiết bị ${equipment?.name || ''} (#${request.code}). Vui lòng xem và xác nhận đã nhận.`,
     action: { type: 'open_detail', resource: 'borrow', resourceId: request._id },
   }).catch(err => console.error('Notify borrower failed:', err))
 
-  return { message: 'Equipment handed over', request }
+  return { message: 'Handover form submitted', request: await populateRequest(BorrowRequest.findById(request._id)) }
 }
 
+/**
+ * Student confirms they have received the equipment.
+ * Transitions: approved (with handoverInfo) → handed_over.
+ *
+ * @param {string} id        — BorrowRequest id
+ * @param {string} studentId — User id of the student
+ */
+const studentConfirmReceived = async (id, studentId) => {
+  const request = await BorrowRequest.findById(id)
+  if (!request) throw new ApiError(StatusCodes.NOT_FOUND, 'Borrow request not found')
+  if (request.status !== 'approved') throw new ApiError(StatusCodes.BAD_REQUEST, 'Request phải ở trạng thái đã duyệt')
+  if (request.borrowerId.toString() !== studentId.toString()) {
+    throw new ApiError(StatusCodes.FORBIDDEN, 'Chỉ người mượn mới có thể xác nhận nhận thiết bị')
+  }
+  if (!request.handoverInfo?.submittedAt) {
+    throw new ApiError(StatusCodes.BAD_REQUEST, 'Giảng viên chưa điền form bàn giao')
+  }
+
+  request.status = 'handed_over'
+  request.handedOverAt = new Date()
+  request.studentConfirmedAt = new Date()
+  await request.save()
+
+  const equipment = await Equipment.findById(request.equipmentId).select('name').lean()
+  await notificationService.createNotification({
+    userId: request.handedOverBy,
+    type: 'borrow',
+    title: 'Sinh viên đã xác nhận nhận hàng',
+    message: `Sinh viên đã xác nhận nhận thiết bị ${equipment?.name || ''} (#${request.code}).`,
+    action: { type: 'open_detail', resource: 'borrow', resourceId: request._id },
+  }).catch(err => console.error('Notify lecturer failed:', err))
+
+  return { message: 'Equipment confirmed received', request: await populateRequest(BorrowRequest.findById(request._id)) }
+}
+
+/**
+ * Student submits return form (checklist + images + notes).
+ * Transitions: handed_over → returning.
+ *
+ * @param {string} id         — BorrowRequest id
+ * @param {string} studentId  — User id of the student
+ * @param {object} returnForm — { checklist: {appearance, functioning, accessories}, notes, images[] }
+ */
+const studentSubmitReturn = async (id, studentId, returnForm) => {
+  const request = await BorrowRequest.findById(id)
+  if (!request) throw new ApiError(StatusCodes.NOT_FOUND, 'Borrow request not found')
+  if (request.status !== 'handed_over') throw new ApiError(StatusCodes.BAD_REQUEST, 'Thiết bị chưa được bàn giao')
+  if (request.borrowerId.toString() !== studentId.toString()) {
+    throw new ApiError(StatusCodes.FORBIDDEN, 'Chỉ người mượn mới có thể gửi yêu cầu trả')
+  }
+
+  const { checklist = {}, notes = null, images = [] } = returnForm || {}
+
+  if (!Array.isArray(images) || images.length === 0) {
+    throw new ApiError(StatusCodes.UNPROCESSABLE_ENTITY, 'Ít nhất một ảnh khi trả là bắt buộc')
+  }
+
+  request.status = 'returning'
+  request.returnRequest = {
+    checklist: {
+      appearance:  !!checklist.appearance,
+      functioning: !!checklist.functioning,
+      accessories: !!checklist.accessories,
+    },
+    notes:       notes || null,
+    images,
+    submittedAt: new Date(),
+  }
+  await request.save()
+
+  // Notify the lecturer who handed over (if available), otherwise notify admins
+  const notifyTarget = request.handedOverBy || null
+  if (notifyTarget) {
+    await notificationService.createNotification({
+      userId: notifyTarget,
+      type: 'return',
+      title: 'Sinh viên gửi yêu cầu trả thiết bị',
+      message: `Sinh viên đã gửi yêu cầu trả thiết bị (Yêu cầu #${request.code}). Vui lòng kiểm tra và xác nhận.`,
+      action: { type: 'open_detail', resource: 'borrow', resourceId: request._id },
+    }).catch(err => console.error('Notify lecturer failed:', err))
+  } else {
+    await notificationService.notifyAdmins({
+      type: 'return',
+      title: 'Yêu cầu trả thiết bị mới',
+      message: `Sinh viên đã gửi yêu cầu trả thiết bị (Yêu cầu #${request.code}).`,
+      action: { type: 'open_detail', resource: 'borrow', resourceId: request._id },
+    }).catch(err => console.error('Notify admins failed:', err))
+  }
+
+  return { message: 'Return request submitted', request: await populateRequest(BorrowRequest.findById(request._id)) }
+}
+
+/**
+ * Lecturer/Admin confirms return after inspecting the equipment.
+ * Transitions: returning → returned.
+ * DB status 'returned' maps to UI label 'Hoàn tất'.
+ *
+ * @param {string} id          — BorrowRequest id
+ * @param {string} confirmedBy — User id of lecturer confirming
+ */
 const confirmReturn = async (id, confirmedBy) => {
   const request = await BorrowRequest.findById(id).populate('borrowerId', 'displayName username')
   if (!request) throw new ApiError(StatusCodes.NOT_FOUND, 'Borrow request not found')
-  if (request.status !== 'handed_over') throw new ApiError(StatusCodes.BAD_REQUEST, 'Equipment has not been handed over yet')
+  if (request.status !== 'returning') {
+    throw new ApiError(StatusCodes.BAD_REQUEST, 'Sinh viên chưa gửi yêu cầu trả thiết bị')
+  }
 
   request.status = 'returned'
   request.returnedConfirmedBy = confirmedBy
@@ -267,10 +384,20 @@ const confirmReturn = async (id, confirmedBy) => {
   request.actualReturnDate = new Date()
   await request.save()
 
-  // Notify admins and technicians
+  const borrowerName = request.borrowerId?.displayName || request.borrowerId?.username || 'Unknown'
+
+  // Notify borrower that return is confirmed
+  await notificationService.createNotification({
+    userId: request.borrowerId._id || request.borrowerId,
+    type: 'return',
+    title: 'Thiết bị đã được xác nhận trả',
+    message: `Giảng viên đã xác nhận bạn trả thiết bị thành công (Yêu cầu #${request.code}). Cảm ơn bạn!`,
+    action: { type: 'open_detail', resource: 'borrow', resourceId: request._id },
+  }).catch(err => console.error('Notify borrower failed:', err))
+
+  // Notify admins/technicians
   try {
-    const staff = await User.find({ role: { $in: ['admin', 'technician'] } }).select('_id role').lean()
-    const borrowerName = request.borrowerId?.displayName || request.borrowerId?.username || 'Unknown'
+    const staff = await User.find({ role: { $in: ['admin', 'technician'] } }).select('_id').lean()
     await Promise.allSettled(
       staff.map(s =>
         notificationService.createNotification({
@@ -286,7 +413,7 @@ const confirmReturn = async (id, confirmedBy) => {
     console.error('Failed to notify staff about return:', err)
   }
 
-  return { message: 'Equipment returned', request }
+  return { message: 'Equipment returned confirmed', request }
 }
 
 const cancelRequest = async (id, userId, decisionNote) => {
@@ -361,6 +488,7 @@ const adminDirectAllocate = async (body, allocatorId) => {
     approvedAt: new Date(),
     handedOverBy: allocatorId,
     handedOverAt: new Date(),
+    studentConfirmedAt: new Date(),
     decisionNote: 'Direct allocation by admin',
   })
 
@@ -373,7 +501,6 @@ const adminDirectAllocate = async (body, allocatorId) => {
 // ── Read queries ──────────────────────────────────────────────────────────────
 
 const getAllBorrowRequests = async () => {
-  await autoCancelExpiredRequests()
   return populateRequest(BorrowRequest.find())
 }
 
@@ -384,21 +511,18 @@ const getBorrowRequestById = async (id) => {
 }
 
 const getPersonalBorrowRequests = async (userId) => {
-  await autoCancelExpiredRequests()
   return populateRequest(BorrowRequest.find({ borrowerId: userId }))
 }
 
 const getPendingBorrowRequests = async () => {
-  await autoCancelExpiredRequests()
   return populateRequest(BorrowRequest.find({ status: 'pending' }))
 }
 
 const getApprovedByMe = async (approverId) => {
-  await autoCancelExpiredRequests()
   return populateRequest(
     BorrowRequest.find({
       approvedBy: approverId,
-      status: { $in: ['approved', 'rejected', 'handed_over', 'returned', 'cancelled'] },
+      status: { $in: ['approved', 'rejected', 'handed_over', 'returning', 'returned', 'cancelled'] },
     }).sort({ updatedAt: -1 }),
   )
 }
@@ -406,7 +530,7 @@ const getApprovedByMe = async (approverId) => {
 const checkOverdueHandedOverRequests = async () => {
   const now = new Date()
   const overdueRequests = await BorrowRequest.find({
-    status: 'handed_over',
+    status: { $in: ['handed_over', 'returning'] },
     expectedReturnDate: { $lt: now },
   }).populate('borrowerId', 'displayName').lean()
 
@@ -433,7 +557,9 @@ export const borrowRequestService = {
   createLecturerRequest,
   approveRequest,
   rejectRequest,
-  handoverToStudent,
+  submitHandoverForm,
+  studentConfirmReceived,
+  studentSubmitReturn,
   confirmReturn,
   cancelRequest,
   adminDirectAllocate,
@@ -442,7 +568,7 @@ export const borrowRequestService = {
   getPersonalBorrowRequests,
   getPendingBorrowRequests,
   getApprovedByMe,
-  autoCancelExpiredRequests,
+  autoCancelSlotEndedRequests,
   checkOverdueHandedOverRequests,
   remindBorrowRequest,
 }

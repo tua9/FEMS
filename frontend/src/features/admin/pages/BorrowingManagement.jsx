@@ -17,7 +17,7 @@ const BorrowingManagement = () => {
  const approveRequest = useBorrowRequestStore(state => state.approveBorrowRequest);
  const rejectRequest = useBorrowRequestStore(state => state.rejectBorrowRequest);
  const returnRequest = useBorrowRequestStore(state => state.returnBorrowRequest);
- const handoverRequest = useBorrowRequestStore(state => state.handoverBorrowRequest);
+ const submitHandoverForm = useBorrowRequestStore(state => state.submitHandoverForm);
  const remindRequest = useBorrowRequestStore(state => state.remindBorrowRequest);
 
  const [isNewBorrowModalOpen, setIsNewBorrowModalOpen] = useState(false);
@@ -34,13 +34,22 @@ const BorrowingManagement = () => {
  const handleUpdateStatus = async (id, action) => {
  try {
  if (action === 'approved') await approveRequest(id);
- else if (action === 'handed_over') await handoverRequest(id);
  else if (action === 'returned') await returnRequest(id);
  else if (action === 'rejected') await rejectRequest(id);
- 
+
  toast.success(`Request ${action} successfully`);
  } catch (error) {
  toast.error(error?.response?.data?.message || "Failed to update status");
+ }
+ };
+
+ // Lecturer submits handover form (id, formData)
+ const handleHandoverSubmit = async (id, formData) => {
+ try {
+ await submitHandoverForm(id, formData);
+ toast.success('Form bàn giao đã được gửi. Chờ sinh viên xác nhận.');
+ } catch (error) {
+ toast.error(error?.response?.data?.message || 'Không gửi được form bàn giao');
  }
  };
 
@@ -257,7 +266,7 @@ const BorrowingManagement = () => {
  <BorrowingTable
  records={sortedRecords}
  onApprove={(id) => handleUpdateStatus(id, 'approved')}
- onHandover={(id) => handleUpdateStatus(id, 'handed_over')}
+ onHandover={handleHandoverSubmit}
  onReject={(id) => handleUpdateStatus(id, 'rejected')}
  onReturn={(id) => handleUpdateStatus(id, 'returned')}
  onAlert={handleAlert}
@@ -286,7 +295,7 @@ const BorrowingManagement = () => {
  record={selectedRecord}
  onClose={() => setIsDetailModalOpen(false)}
  onApprove={(id) => handleUpdateStatus(id, 'approved')}
- onHandover={(id) => handleUpdateStatus(id, 'handed_over')}
+ onHandover={handleHandoverSubmit}
  onReject={(id) => handleUpdateStatus(id, 'rejected')}
  onReturn={(id) => handleUpdateStatus(id, 'returned')}
  onAlert={handleAlert}

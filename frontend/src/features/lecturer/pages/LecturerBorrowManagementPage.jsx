@@ -1,55 +1,33 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { createPortal } from 'react-dom';
 import {
-  Loader2, BookOpen, MapPin, Clock, CheckCircle2, X, AlertTriangle,
-  Laptop, Monitor, LogIn, LogOut, Package, RefreshCw, Eye,
-  Users, ShieldCheck, HandMetal,
+  Laptop, Eye, Loader2, BookOpen, MapPin, Clock, CheckCircle2,
+  LogOut, LogIn, ShieldCheck, AlertTriangle, RefreshCw, Users, HandMetal
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { useAuthStore } from '@/stores/useAuthStore';
 import { scheduleService } from '@/services/scheduleService';
 import { attendanceService } from '@/services/attendanceService';
 import { borrowRequestService } from '@/services/borrowRequestService';
-import { useAuthStore } from '@/stores/useAuthStore';
 import { PageHeader } from '@/features/shared/components/PageHeader';
+import { getTodayVN } from '@/utils/dateUtils';
+import { uploadImages } from '@/utils/uploadHelper';
 
-// ─── Shared sub-components ────────────────────────────────────────────────────
+// Sub-components
+import BorrowBadge from '../components/borrow/BorrowBadge';
+import BorrowAvatar from '../components/borrow/BorrowAvatar';
+import ApproveModal from '../components/borrow/ApproveModal';
+import RejectModal from '../components/borrow/RejectModal';
+import HandoverModal from '../components/borrow/HandoverModal';
+import ReturnConfirmModal from '../components/borrow/ReturnConfirmModal';
+import RequestDetailModal from '../components/borrow/RequestDetailModal';
 
-const RequestStatusBadge = ({ status }) => {
-  const cfg = {
-    pending:     { label: 'Chờ duyệt',    cls: 'bg-amber-50 text-amber-600 border-amber-200 dark:bg-amber-900/20 dark:text-amber-400 dark:border-amber-900/30' },
-    approved:    { label: 'Đã duyệt',     cls: 'bg-blue-50 text-blue-600 border-blue-200 dark:bg-blue-900/20 dark:text-blue-400 dark:border-blue-900/30' },
-    handed_over: { label: 'Đã bàn giao',  cls: 'bg-emerald-50 text-emerald-600 border-emerald-200 dark:bg-emerald-900/20 dark:text-emerald-400 dark:border-emerald-900/30' },
-    returned:    { label: 'Đã hoàn trả',  cls: 'bg-slate-50 text-slate-600 border-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700' },
-    rejected:    { label: 'Từ chối',      cls: 'bg-red-50 text-red-600 border-red-200 dark:bg-red-900/20 dark:text-red-400 dark:border-red-900/30' },
-    cancelled:   { label: 'Đã huỷ',       cls: 'bg-slate-50 text-slate-500 border-slate-200 dark:bg-slate-800 dark:text-slate-500 dark:border-slate-700' },
-  };
-  const c = cfg[status] || { label: status, cls: 'bg-slate-100 text-slate-600 border-slate-200' };
-  return (
-    <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border ${c.cls}`}>
-      {c.label}
-    </span>
-  );
-};
-
-const StudentAvatar = ({ name, avatarUrl, size = 'md' }) => {
-  const initials = (name || 'U').slice(0, 2).toUpperCase();
-  const sz = size === 'sm' ? 'w-8 h-8 text-xs' : 'w-10 h-10 text-sm';
-  return (
-    <div className={`${sz} rounded-full bg-[#1E2B58] dark:bg-slate-700 flex items-center justify-center text-white font-black shrink-0 overflow-hidden`}>
-      {avatarUrl
-        ? <img src={avatarUrl} alt={name} className="w-full h-full object-cover" />
-        : <span>{initials}</span>
-      }
-    </div>
-  );
-};
-
-const QUICK_REJECT_REASONS = [
-  'Thiết bị không có sẵn',
-  'Không phù hợp mục đích sử dụng',
-  'Yêu cầu thiếu thông tin',
-  'Thời gian không hợp lệ',
-];
+// Utilities
+import {
+  fmtTime,
+  fmtDateTime,
+  getStudentName,
+  getEquipmentName
+} from '../components/borrow/borrowUtils';
 
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
@@ -71,10 +49,7 @@ const LecturerBorrowManagementPage = () => {
 
   // ── Modal state ───────────────────────────────────────────────────────────
   const [approvingReq, setApprovingReq] = useState(null);
-  const [approveNote, setApproveNote] = useState('');
   const [rejectingReq, setRejectingReq] = useState(null);
-  const [rejectReason, setRejectReason] = useState('');
-  const [rejectError, setRejectError] = useState('');
   const [handoverReq, setHandoverReq] = useState(null);
   const [confirmReturnReq, setConfirmReturnReq] = useState(null);
   const [viewDetailReq, setViewDetailReq] = useState(null);
@@ -103,8 +78,7 @@ const LecturerBorrowManagementPage = () => {
   const loadSchedules = useCallback(async () => {
     setScheduleLoading(true);
     try {
-      const today = new Date().toISOString().slice(0, 10);
-      const res = await scheduleService.getMySchedules(today);
+      const res = await scheduleService.getMySchedules(getTodayVN());
       setSchedules(Array.isArray(res) ? res : []);
     } catch {
       setSchedules([]);
@@ -177,16 +151,16 @@ const LecturerBorrowManagementPage = () => {
     [allRequests, sessionRoomId]
   );
 
-  // ── Helpers ───────────────────────────────────────────────────────────────
-  const fmtTime = d => d ? new Date(d).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) : '—';
-  const fmtDateTime = d => d
-    ? new Date(d).toLocaleString('vi-VN', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })
-    : '—';
+  const returningRequests = useMemo(() =>
+    allRequests.filter(r =>
+      r.status === 'returning' &&
+      (!sessionRoomId || String(r.roomId?._id || r.roomId) === String(sessionRoomId))
+    ),
+    [allRequests, sessionRoomId]
+  );
 
-  const getStudentName = r =>
-    r.borrowerId?.displayName || r.borrowerId?.username || 'Sinh viên';
-  const getEquipmentName = r =>
-    r.equipmentId?.name || r.roomId?.name || 'Thiết bị';
+  // ── Helpers ───────────────────────────────────────────────────────────────
+  // (Moved to borrowUtils.js)
 
   // ── Check-in ──────────────────────────────────────────────────────────────
   const handleCheckIn = async () => {
@@ -221,14 +195,13 @@ const LecturerBorrowManagementPage = () => {
   };
 
   // ── Approve ───────────────────────────────────────────────────────────────
-  const confirmApprove = async () => {
+  const confirmApprove = async (note) => {
     if (!approvingReq) return;
     setSubmitting(true);
     try {
-      await borrowRequestService.approveBorrowRequest(approvingReq._id, approveNote.trim() || undefined);
+      await borrowRequestService.approveBorrowRequest(approvingReq._id, note.trim() || undefined);
       toast.success(`Đã duyệt yêu cầu của ${getStudentName(approvingReq)}.`);
       setApprovingReq(null);
-      setApproveNote('');
       await loadRequests();
     } catch (err) {
       toast.error(err?.response?.data?.message || 'Không thể duyệt yêu cầu.');
@@ -238,17 +211,13 @@ const LecturerBorrowManagementPage = () => {
   };
 
   // ── Reject ────────────────────────────────────────────────────────────────
-  const handleRejectSubmit = async (e) => {
-    e.preventDefault();
+  const handleRejectSubmit = async (reason) => {
     if (!rejectingReq) return;
-    if (!rejectReason.trim()) { setRejectError('Vui lòng nhập lý do từ chối.'); return; }
     setSubmitting(true);
     try {
-      await borrowRequestService.rejectBorrowRequest(rejectingReq._id, rejectReason.trim());
+      await borrowRequestService.rejectBorrowRequest(rejectingReq._id, reason.trim());
       toast.success(`Đã từ chối yêu cầu của ${getStudentName(rejectingReq)}.`);
       setRejectingReq(null);
-      setRejectReason('');
-      setRejectError('');
       await loadRequests();
     } catch (err) {
       toast.error(err?.response?.data?.message || 'Không thể từ chối yêu cầu.');
@@ -258,15 +227,31 @@ const LecturerBorrowManagementPage = () => {
   };
 
   // ── Handover ──────────────────────────────────────────────────────────────
-  const confirmHandover = async () => {
+  const confirmHandover = async (files) => {
     if (!handoverReq) return;
     setSubmitting(true);
     try {
-      await borrowRequestService.handoverBorrowRequest(handoverReq._id);
+      // 1. Upload images first
+      const imageUrls = await uploadImages(files);
+
+      // 2. Submit handover form
+      const formData = {
+        checklist: {
+          appearance: true,
+          functioning: true,
+          accessories: true,
+        },
+        notes: handoverReq.note || '',
+        images: imageUrls,
+      };
+
+      await borrowRequestService.submitHandoverForm(handoverReq._id, formData);
       toast.success(`Đã bàn giao "${getEquipmentName(handoverReq)}" cho ${getStudentName(handoverReq)}.`);
+      
       setHandoverReq(null);
       await loadRequests();
     } catch (err) {
+      console.error('Handover error:', err);
       toast.error(err?.response?.data?.message || 'Không thể xác nhận bàn giao.');
     } finally {
       setSubmitting(false);
@@ -303,7 +288,7 @@ const LecturerBorrowManagementPage = () => {
       >
         {/* Student */}
         <div className="flex items-center gap-3 sm:w-48 shrink-0">
-          <StudentAvatar name={studentName} avatarUrl={req.borrowerId?.avatarUrl} />
+          <BorrowAvatar name={studentName} avatarUrl={req.borrowerId?.avatarUrl} />
           <div className="min-w-0">
             <p className="font-black text-[#1E2B58] dark:text-white text-sm truncate">{studentName}</p>
             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
@@ -581,13 +566,41 @@ const LecturerBorrowManagementPage = () => {
           </section>
         )}
 
-        {/* ══ SECTION 5: Handed Over — Awaiting Return Confirmation ════════════ */}
-        {activeSchedule && handedOverRequests.length > 0 && (
+        {/* ══ SECTION 5: Handing — Awaiting Return Confirmation ═══════════════ */}
+        {activeSchedule && returningRequests.length > 0 && (
           <section className="mb-8">
             <div className="flex items-center gap-3 mb-5 px-1">
               <div className="w-1.5 h-8 bg-emerald-500 rounded-full" />
-              <h3 className="text-xl font-black text-[#1E2B58] dark:text-white">Đang được mượn</h3>
+              <h3 className="text-xl font-black text-[#1E2B58] dark:text-white">Chờ xác nhận trả</h3>
               <span className="text-[10px] font-black px-2.5 py-1 rounded-full bg-emerald-50 dark:bg-emerald-400/10 text-emerald-600 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-400/20">
+                {returningRequests.length}
+              </span>
+            </div>
+
+            <div className="dashboard-card rounded-4xl overflow-hidden border-2 border-emerald-500/20">
+              <div className="divide-y divide-[#1E2B58]/5 dark:divide-white/5">
+                {returningRequests.map(req =>
+                  renderRequestRow(req, (
+                    <button
+                      onClick={() => setConfirmReturnReq(req)}
+                      className="px-4 py-2 rounded-xl bg-emerald-500 text-white font-black text-[10px] uppercase tracking-widest hover:bg-emerald-600 transition-all active:scale-95 flex items-center gap-1.5 shadow-lg shadow-emerald-500/20"
+                    >
+                      <CheckCircle2 className="w-3.5 h-3.5" /> Xác nhận trả
+                    </button>
+                  ))
+                )}
+              </div>
+            </div>
+          </section>
+        )}
+
+        {/* ══ SECTION 6: Handed Over — Ongoing Usage ═══════════════════════════ */}
+        {activeSchedule && handedOverRequests.length > 0 && (
+          <section className="mb-8">
+            <div className="flex items-center gap-3 mb-5 px-1">
+              <div className="w-1.5 h-8 bg-slate-400 rounded-full" />
+              <h3 className="text-xl font-black text-[#1E2B58] dark:text-white">Đang sử dụng</h3>
+              <span className="text-[10px] font-black px-2.5 py-1 rounded-full bg-slate-50 dark:bg-white/5 text-slate-500 dark:text-slate-400 border border-slate-100 dark:border-white/10">
                 {handedOverRequests.length}
               </span>
             </div>
@@ -596,12 +609,9 @@ const LecturerBorrowManagementPage = () => {
               <div className="divide-y divide-[#1E2B58]/5 dark:divide-white/5">
                 {handedOverRequests.map(req =>
                   renderRequestRow(req, (
-                    <button
-                      onClick={() => setConfirmReturnReq(req)}
-                      className="px-4 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-[#1E2B58] dark:text-white font-black text-[10px] uppercase tracking-widest hover:bg-slate-200 dark:hover:bg-slate-700 transition-all active:scale-95 flex items-center gap-1.5 border border-slate-200 dark:border-slate-700"
-                    >
-                      <LogOut className="w-3.5 h-3.5" /> Xác nhận trả
-                    </button>
+                    <span className="px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+                      Chưa trả
+                    </span>
                   ))
                 )}
               </div>
@@ -615,297 +625,43 @@ const LecturerBorrowManagementPage = () => {
           MODALS
       ══════════════════════════════════════════════════════════════════════ */}
 
-      {/* ── Approve Confirmation Modal ───────────────────────────────────────── */}
-      {approvingReq && createPortal(
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm px-4"
-          onClick={e => { if (e.target === e.currentTarget) { setApprovingReq(null); setApproveNote(''); } }}
-        >
-          <div className="dashboard-card rounded-4xl p-8 w-full max-w-md shadow-2xl shadow-[#1E2B58]/20 relative animate-in fade-in zoom-in-95 duration-200">
-            <button onClick={() => setApprovingReq(null)}
-              className="absolute top-5 right-5 w-8 h-8 flex items-center justify-center rounded-full hover:bg-[#1E2B58]/10 dark:hover:bg-white/10 transition">
-              <X className="w-4 h-4 text-[#1E2B58]/60 dark:text-white/60" />
-            </button>
+      <ApproveModal
+        isOpen={!!approvingReq}
+        onClose={() => setApprovingReq(null)}
+        request={approvingReq}
+        onConfirm={confirmApprove}
+        submitting={submitting}
+      />
 
-            <div className="flex flex-col items-center text-center gap-4 mb-6">
-              <div className="w-14 h-14 rounded-full bg-emerald-500/10 flex items-center justify-center">
-                <CheckCircle2 className="w-7 h-7 text-emerald-500" />
-              </div>
-              <div>
-                <p className="text-[0.625rem] font-black uppercase tracking-widest text-[#1E2B58]/50 dark:text-white/40 mb-1">Xác nhận duyệt</p>
-                <h3 className="text-xl font-black text-[#1E2B58] dark:text-white">Duyệt yêu cầu này?</h3>
-              </div>
-            </div>
+      <RejectModal
+        isOpen={!!rejectingReq}
+        onClose={() => setRejectingReq(null)}
+        request={rejectingReq}
+        onConfirm={handleRejectSubmit}
+        submitting={submitting}
+      />
 
-            <div className="bg-white/40 dark:bg-slate-800/40 rounded-[1.25rem] p-4 mb-6 space-y-2 text-sm">
-              {[
-                ['Sinh viên', getStudentName(approvingReq)],
-                ['Thiết bị', getEquipmentName(approvingReq)],
-                ['Lý do', approvingReq.note || '—'],
-                ['Gửi lúc', fmtDateTime(approvingReq.createdAt)],
-              ].map(([label, value]) => (
-                <div key={label} className="flex justify-between gap-4">
-                  <span className="text-[#1E2B58]/60 dark:text-white/50 font-medium shrink-0">{label}</span>
-                  <span className="font-bold text-[#1E2B58] dark:text-white text-right">{value}</span>
-                </div>
-              ))}
-            </div>
+      <HandoverModal
+        isOpen={!!handoverReq}
+        onClose={() => setHandoverReq(null)}
+        request={handoverReq}
+        onConfirm={confirmHandover}
+        submitting={submitting}
+      />
 
-            <div className="mb-5">
-              <label className="text-[10px] font-black uppercase tracking-widest text-[#1E2B58]/50 dark:text-white/40 mb-2 block">
-                Tin nhắn gửi sinh viên <span className="normal-case font-medium opacity-70">(tùy chọn)</span>
-              </label>
-              <textarea
-                value={approveNote}
-                onChange={e => setApproveNote(e.target.value)}
-                placeholder="VD: Vui lòng đến phòng B203 để nhận thiết bị sau tiết 2..."
-                rows={3}
-                className="w-full rounded-[1rem] border border-[#1E2B58]/10 dark:border-white/10 bg-white/60 dark:bg-white/5 px-4 py-3 text-sm font-medium text-[#1E2B58] dark:text-white placeholder-slate-400 outline-none focus:ring-2 focus:ring-emerald-400/30 resize-none transition-all"
-              />
-            </div>
+      <ReturnConfirmModal
+        isOpen={!!confirmReturnReq}
+        onClose={() => setConfirmReturnReq(null)}
+        request={confirmReturnReq}
+        onConfirm={confirmReturn}
+        submitting={submitting}
+      />
 
-            <div className="flex gap-3">
-              <button onClick={() => { setApprovingReq(null); setApproveNote(''); }}
-                className="flex-1 py-3.5 rounded-[1.25rem] font-bold text-sm border border-[#1E2B58]/20 dark:border-white/20 text-[#1E2B58]/70 dark:text-white/70 hover:bg-[#1E2B58]/5 dark:hover:bg-white/5 transition-all">
-                Hủy
-              </button>
-              <button onClick={confirmApprove} disabled={submitting}
-                className="flex-[2] py-3.5 rounded-[1.25rem] font-bold text-sm bg-emerald-500 text-white hover:bg-emerald-600 transition-all shadow-lg shadow-emerald-500/20 flex items-center justify-center gap-2 disabled:opacity-60 active:scale-95">
-                {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
-                Xác nhận duyệt
-              </button>
-            </div>
-          </div>
-        </div>,
-        document.body
-      )}
-
-      {/* ── Reject Modal ─────────────────────────────────────────────────────── */}
-      {rejectingReq && createPortal(
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm px-4"
-          onClick={e => { if (e.target === e.currentTarget) setRejectingReq(null); }}
-        >
-          <div className="dashboard-card rounded-4xl p-8 w-full max-w-md shadow-2xl shadow-[#1E2B58]/20 relative animate-in fade-in zoom-in-95 duration-200">
-            <button onClick={() => setRejectingReq(null)}
-              className="absolute top-5 right-5 w-8 h-8 flex items-center justify-center rounded-full hover:bg-[#1E2B58]/10 dark:hover:bg-white/10 transition">
-              <X className="w-4 h-4 text-[#1E2B58]/60 dark:text-white/60" />
-            </button>
-
-            <div className="flex flex-col items-center text-center gap-4 mb-6">
-              <div className="w-14 h-14 rounded-full bg-red-500/10 flex items-center justify-center">
-                <AlertTriangle className="w-7 h-7 text-red-500" />
-              </div>
-              <div>
-                <p className="text-[0.625rem] font-black uppercase tracking-widest text-[#1E2B58]/50 dark:text-white/40 mb-1">Từ chối yêu cầu</p>
-                <h3 className="text-xl font-black text-[#1E2B58] dark:text-white">{getStudentName(rejectingReq)}</h3>
-                <p className="text-xs text-[#1E2B58]/50 dark:text-white/40 mt-0.5">{getEquipmentName(rejectingReq)}</p>
-              </div>
-            </div>
-
-            <form onSubmit={handleRejectSubmit} className="flex flex-col gap-4">
-              {/* Quick reasons */}
-              <div>
-                <p className="text-[0.625rem] font-black uppercase tracking-widest text-[#1E2B58]/50 dark:text-white/40 mb-2">
-                  Lý do nhanh
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  {QUICK_REJECT_REASONS.map(r => (
-                    <button
-                      key={r}
-                      type="button"
-                      onClick={() => setRejectReason(r)}
-                      className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all hover:scale-105 active:scale-95 ${
-                        rejectReason === r
-                          ? 'bg-red-500 text-white shadow-md shadow-red-500/20'
-                          : 'bg-white/40 dark:bg-slate-800/40 text-[#1E2B58] dark:text-white border border-[#1E2B58]/10 dark:border-white/10 hover:bg-white/60 dark:hover:bg-slate-700/50'
-                      }`}
-                    >
-                      {r}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Reason textarea */}
-              <div className="flex flex-col gap-2">
-                <label className="text-[0.625rem] font-black uppercase tracking-widest text-[#1E2B58]/50 dark:text-white/40">
-                  Lý do từ chối <span className="text-red-500">*</span>
-                </label>
-                <textarea
-                  rows={3}
-                  placeholder="Giải thích lý do từ chối yêu cầu này..."
-                  value={rejectReason}
-                  onChange={e => { setRejectReason(e.target.value); setRejectError(''); }}
-                  className="w-full bg-white/40 dark:bg-slate-800/50 border border-white/40 dark:border-slate-700/50 rounded-[1rem] px-4 py-3 text-sm font-medium text-[#1E2B58] dark:text-white placeholder:text-[#1E2B58]/30 dark:placeholder:text-white/30 outline-none focus:ring-2 focus:ring-red-400/30 transition-all resize-none"
-                />
-                {rejectError && <p className="text-xs font-bold text-red-500">{rejectError}</p>}
-              </div>
-
-              <div className="flex gap-3 mt-1">
-                <button type="button" onClick={() => setRejectingReq(null)}
-                  className="flex-1 py-3.5 rounded-[1.25rem] font-bold text-sm border border-[#1E2B58]/20 dark:border-white/20 text-[#1E2B58]/70 dark:text-white/70 hover:bg-[#1E2B58]/5 dark:hover:bg-white/5 transition-all">
-                  Hủy
-                </button>
-                <button type="submit" disabled={submitting}
-                  className="flex-[2] py-3.5 rounded-[1.25rem] font-bold text-sm bg-red-500 text-white hover:bg-red-600 transition-all shadow-lg shadow-red-500/20 flex items-center justify-center gap-2 disabled:opacity-60 active:scale-95">
-                  {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <X className="w-4 h-4" />}
-                  Từ chối yêu cầu
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>,
-        document.body
-      )}
-
-      {/* ── Handover Confirmation Modal ──────────────────────────────────────── */}
-      {handoverReq && createPortal(
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm px-4"
-          onClick={e => { if (e.target === e.currentTarget) setHandoverReq(null); }}
-        >
-          <div className="dashboard-card rounded-4xl p-8 w-full max-w-md shadow-2xl shadow-[#1E2B58]/20 relative animate-in fade-in zoom-in-95 duration-200">
-            <button onClick={() => setHandoverReq(null)}
-              className="absolute top-5 right-5 w-8 h-8 flex items-center justify-center rounded-full hover:bg-[#1E2B58]/10 dark:hover:bg-white/10 transition">
-              <X className="w-4 h-4 text-[#1E2B58]/60 dark:text-white/60" />
-            </button>
-
-            <div className="flex flex-col items-center text-center gap-4 mb-6">
-              <div className="w-14 h-14 rounded-full bg-blue-500/10 flex items-center justify-center">
-                <HandMetal className="w-7 h-7 text-blue-500" />
-              </div>
-              <div>
-                <p className="text-[0.625rem] font-black uppercase tracking-widest text-[#1E2B58]/50 dark:text-white/40 mb-1">Xác nhận bàn giao</p>
-                <h3 className="text-xl font-black text-[#1E2B58] dark:text-white">Bàn giao thiết bị?</h3>
-              </div>
-            </div>
-
-            <div className="bg-white/40 dark:bg-slate-800/40 rounded-[1.25rem] p-4 mb-6 space-y-2 text-sm">
-              {[
-                ['Thiết bị', getEquipmentName(handoverReq)],
-                ['Trao cho', getStudentName(handoverReq)],
-                ['Lý do', handoverReq.note || '—'],
-              ].map(([label, value]) => (
-                <div key={label} className="flex justify-between gap-4">
-                  <span className="text-[#1E2B58]/60 dark:text-white/50 font-medium shrink-0">{label}</span>
-                  <span className="font-bold text-[#1E2B58] dark:text-white text-right">{value}</span>
-                </div>
-              ))}
-            </div>
-
-            {/* Image upload placeholder */}
-            <div className="p-3 rounded-2xl border-2 border-dashed border-slate-200 dark:border-slate-700 flex items-center gap-3 mb-5 opacity-50">
-              <span className="material-symbols-outlined text-2xl text-slate-400">cloud_upload</span>
-              <div>
-                <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Ảnh bàn giao thiết bị</p>
-                <p className="text-[10px] text-slate-400">Tính năng đang phát triển</p>
-              </div>
-            </div>
-
-            <div className="flex gap-3">
-              <button onClick={() => setHandoverReq(null)}
-                className="flex-1 py-3.5 rounded-[1.25rem] font-bold text-sm border border-[#1E2B58]/20 dark:border-white/20 text-[#1E2B58]/70 dark:text-white/70 hover:bg-[#1E2B58]/5 dark:hover:bg-white/5 transition-all">
-                Hủy
-              </button>
-              <button onClick={confirmHandover} disabled={submitting}
-                className="flex-[2] py-3.5 rounded-[1.25rem] font-bold text-sm bg-[#1E2B58] text-white hover:bg-[#2A3B66] transition-all shadow-lg shadow-blue-900/20 flex items-center justify-center gap-2 disabled:opacity-60 active:scale-95">
-                {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
-                Xác nhận bàn giao
-              </button>
-            </div>
-          </div>
-        </div>,
-        document.body
-      )}
-
-      {/* ── Confirm Return Modal ─────────────────────────────────────────────── */}
-      {confirmReturnReq && createPortal(
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm px-4"
-          onClick={e => { if (e.target === e.currentTarget) setConfirmReturnReq(null); }}
-        >
-          <div className="dashboard-card rounded-4xl p-8 w-full max-w-md shadow-2xl shadow-[#1E2B58]/20 relative animate-in fade-in zoom-in-95 duration-200">
-            <button onClick={() => setConfirmReturnReq(null)}
-              className="absolute top-5 right-5 w-8 h-8 flex items-center justify-center rounded-full hover:bg-[#1E2B58]/10 dark:hover:bg-white/10 transition">
-              <X className="w-4 h-4 text-[#1E2B58]/60 dark:text-white/60" />
-            </button>
-
-            <div className="flex flex-col items-center text-center gap-4 mb-6">
-              <div className="w-14 h-14 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
-                <LogOut className="w-7 h-7 text-slate-500 dark:text-slate-300" />
-              </div>
-              <div>
-                <p className="text-[0.625rem] font-black uppercase tracking-widest text-[#1E2B58]/50 dark:text-white/40 mb-1">Xác nhận hoàn trả</p>
-                <h3 className="text-xl font-black text-[#1E2B58] dark:text-white">{getEquipmentName(confirmReturnReq)}</h3>
-                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                  Trả bởi {getStudentName(confirmReturnReq)}
-                </p>
-              </div>
-            </div>
-
-            <div className="p-4 rounded-2xl bg-amber-50 dark:bg-amber-900/10 border border-amber-100 dark:border-amber-900/20 mb-5">
-              <p className="text-xs font-bold text-amber-600 dark:text-amber-400">
-                Hãy kiểm tra tình trạng thiết bị trước khi xác nhận. Nếu có hư hỏng, hãy báo cáo thay vì xác nhận.
-              </p>
-            </div>
-
-            <div className="flex gap-3">
-              <button onClick={() => setConfirmReturnReq(null)}
-                className="flex-1 py-3.5 rounded-[1.25rem] font-bold text-sm border border-[#1E2B58]/20 dark:border-white/20 text-[#1E2B58]/70 dark:text-white/70 hover:bg-[#1E2B58]/5 dark:hover:bg-white/5 transition-all">
-                Hủy
-              </button>
-              <button onClick={confirmReturn} disabled={submitting}
-                className="flex-[2] py-3.5 rounded-[1.25rem] font-bold text-sm bg-[#1E2B58] text-white hover:bg-[#2A3B66] transition-all shadow-lg shadow-blue-900/20 flex items-center justify-center gap-2 disabled:opacity-60 active:scale-95">
-                {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
-                Xác nhận đã nhận lại
-              </button>
-            </div>
-          </div>
-        </div>,
-        document.body
-      )}
-
-      {/* ── View Request Detail Modal ────────────────────────────────────────── */}
-      {viewDetailReq && createPortal(
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm px-4"
-          onClick={e => { if (e.target === e.currentTarget) setViewDetailReq(null); }}
-        >
-          <div className="dashboard-card rounded-4xl p-8 w-full max-w-md shadow-2xl shadow-[#1E2B58]/20 relative animate-in fade-in zoom-in-95 duration-200">
-            <button onClick={() => setViewDetailReq(null)}
-              className="absolute top-5 right-5 w-8 h-8 flex items-center justify-center rounded-full hover:bg-[#1E2B58]/10 dark:hover:bg-white/10 transition">
-              <X className="w-4 h-4 text-[#1E2B58]/60 dark:text-white/60" />
-            </button>
-
-            <p className="text-[0.625rem] font-black uppercase tracking-widest text-[#1E2B58]/50 dark:text-white/40 mb-5">
-              Chi tiết yêu cầu #{String(viewDetailReq._id).slice(-6).toUpperCase()}
-            </p>
-
-            <div className="space-y-0">
-              {[
-                ['Sinh viên', getStudentName(viewDetailReq)],
-                ['Thiết bị', getEquipmentName(viewDetailReq)],
-                ['Trạng thái', <RequestStatusBadge key="s" status={viewDetailReq.status} />],
-                ['Lý do', viewDetailReq.note || '—'],
-                ['Gửi lúc', fmtDateTime(viewDetailReq.createdAt)],
-                ['Phản hồi', viewDetailReq.decisionNote || '—'],
-              ].map(([label, value]) => (
-                <div key={label} className="flex justify-between items-center gap-4 py-2.5 border-b border-[#1E2B58]/5 dark:border-white/5 last:border-0">
-                  <span className="text-[#1E2B58]/60 dark:text-white/50 font-medium text-sm shrink-0">{label}</span>
-                  <span className="font-bold text-[#1E2B58] dark:text-white text-right text-sm">{value}</span>
-                </div>
-              ))}
-            </div>
-
-            <button onClick={() => setViewDetailReq(null)}
-              className="mt-6 w-full py-3 rounded-[1.25rem] font-bold text-sm bg-[#1E2B58] text-white hover:bg-[#2A3B66] transition-all active:scale-95">
-              Đóng
-            </button>
-          </div>
-        </div>,
-        document.body
-      )}
+      <RequestDetailModal
+        isOpen={!!viewDetailReq}
+        onClose={() => setViewDetailReq(null)}
+        request={viewDetailReq}
+      />
     </div>
   );
 };

@@ -83,9 +83,14 @@ const borrowRequestSchema = new mongoose.Schema(
     },
 
     // ── Workflow status ───────────────────────────────────────────────────────
+    // pending → approved/rejected
+    // approved → handed_over (after lecturer handover form + student confirmation)
+    // handed_over → returning (after student submits return form)
+    // returning → returned (after lecturer confirms return)
+    // pending/approved → cancelled (auto when slot ends, or manual by borrower)
     status: {
       type: String,
-      enum: ['pending', 'approved', 'rejected', 'handed_over', 'returned', 'cancelled'],
+      enum: ['pending', 'approved', 'rejected', 'handed_over', 'returning', 'returned', 'cancelled'],
       default: 'pending',
     },
 
@@ -107,6 +112,7 @@ const borrowRequestSchema = new mongoose.Schema(
     },
 
     // ── Handover ──────────────────────────────────────────────────────────────
+    // Lecturer submits handover form (status stays 'approved' until student confirms)
     handedOverBy: {
       type: ObjectId,
       ref: 'User',
@@ -118,7 +124,38 @@ const borrowRequestSchema = new mongoose.Schema(
       default: null,
     },
 
-    // ── Return confirmation ────────────────────────────────────────────────────
+    // Checklist + evidence filled by lecturer when handing over equipment
+    handoverInfo: {
+      checklist: {
+        appearance:  { type: Boolean, default: false },
+        functioning: { type: Boolean, default: false },
+        accessories: { type: Boolean, default: false },
+      },
+      notes:       { type: String, default: null },
+      images:      [{ type: String }],
+      submittedAt: { type: Date, default: null },
+    },
+
+    // When student ticked "Confirm Received" (status becomes 'handed_over')
+    studentConfirmedAt: {
+      type: Date,
+      default: null,
+    },
+
+    // ── Return submission (from student) ──────────────────────────────────────
+    // Filled by student when submitting return (status becomes 'returning')
+    returnRequest: {
+      checklist: {
+        appearance:  { type: Boolean, default: false },
+        functioning: { type: Boolean, default: false },
+        accessories: { type: Boolean, default: false },
+      },
+      notes:       { type: String, default: null },
+      images:      [{ type: String }],
+      submittedAt: { type: Date, default: null },
+    },
+
+    // ── Return confirmation (by lecturer) ─────────────────────────────────────
     returnedConfirmedBy: {
       type: ObjectId,
       ref: 'User',

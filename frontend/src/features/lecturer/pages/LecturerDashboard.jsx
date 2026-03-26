@@ -7,6 +7,7 @@ import { useAuthStore } from "@/stores/useAuthStore";
 import { RecentActivityList } from "@/features/shared/components/dashboard/RecentActivityList";
 import { scheduleService } from "@/services/scheduleService";
 import { attendanceService } from "@/services/attendanceService";
+import { getTodayVN } from "@/utils/dateUtils";
 import { equipmentService } from "@/services/equipmentService";
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -288,8 +289,7 @@ const LecturerDashboard = () => {
   const loadSchedules = useCallback(async () => {
     setScheduleLoading(true);
     try {
-      const today = new Date().toISOString().slice(0, 10);
-      const res = await scheduleService.getMySchedules(today);
+      const res = await scheduleService.getMySchedules(getTodayVN());
       setSchedules(Array.isArray(res) ? res : []);
     } catch {
       setSchedules([]);

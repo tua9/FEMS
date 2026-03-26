@@ -2,6 +2,7 @@ import { ChevronLeft, ChevronRight, Clock, MapPin, Users, X } from 'lucide-react
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { scheduleService } from '@/services/scheduleService';
+import { toVNDateStr } from '@/utils/dateUtils';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -505,18 +506,18 @@ const AcademicCalendar = () => {
     const m = viewDate.getMonth();
     if (viewMode === 'month') {
       return {
-        startDate: new Date(y, m - 1, 25).toISOString().slice(0, 10),
-        endDate:   new Date(y, m + 1,  6).toISOString().slice(0, 10),
+        startDate: toVNDateStr(new Date(y, m - 1, 25)),
+        endDate:   toVNDateStr(new Date(y, m + 1,  6)),
       };
     }
     if (viewMode === 'week' || viewMode === 'slot') {
       const mon = startOfWeek(viewDate);
       return {
-        startDate: mon.toISOString().slice(0, 10),
-        endDate:   addDays(mon, 6).toISOString().slice(0, 10),
+        startDate: toVNDateStr(mon),
+        endDate:   toVNDateStr(addDays(mon, 6)),
       };
     }
-    return { date: viewDate.toISOString().slice(0, 10) };
+    return { date: toVNDateStr(viewDate) };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [viewMode, viewDate.getFullYear(), viewDate.getMonth(), viewDate.getDate()]);
 
