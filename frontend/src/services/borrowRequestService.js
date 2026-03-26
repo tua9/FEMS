@@ -31,8 +31,8 @@ export const borrowRequestService = {
  return res.data;
  },
 
- async approveBorrowRequest(id) {
- const res = await api.patch(`/requests/${id}/approve`);
+ async approveBorrowRequest(id, decisionNote) {
+ const res = await api.patch(`/requests/${id}/approve`, decisionNote ? { decisionNote } : {});
  return res.data;
  },
 

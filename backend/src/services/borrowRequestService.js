@@ -200,11 +200,12 @@ const approveRequest = async (id, approverId, decisionNote) => {
   await request.save()
 
   const startDate = request.borrowDate.toISOString().split('T')[0]
+  const baseMsg = `Yêu cầu mượn #${request.code} đã được duyệt. Vui lòng đến nhận thiết bị trước 17:00 ngày ${startDate}.`
   await notificationService.createNotification({
     userId: request.borrowerId,
     type: 'approval',
     title: 'Yêu cầu mượn được duyệt',
-    message: `Yêu cầu mượn #${request.code} đã được duyệt. Vui lòng đến nhận thiết bị trước 17:00 ngày ${startDate}.`,
+    message: decisionNote ? `${baseMsg} Tin nhắn từ giảng viên: "${decisionNote.trim()}"` : baseMsg,
     action: { type: 'open_detail', resource: 'borrow', resourceId: request._id },
   }).catch(err => console.error('Notify borrower failed:', err))
 

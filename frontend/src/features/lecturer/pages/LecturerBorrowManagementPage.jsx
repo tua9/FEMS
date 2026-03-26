@@ -71,6 +71,7 @@ const LecturerBorrowManagementPage = () => {
 
   // ── Modal state ───────────────────────────────────────────────────────────
   const [approvingReq, setApprovingReq] = useState(null);
+  const [approveNote, setApproveNote] = useState('');
   const [rejectingReq, setRejectingReq] = useState(null);
   const [rejectReason, setRejectReason] = useState('');
   const [rejectError, setRejectError] = useState('');
@@ -224,9 +225,10 @@ const LecturerBorrowManagementPage = () => {
     if (!approvingReq) return;
     setSubmitting(true);
     try {
-      await borrowRequestService.approveBorrowRequest(approvingReq._id);
+      await borrowRequestService.approveBorrowRequest(approvingReq._id, approveNote.trim() || undefined);
       toast.success(`Đã duyệt yêu cầu của ${getStudentName(approvingReq)}.`);
       setApprovingReq(null);
+      setApproveNote('');
       await loadRequests();
     } catch (err) {
       toast.error(err?.response?.data?.message || 'Không thể duyệt yêu cầu.');
@@ -617,7 +619,7 @@ const LecturerBorrowManagementPage = () => {
       {approvingReq && createPortal(
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm px-4"
-          onClick={e => { if (e.target === e.currentTarget) setApprovingReq(null); }}
+          onClick={e => { if (e.target === e.currentTarget) { setApprovingReq(null); setApproveNote(''); } }}
         >
           <div className="dashboard-card rounded-4xl p-8 w-full max-w-md shadow-2xl shadow-[#1E2B58]/20 relative animate-in fade-in zoom-in-95 duration-200">
             <button onClick={() => setApprovingReq(null)}
@@ -649,8 +651,21 @@ const LecturerBorrowManagementPage = () => {
               ))}
             </div>
 
+            <div className="mb-5">
+              <label className="text-[10px] font-black uppercase tracking-widest text-[#1E2B58]/50 dark:text-white/40 mb-2 block">
+                Tin nhắn gửi sinh viên <span className="normal-case font-medium opacity-70">(tùy chọn)</span>
+              </label>
+              <textarea
+                value={approveNote}
+                onChange={e => setApproveNote(e.target.value)}
+                placeholder="VD: Vui lòng đến phòng B203 để nhận thiết bị sau tiết 2..."
+                rows={3}
+                className="w-full rounded-[1rem] border border-[#1E2B58]/10 dark:border-white/10 bg-white/60 dark:bg-white/5 px-4 py-3 text-sm font-medium text-[#1E2B58] dark:text-white placeholder-slate-400 outline-none focus:ring-2 focus:ring-emerald-400/30 resize-none transition-all"
+              />
+            </div>
+
             <div className="flex gap-3">
-              <button onClick={() => setApprovingReq(null)}
+              <button onClick={() => { setApprovingReq(null); setApproveNote(''); }}
                 className="flex-1 py-3.5 rounded-[1.25rem] font-bold text-sm border border-[#1E2B58]/20 dark:border-white/20 text-[#1E2B58]/70 dark:text-white/70 hover:bg-[#1E2B58]/5 dark:hover:bg-white/5 transition-all">
                 Hủy
               </button>
