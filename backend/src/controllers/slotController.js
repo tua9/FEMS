@@ -1,32 +1,28 @@
 import { StatusCodes } from 'http-status-codes'
-import Slot from '../models/Slot.js'
-import ApiError from '../utils/ApiError.js'
+import { slotService } from '../services/slotService.js'
 import { asyncHandler } from '../middlewares/asyncHandler.js'
 
 export const getAllSlots = asyncHandler(async (req, res) => {
-  const slots = await Slot.find({ isActive: true }).sort({ order: 1 })
-  res.status(StatusCodes.OK).json(slots)
+  const result = await slotService.getAllSlots()
+  res.status(StatusCodes.OK).json(result)
 })
 
 export const getSlotById = asyncHandler(async (req, res) => {
-  const slot = await Slot.findById(req.params.id)
-  if (!slot) throw new ApiError(StatusCodes.NOT_FOUND, 'Slot not found')
-  res.status(StatusCodes.OK).json(slot)
+  const result = await slotService.getSlotById(req.params.id)
+  res.status(StatusCodes.OK).json(result)
 })
 
 export const createSlot = asyncHandler(async (req, res) => {
-  const slot = await Slot.create(req.body)
-  res.status(StatusCodes.CREATED).json(slot)
+  const result = await slotService.createSlot(req.body)
+  res.status(StatusCodes.CREATED).json(result)
 })
 
 export const updateSlot = asyncHandler(async (req, res) => {
-  const slot = await Slot.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true })
-  if (!slot) throw new ApiError(StatusCodes.NOT_FOUND, 'Slot not found')
-  res.status(StatusCodes.OK).json(slot)
+  const result = await slotService.updateSlot(req.params.id, req.body)
+  res.status(StatusCodes.OK).json(result)
 })
 
 export const deleteSlot = asyncHandler(async (req, res) => {
-  const slot = await Slot.findByIdAndUpdate(req.params.id, { isActive: false }, { new: true })
-  if (!slot) throw new ApiError(StatusCodes.NOT_FOUND, 'Slot not found')
-  res.status(StatusCodes.OK).json({ message: 'Slot deactivated' })
+  const result = await slotService.deleteSlot(req.params.id)
+  res.status(StatusCodes.OK).json(result)
 })

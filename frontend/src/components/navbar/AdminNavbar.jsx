@@ -5,6 +5,7 @@ const ADMIN_LINKS = [
  { name: 'Equipment', path: '/admin/equipment' },
  { name: 'Repairs', path: '/admin/repairs' },
  { name: 'Borrowing', path: '/admin/borrowing' },
+ { name: 'Schedule', path: '/admin/schedule' },
  { name: 'Users', path: '/admin/users' },
  { name: 'Reports', path: '/admin/reports' },
 ];

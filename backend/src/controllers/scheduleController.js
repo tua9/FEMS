@@ -10,8 +10,7 @@ export const createSchedule = asyncHandler(async (req, res) => {
 })
 
 export const getAllSchedules = asyncHandler(async (req, res) => {
-  const { date } = req.query
-  const result = await scheduleService.getAllSchedules(date)
+  const result = await scheduleService.getAllSchedules(req.query)
   res.status(StatusCodes.OK).json(result)
 })
 
@@ -33,7 +32,6 @@ export const deleteSchedule = asyncHandler(async (req, res) => {
 // ── Personal schedules (lecturer + student) ───────────────────────────────────
 
 export const getMySchedules = asyncHandler(async (req, res) => {
-  const { date } = req.query
-  const result = await scheduleService.getMySchedules(req.user._id, date)
+  const result = await scheduleService.getMySchedules(req.user._id, req.query)
   res.status(StatusCodes.OK).json(result)
 })

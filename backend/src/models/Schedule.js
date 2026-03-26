@@ -33,10 +33,10 @@ const scheduleSchema = new mongoose.Schema(
       required: true,
     },
 
-    studentIds: {
-      type: [ObjectId],
-      ref: 'User',
-      default: [],
+    classId: {
+      type: ObjectId,
+      ref: 'Class',
+      required: true,
     },
 
     // Actual datetime stamps — derived from date + slot, stored for fast range queries
@@ -61,7 +61,7 @@ const scheduleSchema = new mongoose.Schema(
 
 scheduleSchema.index({ roomId: 1, startAt: 1, endAt: 1 })
 scheduleSchema.index({ lecturerId: 1, date: 1 })
-scheduleSchema.index({ studentIds: 1, date: 1 })
+scheduleSchema.index({ classId: 1, date: 1 })
 
 scheduleSchema.pre('find', function () {
   this.sort({ date: 1, startAt: 1 })
