@@ -34,6 +34,49 @@ const EquipmentManagement = () => {
     const [sortBy, setSortBy] = useState('Newest');
     const [currentPage, setCurrentPage] = useState(1);
     const ITEMS_PER_PAGE = 5;
+    
+    const statusCards = [
+        { 
+            label: 'Total Assets', 
+            value: equipments.length, 
+            filter: 'All Status', 
+            icon: 'inventory_2', 
+            color: 'text-blue-600 dark:text-blue-400', 
+            bg: 'bg-blue-50 dark:bg-blue-900/20' 
+        },
+        { 
+            label: 'Available', 
+            value: equipments.filter(e => getDerivedStatus(e, activeRequests) === 'Available').length, 
+            filter: 'Available', 
+            icon: 'check_circle', 
+            color: 'text-green-600 dark:text-green-400', 
+            bg: 'bg-green-50 dark:bg-green-900/20' 
+        },
+        { 
+            label: 'Maintenance', 
+            value: equipments.filter(e => e.status === 'maintenance').length, 
+            filter: 'Maintenance', 
+            icon: 'settings', 
+            color: 'text-purple-600 dark:text-purple-400', 
+            bg: 'bg-purple-50 dark:bg-purple-900/20' 
+        },
+        { 
+            label: 'Broken', 
+            value: equipments.filter(e => e.status === 'broken').length, 
+            filter: 'Broken', 
+            icon: 'error', 
+            color: 'text-red-600 dark:text-red-400', 
+            bg: 'bg-red-50 dark:bg-red-900/20' 
+        },
+        { 
+            label: 'Under Review', 
+            value: equipments.filter(e => e.status === 'under_review').length, 
+            filter: 'Under Review', 
+            icon: 'history_edu', 
+            color: 'text-amber-600 dark:text-amber-400', 
+            bg: 'bg-amber-50 dark:bg-amber-900/20' 
+        },
+    ];
 
     useEffect(() => {
         if (location.state && (location.state).status) {
