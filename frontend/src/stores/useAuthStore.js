@@ -64,9 +64,7 @@ export const useAuthStore = create((set, get) => ({
   refreshToken: async () => {
     try {
       set({ loading: true });
-      const { accessToken, user, fetchUserProfile, setAccessToken } = get();
-
-      if (accessToken) return;
+      const { user, fetchUserProfile, setAccessToken } = get();
 
       const newAccessToken = await authService.refreshToken();
       setAccessToken(newAccessToken);

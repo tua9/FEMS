@@ -76,25 +76,28 @@ const EquipmentManagement = () => {
  // Broken components for attention
  const brokenAttention = equipments.filter(e => e.status === 'broken' || e.status === 'maintenance').slice(0, 5);
 
- const categories = Array.from(new Set(equipments.map(e => e.category)));
- const statuses = ['Available', 'Borrowed', 'Maintenance', 'Broken'];
+ const categories = [
+ 'PC Lab',
+ 'IoT Kit',
+ 'Infrastructure',
+ 'Others',
+ ];
+ const statuses = ['Available', 'Maintenance', 'Broken'];
 
  const filteredEquipments = equipments
  .filter(item => {
  const vStatus = getDerivedStatus(item, activeRequests);
  const q = searchQuery.toLowerCase();
+ const roomName = ((item.roomId)?.name || '').toLowerCase();
  const matchesSearch =
  item.name.toLowerCase().includes(q) ||
  item._id.toLowerCase().includes(q) ||
  item.category.toLowerCase().includes(q) ||
- (item.model || '').toLowerCase().includes(q) ||
- (item.serial_number || '').toLowerCase().includes(q);
+ roomName.includes(q);
  let matchesStatus = statusFilter === 'All Status';
  if (!matchesStatus) {
  if (statusFilter === 'Available') {
- matchesStatus = vStatus === 'Available' || vStatus === 'Reserved';
- } else if (statusFilter === 'Borrowed') {
- matchesStatus = vStatus === 'In Use';
+ matchesStatus = vStatus === 'Available';
  } else if (statusFilter === 'Maintenance') {
  matchesStatus = vStatus === 'Maintenance';
  } else if (statusFilter === 'Broken') {

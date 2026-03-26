@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import CustomDropdown from '@/features/shared/components/CustomDropdown';
 import { useEquipmentStore } from '@/stores/useEquipmentStore';
 import { useRoomStore } from '@/stores/useRoomStore';
+import { useBuildingStore } from '@/stores/useBuildingStore';
 import { toast } from 'sonner';
 import { uploadImages } from '@/utils/uploadHelper';
 
@@ -17,9 +18,7 @@ const toInputDate = (d) => {
 };
 
 const STATUS_OPTIONS = [
- { value: 'good', label: 'Available' },
- { value: 'in_use', label: 'In use' },
- { value: 'reserved', label: 'Reserved' },
+ { value: 'available', label: 'Available' },
  { value: 'maintenance', label: 'Maintenance' },
  { value: 'broken', label: 'Broken' },
 ];
@@ -32,33 +31,31 @@ const AddEquipmentModal = ({ isOpen, onClose, equipment, onEquipmentUpdated, onC
  const [buildingId, setBuildingId] = useState('');
  const [roomId, setRoomId] = useState('');
  const [code, setCode] = useState('');
- const [model, setModel] = useState('');
- const [serialNumber, setSerialNumber] = useState('');
- const [status, setStatus] = useState('good');
- const [purchaseDate, setPurchaseDate] = useState('');
+ const [status, setStatus] = useState('available');
+ const [description, setDescription] = useState('');
  const [lastMaintenanceDate, setLastMaintenanceDate] = useState('');
  const [isSubmitting, setIsSubmitting] = useState(false);
 
  const createEquipment = useEquipmentStore(state => state.createEquipment);
  const updateEquipment = useEquipmentStore(state => state.updateEquipment);
  const { rooms, fetchAll: fetchRooms } = useRoomStore();
+ const { buildings: allBuildings, fetchAll: fetchBuildings } = useBuildingStore();
 
  useEffect(() => {
  if (isOpen) {
  fetchRooms();
+ fetchBuildings();
  }
- }, [isOpen, fetchRooms]);
+ }, [isOpen, fetchRooms, fetchBuildings]);
 
  useEffect(() => {
  if (equipment) {
  setName(equipment.name);
  setCategory(equipment.category);
  setCode(equipment.code || '');
- setModel(equipment.model || '');
- setSerialNumber(equipment.serialNumber || '');
- setStatus(equipment.status || 'good');
- setPurchaseDate(toInputDate(equipment.purchase_date));
- setLastMaintenanceDate(toInputDate(equipment.last_maintenance_date));
+ setStatus(equipment.status || 'available');
+ setDescription(equipment.description || '');
+ setLastMaintenanceDate(toInputDate(equipment.last_maintenance_date || equipment.lastMaintenanceDate));
  
  // Set building and room for editing
  const rm = equipment.roomId;
@@ -75,44 +72,88 @@ const AddEquipmentModal = ({ isOpen, onClose, equipment, onEquipmentUpdated, onC
  setBuildingId('');
  setRoomId('');
  setCode('');
- setModel('');
- setSerialNumber('');
- setStatus('good');
- setPurchaseDate('');
+ setStatus('available');
+ setDescription('');
  setLastMaintenanceDate('');
  }
  setPreviewUrl(equipment?.img || null);
  setImages([]);
  }, [equipment, isOpen]);
 
+ // When editing and roomId is a string, infer buildingId from loaded rooms
+ useEffect(() => {
+ if (!isOpen) return;
+ if (!equipment) return;
+ if (!roomId) return;
+ if (buildingId) return;
+
+ const match = rooms.find((r) => r._id === roomId);
+ const b = match?.buildingId;
+ const bId = b && typeof b === 'object' ? b._id : b;
+ if (bId) setBuildingId(bId);
+ }, [isOpen, equipment, roomId, buildingId, rooms]);
+
  // ── Room Selection Logic ──────────────────────────────────────────────────
  
- // Group rooms by building
- const buildings = useMemo(() => {
- const bMap = new Map();
- rooms.forEach((r) => {
- const b = r.buildingId;
- if (b && typeof b === 'object') {
- bMap.set(b._id, b.name);
- }
- });
- return Array.from(bMap.entries()).map(([id, name]) => ({ value: id, label: name }));
- }, [rooms]);
+// Buildings dropdown should come from Buildings collection (not inferred from rooms)
+const buildings = useMemo(() => {
+ const list = Array.isArray(allBuildings)
+  ? allBuildings
+  : allBuildings?.buildings ?? allBuildings?.data ?? [];
+
+ return (Array.isArray(list) ? list : [])
+  .filter((b) => b && (b._id || b.id))
+  .map((b) => ({ value: b._id || b.id, label: b.name || `Building ${String(b._id || b.id).slice(-6)}` }));
+}, [allBuildings]);
 
  const roomOptions = useMemo(() => {
- const filtered = buildingId 
- ? rooms.filter((r) => (r.buildingId?._id || r.buildingId) === buildingId)
- : rooms;
+  const normalizeId = (v) => {
+   if (!v) return '';
+   if (typeof v === 'string') return v;
+   if (typeof v === 'object') return v._id || v.id || '';
+   return String(v);
+  };
+
+ const getRoomBuildingId = (room) => {
+  // API hiện đang trả legacy field `building_id` (string) và `buildingId` bị null
+  // Ưu tiên buildingId (nếu đã populate), fallback sang building_id.
+  return normalizeId(room?.buildingId) || normalizeId(room?.building_id);
+ };
  
- return [
- { value: '', label: 'No Room / Storage' },
- ...filtered.map(r => ({ value: r._id, label: r.name }))
- ];
+  const selectedBuildingId = normalizeId(buildingId);
+  const filtered = selectedBuildingId
+   ? rooms.filter((r) => getRoomBuildingId(r) === selectedBuildingId)
+   : rooms;
+ 
+  return [
+   { value: '', label: 'No Room / Storage' },
+   ...filtered.map(r => ({ value: r._id, label: r.name }))
+  ];
  }, [rooms, buildingId]);
 
+// Auto-fill building when user picks a room first
+useEffect(() => {
+ const normalizeId = (v) => {
+  if (!v) return '';
+  if (typeof v === 'string') return v;
+  if (typeof v === 'object') return v._id || v.id || '';
+  return String(v);
+ };
+ const getRoomBuildingId = (room) => normalizeId(room?.buildingId) || normalizeId(room?.building_id);
+
+ if (!isOpen) return;
+ if (!roomId) return;
+
+ const selectedRoom = rooms.find((r) => r._id === roomId);
+ const bId = getRoomBuildingId(selectedRoom);
+ if (bId && normalizeId(buildingId) !== bId) {
+  setBuildingId(bId);
+ }
+}, [isOpen, roomId, rooms, buildingId]);
+
  const handleBuildingChange = (id) => {
- setBuildingId(id);
- setRoomId(''); // Reset room when building changes
+  setBuildingId(id);
+  setRoomId(''); // Reset room when building changes
  };
 
  const [images, setImages] = useState([]);
@@ -146,12 +187,10 @@ const AddEquipmentModal = ({ isOpen, onClose, equipment, onEquipmentUpdated, onC
  const payload= {
  name,
  category,
- status,
+ ...(isEdit ? { status } : { status: 'available' }),
  roomId: roomId || null,
  img: uploadedImageUrl,
- model: model || '',
- serialNumber: serialNumber || '',
- purchase_date: purchaseDate || null,
+ description: description || null,
  last_maintenance_date: lastMaintenanceDate || null,
  ...(isEdit && { code: code || undefined })
  };
@@ -184,9 +223,10 @@ const AddEquipmentModal = ({ isOpen, onClose, equipment, onEquipmentUpdated, onC
 
  const inputClasses = "w-full bg-slate-50/50 dark:bg-slate-900/50 border-2 border-slate-100 dark:border-slate-800 rounded-2xl px-5 py-3.5 text-sm font-bold text-slate-800 dark:text-white placeholder:text-slate-400 focus:ring-2 focus:ring-[#1E2B58] dark:focus:ring-blue-500 outline-none transition-all";
  const labelClasses = "text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1 mb-2 block";
+ const roomDropdownMenuClassName = "max-h-[240px] overflow-y-auto"; // ~5 options then scroll
 
  return createPortal(
- <div className="fixed inset-0 z-[100] flex items-center justify-center px-4 py-6 bg-black/30 backdrop-blur-sm">
+ <div className="fixed inset-0 z-100 flex items-center justify-center px-4 py-6 bg-black/30 backdrop-blur-sm">
  <style dangerouslySetInnerHTML={{
  __html: `
  .no-scrollbar::-webkit-scrollbar { display: none; }
@@ -239,29 +279,6 @@ const AddEquipmentModal = ({ isOpen, onClose, equipment, onEquipmentUpdated, onC
  />
  </div>
 
- <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
- <div className="space-y-1.5">
- <label className={labelClasses}>Model</label>
- <input
- type="text"
- value={model}
- onChange={(e) => setModel(e.target.value)}
- className={inputClasses}
- placeholder="e.g. U2723QE"
- />
- </div>
- <div className="space-y-1.5">
- <label className={labelClasses}>Serial number</label>
- <input
- type="text"
- value={serialNumber}
- onChange={(e) => setSerialNumber(e.target.value)}
- className={inputClasses}
- placeholder="Optional"
- />
- </div>
- </div>
-
  {isEdit && (
  <div className="space-y-1.5">
  <label className={labelClasses}>Asset Code</label>
@@ -282,17 +299,10 @@ const AddEquipmentModal = ({ isOpen, onClose, equipment, onEquipmentUpdated, onC
  value={category}
  options={[
  { value: '', label: 'Select Category' },
- { value: 'laptop', label: 'Laptop' },
- { value: 'pc_lab', label: 'PC Lab' },
- { value: 'photography', label: 'Photography' },
- { value: 'camera', label: 'Camera' },
- { value: 'audio', label: 'Audio' },
- { value: 'iot_kit', label: 'IoT Kit' },
- { value: 'lab', label: 'Lab Equipment' },
- { value: 'tablet', label: 'Tablet' },
- { value: 'network', label: 'Network Infrastructure' },
- { value: 'infrastructure', label: 'Infrastructure' },
- { value: 'other', label: 'Other' }
+ { value: 'PC Lab', label: 'PC Lab' },
+ { value: 'IoT Kit', label: 'IoT Kit' },
+ { value: 'Infrastructure', label: 'Infrastructure' },
+ { value: 'Others', label: 'Others' }
  ]}
  onChange={setCategory}
  className="w-full"
@@ -326,44 +336,36 @@ const AddEquipmentModal = ({ isOpen, onClose, equipment, onEquipmentUpdated, onC
  onChange={setRoomId}
  className="w-full"
  triggerClassName={`${inputClasses} flex justify-between items-center cursor-pointer`}
+ menuClassName={roomDropdownMenuClassName}
  fullWidth={true}
  />
- </div>
-
- <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:col-span-2">
- <div className="space-y-1.5 relative">
- <label className={labelClasses}>Status</label>
- <CustomDropdown
- value={status}
- options={STATUS_OPTIONS.map((o) => ({ value: o.value, label: o.label }))}
- onChange={setStatus}
- className="w-full"
- triggerClassName={`${inputClasses} flex justify-between items-center cursor-pointer`}
- fullWidth={true}
- />
- </div>
- <div className="space-y-1.5">
- <label className={labelClasses}>Purchase date</label>
- <input
- type="date"
- value={purchaseDate}
- onChange={(e) => setPurchaseDate(e.target.value)}
- className={inputClasses}
- />
- </div>
  </div>
 
  {isEdit ? (
- <div className="space-y-1.5 md:col-span-2">
- <label className={labelClasses}>Last maintenance</label>
- <input
- type="date"
- value={lastMaintenanceDate}
- onChange={(e) => setLastMaintenanceDate(e.target.value)}
- className={inputClasses}
- />
+ <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:col-span-2">
+  <div className="space-y-1.5 relative">
+   <label className={labelClasses}>Status</label>
+   <CustomDropdown
+    value={status}
+    options={STATUS_OPTIONS.map((o) => ({ value: o.value, label: o.label }))}
+    onChange={setStatus}
+    className="w-full"
+    triggerClassName={`${inputClasses} flex justify-between items-center cursor-pointer`}
+    fullWidth={true}
+   />
+  </div>
  </div>
  ) : null}
+
+ <div className="md:col-span-2 space-y-1.5">
+  <label className={labelClasses}>Description</label>
+  <textarea
+   value={description}
+   onChange={(e) => setDescription(e.target.value)}
+   className={`${inputClasses} min-h-28 resize-none`}
+   placeholder="Short description about this equipment (optional)"
+  />
+ </div>
 
  </div>
 

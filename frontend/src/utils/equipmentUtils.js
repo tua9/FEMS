@@ -3,8 +3,8 @@
  */
 export const sortEquipmentByAvailability = (items)=> {
  return [...items].sort((a, b) => {
- const aIsAvailable = (a.status === "good" || a.status === "available") && !a.borrowed_by;
- const bIsAvailable = (b.status === "good" || b.status === "available") && !b.borrowed_by;
+ const aIsAvailable = a.status === "available" && !a.borrowed_by;
+ const bIsAvailable = b.status === "available" && !b.borrowed_by;
 
  if (aIsAvailable && !bIsAvailable) return -1;
  if (!aIsAvailable && bIsAvailable) return 1;
@@ -61,28 +61,6 @@ export const getDerivedStatus = (
 
  if (equipment.status === 'broken') return 'Broken';
  if (equipment.status === 'maintenance') return 'Maintenance';
- if (equipment.status === 'in_use') return 'In Use';
- if (equipment.status === 'reserved') return 'Reserved';
 
- if (equipment.borrowed_by) {
- // Được gán cho ai đó -> Physical possession
- return 'In Use';
- }
-
- // Kiểm tra xem có đơn mượn nào được duyệt trong ngày hôm nay không
- const now = new Date();
- const todayEnd = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
-
- const upcomingReq = activeRequests.find(r =>
- (r.equipmentId?._id === equipment._id || r.equipmentId === equipment._id) &&
- r.status === 'approved' &&
- new Date(r.borrowDate) <= todayEnd
- );
-
- if (upcomingReq) {
- return 'Reserved';
- }
-
- // KHÔNG có borrowed_by => Sẵn sàng mượn
  return 'Available';
 };

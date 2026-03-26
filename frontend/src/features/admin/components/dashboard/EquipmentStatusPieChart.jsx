@@ -2,9 +2,8 @@ import React from 'react';
 
 const SEGMENTS = [
  { key: 'available', label: 'Available', color: '#22c55e' },
- { key: 'borrowed', label: 'Borrowed', color: '#1A2B56' },
- { key: 'under_maintenance', label: 'Under Maintenance', color: '#f59e0b' },
- { key: 'pending_disposal', label: 'Pending Disposal', color: '#ef4444' },
+ { key: 'maintenance', label: 'Maintenance', color: '#f59e0b' },
+ { key: 'broken', label: 'Broken', color: '#ef4444' },
 ]
 const CIRCUMFERENCE = 251.2
 
@@ -28,7 +27,7 @@ const EquipmentStatusPieChart = ({ data }) => {
  <p className="text-[11px] font-semibold uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-4">
  Equipment status
  </p>
- <div className="relative flex items-center justify-center py-4 min-h-[200px]">
+ <div className="relative flex items-center justify-center py-4 min-h-50">
  <svg className="w-44 h-44" viewBox="0 0 100 100">
  {segments.map((seg) =>
  seg.len > 0 ? (
@@ -54,7 +53,7 @@ const EquipmentStatusPieChart = ({ data }) => {
  {segments.map((seg) => (
  <div key={seg.key} className="flex items-center justify-between text-xs font-semibold dark:text-slate-300">
  <div className="flex items-center gap-2">
- <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: seg.color }} />
+ <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: seg.color }} />
  {seg.label}
  </div>
  <span>{seg.count}</span>
