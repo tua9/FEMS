@@ -7,7 +7,7 @@ import { RecentActivityList } from "@/features/shared/components/dashboard/Recen
 
 // ─────────────────────────────────────────────────────────────────────────────
 
-const LecturerDashboard: React.FC = () => {
+const LecturerDashboard = () => {
   const navigate = useNavigate();
   const { stats, activities, fetchStats, fetchActivities } = useDashboardStore();
   const { schedules, fetchSchedules } = useScheduleStore();

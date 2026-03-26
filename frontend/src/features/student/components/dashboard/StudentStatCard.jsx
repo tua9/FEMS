@@ -5,7 +5,7 @@ import { AnimatedList, AnimatedListItem } from "@/components/motion";
 import { useBorrowRequestStore } from "@/stores/useBorrowRequestStore";
 import { useReportStore } from "@/stores/useReportStore";
 
-const StudentStatCard: React.FC = () => {
+const StudentStatCard = () => {
   const borrowRequests = useBorrowRequestStore((state) => state.borrowRequests);
   const myReports = useReportStore((state) => state.myReports);
 

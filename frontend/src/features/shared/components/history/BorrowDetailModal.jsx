@@ -25,8 +25,8 @@ export const BorrowDetailModal = ({ item: b, initialMode = 'view', onClose, onBo
  <>
  <div className="flex items-center gap-3 mb-6">
  <div className="w-12 h-12 rounded-[1rem] bg-[#1E2B58]/10 dark:bg-white/5 flex items-center justify-center overflow-hidden">
- {(b.original?.equipment_id)?.img ? (
- <img src={(b.original.equipment_id).img} alt={b.equipmentName} className="w-full h-full object-cover" />
+ {(b.original?.equipmentId)?.img ? (
+ <img src={(b.original.equipmentId).img} alt={b.equipmentName} className="w-full h-full object-cover" />
  ) : (
  <Icon className="w-6 h-6 text-[#1E2B58] dark:text-white" />
  )}
@@ -82,12 +82,6 @@ export const BorrowDetailModal = ({ item: b, initialMode = 'view', onClose, onBo
  <div className="flex gap-3">
  {b.status === 'PENDING' ? (
  <>
- <button
- onClick={() => setMode('edit')}
- className="flex-1 py-3 rounded-[1.25rem] font-bold text-sm bg-amber-500 text-white hover:bg-amber-600 hover:scale-[1.02] active:scale-95 transition-all shadow-lg shadow-amber-500/20 flex items-center justify-center gap-2"
- >
- <Edit3 className="w-4 h-4" /> Edit
- </button>
  <button
  onClick={() => setShowCancelModal(true)}
  className="flex-1 py-3 rounded-[1.25rem] font-bold text-sm bg-red-500 text-white hover:bg-red-600 hover:scale-[1.02] active:scale-95 transition-all shadow-lg shadow-red-500/20 flex items-center justify-center gap-2"

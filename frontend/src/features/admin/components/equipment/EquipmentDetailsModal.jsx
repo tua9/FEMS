@@ -38,7 +38,7 @@ const EquipmentDetailsModal = ({ isOpen, equipment, onClose, onEdit, onReportDam
  import('@/services/borrowRequestService').then(({ borrowRequestService }) => {
  borrowRequestService.getAllBorrowRequests().then((reqs) => {
  const active = reqs.find(r =>
- (r.equipment_id?._id === equipment._id || r.equipment_id === equipment._id) &&
+ (r.equipmentId?._id === equipment._id || r.equipmentId === equipment._id) &&
  ['approved', 'handed_over', 'borrowing'].includes(r.status)
  );
  setActiveRequest(active);
@@ -122,7 +122,7 @@ const EquipmentDetailsModal = ({ isOpen, equipment, onClose, onEdit, onReportDam
  <span className="material-symbols-outlined text-xl">location_on</span>
  </div>
  <div className="flex flex-col">
- <p className="font-black text-slate-800 dark:text-white leading-tight">{(equipment.room_id)?.name || 'N/A'}</p>
+ <p className="font-black text-slate-800 dark:text-white leading-tight">{(equipment.roomId)?.name || 'N/A'}</p>
  <p className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mt-0.5">Asset Code: {equipment.code || "#" + equipment._id.slice(-6).toUpperCase()}</p>
  </div>
  </div>
@@ -137,7 +137,7 @@ const EquipmentDetailsModal = ({ isOpen, equipment, onClose, onEdit, onReportDam
  </div>
  </div>
  </div>
- {(equipment.model || equipment.serial_number) ? (
+ {(equipment.model || equipment.serialNumber) ? (
  <div className="md:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4">
  {equipment.model ? (
  <div className="p-6 rounded-3xl bg-white/40 dark:bg-slate-900/30 border-2 border-white dark:border-slate-700 shadow-sm">
@@ -145,10 +145,10 @@ const EquipmentDetailsModal = ({ isOpen, equipment, onClose, onEdit, onReportDam
  <p className="font-bold text-slate-800 dark:text-white">{equipment.model}</p>
  </div>
  ) : null}
- {equipment.serial_number ? (
+ {equipment.serialNumber ? (
  <div className="p-6 rounded-3xl bg-white/40 dark:bg-slate-900/30 border-2 border-white dark:border-slate-700 shadow-sm">
  <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Serial</h4>
- <p className="font-bold text-slate-800 dark:text-white">{equipment.serial_number}</p>
+ <p className="font-bold text-slate-800 dark:text-white">{equipment.serialNumber}</p>
  </div>
  ) : null}
  </div>
@@ -184,10 +184,10 @@ const EquipmentDetailsModal = ({ isOpen, equipment, onClose, onEdit, onReportDam
  {['Reserved', 'In Use'].includes(vStatus) && activeRequest && (
  <div className="mt-4 pt-4 border-t border-slate-200 dark:border-slate-700 w-full flex flex-col items-center justify-center gap-1.5 transition-all text-sm">
  <p className="text-slate-600 dark:text-slate-400">
- <span className="font-semibold">{vStatus === 'Reserved' ? 'Reserved for' : 'Currently used by'}:</span> {(activeRequest.user_id)?.displayName || (activeRequest.user_id)?.username || 'A User'}
+ <span className="font-semibold">{vStatus === 'Reserved' ? 'Reserved for' : 'Currently used by'}:</span> {(activeRequest.borrowerId)?.displayName || (activeRequest.borrowerId)?.username || 'A User'}
  </p>
  <p className="text-slate-600 dark:text-slate-400">
- <span className="font-semibold">Expected Return:</span> {formatDate(activeRequest.return_date)}
+ <span className="font-semibold">Expected Return:</span> {formatDate(activeRequest.expectedReturnDate)}
  </p>
  <a href={`/admin/borrow-requests?id=${activeRequest._id}`} target="_blank" rel="noreferrer" className="text-blue-500 hover:text-blue-600 font-bold tracking-wide mt-1 flex items-center justify-center gap-1">
  <span className="material-symbols-outlined text-[16px] mr-1">visibility</span>

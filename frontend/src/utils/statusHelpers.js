@@ -3,10 +3,10 @@
  * Dựa trên ngày hệ thống (Virtual Time Status).
  */
 export const isRequestOverdue = (request)=> {
- if (!request || !request.return_date) return false;
- 
+ if (!request || !request.expectedReturnDate) return false;
+
  if (request.status === 'handed_over' || request.status === 'borrowing') {
- return new Date() > new Date(request.return_date);
+ return new Date() > new Date(request.expectedReturnDate);
  }
  return false;
 };
@@ -19,7 +19,7 @@ export const getBorrowRequestDisplayStatus = (request)=> {
  if (isRequestOverdue(request)) return 'Overdue';
  
  if (request.status === 'approved') {
- const bDate = new Date(request.borrow_date);
+ const bDate = new Date(request.borrowDate);
  bDate.setHours(17, 0, 0, 0);
  if (new Date() > bDate) {
  return 'Late Pickup';

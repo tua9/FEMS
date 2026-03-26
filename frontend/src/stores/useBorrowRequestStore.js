@@ -92,7 +92,6 @@ export const useBorrowRequestStore = create((set, get) => ({
   },
 
   cancelMyBorrowRequest: async (id, decisionNote) => {
-    console.log('🏪 [STORE] cancelMyBorrowRequest started for ID:', id);
     try {
       set({ loading: true, error: null });
       await borrowRequestService.cancelBorrowRequest(id, decisionNote);
@@ -110,31 +109,6 @@ export const useBorrowRequestStore = create((set, get) => ({
       set({
         error:
           error?.response?.data?.message || "Không hủy được borrow request",
-      });
-      throw error;
-    } finally {
-      set({ loading: false });
-    }
-  },
-
-  editMyBorrowRequest: async (id, payload) => {
-    try {
-      set({ loading: true, error: null });
-      const updated = await borrowRequestService.editBorrowRequest(id, payload);
-      if (updated && updated.borrowRequest) {
-        set((state) => ({
-          borrowRequests: state.borrowRequests.map((item) =>
-            item._id === id ? updated.borrowRequest : item
-          ),
-          selectedBorrowRequest:
-            state.selectedBorrowRequest?._id === id
-              ? updated.borrowRequest
-              : state.selectedBorrowRequest,
-        }));
-      }
-    } catch (error) {
-      set({
-        error: error?.response?.data?.message || "Không cập nhật được borrow request",
       });
       throw error;
     } finally {

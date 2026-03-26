@@ -38,7 +38,7 @@ const toAsset = (eq) => ({
   _status: eq.status, // raw backend status
   icon: CATEGORY_ICON[eq.category] ?? 'category',
   imageUrl: eq.img ?? undefined,
-  location: eq.room_id?.name ?? undefined,
+  location: (eq.roomId ?? eq.room_id)?.name ?? undefined,
   code: eq.code,
 });
 

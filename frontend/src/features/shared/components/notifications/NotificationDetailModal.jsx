@@ -54,8 +54,8 @@ const BorrowDetail = ({ request, onClose }) => {
  const navigate = useNavigate();
  const { user } = useAuthStore();
 
- const eq = request.equipment_id;
- const rm = request.room_id;
+ const eq = request.equipmentId;
+ const rm = request.roomId;
  const assetName = (eq && typeof eq === 'object' ? eq.name : null) || (rm && typeof rm === 'object' ? rm.name : null) || 'Asset';
  const category = (eq && typeof eq === 'object' ? eq.category : null) || '';
  const Icon = CATEGORY_ICONS[category.toLowerCase()] || (rm ? Monitor : null);
@@ -80,8 +80,8 @@ const BorrowDetail = ({ request, onClose }) => {
  <div className="space-y-0 bg-white/40 dark:bg-slate-800/40 rounded-[1.25rem] px-5 py-1 mb-6">
  <DetailRow label="Asset" value={assetName} />
  <DetailRow label="Type" value={request.type || '—'} />
- <DetailRow label="Borrow Date" value={fmt(request.borrow_date)} />
- <DetailRow label="Return Date" value={fmt(request.return_date)} />
+ <DetailRow label="Borrow Date" value={fmt(request.borrowDate)} />
+ <DetailRow label="Return Date" value={fmt(request.expectedReturnDate)} />
  {request.note && <DetailRow label="Note" value={request.note} />}
  <div className="flex justify-between items-center text-sm py-2">
  <span className="text-[#1E2B58]/55 dark:text-white/50 font-medium">Status</span>
@@ -89,10 +89,10 @@ const BorrowDetail = ({ request, onClose }) => {
  {request.status.replace('_', ' ')}
  </span>
  </div>
- {request.decision_note && (
+ {request.decisionNote && (
  <div className="pt-2 border-t border-[#1E2B58]/10">
  <p className="text-[0.625rem] font-bold uppercase tracking-wider text-[#1E2B58]/50 mb-1">Note</p>
- <p className="text-sm text-[#1E2B58] dark:text-white/90 font-medium bg-white/30 dark:bg-slate-900/30 p-3 rounded-xl border border-white/40">{request.decision_note}</p>
+ <p className="text-sm text-[#1E2B58] dark:text-white/90 font-medium bg-white/30 dark:bg-slate-900/30 p-3 rounded-xl border border-white/40">{request.decisionNote}</p>
  </div>
  )}
  </div>

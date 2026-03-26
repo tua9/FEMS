@@ -89,8 +89,8 @@ export function useHistoryController(ITEMS_PER_PAGE= 6) {
  const filteredReports = useMemo(() => {
  const q = searchTerm.toLowerCase();
  return myReports.filter((r) => {
- const eqName = getEquipmentName(r.equipment_id).toLowerCase();
- const rmName = getRoomName(r.room_id).toLowerCase();
+ const eqName = getEquipmentName(r.equipment_id || r.equipmentId).toLowerCase();
+ const rmName = getRoomName(r.room_id || r.roomId).toLowerCase();
  const typeMatches = r.type && r.type.toLowerCase().includes(q);
  
  const matchSearch = !q || r._id.toLowerCase().includes(q) || eqName.includes(q) || rmName.includes(q) || typeMatches;
@@ -106,12 +106,12 @@ export function useHistoryController(ITEMS_PER_PAGE= 6) {
  const filteredBorrow = useMemo(() => {
  const q = searchTerm.toLowerCase();
  return borrowRequests.filter((b) => {
- const eqName = getEquipmentName(b.equipment_id).toLowerCase();
- const rmName = getRoomName(b.room_id).toLowerCase();
+ const eqName = getEquipmentName(b.equipmentId).toLowerCase();
+ const rmName = getRoomName(b.roomId).toLowerCase();
  
  const matchSearch = !q || b._id.toLowerCase().includes(q) || eqName.includes(q) || rmName.includes(q);
 
- const isOverdue = b.status === 'approved' && new Date(b.return_date) < new Date();
+ const isOverdue = b.status === 'approved' && new Date(b.expectedReturnDate) < new Date();
  const displayStatus = isOverdue ? 'OVERDUE' : (b.status ? b.status.toUpperCase() : '');
  const matchStatus = statusFilter === "All" || displayStatus === statusFilter.toUpperCase();
  
@@ -129,10 +129,10 @@ export function useHistoryController(ITEMS_PER_PAGE= 6) {
  // Final mapping for UI
  const currentBorrowItems = useMemo(() => {
  return pagedBorrowItems.map((b)=> {
- const equipment = b.equipment_id && typeof b.equipment_id !== 'string' ? b.equipment_id : null;
- const room = b.room_id && typeof b.room_id !== 'string' ? b.room_id : null;
+ const equipment = b.equipmentId && typeof b.equipmentId !== 'string' ? b.equipmentId : null;
+ const room = b.roomId && typeof b.roomId !== 'string' ? b.roomId : null;
  
- const isOverdue = b.status === 'approved' && new Date(b.return_date) < new Date();
+ const isOverdue = b.status === 'approved' && new Date(b.expectedReturnDate) < new Date();
  const displayStatus = (isOverdue ? 'OVERDUE' : (b.status || 'PENDING')).toUpperCase();
 
  return {
@@ -141,8 +141,8 @@ export function useHistoryController(ITEMS_PER_PAGE= 6) {
  group: room ? (room.type || '') : '',
  equipmentName: equipment ? equipment.name : 'Infrastructure',
  icon: getIcon(equipment?.category),
- period: formatDisplayDate(b.borrow_date),
- returnDate: formatDisplayDate(b.return_date),
+ period: formatDisplayDate(b.borrowDate),
+ returnDate: formatDisplayDate(b.expectedReturnDate),
  status: displayStatus,
  original: b
  };

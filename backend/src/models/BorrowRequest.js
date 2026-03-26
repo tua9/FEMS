@@ -1,54 +1,80 @@
 import mongoose from 'mongoose'
 
+const { ObjectId } = mongoose.Schema.Types
+
 const borrowRequestSchema = new mongoose.Schema(
   {
-    user_id: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'User',
-      required: true,
-    },
-
-    equipment_id: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'Equipment',
-      default: null,
-    },
-
-    room_id: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'Room',
-      default: null,
-    },
-
-    type: {
-      type: String,
-      enum: ['equipment', 'infrastructure'],
-      default: 'other',
-    },
-
     // Auto-generated business code, e.g. BR2603ABC
     code: {
       type: String,
       unique: true,
-      sparse: true, // allows existing docs without code
+      sparse: true,
       trim: true,
     },
 
-    status: {
+    // ── Borrower ──────────────────────────────────────────────────────────────
+    borrowerId: {
+      type: ObjectId,
+      ref: 'User',
+      required: true,
+    },
+
+    // Role at the time the request was created
+    borrowerRole: {
       type: String,
-      enum: ['pending', 'approved', 'rejected', 'handed_over', 'returned', 'cancelled'],
-      default: 'pending',
+      enum: ['student', 'lecturer'],
+      required: true,
     },
 
+    // ── Target asset ──────────────────────────────────────────────────────────
+    equipmentId: {
+      type: ObjectId,
+      ref: 'Equipment',
+      required: true,
+    },
 
-    borrow_date: {
+    // Room the equipment belongs to at time of request (for audit)
+    roomId: {
+      type: ObjectId,
+      ref: 'Room',
+      default: null,
+    },
+
+    // ── Session context ───────────────────────────────────────────────────────
+    // The schedule session that grants the right to borrow
+    scheduleId: {
+      type: ObjectId,
+      ref: 'Schedule',
+      default: null,
+    },
+
+    // The slot (Ca 1 / Ca 2 …) the request belongs to
+    classSlotId: {
+      type: ObjectId,
+      ref: 'Slot',
+      default: null,
+    },
+
+    // ── Dates ─────────────────────────────────────────────────────────────────
+    borrowDate: {
       type: Date,
       required: true,
     },
 
-    return_date: {
+    expectedReturnDate: {
       type: Date,
       required: true,
+    },
+
+    actualReturnDate: {
+      type: Date,
+      default: null,
+    },
+
+    // ── Purpose / Notes ───────────────────────────────────────────────────────
+    purpose: {
+      type: String,
+      default: null,
     },
 
     note: {
@@ -56,29 +82,78 @@ const borrowRequestSchema = new mongoose.Schema(
       default: null,
     },
 
-    // ── Decision / Audit fields ──────────────────────────────────────────────
-    // Shared field for: user's cancel reason, admin's approve/reject note
-    decision_note: {
+    // ── Workflow status ───────────────────────────────────────────────────────
+    status: {
+      type: String,
+      enum: ['pending', 'approved', 'rejected', 'handed_over', 'returned', 'cancelled'],
+      default: 'pending',
+    },
+
+    decisionNote: {
       type: String,
       default: null,
     },
 
-    // Timestamps + actor for cancel
-    cancelled_at: { type: Date, default: null },
-    cancelled_by: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
+    // ── Approval ──────────────────────────────────────────────────────────────
+    approvedBy: {
+      type: ObjectId,
+      ref: 'User',
+      default: null,
+    },
 
-    // Timestamps + actor for admin approve/reject
-    processed_at: { type: Date, default: null },
-    processed_by: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
+    approvedAt: {
+      type: Date,
+      default: null,
+    },
+
+    // ── Handover ──────────────────────────────────────────────────────────────
+    handedOverBy: {
+      type: ObjectId,
+      ref: 'User',
+      default: null,
+    },
+
+    handedOverAt: {
+      type: Date,
+      default: null,
+    },
+
+    // ── Return confirmation ────────────────────────────────────────────────────
+    returnedConfirmedBy: {
+      type: ObjectId,
+      ref: 'User',
+      default: null,
+    },
+
+    returnedAt: {
+      type: Date,
+      default: null,
+    },
+
+    // ── Cancellation ──────────────────────────────────────────────────────────
+    cancelledBy: {
+      type: ObjectId,
+      ref: 'User',
+      default: null,
+    },
+
+    cancelledAt: {
+      type: Date,
+      default: null,
+    },
   },
   { timestamps: true },
 )
 
-// Default sort by newest first
+// ── Indexes ───────────────────────────────────────────────────────────────────
+borrowRequestSchema.index({ borrowerId: 1, status: 1 })
+borrowRequestSchema.index({ equipmentId: 1, status: 1 })
+borrowRequestSchema.index({ scheduleId: 1 })
+
+// Default sort newest first
 borrowRequestSchema.pre('find', function () {
   this.sort({ createdAt: -1 })
 })
 
 const BorrowRequest = mongoose.model('BorrowRequest', borrowRequestSchema)
-
 export default BorrowRequest

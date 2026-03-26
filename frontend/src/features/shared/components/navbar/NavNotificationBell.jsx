@@ -27,13 +27,13 @@ const NotificationItem = ({
  to={`/${role}/notifications`}
  state={{ highlightId: notification._id }}
  onClick={() => {
- if (!notification.read) {
+ if (!notification.isRead) {
  onRead(notification._id);
  }
  onClose();
  }}
  className={`block w-full px-5 py-4 text-left transition-colors hover:bg-black/5 dark:hover:bg-white/10 border-b border-black/8 dark:border-white/12 last:border-0 group ${
- !notification.read ? "bg-blue-500/6 dark:bg-blue-400/10" : ""
+ !notification.isRead ? "bg-blue-500/6 dark:bg-blue-400/10" : ""
  }`}
  >
  <div className="flex items-start gap-3">
@@ -51,14 +51,14 @@ const NotificationItem = ({
  <div className="flex items-start justify-between gap-2">
  <p
  className={`text-[0.8125rem] font-bold leading-snug ${
- notification.read
+ notification.isRead
  ? "text-slate-500 dark:text-slate-400"
  : "text-slate-900 dark:text-slate-100"
  }`}
  >
  {notification.title}
  </p>
- {!notification.read && (
+ {!notification.isRead && (
  <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-blue-500" />
  )}
  </div>
@@ -261,7 +261,7 @@ const NavNotificationBell = () => {
  </div>
  ) : (
  (() => {
- const unreadList = notifications.filter(n => !n.read);
+ const unreadList = notifications.filter(n => !n.isRead);
  if (unreadList.length > 0) {
  return unreadList.slice(0, 10).map((n) => (
  <NotificationItem

@@ -20,7 +20,7 @@ export const hasActiveBorrowRequest = (
  const activeStatuses = ["pending", "approved", "handed_over"];
 
  return myRequests.find((req) => {
- const reqEqId = typeof req.equipment_id === "object" ? (req.equipment_id)?._id : req.equipment_id;
+ const reqEqId = typeof req.equipmentId === "object" ? (req.equipmentId)?._id : req.equipmentId;
  return reqEqId === equipmentId && activeStatuses.includes(req.status);
  });
 };
@@ -41,7 +41,7 @@ export const getDerivedEquipmentType = (equipment) => {
  return 'Infrastructure';
  }
 
- if (equipment.room_id) {
+ if (equipment.roomId || equipment.room_id) {
  return 'Lab';
  }
 
@@ -74,9 +74,9 @@ export const getDerivedStatus = (
  const todayEnd = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
 
  const upcomingReq = activeRequests.find(r =>
- (r.equipment_id?._id === equipment._id || r.equipment_id === equipment._id) &&
+ (r.equipmentId?._id === equipment._id || r.equipmentId === equipment._id) &&
  r.status === 'approved' &&
- new Date(r.borrow_date) <= todayEnd
+ new Date(r.borrowDate) <= todayEnd
  );
 
  if (upcomingReq) {

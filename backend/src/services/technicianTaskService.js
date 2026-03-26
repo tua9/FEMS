@@ -30,15 +30,15 @@ const mapStatus = (s) => {
 const getTasks = async () => {
   const reports = await Report.find()
     .populate({ path: 'equipment_id', select: 'name category' })
-    .populate({ path: 'room_id', select: 'name floor building_id' })
-    .populate({ path: 'room_id', populate: { path: 'building_id', select: 'name' } })
+    .populate({ path: 'room_id', select: 'name floor buildingId' })
+    .populate({ path: 'room_id', populate: { path: 'buildingId', select: 'name' } })
     .populate({ path: 'user_id', select: 'displayName email username' })
 
   return reports.map((r) => {
     const roomName = r.room_id?.name || 'N/A'
     const equipmentName = r.equipment_id?.name || null
 
-    const buildingName = r.room_id?.building_id?.name || 'N/A'
+    const buildingName = r.room_id?.buildingId?.name || 'N/A'
 
     const reporterName = r.user_id?.displayName || r.user_id?.username || 'Unknown'
 

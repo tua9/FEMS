@@ -25,12 +25,12 @@ const BorrowingDetailModal = ({
  }
  };
 
- const isOverdue = record.status === 'overdue' || (record.status === 'handed_over' && new Date(record.return_date) < new Date());
+ const isOverdue = record.status === 'overdue' || (record.status === 'handed_over' && new Date(record.expectedReturnDate) < new Date());
  const displayStatus = isOverdue ? 'overdue' : record.status;
 
  // Resolve entity (Equipment or Room)
  const isInfrastructure = record.type === 'infrastructure';
- const entity = isInfrastructure ? record.room_id : record.equipment_id;
+ const entity = isInfrastructure ? record.roomId : record.equipmentId;
  const entityName = (entity)?.name || 'Unknown';
  const entitySub = isInfrastructure ? (entity)?.type : (entity)?.category;
  const entityIcon = isInfrastructure ? 'meeting_room' : 'devices';
@@ -84,14 +84,14 @@ const BorrowingDetailModal = ({
  <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Borrower Details</h4>
  <div className="flex items-center gap-4">
  <div className="w-12 h-12 rounded-2xl bg-[#1A2B56] text-white flex items-center justify-center font-bold text-lg">
- {(typeof record.user_id === 'object' ? record.user_id?.displayName : 'U')?.charAt(0)}
+ {(typeof record.borrowerId === 'object' ? record.borrowerId?.displayName : 'U')?.charAt(0)}
  </div>
  <div className="min-w-0">
  <p className="font-black text-slate-800 dark:text-white leading-tight truncate">
- {typeof record.user_id === 'object' ? record.user_id?.displayName : 'Unknown'}
+ {typeof record.borrowerId === 'object' ? record.borrowerId?.displayName : 'Unknown'}
  </p>
  <p className="text-[10px] font-bold text-slate-500 dark:text-slate-400 mt-0.5 truncate">
- {typeof record.user_id === 'object' ? record.user_id?.email : 'No email'}
+ {typeof record.borrowerId === 'object' ? record.borrowerId?.email : 'No email'}
  </p>
  </div>
  </div>
@@ -127,11 +127,11 @@ const BorrowingDetailModal = ({
  )}
 
  {/* Cancellation Reason */}
- {record.status === 'cancelled' && record.decision_note && (
+ {record.status === 'cancelled' && record.decisionNote && (
  <div className="p-8 rounded-[32px] bg-red-50/50 dark:bg-red-900/10 border-2 border-red-100 dark:border-red-900/30">
  <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-red-500 mb-4">Cancellation Reason</h4>
  <p className="text-sm font-bold text-red-700 dark:text-red-400 leading-relaxed italic">
- "{record.decision_note}"
+ "{record.decisionNote}"
  </p>
  </div>
  )}
@@ -143,7 +143,7 @@ const BorrowingDetailModal = ({
  <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Scheduled Due Date</p>
  <div className="flex items-center gap-2">
  <span className={`text-xl font-black ${isOverdue ? 'text-red-500' : 'text-[#1A2B56] dark:text-white'}`}>
- {new Date(record.return_date).toLocaleDateString()}
+ {new Date(record.expectedReturnDate).toLocaleDateString()}
  </span>
  </div>
  </div>
@@ -151,7 +151,7 @@ const BorrowingDetailModal = ({
  <div className="text-right hidden md:block">
  <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Borrow Date</p>
  <p className="text-sm font-bold text-slate-700 dark:text-slate-300">
- {new Date(record.borrow_date).toLocaleDateString()}
+ {new Date(record.borrowDate).toLocaleDateString()}
  </p>
  </div>
  <div className="w-12 h-12 rounded-2xl bg-white dark:bg-slate-800 flex items-center justify-center text-slate-400 border-2 border-slate-100 dark:border-slate-700 transform rotate-12">
@@ -162,7 +162,7 @@ const BorrowingDetailModal = ({
  </div>
 
  {/* Administrative Metadata */}
- {(record.processed_by || record.createdAt) && (
+ {(record.approvedBy || record.createdAt) && (
  <div>
  <h4 className="text-[11px] font-black uppercase tracking-[0.25em] text-slate-400 mb-6 flex items-center gap-3">
  <span className="w-8 h-0.5 bg-slate-200 dark:bg-slate-700"></span>
@@ -180,7 +180,7 @@ const BorrowingDetailModal = ({
  </div>
  </div>
  )}
- {record.processed_by && (
+ {record.approvedBy && (
  <div className="flex items-center gap-4 p-4 rounded-2xl bg-white dark:bg-slate-900/40 border-2 border-slate-100 dark:border-slate-800">
  <div className="w-8 h-8 rounded-xl bg-emerald-50 dark:bg-emerald-900/20 text-emerald-500 flex items-center justify-center shadow-sm">
  <span className="material-symbols-outlined text-[18px]">verified_user</span>
@@ -188,7 +188,7 @@ const BorrowingDetailModal = ({
  <div className="text-[10px]">
  <p className="font-bold text-slate-500 uppercase tracking-widest">Handled By</p>
  <p className="font-black text-slate-800 dark:text-white mt-0.5 truncate">
- {typeof record.processed_by === 'object' ? (record.processed_by)?.displayName : 'Staff'}
+ {typeof record.approvedBy === 'object' ? (record.approvedBy)?.displayName : 'Staff'}
  </p>
  </div>
  </div>

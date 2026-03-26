@@ -22,15 +22,7 @@ export const borrowRequestService = {
  },
 
  async cancelBorrowRequest(id, decisionNote) {
- console.log('🚀 [FRONTEND SERVICE] cancelBorrowRequest ID:', id);
- console.log('🚀 [FRONTEND SERVICE] cancelBorrowRequest decisionNote:', decisionNote);
- const res = await api.patch(`/requests/${id}/cancel`, { decision_note: decisionNote });
- console.log('✅ [FRONTEND SERVICE] cancelBorrowRequest result:', res.data);
- return res.data;
- },
-
- async editBorrowRequest(id, payload) {
- const res = await api.patch(`/requests/${id}/edit`, payload);
+ const res = await api.patch(`/requests/${id}/cancel`, { decisionNote });
  return res.data;
  },
 
@@ -45,7 +37,7 @@ export const borrowRequestService = {
  },
 
  async rejectBorrowRequest(id, decisionNote) {
- const res = await api.patch(`/requests/${id}/reject`, { decision_note: decisionNote });
+ const res = await api.patch(`/requests/${id}/reject`, { decisionNote });
  return res.data;
  },
 

@@ -149,14 +149,14 @@ export const EquipmentCatalog = () => {
 
  const handleSubmitBorrow = async (borrowDate, returnDate, purpose) => {
  try {
- const tempRoom = borrowingItem?.room_id;
+ const tempRoom = borrowingItem?.roomId || borrowingItem?.room_id;
  const roomId = tempRoom?._id ? String(tempRoom._id) : (typeof tempRoom === 'string' ? tempRoom : "");
 
- await createMyBorrowRequest({ equipment_id: borrowingItem._id,
- ...(roomId ? { room_id: roomId } : {}),
+ await createMyBorrowRequest({ equipmentId: borrowingItem._id,
+ ...(roomId ? { roomId } : {}),
  type: "equipment",
- borrow_date: new Date(borrowDate).toISOString(),
- return_date: new Date(returnDate).toISOString(),
+ borrowDate: new Date(borrowDate).toISOString(),
+ expectedReturnDate: new Date(returnDate).toISOString(),
  note: purpose.trim(),
  });
 

@@ -123,10 +123,10 @@ const NewBorrowModal = ({ isOpen, onClose }) => {
  try {
  setSubmitting(true);
  await borrowRequestService.directAllocateEquipment({
- user_id: selectedUser._id,
- equipment_id: selectedEquipment._id,
- borrow_date: new Date(borrowDate).toISOString(),
- return_date: new Date(returnDate).toISOString(),
+ borrowerId: selectedUser._id,
+ equipmentId: selectedEquipment._id,
+ borrowDate: new Date(borrowDate).toISOString(),
+ expectedReturnDate: new Date(returnDate).toISOString(),
  note: note?.trim() || undefined,
  });
  toast.success('Direct allocation created');

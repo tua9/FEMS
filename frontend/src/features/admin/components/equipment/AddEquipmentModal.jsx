@@ -55,16 +55,16 @@ const AddEquipmentModal = ({ isOpen, onClose, equipment, onEquipmentUpdated, onC
  setCategory(equipment.category);
  setCode(equipment.code || '');
  setModel(equipment.model || '');
- setSerialNumber(equipment.serial_number || '');
+ setSerialNumber(equipment.serialNumber || '');
  setStatus(equipment.status || 'good');
  setPurchaseDate(toInputDate(equipment.purchase_date));
  setLastMaintenanceDate(toInputDate(equipment.last_maintenance_date));
  
  // Set building and room for editing
- const rm = equipment.room_id;
+ const rm = equipment.roomId;
  if (rm && typeof rm === 'object') {
  setRoomId(rm._id || '');
- setBuildingId(rm.building_id?._id || rm.building_id || '');
+ setBuildingId(rm.buildingId?._id || rm.buildingId || '');
  } else if (rm) {
  setRoomId(rm);
  // Building will be fetched/matched later if possible
@@ -91,7 +91,7 @@ const AddEquipmentModal = ({ isOpen, onClose, equipment, onEquipmentUpdated, onC
  const buildings = useMemo(() => {
  const bMap = new Map();
  rooms.forEach((r) => {
- const b = r.building_id;
+ const b = r.buildingId;
  if (b && typeof b === 'object') {
  bMap.set(b._id, b.name);
  }
@@ -101,7 +101,7 @@ const AddEquipmentModal = ({ isOpen, onClose, equipment, onEquipmentUpdated, onC
 
  const roomOptions = useMemo(() => {
  const filtered = buildingId 
- ? rooms.filter((r) => (r.building_id?._id || r.building_id) === buildingId)
+ ? rooms.filter((r) => (r.buildingId?._id || r.buildingId) === buildingId)
  : rooms;
  
  return [
@@ -147,11 +147,10 @@ const AddEquipmentModal = ({ isOpen, onClose, equipment, onEquipmentUpdated, onC
  name,
  category,
  status,
- available: isEdit ? equipment?.available : true,
- room_id: roomId || null,
+ roomId: roomId || null,
  img: uploadedImageUrl,
  model: model || '',
- serial_number: serialNumber || '',
+ serialNumber: serialNumber || '',
  purchase_date: purchaseDate || null,
  last_maintenance_date: lastMaintenanceDate || null,
  ...(isEdit && { code: code || undefined })

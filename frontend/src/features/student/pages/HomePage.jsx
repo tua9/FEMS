@@ -31,14 +31,14 @@ const HomePage = () => {
  // Map borrowRequests to RecentActivity format
  const mappedActivities= useMemo(() => {
  return [...borrowRequests]
- .sort((a, b) => new Date(b.borrow_date).getTime() - new Date(a.borrow_date).getTime())
+ .sort((a, b) => new Date(b.borrowDate).getTime() - new Date(a.borrowDate).getTime())
  .slice(0, 5)
  .map((req) => ({
  id: req._id,
  type: "return", // or map based on req status/type
  title: `${req.type === 'equipment' ? 'Equipment' : 'Facility'} Request`,
  subject: `Status: ${req.status || 'Pending'}`,
- time: req.borrow_date,
+ time: req.borrowDate,
  description: req.note || undefined,
  }));
  }, [borrowRequests]);

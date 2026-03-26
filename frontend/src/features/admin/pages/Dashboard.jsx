@@ -13,11 +13,10 @@ import DamageCauseChart from '../components/dashboard/DamageCauseChart';
 import TopBrokenList from '../components/dashboard/TopBrokenList';
 import RepairOutcomeChart from '../components/dashboard/RepairOutcomeChart';
 import { useAdminStore } from '@/stores/useAdminStore';
-import type { TopBorrowedItem } from '@/types/admin.types';
 import { useNavigate } from 'react-router-dom';
 import { PageShell, AnimatedSection, AnimatedList, AnimatedListItem } from '@/components/motion';
 
-const AdminDashboard: React.FC = () => {
+const AdminDashboard = () => {
     const navigate = useNavigate();
     const {
         stats, fetchStats,
@@ -55,7 +54,7 @@ const AdminDashboard: React.FC = () => {
         fetchDashboardData();
     }, [fetchStats, fetchHealthStatus, fetchChartData, fetchBorrowRequests, fetchDamageReports, fetchEquipmentAnalytics, fetchReportAnalytics]);
 
-    const topBorrowedDisplay: TopBorrowedItem[] = React.useMemo(() => {
+    const topBorrowedDisplay = React.useMemo(() => {
         const raw =
             equipmentAnalytics?.topBorrowedModels?.length > 0
                 ? equipmentAnalytics.topBorrowedModels
@@ -63,8 +62,8 @@ const AdminDashboard: React.FC = () => {
                     ? equipmentAnalytics.topBorrowedEquipment
                     : chartData?.topBorrowedEquipment ?? [];
         if (!raw.length) return [];
-        const maxCount = Math.max(...raw.map((i: any) => i.count), 1);
-        return raw.map((item: any) => ({
+        const maxCount = Math.max(...raw.map((i) => i.count), 1);
+        return raw.map((item) => ({
             name: item.name,
             count: item.count,
             percentage: (item.count / maxCount) * 100

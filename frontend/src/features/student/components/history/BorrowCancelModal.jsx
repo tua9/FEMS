@@ -37,8 +37,8 @@ const BorrowCancelModal = ({
  }, []);
 
  const equipmentName =
- item.equipment_id && typeof item.equipment_id !== "string"
- ? item.equipment_id.name
+ item.equipmentId && typeof item.equipmentId !== "string"
+ ? item.equipmentId.name
  : "Thiết bị";
 
  const requestId = `#${item._id.slice(-6).toUpperCase()}`;

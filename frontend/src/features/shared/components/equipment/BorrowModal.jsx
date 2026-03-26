@@ -107,7 +107,7 @@ const BorrowModal = ({ item, onClose, onSubmit, isLoading }) => {
  </div>
  <div>
  <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Location</p>
- <p className="text-xs font-black text-[#1E2B58] dark:text-white">{(item.room_id)?.name || "Central Store"}</p>
+ <p className="text-xs font-black text-[#1E2B58] dark:text-white">{(item.roomId)?.name || "Central Store"}</p>
  </div>
  </div>
  </div>

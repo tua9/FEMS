@@ -36,7 +36,7 @@ const AdminNotificationDropdown = () => {
  const dropdownRef = useRef(null);
  const navigate = useNavigate();
 
- const unread = items.filter((n) => !n.read).length;
+ const unread = items.filter((n) => !n.isRead).length;
 
  // ── Portal position ───────────────────────────────────────────────────────
  const [pos, setPos] = useState({ top: 0, right: 0 });
@@ -191,7 +191,7 @@ const AdminNotificationDropdown = () => {
  onClick={() => markRead(notif.id)}
  className={[
  'group w-full border-b border-black/8 px-4 py-3.5 text-left transition-colors last:border-0 hover:bg-black/5 dark:border-white/12 dark:hover:bg-white/10',
- !notif.read ? 'bg-blue-500/6 dark:bg-blue-400/10' : '',
+ !notif.isRead ? 'bg-blue-500/6 dark:bg-blue-400/10' : '',
  ].join(' ')}
  >
  <div className="flex items-start gap-3">
@@ -202,14 +202,14 @@ const AdminNotificationDropdown = () => {
  </div>
  <div className="min-w-0 flex-1">
  <div className="flex items-start justify-between gap-2">
- <p className={`text-[0.8125rem] font-bold leading-tight ${notif.read ? 'text-slate-500 dark:text-slate-400' : 'text-slate-900 dark:text-slate-100'}`}>
+ <p className={`text-[0.8125rem] font-bold leading-tight ${notif.isRead ? 'text-slate-500 dark:text-slate-400' : 'text-slate-900 dark:text-slate-100'}`}>
  {notif.title}
  </p>
- {!notif.read && (
+ {!notif.isRead && (
  <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-rose-500" />
  )}
  </div>
- <p className={`mt-0.5 line-clamp-2 text-xs leading-snug ${notif.read ? 'text-slate-400 dark:text-slate-500' : 'text-slate-600 dark:text-slate-300'}`}>
+ <p className={`mt-0.5 line-clamp-2 text-xs leading-snug ${notif.isRead ? 'text-slate-400 dark:text-slate-500' : 'text-slate-600 dark:text-slate-300'}`}>
  {notif.body}
  </p>
  <span className="mt-1 block text-[0.6875rem] font-semibold text-slate-400 dark:text-slate-500">

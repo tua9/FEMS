@@ -32,7 +32,7 @@ const HistoryDetailModal = ({ modal, onClose }) => {
  const getRoomName = (room) => {
  if (!room) return "Unknown Room";
  if (typeof room === 'string') return room;
- const building = room.building_id && typeof room.building_id !== 'string' ? room.building_id : null;
+ const building = (room.buildingId || room.building_id) && typeof (room.buildingId || room.building_id) !== 'string' ? (room.buildingId || room.building_id) : null;
  return building ? `${building.name}, ${room.name}` : (room.name || "Unknown Room");
  };
 
@@ -89,7 +89,7 @@ const HistoryDetailModal = ({ modal, onClose }) => {
  <div className="flex justify-between">
  <span className="text-sm text-slate-500 dark:text-slate-400">Date</span>
  <span className="text-sm font-bold text-[#1E2B58] dark:text-white">
- {new Date(item.createdAt || (item).borrow_date || new Date()).toLocaleString('en-US', {
+ {new Date(item.createdAt || (item).borrowDate || new Date()).toLocaleString('en-US', {
  dateStyle: 'medium',
  timeStyle: 'short'
  })}
@@ -99,7 +99,7 @@ const HistoryDetailModal = ({ modal, onClose }) => {
  <div className="flex justify-between">
  <span className="text-sm text-slate-500 dark:text-slate-400">Room</span>
  <span className="text-sm font-bold text-[#1E2B58] dark:text-white">
- {getRoomName(item.room_id)}
+ {getRoomName(item.room_id || item.roomId)}
  </span>
  </div>
 
@@ -131,13 +131,13 @@ const HistoryDetailModal = ({ modal, onClose }) => {
  <div className="flex justify-between">
  <span className="text-sm text-slate-500 dark:text-slate-400">Equipment</span>
  <span className="text-sm font-bold text-[#1E2B58] dark:text-white">
- {getEquipmentName(item.equipment_id)}
+ {getEquipmentName(item.equipmentId || item.equipment_id)}
  </span>
  </div>
  <div className="flex justify-between">
  <span className="text-sm text-slate-500 dark:text-slate-400">Return By</span>
  <span className="text-sm font-bold text-[#1E2B58] dark:text-white">
- {new Date((item).return_date).toLocaleString('en-US', {
+ {new Date((item).expectedReturnDate).toLocaleString('en-US', {
  dateStyle: 'medium',
  timeStyle: 'short'
  })}

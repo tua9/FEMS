@@ -1,7 +1,16 @@
 import mongoose from 'mongoose'
 
-const assetSchema = new mongoose.Schema(
+const { ObjectId } = mongoose.Schema.Types
+
+const equipmentSchema = new mongoose.Schema(
   {
+    code: {
+      type: String,
+      unique: true,
+      sparse: true,
+      trim: true,
+    },
+
     name: {
       type: String,
       required: true,
@@ -13,34 +22,34 @@ const assetSchema = new mongoose.Schema(
       required: true,
     },
 
-    available: {
-      type: Boolean,
-      default: true,
-    },
-
+    // Technical condition only — NOT borrow status
+    // Borrow status is derived from BorrowRequest (see availabilityService)
     status: {
       type: String,
-      enum: ['good', 'broken', 'maintenance', 'reserved', 'in_use'],
+      enum: ['good', 'broken', 'maintenance'],
       required: true,
       default: 'good',
     },
 
-    room_id: {
-      type: mongoose.Schema.Types.ObjectId,
+    roomId: {
+      type: ObjectId,
       ref: 'Room',
       default: null,
     },
 
-    borrowed_by: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'User',
+    img: {
+      type: String,
       default: null,
     },
 
-    code: {
+    description: {
       type: String,
-      unique: true,
-      sparse: true, // allows existing docs without code; new ones always get one
+      default: null,
+    },
+
+    brand: {
+      type: String,
+      default: '',
       trim: true,
     },
 
@@ -50,51 +59,32 @@ const assetSchema = new mongoose.Schema(
       trim: true,
     },
 
-    serial_number: {
+    serialNumber: {
       type: String,
       default: '',
       trim: true,
     },
 
-    purchase_date: {
+    purchaseDate: {
       type: Date,
       default: null,
     },
 
-    last_maintenance_date: {
+    lastMaintenanceDate: {
       type: Date,
       default: null,
     },
-
-    img: {
-      type: String,
-      default: null,
-    },
   },
-  {
-    timestamps: true,
-  },
+  { timestamps: true },
 )
 
-// Equipment availability logic: only depends on condition status and borrow status
-assetSchema.pre('save', function () {
-  if (this.status === 'broken' || this.status === 'maintenance') {
-    this.available = false
-  } else if (this.status === 'in_use') {
-    this.available = false
-  } else if (this.status === 'reserved') {
-    // Reserved means approved but not yet handed over; still physically available in storage
-    this.available = true
-  } else if (this.status === 'good') {
-    this.available = !this.borrowed_by
-  }
-})
+equipmentSchema.index({ roomId: 1 })
+equipmentSchema.index({ status: 1 })
 
-// Default sort by newest first
-assetSchema.pre('find', function () {
+// Default sort newest first
+equipmentSchema.pre('find', function () {
   this.sort({ createdAt: -1 })
-
 })
 
-const Equipment = mongoose.model('Equipment', assetSchema, 'equipment')
+const Equipment = mongoose.model('Equipment', equipmentSchema, 'equipment')
 export default Equipment

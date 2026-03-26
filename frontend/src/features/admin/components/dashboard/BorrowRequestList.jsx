@@ -20,21 +20,21 @@ const BorrowRequestList = ({ requests, efficiencyRate, onViewAll, onItemClick })
  </div>
 ) : requests.map((request) => (
  <div key={request._id} onClick={() => onItemClick?.(request)} className="flex items-start gap-4 p-3 hover:bg-white/30 dark:hover:bg-slate-700/50 rounded-2xl transition-all cursor-pointer">
- {request.user_id?.avatar ? (
- <img alt="Avatar" className="w-10 h-10 rounded-full border border-white dark:border-slate-600 object-cover" src={request.user_id.avatar} />
+ {request.borrowerId?.avatar ? (
+ <img alt="Avatar" className="w-10 h-10 rounded-full border border-white dark:border-slate-600 object-cover" src={request.borrowerId.avatar} />
  ) : (
  <div className="w-10 h-10 rounded-full bg-[#1A2B56] text-white flex items-center justify-center font-bold shrink-0">
- {request.user_id?.name?.charAt(0) || 'U'}
+ {request.borrowerId?.name?.charAt(0) || 'U'}
  </div>
  )}
 
  <div className="flex-1 min-w-0">
  <p className="text-xs font-bold text-[#1A2B56] dark:text-blue-300 truncate">
- {request.user_id?.name} <span className="text-slate-500 dark:text-slate-400 font-medium">requested</span>
+ {request.borrowerId?.name} <span className="text-slate-500 dark:text-slate-400 font-medium">requested</span>
  </p>
- <p className="text-sm font-extrabold text-slate-800 dark:text-white truncate">{request.equipment_id?.name}</p>
+ <p className="text-sm font-extrabold text-slate-800 dark:text-white truncate">{request.equipmentId?.name}</p>
  <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-1">
- {formatDistanceToNow(new Date(request.createdAt))} ago • {request.user_id?.department || 'General'}
+ {formatDistanceToNow(new Date(request.createdAt))} ago • {request.borrowerId?.department || 'General'}
  </p>
  </div>
  <span className="w-2 h-2 rounded-full mt-2 bg-amber-500"></span>

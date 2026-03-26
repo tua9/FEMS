@@ -10,7 +10,7 @@ const UpcomingDue = () => {
 
  const upcomingItems = [...borrowRequests]
  .filter((r) => ["Approved", "HandedOver"].includes(r.status))
- .sort((a, b) => new Date(a.return_date).getTime() - new Date(b.return_date).getTime())
+ .sort((a, b) => new Date(a.expectedReturnDate).getTime() - new Date(b.expectedReturnDate).getTime())
  .slice(0, 5);
 
  return (
@@ -30,7 +30,7 @@ const UpcomingDue = () => {
  <div className="mb-3 flex items-center justify-between">
  <span className="flex items-center gap-2 rounded-full bg-[#1E2B58] px-3 py-1 text-[10px] font-bold text-white">
  <Clock className="h-3 w-3" /> 
- {new Intl.DateTimeFormat("en-US", { dateStyle: "short" }).format(new Date(item.return_date))}
+ {new Intl.DateTimeFormat("en-US", { dateStyle: "short" }).format(new Date(item.expectedReturnDate))}
  </span>
  </div>
  <h4 className="font-black text-[#1E2B58] dark:text-white">{item.type} request</h4>

@@ -1,4 +1,3 @@
-import type { DashboardMetrics, EquipmentRequest, DamageReport, HealthStatus, TopBrokenItem } from '@/types/admin.types';
 
 export const mockDashboardMetrics: DashboardMetrics = {
     totalDevices: 64,

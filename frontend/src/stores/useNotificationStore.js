@@ -20,7 +20,7 @@ export const useNotificationStore = create((set, get) => ({
     try {
       set({ loading: true, error: null });
       const data = await notificationService.getNotifications();
-      const unread = data.filter((n) => !n.read).length;
+      const unread = data.filter((n) => !n.isRead).length;
       set({
         notifications: data,
         unreadCount: unread,
@@ -38,9 +38,9 @@ export const useNotificationStore = create((set, get) => ({
       await notificationService.markAsRead(id);
       set((state) => {
         const updated = state.notifications.map((n) =>
-          n._id === id ? { ...n, read: true } : n
+          n._id === id ? { ...n, isRead: true } : n
         );
-        const unread = updated.filter((n) => !n.read).length;
+        const unread = updated.filter((n) => !n.isRead).length;
         return { notifications: updated, unreadCount: unread };
       });
     } catch (error) {
@@ -52,7 +52,7 @@ export const useNotificationStore = create((set, get) => ({
     try {
       await notificationService.markAllAsRead();
       set((state) => ({
-        notifications: state.notifications.map((n) => ({ ...n, read: true })),
+        notifications: state.notifications.map((n) => ({ ...n, isRead: true })),
         unreadCount: 0,
       }));
     } catch (error) {
@@ -65,7 +65,7 @@ export const useNotificationStore = create((set, get) => ({
       await notificationService.deleteNotification(id);
       set((state) => {
         const updated = state.notifications.filter((n) => n._id !== id);
-        const unread = updated.filter((n) => !n.read).length;
+        const unread = updated.filter((n) => !n.isRead).length;
         return { notifications: updated, unreadCount: unread };
       });
     } catch (error) {

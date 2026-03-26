@@ -79,7 +79,7 @@ export function useHistoryMappings(
 
  let status = statusMap[b.status] || 'BORROWED';
 
- if (status === 'BORROWED' && b.return_date && new Date(b.return_date) < new Date()) {
+ if (status === 'BORROWED' && b.expectedReturnDate && new Date(b.expectedReturnDate) < new Date()) {
  status = 'OVERDUE';
  }
 
@@ -94,8 +94,8 @@ export function useHistoryMappings(
  return null;
  };
 
- const eq = b.equipment_id;
- const rm = b.room_id;
+ const eq = b.equipmentId;
+ const rm = b.roomId;
  const roomName = rm && typeof rm === 'object' ? rm.name : null;
  const smartClassInfo = roomName || extractClassInfo(b.note || '') || 'Academic Use';
 
@@ -110,7 +110,7 @@ export function useHistoryMappings(
  || (rm && typeof rm === 'object' ? rm.name : null)
  || 'Asset',
  icon: CATEGORY_ICONS[(eq?.category || '').toLowerCase()] || Monitor,
- period: `${b.borrow_date ? new Date(b.borrow_date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }) : '?'} – ${b.return_date ? new Date(b.return_date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }) : '?'}`,
+ period: `${b.borrowDate ? new Date(b.borrowDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }) : '?'} – ${b.expectedReturnDate ? new Date(b.expectedReturnDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }) : '?'}`,
  returnDate: b.note || '-',
  status: status,
  original: b,
@@ -120,9 +120,9 @@ export function useHistoryMappings(
 
  const mappedApproval = useMemo(() => {
  return approvedByMe.map(a => {
- const userRef = a.user_id;
- const equipment = a.equipment_id;
- const room = a.room_id;
+ const userRef = a.borrowerId;
+ const equipment = a.equipmentId;
+ const room = a.roomId;
 
  const APPROVED_STATUSES = ['approved', 'handed_over', 'returned'];
  const decision = APPROVED_STATUSES.includes(a.status)
@@ -134,7 +134,7 @@ export function useHistoryMappings(
  studentName: userRef?.displayName || 'User',
  studentId: (userRef?._id || '').substring(18).toUpperCase(),
  equipment: equipment?.name || room?.name || 'Asset',
- requestDate: a.borrow_date ? new Date(a.borrow_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '?',
+ requestDate: a.borrowDate ? new Date(a.borrowDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '?',
  decidedDate: a.updatedAt ? new Date(a.updatedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '?',
  decision,
  reason: a.note?.split('| Rejection Reason: ')[1] || undefined,

@@ -59,7 +59,7 @@ export function useReportForm() {
  if (cancelled || !eq?._id) return;
  setPrefillEquipmentId(eq._id);
  setPrefillCategory('equipment');
- const rm = eq.room_id;
+ const rm = eq.roomId || eq.room_id;
  if (rm) {
  const rid = typeof rm === 'object' ? rm._id : rm;
  setPrefillRoomId(rid || '');

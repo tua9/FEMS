@@ -80,8 +80,8 @@ export const ReportManualForm = ({
  if (prefillRoomId) {
  setRoomId(prefillRoomId);
  const room = rooms.find(r => r._id === prefillRoomId);
- if (room && room.building_id) {
- setSelectedBuildingId(typeof room.building_id === 'string' ? room.building_id : room.building_id._id);
+ if (room && room.buildingId) {
+ setSelectedBuildingId(typeof room.buildingId === 'string' ? room.buildingId : room.buildingId._id);
  }
  }
  }, [prefillRoomId, rooms]);
@@ -102,9 +102,9 @@ export const ReportManualForm = ({
  const buildings = React.useMemo(() => {
  const map = new Map();
  rooms.forEach((room) => {
- if (!room.building_id) return;
- const id = typeof room.building_id === 'string' ? room.building_id : room.building_id._id;
- const name = typeof room.building_id === 'string' ? room.building_id : room.building_id.name;
+ if (!room.buildingId) return;
+ const id = typeof room.buildingId === 'string' ? room.buildingId : room.buildingId._id;
+ const name = typeof room.buildingId === 'string' ? room.buildingId : room.buildingId.name;
  if (!map.has(id)) map.set(id, { id, name });
  });
  return Array.from(map.values()).sort((a, b) =>
@@ -116,8 +116,8 @@ export const ReportManualForm = ({
  const filteredRooms = React.useMemo(() => {
  if (!selectedBuildingId) return [];
  return rooms.filter((room) => {
- if (!room.building_id) return false;
- const bId = typeof room.building_id === 'string' ? room.building_id : room.building_id._id;
+ if (!room.buildingId) return false;
+ const bId = typeof room.buildingId === 'string' ? room.buildingId : room.buildingId._id;
  return bId === selectedBuildingId;
  }).sort((a, b) =>
  String(a.name ?? "").localeCompare(String(b.name ?? ""), undefined, { sensitivity: "base" })

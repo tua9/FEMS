@@ -55,7 +55,7 @@ const EquipmentTable = ({ equipments, onOpenDetails, onOpenQRCode, onEdit, onDel
  </div>
  </td>
  <td className={`p-4 text-sm font-medium text-slate-600 dark:text-slate-300 hidden lg:table-cell max-w-[140px] truncate ${rowBg}`} title={item.model || ''}>{item.model || '—'}</td>
- <td className={`p-4 text-sm font-medium text-slate-600 dark:text-slate-300 hidden sm:table-cell max-w-[150px] truncate ${rowBg}`} title={(item.room_id)?.name}>{(item.room_id)?.name || 'N/A'}</td>
+ <td className={`p-4 text-sm font-medium text-slate-600 dark:text-slate-300 hidden sm:table-cell max-w-[150px] truncate ${rowBg}`} title={(item.roomId)?.name}>{(item.roomId)?.name || 'N/A'}</td>
  <td className={`p-4 text-sm font-medium text-slate-600 dark:text-slate-300 hidden xl:table-cell max-w-[120px] whitespace-nowrap ${rowBg}`}>{formatMaint(item.last_maintenance_date)}</td>
  <td className={`p-4 ${rowBg}`}>
  {(() => {

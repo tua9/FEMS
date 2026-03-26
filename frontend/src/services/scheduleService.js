@@ -2,7 +2,7 @@ import api from '@/lib/axios';
 export const scheduleService = {
  getMySchedules: async (date)=> {
  const params = date ? { date } : {};
- const response = await api.get('/schedules', { params });
+ const response = await api.get('/schedules/me', { params });
  return response.data;
  },
 

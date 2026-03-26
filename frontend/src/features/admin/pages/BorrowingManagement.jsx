@@ -70,8 +70,8 @@ const BorrowingManagement = () => {
 
  const sortedRecords = borrowRecords
  .filter(record => {
- const borrower = typeof record.user_id === 'object' ? record.user_id?.displayName : 'Unknown';
- const equipment = typeof record.equipment_id === 'object' ? record.equipment_id?.name : 'Unknown Room/Item';
+ const borrower = typeof record.borrowerId === 'object' ? record.borrowerId?.displayName : 'Unknown';
+ const equipment = typeof record.equipmentId === 'object' ? record.equipmentId?.name : 'Unknown Room/Item';
 
  const matchesSearch =
  borrower?.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -79,7 +79,7 @@ const BorrowingManagement = () => {
  record._id.toLowerCase().includes(searchQuery.toLowerCase());
 
  // Handle multi-status filtering for Active Loans (Handed Over + Overdue)
- const isRecOverdue = record.status === 'overdue' || (record.status === 'handed_over' && new Date(record.return_date) < new Date());
+ const isRecOverdue = record.status === 'overdue' || (record.status === 'handed_over' && new Date(record.expectedReturnDate) < new Date());
  
  const matchesStatus = statusFilter === 'All' 
  || (statusFilter === 'handed_over' && (record.status === 'handed_over' || isRecOverdue))
@@ -89,8 +89,8 @@ const BorrowingManagement = () => {
  return matchesSearch && matchesStatus;
  })
  .sort((a, b) => {
- const timeA = parseDateRaw(a.borrow_date);
- const timeB = parseDateRaw(b.borrow_date);
+ const timeA = parseDateRaw(a.borrowDate);
+ const timeB = parseDateRaw(b.borrowDate);
  return sortOrder === 'asc' ? timeA - timeB : timeB - timeA;
  });
 
@@ -105,7 +105,7 @@ const BorrowingManagement = () => {
  // Filter statuses for counts
  const now = new Date();
  const isOverdueGlobal = (r) =>
- r.status === 'overdue' || (r.status === 'handed_over' && new Date(r.return_date) < now);
+ r.status === 'overdue' || (r.status === 'handed_over' && new Date(r.expectedReturnDate) < now);
 
  const pendingCount = borrowRecords.filter(r => r.status === 'pending').length;
  const activeLoansCount = borrowRecords.filter(r => r.status === 'handed_over' || isOverdueGlobal(r)).length;

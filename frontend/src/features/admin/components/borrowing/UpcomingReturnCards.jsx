@@ -6,14 +6,14 @@ const UpcomingReturnCards = ({ records, onViewDetails }) => {
  const attentionRecords = records
  .filter(r => {
  if (r.status === 'returned' || r.status === 'rejected') return false;
- // Overdue is a derived state here, but for now we'll check return_date
- const returnDate = new Date(r.return_date).getTime();
+ // Overdue is a derived state here, but for now we'll check expectedReturnDate
+ const returnDate = new Date(r.expectedReturnDate).getTime();
  const today = new Date().getTime();
  const sevenDaysInMs = 7 * 24 * 60 * 60 * 1000;
 
  return (returnDate - today) <= sevenDaysInMs;
  })
- .sort((a, b) => new Date(a.return_date).getTime() - new Date(b.return_date).getTime());
+ .sort((a, b) => new Date(a.expectedReturnDate).getTime() - new Date(b.expectedReturnDate).getTime());
 
  const scroll = (direction) => {
  if (scrollContainerRef.current) {
@@ -62,11 +62,11 @@ const UpcomingReturnCards = ({ records, onViewDetails }) => {
  >
  <style dangerouslySetInnerHTML={{ __html: `.custom-scrollbar::-webkit-scrollbar { display: none; }` }} />
  {attentionRecords.map(record => {
- const borrower = typeof record.user_id === 'object' ? record.user_id : null;
- const equipment = typeof record.equipment_id === 'object' ? record.equipment_id : null;
+ const borrower = typeof record.borrowerId === 'object' ? record.borrowerId : null;
+ const equipment = typeof record.equipmentId === 'object' ? record.equipmentId : null;
  const borrowerName = borrower?.displayName || 'Unknown';
  const equipmentName = equipment?.name || 'Unknown Item';
- const isOverdue = new Date(record.return_date).getTime() < new Date().getTime();
+ const isOverdue = new Date(record.expectedReturnDate).getTime() < new Date().getTime();
 
  return (
  <div
@@ -102,7 +102,7 @@ const UpcomingReturnCards = ({ records, onViewDetails }) => {
  <div>
  <p className="text-[10px] text-slate-500 font-bold uppercase">Due Date</p>
  <p className={`text-sm font-bold ${isOverdue ? 'text-red-500' : 'text-slate-800 dark:text-white'}`}>
- {new Date(record.return_date).toLocaleDateString()}
+ {new Date(record.expectedReturnDate).toLocaleDateString()}
  </p>
  </div>
  <button className="text-[10px] font-bold px-4 py-2 bg-slate-100 dark:bg-slate-600 text-slate-700 dark:text-slate-200 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-500 transition-all flex items-center gap-1">

@@ -23,13 +23,13 @@ const ReturnCalendar = ({ records = [], onViewDetails }) => {
  records.forEach(record => {
  if (record.status === 'returned' || record.status === 'rejected') return;
 
- const returnDate = new Date(record.return_date);
+ const returnDate = new Date(record.expectedReturnDate);
  if (returnDate.getMonth() === currentMonth && returnDate.getFullYear() === currentYear) {
  const day = returnDate.getDate();
  if (!map[day]) map[day] = [];
 
- const borrower = typeof record.user_id === 'object' ? record.user_id : null;
- const equipment = typeof record.equipment_id === 'object' ? record.equipment_id : null;
+ const borrower = typeof record.borrowerId === 'object' ? record.borrowerId : null;
+ const equipment = typeof record.equipmentId === 'object' ? record.equipmentId : null;
  const isOverdue = returnDate.getTime() < new Date().getTime();
 
  map[day].push({

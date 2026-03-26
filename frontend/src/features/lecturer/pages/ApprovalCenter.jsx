@@ -32,20 +32,20 @@ export const ApprovalCenter = () => {
  id: r._id,
  status: r.status,
  student: {
- name: r.user_id?.displayName || r.user_id?.username || 'Requested User',
- id: (r.user_id?._id || 'UID').substring(18).toUpperCase(), // Short ID from mongo _id
- initials: (r.user_id?.displayName || r.user_id?.username || 'US').substring(0, 2).toUpperCase(),
+ name: r.borrowerId?.displayName || r.borrowerId?.username || 'Requested User',
+ id: (r.borrowerId?._id || 'UID').substring(18).toUpperCase(), // Short ID from mongo _id
+ initials: (r.borrowerId?.displayName || r.borrowerId?.username || 'US').substring(0, 2).toUpperCase(),
  statusColor: 'bg-green-500',
- avatar: r.user_id?.avatarUrl
+ avatar: r.borrowerId?.avatarUrl
  },
  equipment: {
- name: r.equipment_id?.name || r.room_id?.name || 'Unknown',
- asset: (r.equipment_id?._id || r.room_id?._id || 'ASSET').substring(18).toUpperCase(),
- icon: r.room_id ? Monitor : Laptop,
- type: (r.type === 'infrastructure' ? 'other' : (r.equipment_id?.category || 'other'))
+ name: r.equipmentId?.name || r.roomId?.name || 'Unknown',
+ asset: (r.equipmentId?._id || r.roomId?._id || 'ASSET').substring(18).toUpperCase(),
+ icon: r.roomId ? Monitor : Laptop,
+ type: (r.type === 'infrastructure' ? 'other' : (r.equipmentId?.category || 'other'))
  },
  period: {
- date: `${new Date(r.borrow_date || new Date()).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })} – ${new Date(r.return_date || new Date()).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}`,
+ date: `${new Date(r.borrowDate || new Date()).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })} – ${new Date(r.expectedReturnDate || new Date()).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}`,
  label: r.note || 'ACADEMIC PROJECT',
  labelColor: r.type === 'infrastructure' ? 'text-blue-500' : 'text-[#1E2B58] dark:text-blue-300'
  },

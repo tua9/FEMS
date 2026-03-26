@@ -53,12 +53,12 @@ const BorrowingTable = ({ records, onApprove, onHandover, onReject, onReturn, on
  </thead>
  <tbody>
  {currentRecords.map(record => {
- const borrower = typeof record.user_id === 'object' ? record.user_id : null;
- const equipment = typeof record.equipment_id === 'object' ? record.equipment_id : null;
+ const borrower = typeof record.borrowerId === 'object' ? record.borrowerId : null;
+ const equipment = typeof record.equipmentId === 'object' ? record.equipmentId : null;
  const borrowerName = borrower?.displayName || 'Unknown';
  const equipmentName = equipment?.name || 'Unknown Item';
  const equipmentCode = (equipment)?.code || (equipment)?.qr_code || 'N/A';
- const isOverdue = record.status === 'overdue' || (record.status === 'handed_over' && new Date(record.return_date) < new Date());
+ const isOverdue = record.status === 'overdue' || (record.status === 'handed_over' && new Date(record.expectedReturnDate) < new Date());
  const displayStatus = isOverdue ? 'overdue' : (record.status);
 
  return (
@@ -85,10 +85,10 @@ const BorrowingTable = ({ records, onApprove, onHandover, onReject, onReturn, on
  </div>
  </td>
  <td className={`p-3 text-xs font-medium text-slate-500 dark:text-slate-400 ${rowBg}`}>
- <div>{record.borrow_date ? new Date(record.borrow_date).toLocaleDateString('vi-VN') : 'N/A'}</div>
+ <div>{record.borrowDate ? new Date(record.borrowDate).toLocaleDateString('vi-VN') : 'N/A'}</div>
  </td>
  <td className={`p-3 text-xs font-medium ${isOverdue ? 'text-red-500 font-bold' : 'text-slate-500 dark:text-slate-400'} ${rowBg}`}>
- <div>{record.return_date ? new Date(record.return_date).toLocaleDateString('vi-VN') : 'N/A'}</div>
+ <div>{record.expectedReturnDate ? new Date(record.expectedReturnDate).toLocaleDateString('vi-VN') : 'N/A'}</div>
  </td>
  <td className={`p-3 ${rowBg}`}>
  <span className={`px-2 py-1 rounded-full text-[10px] font-medium uppercase tracking-wider inline-flex items-center justify-center whitespace-nowrap ${getStatusStyle(displayStatus)}`}>

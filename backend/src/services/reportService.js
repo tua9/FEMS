@@ -4,46 +4,40 @@ import Equipment from '../models/Equipment.js'
 import ApiError from '../utils/ApiError.js'
 import { notificationService } from './notificationService.js'
 
-// ─── Code Generation ─────────────────────────────────────────────────────────────────────
+// ── Code Generation ───────────────────────────────────────────────────────────
 
-/**
- * Build one candidate code for a report.
- * Format: RP + 2-digit year + 2-digit month + 3 random uppercase letters
- * Example: RP2603ABC
- */
 const generateReportCode = () => {
-  const now   = new Date()
-  const year  = String(now.getFullYear()).slice(-2)
+  const now = new Date()
+  const year = String(now.getFullYear()).slice(-2)
   const month = String(now.getMonth() + 1).padStart(2, '0')
-  const CHARS  = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+  const CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
   const random = Array.from({ length: 3 }, () => CHARS[Math.floor(Math.random() * CHARS.length)]).join('')
   return `RP${year}${month}${random}`
 }
 
-/**
- * Generate a unique report code.
- */
 const generateUniqueCode = async () => {
   let code
   let exists = true
   while (exists) {
-    code   = generateReportCode()
+    code = generateReportCode()
     exists = !!(await Report.findOne({ code }))
   }
   return code
 }
 
-// ─── Service Functions ─────────────────────────────────────────────────────────────────
+// ── Helpers ───────────────────────────────────────────────────────────────────
 
-const populateReport = (query) => {
-  return query
+// Report model still uses snake_case (user_id, equipment_id, etc.)
+// We only update the notification calls here to use the new Notification schema.
+const populateReport = (query) =>
+  query
     .populate('user_id', 'displayName email username')
     .populate('equipment_id', 'name category')
     .populate('room_id', 'name type')
-    .populate('room_id', 'name type')
     .populate('processed_by', 'displayName username')
     .populate('assigned_to', 'displayName username')
-}
+
+// ── Service Functions ─────────────────────────────────────────────────────────
 
 const createReport = async (body) => {
   const { user_id, equipment_id, room_id, type, severity, description, img, priority, images } = body
@@ -58,119 +52,77 @@ const createReport = async (body) => {
     severity: severity || 'medium',
     priority: priority || severity || 'medium',
     description: description || null,
-    img: img || (images && images.length > 0 ? images[0] : null),
+    img: img || (images?.length > 0 ? images[0] : null),
     images: images || [],
     code,
   })
 
   const populated = await populateReport(Report.findById(newReport._id))
 
-  // Notify Admins for High/Critical Severity
   if (severity === 'high' || severity === 'critical') {
     await notificationService.notifyAdmins({
       type: 'report',
       title: `Priority Alert: ${severity.toUpperCase()} Report`,
       message: `A new ${severity} report #${code} has been submitted by ${populated.user_id?.displayName || 'a user'}.`,
-      to: '/admin/reports',
-      state: { type: 'report', id: newReport._id, tab: 'report' }
+      action: { type: 'open_detail', resource: 'report', resourceId: newReport._id },
     }).catch(err => console.error('Failed to notify admins:', err))
   }
 
-  return {
-    message: 'Create report success',
-    report_id: newReport._id,
-    report: populated,
-  }
+  return { message: 'Report created', report_id: newReport._id, report: populated }
 }
 
-const getAllReports = async () => {
-  return await populateReport(Report.find())
-}
+const getAllReports = async () => populateReport(Report.find())
 
 const getReportById = async (id) => {
   const report = await populateReport(Report.findById(id))
-
-  if (!report) {
-    throw new ApiError(StatusCodes.NOT_FOUND, 'Report not found')
-  }
+  if (!report) throw new ApiError(StatusCodes.NOT_FOUND, 'Report not found')
   return report
 }
 
 const updateReport = async (id, body) => {
-  const report = await Report.findByIdAndUpdate(id, body, {
-    new: true,
-    runValidators: true,
-  })
-
-  if (!report) {
-    throw new ApiError(StatusCodes.NOT_FOUND, 'Report not found')
-  }
-
-  const populated = await populateReport(Report.findById(report._id))
-
-  return { message: 'Update success', report: populated }
+  const report = await Report.findByIdAndUpdate(id, body, { new: true, runValidators: true })
+  if (!report) throw new ApiError(StatusCodes.NOT_FOUND, 'Report not found')
+  return { message: 'Report updated', report: await populateReport(Report.findById(report._id)) }
 }
 
 const deleteReport = async (id) => {
   const report = await Report.findByIdAndDelete(id)
-  if (!report) {
-    throw new ApiError(StatusCodes.NOT_FOUND, 'Report not found')
-  }
-  return { message: 'Delete success' }
+  if (!report) throw new ApiError(StatusCodes.NOT_FOUND, 'Report not found')
+  return { message: 'Report deleted' }
 }
 
-const getPersonalReports = async (userId) => {
-  return await populateReport(Report.find({ user_id: userId }))
-}
+const getPersonalReports = async (userId) => populateReport(Report.find({ user_id: userId }))
 
 const cancelReport = async (id, userId, decisionNote) => {
   const report = await Report.findOne({ _id: id, user_id: userId })
-  if (!report) {
-    throw new ApiError(StatusCodes.NOT_FOUND, 'Report not found')
-  }
+  if (!report) throw new ApiError(StatusCodes.NOT_FOUND, 'Report not found')
   if (report.status !== 'pending') {
-    throw new ApiError(
-      StatusCodes.BAD_REQUEST,
-      'Only pending reports can be cancelled',
-    )
+    throw new ApiError(StatusCodes.BAD_REQUEST, 'Only pending reports can be cancelled')
   }
   report.status = 'cancelled'
   report.decision_note = decisionNote || null
   await report.save()
-  return { message: 'Report cancelled successfully', report }
+  return { message: 'Report cancelled', report }
 }
 
 const updateReportStatus = async (id, status, approverId, technicianId) => {
-  const allowedStatuses = [
-    'pending',
-    'approved',
-    'rejected',
-    'processing',
-    'fixed',
-    'cancelled'
-  ]
-  if (!allowedStatuses.includes(status)) {
-    throw new ApiError(StatusCodes.BAD_REQUEST, 'Invalid status')
-  }
+  const allowed = ['pending', 'approved', 'rejected', 'processing', 'fixed', 'cancelled']
+  if (!allowed.includes(status)) throw new ApiError(StatusCodes.BAD_REQUEST, 'Invalid status')
 
-  const report = await Report.findById(id).populate('equipment_id', 'code')
-  if (!report) {
-    throw new ApiError(StatusCodes.NOT_FOUND, 'Report not found')
-  }
+  const report = await Report.findById(id).populate('equipment_id', 'code name')
+  if (!report) throw new ApiError(StatusCodes.NOT_FOUND, 'Report not found')
 
   report.status = status
+
   if (status === 'processing' && technicianId) {
     report.assigned_to = technicianId
-    
-    // Notify Technician
-    const eqCode = report.equipment_id?.code || report.equipment_id?.toString()?.slice(-6).toUpperCase()
+    const eqCode = report.equipment_id?.code || report.equipment_id?._id?.toString().slice(-6).toUpperCase()
     await notificationService.createNotification({
-      user_id: technicianId,
+      userId: technicianId,
       type: 'report',
       title: 'New Maintenance Task Assigned',
-      message: `Equipment ${eqCode} has been assigned to you for repair. Please check it now.`,
-      to: '/admin/reports', // As requested by user
-      state: { type: 'report', id: report._id, tab: 'report' }
+      message: `Equipment ${eqCode} has been assigned to you for repair.`,
+      action: { type: 'open_detail', resource: 'report', resourceId: report._id },
     }).catch(err => console.error('Failed to notify technician:', err))
   }
 
@@ -181,46 +133,40 @@ const updateReportStatus = async (id, status, approverId, technicianId) => {
 
   await report.save()
 
-  // Sync Equipment Status based on report status
+  // Sync Equipment technical status
   if (report.equipment_id) {
     let eqStatus = null
     if (status === 'approved') eqStatus = 'broken'
     else if (status === 'processing') eqStatus = 'maintenance'
     else if (status === 'fixed') eqStatus = 'good'
-
-    if (eqStatus) {
-      await Equipment.findByIdAndUpdate(report.equipment_id, { status: eqStatus })
-    }
+    if (eqStatus) await Equipment.findByIdAndUpdate(report.equipment_id, { status: eqStatus })
   }
 
-  // Notify User
-  let notificationTitle = 'Report Update'
+  // Notify the reporter
   const reportCode = report.code || report._id.toString().slice(-6).toUpperCase()
-  let notificationMessage = `Your report #${reportCode} status has been updated to ${status}.`
-  
+  let notifTitle = 'Report Update'
+  let notifMessage = `Your report #${reportCode} status has been updated to ${status}.`
+
   if (status === 'approved' || status === 'processing') {
-    notificationTitle = 'Report Processing'
-    notificationMessage = `Your report ${reportCode} is being processed. Thank you for your report.`
+    notifTitle = 'Report Being Processed'
+    notifMessage = `Your report #${reportCode} is being processed.`
   } else if (status === 'fixed') {
-    notificationTitle = 'Issue Resolved'
-    notificationMessage = `Your reported issue #${reportCode} has been resolved. Thank you for your patience.`
+    notifTitle = 'Issue Resolved'
+    notifMessage = `Your reported issue #${reportCode} has been resolved.`
   } else if (status === 'rejected') {
-    notificationTitle = 'Report Rejected'
-    notificationMessage = `Your report #${reportCode} was rejected. Please contact the administrator for more details.`
+    notifTitle = 'Report Rejected'
+    notifMessage = `Your report #${reportCode} was rejected. Please contact the administrator.`
   }
 
   await notificationService.createNotification({
-    user_id: report.user_id,
+    userId: report.user_id,
     type: 'report',
-    title: notificationTitle,
-    message: notificationMessage,
-    to: '/student/notifications',
-    state: { type: 'report', id: report._id, tab: 'report' }
-  }).catch(err => console.error('Failed to create notification:', err))
+    title: notifTitle,
+    message: notifMessage,
+    action: { type: 'open_detail', resource: 'report', resourceId: report._id },
+  }).catch(err => console.error('Failed to notify reporter:', err))
 
-  const populated = await populateReport(Report.findById(id))
-
-  return { message: 'Status updated successfully', report: populated }
+  return { message: 'Status updated', report: await populateReport(Report.findById(id)) }
 }
 
 export const reportService = {

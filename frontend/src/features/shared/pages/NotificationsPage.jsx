@@ -31,7 +31,7 @@ const NotificationRow = ({ notification, onRead, onDelete, onOpenDetail, isHighl
  const hasDetail = action.type === 'modal';
 
  const handleClick = () => {
- if (!notification.read) {
+ if (!notification.isRead) {
  onRead(notification._id);
  }
  if (action.type === 'modal') {
@@ -46,7 +46,7 @@ const NotificationRow = ({ notification, onRead, onDelete, onOpenDetail, isHighl
  <div
  className={`flex items-start gap-4 p-5 border-b border-[#1E2B58]/[0.05] dark:border-white/[0.05] last:border-0 group transition-all duration-500 ${
  isHighlighted ? 'ring-2 ring-blue-500 ring-inset bg-blue-50 dark:bg-blue-900/30 scale-[1.01] shadow-lg z-10' :
- !notification.read ? 'bg-blue-50/40 dark:bg-slate-700/20' : 'hover:bg-[#1E2B58]/[0.02] dark:hover:bg-white/[0.02]'
+ !notification.isRead ? 'bg-blue-50/40 dark:bg-slate-700/20' : 'hover:bg-[#1E2B58]/[0.02] dark:hover:bg-white/[0.02]'
  }`}
  >
  {/* Type icon */}
@@ -66,13 +66,13 @@ const NotificationRow = ({ notification, onRead, onDelete, onOpenDetail, isHighl
  >
  <div className="flex items-start justify-between gap-3">
  <h3 className={`text-[0.875rem] font-bold leading-snug ${
- !notification.read
+ !notification.isRead
  ? 'text-[#1E2B58] dark:text-white'
  : 'text-slate-600 dark:text-slate-300'
  }`}>
  {notification.title}
  </h3>
- {!notification.read && (
+ {!notification.isRead && (
  <span className="w-2.5 h-2.5 bg-blue-500 rounded-full shrink-0 mt-1" />
  )}
  </div>
@@ -96,7 +96,7 @@ const NotificationRow = ({ notification, onRead, onDelete, onOpenDetail, isHighl
 
  {/* Actions */}
  <div className="flex items-center gap-1 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
- {!notification.read && (
+ {!notification.isRead && (
  <button
  type="button"
  onClick={(e) => { e.stopPropagation(); onRead(notification._id); }}
@@ -160,7 +160,7 @@ const NotificationsPage = () => {
  const filtered = useMemo(() => {
  return notifications.filter(n => {
  const typeMatch = activeFilter === 'all' || n.type === activeFilter;
- const unreadMatch = !showUnreadOnly || !n.read;
+ const unreadMatch = !showUnreadOnly || !n.isRead;
  return typeMatch && unreadMatch;
  });
  }, [notifications, activeFilter, showUnreadOnly]);
