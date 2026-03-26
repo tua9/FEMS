@@ -59,13 +59,15 @@ const getHealthStatus = async () => {
   const total = await Equipment.countDocuments()
   if (total === 0) return { healthy: 100, available: 0, maintenance: 0, broken: 0 }
 
-  const available = await Equipment.countDocuments({ status: 'good' })
+  const available = await Equipment.countDocuments({ status: 'available' })
   const maintenance = await Equipment.countDocuments({ status: 'maintenance' })
   const broken = await Equipment.countDocuments({ status: 'broken' })
   const healthy = Math.round((available / total) * 100)
 
   return { healthy, available, maintenance, broken }
 }
+
+// ── Recent dashboard lists ────────────────────────────────────────────────────
 
 const getRecentBorrowRequests = async () => {
   const requests = await BorrowRequest.find({ status: 'pending' })
@@ -88,63 +90,29 @@ const getRecentBorrowRequests = async () => {
 }
 
 const getRecentDamageReports = async () => {
-  return Report.aggregate([
-    { $match: { status: 'pending' } },
-    {
-      $addFields: {
-        priorityOrder: {
-          $switch: {
-            branches: [
-              { case: { $eq: ['$priority', 'critical'] }, then: 4 },
-              { case: { $eq: ['$priority', 'high'] }, then: 3 },
-              { case: { $eq: ['$priority', 'medium'] }, then: 2 },
-              { case: { $eq: ['$priority', 'low'] }, then: 1 },
-            ],
-            default: 0,
-          },
-        },
-      },
-    },
-    { $sort: { priorityOrder: -1, createdAt: -1 } },
-    { $limit: 5 },
-    {
-      $lookup: {
-        from: 'users',
-        localField: 'user_id',
-        foreignField: '_id',
-        as: 'reporter',
-      },
-    },
-    { $unwind: { path: '$reporter', preserveNullAndEmptyArrays: true } },
-    {
-      $lookup: {
-        from: 'equipment',
-        localField: 'equipment_id',
-        foreignField: '_id',
-        as: 'equipment',
-      },
-    },
-    { $unwind: { path: '$equipment', preserveNullAndEmptyArrays: true } },
-    {
-      $project: {
-        reporter: {
-          name: { $ifNull: ['$reporter.displayName', '$reporter.username'] },
-          avatar: '$reporter.avatarUrl',
-        },
-        equipment: { name: '$equipment.name' },
-        description: 1,
-        priority: 1,
-        status: 1,
-        createdAt: 1,
-      },
-    },
-  ])
+  const reports = await Report.find({ type: 'equipment' })
+    .sort({ createdAt: -1 })
+    .limit(5)
+    .populate('reporterId', 'displayName avatarUrl username')
+    .populate('equipment_id', 'name')
+    .lean()
+
+  return reports.map((r) => ({
+    ...r,
+    reporterId: r.reporterId
+      ? {
+          ...r.reporterId,
+          name: r.reporterId.displayName || r.reporterId.username,
+          avatar: r.reporterId.avatarUrl,
+        }
+      : null,
+  }))
 }
 
 // ── Equipment Analytics ───────────────────────────────────────────────────────
 
 const getEquipmentAnalytics = async () => {
-  // 1. Status distribution — derive "borrowed" from BorrowRequest
+  // 1. Status distribution (technical statuses only)
   const statusGroups = await Equipment.aggregate([
     { $group: { _id: '$status', count: { $sum: 1 } } },
   ])
@@ -155,11 +123,9 @@ const getEquipmentAnalytics = async () => {
 
   const availableCount = Math.max((statusMap.good || 0) - inUseCount - reservedCount, 0)
   const statusDistribution = [
-    { status: 'available', label: 'Available', count: availableCount },
-    { status: 'in_use', label: 'Borrowed', count: inUseCount },
-    { status: 'reserved', label: 'Reserved', count: reservedCount },
-    { status: 'under_maintenance', label: 'Under Maintenance', count: statusMap.maintenance || 0 },
-    { status: 'pending_disposal', label: 'Pending Disposal', count: statusMap.broken || 0 },
+    { status: 'available', label: 'Available', count: statusMap.available || 0 },
+    { status: 'maintenance', label: 'Maintenance', count: statusMap.maintenance || 0 },
+    { status: 'broken', label: 'Broken', count: statusMap.broken || 0 },
   ]
 
   // 2. Build last-6-months scaffold

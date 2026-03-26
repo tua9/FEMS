@@ -1,6 +1,7 @@
 import { StatusCodes } from 'http-status-codes'
 import { equipmentService } from '../services/equipmentService.js'
 import { asyncHandler } from '../middlewares/asyncHandler.js'
+import Equipment from '../models/Equipment.js'
 
 export const createEquipment = asyncHandler(async (req, res) => {
   console.log('💻 create equipment')
@@ -36,4 +37,10 @@ export const getEquipmentByCode = asyncHandler(async (req, res) => {
 export const getEquipmentInventory = asyncHandler(async (req, res) => {
   const result = await equipmentService.getEquipmentInventory(req.query)
   res.status(StatusCodes.OK).json(result)
+})
+
+export const getEquipmentCategories = asyncHandler(async (req, res) => {
+  // Distinct categories from DB (read-only)
+  const categories = await Equipment.distinct('category')
+  res.status(StatusCodes.OK).json((categories || []).filter(Boolean))
 })

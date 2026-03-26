@@ -7,6 +7,7 @@ import {
   updateEquipment,
   deleteEquipment,
   getEquipmentInventory,
+  getEquipmentCategories,
 } from '../controllers/equipmentController.js'
 import { restrictTo, protectedRoute } from '../middlewares/authMiddlewares.js'
 
@@ -14,6 +15,7 @@ const router = express.Router()
 
 // Guest / All routes
 router.get('/code/:code', getEquipmentByCode)
+router.get('/categories', getEquipmentCategories)
 router.get('/inventory', getEquipmentInventory)
 router.get('/', getAllEquipment)
 router.get('/:id', getEquipmentById)

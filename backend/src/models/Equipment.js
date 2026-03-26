@@ -26,9 +26,9 @@ const equipmentSchema = new mongoose.Schema(
     // Borrow status is derived from BorrowRequest (see availabilityService)
     status: {
       type: String,
-      enum: ['good', 'broken', 'maintenance'],
+      enum: ['available', 'maintenance', 'broken'],
       required: true,
-      default: 'good',
+      default: 'available',
     },
 
     roomId: {
@@ -45,29 +45,7 @@ const equipmentSchema = new mongoose.Schema(
     description: {
       type: String,
       default: null,
-    },
-
-    brand: {
-      type: String,
-      default: '',
       trim: true,
-    },
-
-    model: {
-      type: String,
-      default: '',
-      trim: true,
-    },
-
-    serialNumber: {
-      type: String,
-      default: '',
-      trim: true,
-    },
-
-    purchaseDate: {
-      type: Date,
-      default: null,
     },
 
     lastMaintenanceDate: {
