@@ -7,6 +7,7 @@ import { useAuthStore } from "@/stores/useAuthStore";
 import { RecentActivityList } from "@/features/shared/components/dashboard/RecentActivityList";
 import { scheduleService } from "@/services/scheduleService";
 import { attendanceService } from "@/services/attendanceService";
+import { getTodayVN } from "@/utils/dateUtils";
 import { equipmentService } from "@/services/equipmentService";
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -23,7 +24,7 @@ const fmtTime = (d) =>
 const SessionCard = ({ schedule, isCheckedIn, isActionLoading, onCheckIn }) => {
   const slotLabel =
     schedule.slotId?.name || schedule.slotId?.code || "Slot";
-  const timeRange = `${fmtTime(schedule.startAt)} – ${fmtTime(schedule.endAt)}`;
+  const timeRange = `${schedule.slotId?.startTime || fmtTime(schedule.startAt)} – ${schedule.slotId?.endTime || fmtTime(schedule.endAt)}`;
   const roomName =
     schedule.roomId?.name || schedule.roomId?.code || "—";
   const courseName = schedule.title || "—";
@@ -288,8 +289,7 @@ const LecturerDashboard = () => {
   const loadSchedules = useCallback(async () => {
     setScheduleLoading(true);
     try {
-      const today = new Date().toISOString().slice(0, 10);
-      const res = await scheduleService.getMySchedules(today);
+      const res = await scheduleService.getMySchedules(getTodayVN());
       setSchedules(Array.isArray(res) ? res : []);
     } catch {
       setSchedules([]);
@@ -306,13 +306,19 @@ const LecturerDashboard = () => {
   const activeSchedule = useMemo(() => {
     if (!schedules.length) return null;
     const now = new Date();
-    return (
-      schedules.find(
-        (s) => new Date(s.startAt) <= now && new Date(s.endAt) >= now
-      ) ||
-      schedules.find((s) => new Date(s.startAt) > now) ||
-      null
+    
+    // Ignore completed or cancelled sessions for the 'active/upcoming' dashboard card
+    const validSchedules = schedules.filter(s => s.status !== 'completed' && s.status !== 'cancelled');
+    
+    // First, try to find a session that is currently ongoing
+    const ongoing = validSchedules.find(
+      (s) => new Date(s.startAt) <= now && new Date(s.endAt) >= now
     );
+    if (ongoing) return ongoing;
+    
+    // Else, return the next upcoming session
+    const upcoming = validSchedules.find((s) => new Date(s.startAt) > now);
+    return upcoming || null;
   }, [schedules]);
 
   // ── Load check-in status once session is known ─────────────────────────────

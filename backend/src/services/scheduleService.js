@@ -3,6 +3,7 @@ import Slot from '../models/Slot.js'
 import User from '../models/User.js'
 import ApiError from '../utils/ApiError.js'
 import { StatusCodes } from 'http-status-codes'
+import { buildVNDateTime, vnDayRange, vnRangeStart, vnRangeEnd } from '../utils/dateVN.js'
 
 // ── CRUD (admin) ──────────────────────────────────────────────────────────────
 
@@ -15,14 +16,14 @@ const createSchedule = async (data) => {
     const slot = await Slot.findById(data.slotId)
     if (!slot) throw new ApiError(StatusCodes.BAD_REQUEST, 'Slot not found')
 
-    const [sh, sm] = slot.startTime.split(':').map(Number)
-    const [eh, em] = slot.endTime.split(':').map(Number)
+    // Lấy phần YYYY-MM-DD từ date (có thể là string hoặc Date object)
+    const datePart = typeof data.date === 'string'
+      ? data.date.slice(0, 10)
+      : new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Ho_Chi_Minh' }).format(new Date(data.date))
 
-    const base = new Date(data.date)
-    const startAt = new Date(base)
-    startAt.setHours(sh, sm, 0, 0)
-    const endAt = new Date(base)
-    endAt.setHours(eh, em, 0, 0)
+    // Xây dựng startAt/endAt theo giờ Việt Nam (UTC+7) để đúng dù server ở timezone nào
+    const startAt = buildVNDateTime(datePart, slot.startTime)
+    const endAt   = buildVNDateTime(datePart, slot.endTime)
 
     data = { ...data, startAt, endAt }
   }
@@ -42,15 +43,11 @@ const getAllSchedules = async (query = {}) => {
   const filter = {}
 
   if (query.date) {
-    const start = new Date(query.date)
-    start.setHours(0, 0, 0, 0)
-    const end = new Date(query.date)
-    end.setHours(23, 59, 59, 999)
-    filter.date = { $gte: start, $lte: end }
+    filter.date = vnDayRange(query.date)
   } else if (query.startDate || query.endDate) {
     filter.date = {}
-    if (query.startDate) filter.date.$gte = new Date(query.startDate)
-    if (query.endDate) filter.date.$lte = new Date(query.endDate)
+    if (query.startDate) filter.date.$gte = vnRangeStart(query.startDate)
+    if (query.endDate)   filter.date.$lte = vnRangeEnd(query.endDate)
   }
 
   if (query.lecturerId) filter.lecturerId = query.lecturerId
@@ -115,21 +112,31 @@ const getMySchedules = async (userId, filter = {}) => {
   const f = typeof filter === 'string' ? { date: filter } : filter
 
   if (f.date) {
-    const start = new Date(f.date)
-    start.setHours(0, 0, 0, 0)
-    const end = new Date(f.date)
-    end.setHours(23, 59, 59, 999)
-    query.date = { $gte: start, $lte: end }
+    query.date = vnDayRange(f.date)
   } else if (f.startDate || f.endDate) {
     query.date = {}
-    if (f.startDate) query.date.$gte = new Date(f.startDate)
-    if (f.endDate) query.date.$lte = new Date(f.endDate)
+    if (f.startDate) query.date.$gte = vnRangeStart(f.startDate)
+    if (f.endDate)   query.date.$lte = vnRangeEnd(f.endDate)
   }
 
-  return Schedule.find(query)
+  const schedules = await Schedule.find(query)
     .populate('slotId', 'code name startTime endTime order')
     .populate('roomId', 'name type')
     .populate('classId', 'code name')
+    .lean()
+
+  // Attach studentIds for the frontend to count enrolled students
+  for (const sch of schedules) {
+    if (sch.classId?._id) {
+      sch.studentIds = await User.find({ role: 'student', classId: sch.classId._id })
+        .select('_id')
+        .lean()
+    } else {
+      sch.studentIds = []
+    }
+  }
+
+  return schedules
 }
 
 // ── Borrow-permission helpers ─────────────────────────────────────────────────

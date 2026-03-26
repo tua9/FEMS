@@ -12,7 +12,7 @@ const getDashboardStats = async () => {
   const pendingRequests = await BorrowRequest.countDocuments({ status: 'pending' })
 
   // Derive "in use" count from BorrowRequest (source of truth)
-  const inUseEquipment = await BorrowRequest.countDocuments({ status: 'handed_over' })
+  const inUseEquipment = await BorrowRequest.countDocuments({ status: { $in: ['handed_over', 'returning'] } })
 
   const borrowRate =
     totalEquipment > 0 ? Math.round((inUseEquipment / totalEquipment) * 100) : 0
@@ -150,7 +150,7 @@ const getEquipmentAnalytics = async () => {
   ])
   const statusMap = Object.fromEntries(statusGroups.map((g) => [g._id, g.count]))
 
-  const inUseCount = await BorrowRequest.countDocuments({ status: 'handed_over' })
+  const inUseCount = await BorrowRequest.countDocuments({ status: { $in: ['handed_over', 'returning'] } })
   const reservedCount = await BorrowRequest.countDocuments({ status: 'approved' })
 
   const availableCount = Math.max((statusMap.good || 0) - inUseCount - reservedCount, 0)
@@ -470,7 +470,7 @@ const getActiveBorrowing = async () => {
     schedules.map(async (schedule) => {
       const requests = await BorrowRequest.find({
         scheduleId: schedule._id,
-        status: { $in: ['pending', 'approved', 'handed_over', 'returned'] },
+        status: { $in: ['pending', 'approved', 'handed_over', 'returning', 'returned'] },
       })
         .populate('borrowerId', 'displayName username avatarUrl')
         .populate('equipmentId', 'name code category status img')

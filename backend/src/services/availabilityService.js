@@ -29,7 +29,7 @@ const getEquipmentBorrowStatus = async (equipmentId) => {
   // Check for active borrow requests
   const activeRequest = await BorrowRequest.findOne({
     equipmentId,
-    status: { $in: ['approved', 'handed_over'] },
+    status: { $in: ['approved', 'handed_over', 'returning'] },
   })
     .populate('borrowerId', 'displayName username')
     .lean()
@@ -38,7 +38,7 @@ const getEquipmentBorrowStatus = async (equipmentId) => {
     return { borrowStatus: 'available', activeRequest: null }
   }
 
-  if (activeRequest.status === 'handed_over') {
+  if (activeRequest.status === 'handed_over' || activeRequest.status === 'returning') {
     return { borrowStatus: 'in_use', activeRequest }
   }
 
@@ -70,7 +70,7 @@ const checkEquipmentBorrowability = async (equipmentId, dateRange = null) => {
   // Check for any conflicting active requests in the requested time window
   const conflictQuery = {
     equipmentId,
-    status: { $in: ['approved', 'handed_over'] },
+    status: { $in: ['approved', 'handed_over', 'returning'] },
   }
 
   if (dateRange) {

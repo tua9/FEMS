@@ -72,13 +72,45 @@ export const rejectBorrowRequest = asyncHandler(async (req, res) => {
   res.status(StatusCodes.OK).json(result)
 })
 
-export const handoverBorrowRequest = asyncHandler(async (req, res) => {
-  const result = await borrowRequestService.handoverToStudent(req.params.id, req.user._id)
+/**
+ * Student confirms they received the equipment.
+ * Body: { checklist: { appearance, functioning, accessories }, notes, images[] }
+ * Status: approved → handed_over
+ */
+export const confirmReceivedBorrowRequest = asyncHandler(async (req, res) => {
+  const { checklist, notes, images } = req.body
+  const result = await borrowRequestService.studentConfirmReceived(
+    req.params.id, 
+    req.user._id,
+    { checklist, notes, images }
+  )
   res.status(StatusCodes.OK).json(result)
 })
 
+/**
+ * Student requests return. No body payload needed anymore.
+ * Status: handed_over → returning
+ */
+export const submitReturnBorrowRequest = asyncHandler(async (req, res) => {
+  const result = await borrowRequestService.studentSubmitReturn(
+    req.params.id,
+    req.user._id
+  )
+  res.status(StatusCodes.OK).json(result)
+})
+
+/**
+ * Lecturer/Admin confirms return after inspecting equipment.
+ * Body: { checklist: { appearance, functioning, accessories }, notes, images[] }
+ * Status: returning → returned
+ */
 export const returnBorrowRequest = asyncHandler(async (req, res) => {
-  const result = await borrowRequestService.confirmReturn(req.params.id, req.user._id)
+  const { checklist, notes, images } = req.body
+  const result = await borrowRequestService.confirmReturn(
+    req.params.id, 
+    req.user._id,
+    { checklist, notes, images }
+  )
   res.status(StatusCodes.OK).json(result)
 })
 

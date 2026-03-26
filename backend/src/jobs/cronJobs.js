@@ -7,28 +7,16 @@ import { borrowRequestService } from '../services/borrowRequestService.js'
 export const initCronJobs = () => {
   console.log('⏰ Initializing background cron jobs...')
 
-  // Run every 10 minutes to check for expired (uncollected) borrow requests
-  // This will catch requests that passed their 17:00 deadline on their borrow_date
-  cron.schedule('*/10 * * * *', async () => {
-    console.log('🔍 [CRON] Checking for uncollected borrow requests...')
+  // Every 5 minutes: cancel pending/approved requests whose slot has ended
+  cron.schedule('*/5 * * * *', async () => {
     try {
-      await borrowRequestService.autoCancelExpiredRequests()
+      await borrowRequestService.autoCancelSlotEndedRequests()
     } catch (error) {
-      console.error('❌ [CRON] Error in autoCancelExpiredRequests:', error)
+      console.error('❌ [CRON] Error in autoCancelSlotEndedRequests:', error)
     }
   })
 
-  // Optional: Run specifically at 17:05 daily as a safety check
-  cron.schedule('5 17 * * *', async () => {
-    console.log('🔍 [CRON] Daily 17:05 check for uncollected borrow requests...')
-    try {
-      await borrowRequestService.autoCancelExpiredRequests()
-    } catch (error) {
-      console.error('❌ [CRON] Error in daily auto-cancel check:', error)
-    }
-  })
-
-  // Run daily at 08:00 to check for overdue borrows
+  // Daily at 08:00: alert admins about overdue handed-over items
   cron.schedule('0 8 * * *', async () => {
     console.log('🔍 [CRON] Daily check for overdue borrows...')
     try {

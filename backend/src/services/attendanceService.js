@@ -81,6 +81,10 @@ const teacherCheckOut = async (scheduleId, lecturerId) => {
   if (!record) {
     throw new ApiError(StatusCodes.NOT_FOUND, 'Attendance record not found')
   }
+
+  // Update schedule status to completed so no new device borrows can happen
+  await Schedule.findByIdAndUpdate(scheduleId, { status: 'completed' })
+
   return record
 }
 

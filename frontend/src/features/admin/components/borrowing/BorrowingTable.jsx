@@ -117,27 +117,39 @@ const BorrowingTable = ({ records, onApprove, onHandover, onReject, onReturn, on
  </button>
  </>
  )}
+ {/* approved → open detail modal to fill handover form */}
  {record.status === 'approved' && (
  <button
- onClick={(e) => { e.stopPropagation(); onHandover?.(record._id); }}
+ onClick={(e) => { e.stopPropagation(); onViewDetails?.(record); }}
  className="px-2.5 py-1 bg-[#1A2B56] text-white hover:bg-[#2A3B66] rounded-md text-xs font-semibold transition-all shadow-[0_5px_15px_rgba(26,43,86,0.2)] hover:shadow-[0_8px_20px_rgba(26,43,86,0.3)] hover:-translate-y-0.5 whitespace-nowrap active:scale-95"
  >
- Handover
+ {record.handoverInfo?.submittedAt ? 'Chờ SV xác nhận' : 'Handover Form'}
  </button>
  )}
- {(record.status === 'handed_over' || record.status === 'overdue' || isOverdue) && (
+ {/* returning → lecturer confirms return */}
+ {record.status === 'returning' && (
  <button
  onClick={(e) => { e.stopPropagation(); onReturn?.(record._id); }}
- className="px-2.5 py-1 bg-indigo-600 text-white hover:bg-indigo-700 rounded-md text-xs font-semibold transition-all shadow-[0_5px_15px_rgba(79,70,229,0.2)] hover:shadow-[0_8px_20px_rgba(79,70,229,0.3)] hover:-translate-y-0.5 whitespace-nowrap active:scale-95"
+ className="px-2.5 py-1 bg-emerald-600 text-white hover:bg-emerald-700 rounded-md text-xs font-semibold transition-all shadow-[0_5px_15px_rgba(5,150,105,0.2)] hover:-translate-y-0.5 whitespace-nowrap active:scale-95"
  >
  Confirm Return
  </button>
+ )}
+ {/* handed_over: in use, show label */}
+ {(record.status === 'handed_over' && !isOverdue) && (
+ <div className="px-2.5 py-1 text-[10px] font-semibold uppercase text-indigo-400 tracking-widest">In Use</div>
+ )}
+ {isOverdue && (
+ <div className="px-2.5 py-1 text-[10px] font-semibold uppercase text-red-400 tracking-widest">Overdue</div>
  )}
  {record.status === 'returned' && (
  <div className="px-2.5 py-1 text-[10px] font-semibold uppercase text-slate-400 tracking-widest">Completed</div>
  )}
  {record.status === 'rejected' && (
  <div className="px-2.5 py-1 text-[10px] font-semibold uppercase text-red-400 tracking-widest">Rejected</div>
+ )}
+ {record.status === 'cancelled' && (
+ <div className="px-2.5 py-1 text-[10px] font-semibold uppercase text-slate-400 tracking-widest">Cancelled</div>
  )}
  </>
  )}

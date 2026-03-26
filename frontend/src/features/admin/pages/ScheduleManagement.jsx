@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 import { PageHeader } from '@/features/shared/components/PageHeader';
 import { scheduleService } from '@/services/scheduleService';
+import { toVNDateStr } from '@/utils/dateUtils';
 import { slotService } from '@/services/slotService';
 import { roomService } from '@/services/roomService';
 import { userService } from '@/services/userService';
@@ -215,7 +216,7 @@ const ScheduleFormModal = ({ initial, slots, rooms, lecturers, classes, onSave, 
   const buildForm = (src) => src
     ? {
         title: src.title || '',
-        date: src.date ? new Date(src.date).toISOString().slice(0, 10) : '',
+        date: src.date ? toVNDateStr(new Date(src.date)) : '',
         slotId: src.slotId?._id || src.slotId || '',
         roomId: src.roomId?._id || src.roomId || '',
         lecturerId: src.lecturerId?._id || src.lecturerId || '',
@@ -435,8 +436,8 @@ const SchedulesTab = () => {
     try {
       const y = calDate.getFullYear(), m = calDate.getMonth();
       const data = await scheduleService.getAllSchedules({
-        startDate: new Date(y, m, 1).toISOString().slice(0, 10),
-        endDate:   new Date(y, m + 1, 0).toISOString().slice(0, 10),
+        startDate: toVNDateStr(new Date(y, m, 1)),
+        endDate:   toVNDateStr(new Date(y, m + 1, 0)),
       });
       setSchedules(Array.isArray(data) ? data : []);
     } catch {
@@ -577,7 +578,7 @@ const SchedulesTab = () => {
       {/* Create / Edit modal */}
       {formModal && (
         <ScheduleFormModal
-          initial={formModal === 'create' ? { date: selectedDate?.toISOString().slice(0, 10) } : formModal}
+          initial={formModal === 'create' ? { date: selectedDate ? toVNDateStr(selectedDate) : '' } : formModal}
           slots={slots}
           rooms={rooms}
           lecturers={lecturers}
