@@ -36,3 +36,13 @@ export const getRecentDamageReports = asyncHandler(async (req, res) => {
   const result = await adminService.getRecentDamageReports()
   res.status(StatusCodes.OK).json(result)
 })
+
+export const getTechnicianPerformance = asyncHandler(async (req, res) => {
+  const result = await adminService.getTechnicianPerformance()
+  res.status(StatusCodes.OK).json(result)
+})
+
+export const getActiveBorrowing = asyncHandler(async (req, res) => {
+  const result = await adminService.getActiveBorrowing()
+  res.status(StatusCodes.OK).json(result)
+})

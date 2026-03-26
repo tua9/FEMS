@@ -76,6 +76,24 @@ const EquipmentManagement = () => {
  // Broken components for attention
  const brokenAttention = equipments.filter(e => e.status === 'broken' || e.status === 'maintenance').slice(0, 5);
 
+ // Status summary counts
+ const totalCount = equipments.length;
+ const availableCount = equipments.filter(e => {
+ const vs = getDerivedStatus(e, activeRequests);
+ return vs === 'Available' || vs === 'Reserved';
+ }).length;
+ const inUseCount = equipments.filter(e => getDerivedStatus(e, activeRequests) === 'In Use').length;
+ const maintenanceCount = equipments.filter(e => e.status === 'maintenance').length;
+ const brokenCount = equipments.filter(e => e.status === 'broken').length;
+
+ const statusCards = [
+ { label: 'Total', value: totalCount, icon: 'devices', color: 'text-[#1A2B56] dark:text-blue-300', bg: 'bg-blue-50 dark:bg-blue-900/20', filter: 'All Status' },
+ { label: 'Available', value: availableCount, icon: 'check_circle', color: 'text-emerald-600 dark:text-emerald-400', bg: 'bg-emerald-50 dark:bg-emerald-900/20', filter: 'Available' },
+ { label: 'In Use', value: inUseCount, icon: 'swap_horiz', color: 'text-indigo-600 dark:text-indigo-400', bg: 'bg-indigo-50 dark:bg-indigo-900/20', filter: 'Borrowed' },
+ { label: 'Maintenance', value: maintenanceCount, icon: 'build', color: 'text-amber-600 dark:text-amber-400', bg: 'bg-amber-50 dark:bg-amber-900/20', filter: 'Maintenance' },
+ { label: 'Broken', value: brokenCount, icon: 'warning', color: 'text-red-600 dark:text-red-400', bg: 'bg-red-50 dark:bg-red-900/20', filter: 'Broken' },
+ ];
+
  const categories = Array.from(new Set(equipments.map(e => e.category)));
  const statuses = ['Available', 'Borrowed', 'Maintenance', 'Broken'];
 
@@ -146,6 +164,29 @@ const EquipmentManagement = () => {
  <span className="material-symbols-outlined text-lg">add</span>
  Add Equipment
  </button>
+ </div>
+
+ {/* Status Summary Cards */}
+ <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 mb-6">
+ {statusCards.map(card => (
+ <button
+ key={card.label}
+ onClick={() => setStatusFilter(statusFilter === card.filter ? 'All Status' : card.filter)}
+ className={`dashboard-card p-4 rounded-2xl transition-all duration-200 flex items-center justify-between hover:scale-[1.02] active:scale-95 text-left border-2 ${
+ statusFilter === card.filter ? 'border-[#1A2B56]/20 dark:border-blue-400/30' : 'border-transparent'
+ }`}
+ >
+ <div>
+ <p className="text-[10px] font-semibold uppercase tracking-[0.15em] text-slate-500 dark:text-slate-400 mb-1">
+ {card.label}
+ </p>
+ <p className={`text-2xl font-extrabold tracking-tight ${card.color}`}>{card.value}</p>
+ </div>
+ <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${card.bg}`}>
+ <span className={`material-symbols-outlined text-lg ${card.color}`}>{card.icon}</span>
+ </div>
+ </button>
+ ))}
  </div>
 
  <div className="dashboard-card p-8 rounded-4xl transition-all duration-300">

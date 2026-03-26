@@ -5,6 +5,7 @@ import UpcomingReturnCards from '../components/borrowing/UpcomingReturnCards';
 import ReturnCalendar from '../components/borrowing/ReturnCalendar';
 import NewBorrowModal from '../components/borrowing/NewBorrowModal';
 import BorrowingDetailModal from '../components/borrowing/BorrowingDetailModal';
+import ActiveBorrowingMonitor from '../components/borrowing/ActiveBorrowingMonitor';
 import { useBorrowRequestStore } from '@/stores/useBorrowRequestStore';
 import { PageHeader } from '@/features/shared/components/PageHeader';
 import { toast } from 'sonner';
@@ -131,6 +132,15 @@ const BorrowingManagement = () => {
  Direct Allocation
  </button>
  </div>
+
+ {/* Active Borrowing Monitor */}
+ <div className="mb-8">
+ <ActiveBorrowingMonitor />
+ </div>
+
+ <h3 className="text-base font-extrabold text-[#1A2B56] dark:text-white mb-6 px-2">
+ Borrowing History
+ </h3>
 
  {/* KPI Cards */}
  <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">

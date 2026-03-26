@@ -9,6 +9,8 @@ export const useAdminStore = create((set) => ({
   damageReports: [],
   equipmentAnalytics: null,
   reportAnalytics: null,
+  technicianPerformance: null,
+  activeBorrowing: null,
   loading: false,
   error: null,
 
@@ -87,6 +89,24 @@ export const useAdminStore = create((set) => ({
       set({ reportAnalytics: data });
     } catch (error) {
       set({ error: error?.response?.data?.message || "Cannot fetch report analytics" });
+    }
+  },
+
+  fetchTechnicianPerformance: async () => {
+    try {
+      const data = await adminService.getTechnicianPerformance();
+      set({ technicianPerformance: data });
+    } catch (error) {
+      set({ error: error?.response?.data?.message || "Cannot fetch technician performance" });
+    }
+  },
+
+  fetchActiveBorrowing: async () => {
+    try {
+      const data = await adminService.getActiveBorrowing();
+      set({ activeBorrowing: data });
+    } catch (error) {
+      set({ error: error?.response?.data?.message || "Cannot fetch active borrowing" });
     }
   },
 }));
