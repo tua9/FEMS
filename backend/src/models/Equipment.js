@@ -20,7 +20,7 @@ const assetSchema = new mongoose.Schema(
 
     status: {
       type: String,
-      enum: ['good', 'broken', 'maintenance'],
+      enum: ['good', 'broken', 'maintenance', 'reserved', 'in_use'],
       required: true,
       default: 'good',
     },
@@ -40,7 +40,11 @@ const assetSchema = new mongoose.Schema(
     code: {
       type: String,
       unique: true,
-      sparse: true,
+      sparse: true, // allows existing docs without code; new ones always get one
+      trim: true,
+    },
+    img: {
+      type: String,
       default: null,
     },
   },
@@ -49,16 +53,19 @@ const assetSchema = new mongoose.Schema(
   },
 )
 
-// If equipment is assigned to a room or borrowed, it's not available
+// Equipment availability logic: only depends on condition status and borrow status
 assetSchema.pre('save', function () {
-  if (this.room_id || this.borrowed_by) {
+  if (this.status === 'broken' || this.status === 'maintenance') {
     this.available = false
-  } else {
+  } else if (this.status === 'in_use') {
+    this.available = false
+  } else if (this.status === 'reserved') {
+    // Reserved means approved but not yet handed over; still physically available in storage
     this.available = true
+  } else if (this.status === 'good') {
+    this.available = !this.borrowed_by
   }
-}
-
-)
+})
 
 // Default sort by newest first
 assetSchema.pre('find', function () {

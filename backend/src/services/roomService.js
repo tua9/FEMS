@@ -70,7 +70,7 @@ const deleteRoom = async (id) => {
 }
 
 const getRoomStatusCenter = async (queries) => {
-  const { building_id, floor, deviceStatus } = queries
+  const { building_id, floor, equipmentStatus } = queries
 
   const matchQuery = {}
   if (building_id) matchQuery.building_id = new mongoose.Types.ObjectId(building_id)
@@ -89,37 +89,37 @@ const getRoomStatusCenter = async (queries) => {
     { $unwind: '$building' },
     {
       $lookup: {
-        from: 'equipments',
+        from: 'equipment',
         localField: '_id',
         foreignField: 'room_id',
-        as: 'devices',
+        as: 'equipmentItems',
       },
     },
     {
       $addFields: {
-        totalDevices: { $size: '$devices' },
-        faultyDevices: {
+        totalEquipment: { $size: '$equipmentItems' },
+        faultyEquipment: {
           $size: {
             $filter: {
-              input: '$devices',
+              input: '$equipmentItems',
               as: 'd',
               cond: { $eq: ['$$d.status', 'broken'] },
             },
           },
         },
-        maintenanceDevices: {
+        maintenanceEquipment: {
           $size: {
             $filter: {
-              input: '$devices',
+              input: '$equipmentItems',
               as: 'd',
               cond: { $eq: ['$$d.status', 'maintenance'] },
             },
           },
         },
-        goodDevices: {
+        goodEquipment: {
           $size: {
             $filter: {
-              input: '$devices',
+              input: '$equipmentItems',
               as: 'd',
               cond: { $eq: ['$$d.status', 'good'] },
             },
@@ -131,16 +131,16 @@ const getRoomStatusCenter = async (queries) => {
       $addFields: {
         operationalSummary: {
           $concat: [
-            { $toString: '$goodDevices' },
+            { $toString: '$goodEquipment' },
             '/',
-            { $toString: '$totalDevices' },
+            { $toString: '$totalEquipment' },
             ' PCS OPERATIONAL',
           ],
         },
-        // Get top 3 representative devices for display on card
-        displayDevices: {
+        // Get top 3 representative equipment for display on card
+        displayEquipment: {
           $map: {
-            input: { $slice: ['$devices', 3] },
+            input: { $slice: ['$equipmentItems', 3] },
             as: 'd',
             in: {
               name: '$$d.name',
@@ -161,18 +161,18 @@ const getRoomStatusCenter = async (queries) => {
     },
   ]
 
-  // Apply device status filter if provided
-  if (deviceStatus) {
-    if (deviceStatus === 'faulty') {
-      pipeline.push({ $match: { faultyDevices: { $gt: 0 } } })
-    } else if (deviceStatus === 'maintenance') {
-      pipeline.push({ $match: { maintenanceDevices: { $gt: 0 } } })
-    } else if (deviceStatus === 'active') {
-      pipeline.push({ $match: { faultyDevices: 0, maintenanceDevices: 0, totalDevices: { $gt: 0 } } })
+  // Apply equipment status filter if provided
+  if (equipmentStatus) {
+    if (equipmentStatus === 'faulty') {
+      pipeline.push({ $match: { faultyEquipment: { $gt: 0 } } })
+    } else if (equipmentStatus === 'maintenance') {
+      pipeline.push({ $match: { maintenanceEquipment: { $gt: 0 } } })
+    } else if (equipmentStatus === 'active') {
+      pipeline.push({ $match: { faultyEquipment: 0, maintenanceEquipment: 0, totalEquipment: { $gt: 0 } } })
     }
   }
 
-  // Final step: Group by building name to match UI structure and avoid duplicate sections
+  // Final step: Group by building name
   pipeline.push({
     $group: {
       _id: '$building.name',
@@ -185,11 +185,10 @@ const getRoomStatusCenter = async (queries) => {
           type: '$type',
           status: '$status',
           floor: '$floor',
-          labels: '$labels',
           operationalSummary: '$operationalSummary',
-          displayDevices: '$displayDevices',
-          totalDevices: '$totalDevices',
-          faultyDevices: '$faultyDevices',
+          displayEquipment: '$displayEquipment',
+          totalEquipment: '$totalEquipment',
+          faultyEquipment: '$faultyEquipment',
         },
       },
     },

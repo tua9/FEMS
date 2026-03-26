@@ -1,4 +1,4 @@
-export type EquipmentStatus = 'good' | 'broken' | 'maintenance' | string;
+export type EquipmentStatus = 'good' | 'broken' | 'maintenance' | 'reserved' | 'in_use' | string;
 export type EquipmentType = 'laptop' | 'projector' | 'tablet' | 'monitor' | 'camera' | 'audio' | 'all-types';
 export type LocationKey = 'gamma' | 'beta' | 'alpha' | 'all-locations';
 
@@ -19,7 +19,7 @@ export interface Equipment {
     email: string;
   } | string | null;
   code?: string | null;
-  imageUrl?: string;
+  img?: string | null;
   description?: string;
   issueDescription?: string;
   createdAt?: string;
@@ -30,6 +30,8 @@ export interface CreateEquipmentPayload {
   name: string;
   category: string;
   status?: EquipmentStatus;
+  available?: boolean;
   room_id?: string | null;
   code?: string | null;
+  img?: string | null;
 }

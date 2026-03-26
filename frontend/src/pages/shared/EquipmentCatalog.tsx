@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { Loader2 } from "lucide-react";
@@ -10,11 +10,15 @@ import { EquipmentGrid } from "@/components/shared/equipment/EquipmentGrid";
 import { BorrowedEquipmentGrid } from "@/components/shared/equipment/BorrowedEquipmentGrid";
 import BorrowModal from "@/components/shared/equipment/BorrowModal";
 import { useEquipmentStore } from "@/stores/useEquipmentStore";
-import { useBuildingStore } from "@/stores/useBuildingStore";
 import { useBorrowRequestStore } from "@/stores/useBorrowRequestStore";
 import { useRoomStore } from "@/stores/useRoomStore";
 import { useAuthStore } from "@/stores/useAuthStore";
 import type { Equipment } from "@/types/equipment";
+import type { BorrowRequest } from "@/types/borrowRequest";
+import { sortEquipmentByAvailability, hasActiveBorrowRequest } from "@/utils/equipmentHelper";
+import { DuplicateBorrowModal } from "@/components/shared/equipment/DuplicateBorrowModal";
+import { HistoryDetailModal, type ModalItem } from "@/components/shared/history/HistoryDetailModal";
+import { useHistoryMappings } from "@/hooks/useHistoryMappings";
 
 // Category id → EquipmentType (or 'all')
 // Must match the `category` values stored in MongoDB
@@ -41,27 +45,31 @@ export const EquipmentCatalog: React.FC = () => {
   const historyPath = `/${role}/history`;
 
   const { inventoryData, fetchInventory, loading: equipmentLoading } = useEquipmentStore();
-  const { buildings, fetchAll: fetchBuildings } = useBuildingStore();
   const { fetchAll: fetchRooms } = useRoomStore();
-  const { createMyBorrowRequest, fetchMyBorrowRequests, loading: borrowLoading } = useBorrowRequestStore();
+  const { createMyBorrowRequest, fetchMyBorrowRequests, borrowRequests, loading: borrowLoading } = useBorrowRequestStore();
 
   // ── Filter state ──────────────────────────────────────────────────────────
   const [searchText, setSearchText] = useState("");
   const [typeFilter, setTypeFilter] = useState("all-types");
-  const [locationFilter, setLocationFilter] = useState("all-locations");
   const [activeCategory, setActiveCategory] = useState("all");
+  const [statusFilter, setStatusFilter] = useState("all-statuses");
   const [currentPage, setCurrentPage] = useState(1);
 
   // ── Borrow modal state ────────────────────────────────────────────────────
   const [borrowingItem, setBorrowingItem] = useState<Equipment | null>(null);
+  const [duplicateModalOpen, setDuplicateModalOpen] = useState(false);
+  const [activeRequestToView, setActiveRequestToView] = useState<BorrowRequest | null>(null);
+  const [historyModalItem, setHistoryModalItem] = useState<ModalItem | null>(null);
 
-  const ITEMS_PER_PAGE = 12;
+  const { mappedBorrow } = useHistoryMappings(null, borrowRequests, []);
+
+  const ITEMS_PER_PAGE = 8;
 
   // ── Initial Fetch ─────────────────────────────────────────────────────────
   useEffect(() => {
-    fetchBuildings();
     fetchRooms();
-  }, [fetchBuildings, fetchRooms]);
+    fetchMyBorrowRequests();
+  }, [fetchRooms, fetchMyBorrowRequests]);
 
   useEffect(() => {
     const params: any = {
@@ -76,15 +84,12 @@ export const EquipmentCatalog: React.FC = () => {
       params.category = activeCategory;
     }
 
-    if (locationFilter !== "all-locations") {
-      // Find building ID by name (case insensitive slug)
-      const slug = locationFilter.toLowerCase();
-      const building = buildings.find(b => b.name.toLowerCase().includes(slug));
-      if (building) params.building_id = building._id;
+    if (statusFilter !== "all-statuses") {
+      params.status = statusFilter;
     }
 
     fetchInventory(params);
-  }, [currentPage, searchText, typeFilter, activeCategory, locationFilter, fetchInventory, buildings]);
+  }, [currentPage, searchText, typeFilter, activeCategory, statusFilter, fetchInventory]);
 
   // ── Sync category ↔ type dropdown ─────────────────────────────────────────
   const handleTypeChange = (val: string) => {
@@ -106,7 +111,9 @@ export const EquipmentCatalog: React.FC = () => {
   // ── Pagination ────────────────────────────────────────────────────────────
   const totalPages = inventoryData?.pagination.totalPages || 1;
   const safePage = Math.min(currentPage, totalPages);
-  const pagedItems = inventoryData?.items || [];
+  // Sorting is now handled by the custom helper before rendering
+  const rawPagedItems = inventoryData?.items || [];
+  const pagedItems = sortEquipmentByAvailability(rawPagedItems);
 
   const handlePageChange = (page: number) => {
     if (page < 1 || page > totalPages) return;
@@ -117,6 +124,12 @@ export const EquipmentCatalog: React.FC = () => {
   // ── Borrow modal ──────────────────────────────────────────────────────────
 
   const openBorrowModal = (item: Equipment) => {
+    const activeReq = hasActiveBorrowRequest(item._id, borrowRequests);
+    if (activeReq) {
+      setActiveRequestToView(activeReq);
+      setDuplicateModalOpen(true);
+      return;
+    }
     setBorrowingItem(item);
   };
 
@@ -124,10 +137,22 @@ export const EquipmentCatalog: React.FC = () => {
     setBorrowingItem(null);
   };
 
+  const handleViewPreviousRequest = () => {
+    setDuplicateModalOpen(false);
+    if (activeRequestToView) {
+      const item = mappedBorrow.find(b => b.original._id === activeRequestToView._id);
+      if (item) {
+        setHistoryModalItem({ type: 'borrow', item, mode: 'view' });
+      } else {
+        toast.error("Không tìm thấy đơn mượn.");
+      }
+    }
+  };
+
   const handleSubmitBorrow = async (borrowDate: string, returnDate: string, purpose: string) => {
     try {
-      const roomIdFromItem = (borrowingItem?.room_id as any)?._id || (borrowingItem?.room_id as any);
-      const roomId = roomIdFromItem ? String(roomIdFromItem) : "";
+      const tempRoom = borrowingItem?.room_id as any;
+      const roomId = tempRoom?._id ? String(tempRoom._id) : (typeof tempRoom === 'string' ? tempRoom : "");
 
       await createMyBorrowRequest({
         equipment_id: borrowingItem!._id,
@@ -203,6 +228,29 @@ export const EquipmentCatalog: React.FC = () => {
     );
   };
 
+  // ── Handled Over (Currently Borrowed) ──────────────────────────────────
+  const borrowedItems = useMemo(() => {
+    return mappedBorrow.filter((b: any) => 
+      b.status === "BORROWED" || 
+      b.status === "OVERDUE" || 
+      b.status === "APPROVED"
+    );
+  }, [mappedBorrow]);
+
+  const handleReturnBorrowed = async (borrowRequestId: string) => {
+    try {
+      await useBorrowRequestStore.getState().returnBorrowRequest(borrowRequestId);
+      toast.success("Đã gửi yêu cầu hoàn trả thiết bị.");
+      await fetchMyBorrowRequests();
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || "Không thể thực hiện hoàn trả.");
+    }
+  };
+
+  const handleViewHistoryItem = (item: any) => {
+    setHistoryModalItem({ type: 'borrow', item, mode: 'view' });
+  };
+
   return (
     <div className="w-full">
       <main className="mx-auto flex w-full max-w-[90vw] flex-1 flex-col px-4 pt-6 sm:pt-24 pb-10 sm:px-6 xl:max-w-7xl">
@@ -221,9 +269,9 @@ export const EquipmentCatalog: React.FC = () => {
           }}
           typeFilter={typeFilter}
           onTypeChange={handleTypeChange}
-          locationFilter={locationFilter}
-          onLocationChange={(val) => {
-            setLocationFilter(val);
+          statusFilter={statusFilter}
+          onStatusChange={(val) => {
+            setStatusFilter(val);
             setCurrentPage(1);
           }}
           onFilter={handleFilter}
@@ -249,15 +297,19 @@ export const EquipmentCatalog: React.FC = () => {
           />
         )}
 
-        {/* Borrowed equipment */}
-        <BorrowedEquipmentGrid
-          items={[]} // This would eventually come from a store too
-          onViewHistory={() => navigate(historyPath)}
-          onItemClick={() => navigate(historyPath)}
-        />
-
-        {/* Pagination */}
+        {/* Pagination - Moved above currently borrowed */}
         {renderPageButtons()}
+
+        {/* Borrowed equipment */}
+        {borrowedItems.length > 0 && (
+          <BorrowedEquipmentGrid
+            items={borrowedItems}
+            user={user}
+            onViewHistory={() => navigate(historyPath)}
+            onReturn={handleReturnBorrowed}
+            onView={handleViewHistoryItem}
+          />
+        )}
       </main>
 
       {/* ── Borrow Request Modal ───────────────────────────────────────── */}
@@ -267,6 +319,21 @@ export const EquipmentCatalog: React.FC = () => {
           onClose={closeBorrowModal}
           onSubmit={handleSubmitBorrow}
           isLoading={borrowLoading}
+        />
+      )}
+
+      {/* ── Duplicate Borrow Modal ─────────────────────────────────────── */}
+      <DuplicateBorrowModal
+        isOpen={duplicateModalOpen}
+        onClose={() => setDuplicateModalOpen(false)}
+        onViewPrevious={handleViewPreviousRequest}
+      />
+
+      {/* ── History Detail Modal ───────────────────────────────────────── */}
+      {historyModalItem && (
+        <HistoryDetailModal
+          modal={historyModalItem}
+          onClose={() => setHistoryModalItem(null)}
         />
       )}
     </div>

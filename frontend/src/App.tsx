@@ -3,6 +3,7 @@ import { Outlet } from "react-router";
 import { Toaster } from "sonner";
 import { ThemeProvider } from "./components/common/theme-provider";
 import { useAuthStore } from "./stores/useAuthStore";
+import ChatBox from "./components/chat/ChatBox";
 
 export default function App() {
   const { refreshToken } = useAuthStore();
@@ -15,6 +16,7 @@ export default function App() {
     <>
       <Toaster richColors />
       <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
+        <ChatBox />
         <Outlet />
       </ThemeProvider>
     </>

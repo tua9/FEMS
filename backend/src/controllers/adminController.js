@@ -11,3 +11,18 @@ export const getDashboardChart = asyncHandler(async (req, res) => {
   const result = await adminService.getDashboardChart()
   res.status(StatusCodes.OK).json(result)
 })
+
+export const getHealthStatus = asyncHandler(async (req, res) => {
+  const result = await adminService.getHealthStatus()
+  res.status(StatusCodes.OK).json(result)
+})
+
+export const getRecentBorrowRequests = asyncHandler(async (req, res) => {
+  const result = await adminService.getRecentBorrowRequests()
+  res.status(StatusCodes.OK).json(result)
+})
+
+export const getRecentDamageReports = asyncHandler(async (req, res) => {
+  const result = await adminService.getRecentDamageReports()
+  res.status(StatusCodes.OK).json(result)
+})

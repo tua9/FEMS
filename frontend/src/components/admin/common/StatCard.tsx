@@ -7,7 +7,7 @@ interface StatCardProps {
     trendLabel?: string;
     trendDirection?: 'up' | 'down' | 'neutral';
     iconName: string;
-    color?: string; // Hex color for the icon container
+    colorTheme?: 'blue' | 'emerald' | 'amber' | 'red' | 'slate';
     onClick?: () => void;
 }
 
@@ -18,6 +18,7 @@ const StatCard: React.FC<StatCardProps> = ({
     trendLabel,
     trendDirection = 'neutral',
     iconName,
+    colorTheme = 'slate',
     onClick
 }) => {
 
@@ -41,6 +42,15 @@ const StatCard: React.FC<StatCardProps> = ({
         trendIcon = 'info';
     }
 
+    // Theme-based icon colors
+    const themeClasses = {
+        blue: 'bg-blue-50 dark:bg-blue-900/20 text-[#1A2B56] dark:text-blue-400',
+        emerald: 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-500',
+        amber: 'bg-amber-50 dark:bg-amber-900/20 text-amber-500',
+        red: 'bg-red-50 dark:bg-red-900/20 text-red-500',
+        slate: 'bg-slate-50 dark:bg-slate-700/30 text-slate-400 dark:text-slate-500'
+    };
+
     const CardContent = (
         <>
             <div>
@@ -56,7 +66,7 @@ const StatCard: React.FC<StatCardProps> = ({
                 )}
             </div>
 
-            <div className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-700/30 text-slate-400 dark:text-slate-500 transition-all duration-300">
+            <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-300 ${themeClasses[colorTheme]}`}>
                 <span className="material-symbols-outlined text-3xl block">{iconName}</span>
             </div>
         </>

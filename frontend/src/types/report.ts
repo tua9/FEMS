@@ -38,9 +38,11 @@ export interface Report {
     displayName?: string;
   } | string | null;
   img?: string | null;
+  images?: string[];
   description?: string | null;
   createdAt?: string;
   updatedAt?: string;
+  code?: string | null;
 }
 
 export interface CreateReportPayload {
@@ -50,5 +52,6 @@ export interface CreateReportPayload {
   priority?: ReportPriority;
   severity?: 'low' | 'medium' | 'high' | 'critical';
   img?: string | null;
+  images?: string[];
   description?: string | null;
 }

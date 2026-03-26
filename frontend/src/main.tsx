@@ -7,6 +7,7 @@ import "./styles/index.css";
 
 // Auth guards
 import RoleRedirect from "./components/auth/RoleRedirect.tsx";
+import GuestReportPage from "./pages/guest/GuestReportPage.tsx";
 
 // Route Modules
 import PublicRoutes from "./routes/publicRoutes.tsx";
@@ -23,8 +24,8 @@ createRoot(document.getElementById("root")!).render(
           {/* Public routes */}
           {PublicRoutes()}
 
-          {/* Root "/" → redirect theo role */}
-          <Route path="/" element={<RoleRedirect />} />
+          {/* Root "/" → public report page (no login required) */}
+          <Route path="/" element={<GuestReportPage />} />
 
           {/* Role-based routes */}
           {StudentRoutes()}

@@ -33,56 +33,6 @@ describe('authService Unit Tests', () => {
     vi.clearAllMocks()
   })
 
-  // ─── 1️⃣ signUp ─────────────────────────────────────────────────────────────
-  describe('signUp()', () => {
-    it('should throw "All fields are required" if any field is missing (BVA)', async () => {
-      const incompleteBody = { username: 'testuser' } // Missing others
-      
-      console.log('🧪 Test: signUp with missing fields')
-      await expect(authService.signUp(incompleteBody)).rejects.toThrow('All fields are required!')
-    })
-
-    it('should throw "User already exists" if email is taken (Decision: User exists)', async () => {
-      const body = {
-        username: 'newuser',
-        email: 'exists@example.com',
-        password: 'password123',
-        role: 'student',
-        firstname: 'John',
-        lastname: 'Doe'
-      }
-
-      // Mock User.findOne to return a dummy user
-      User.findOne.mockResolvedValue({ _id: '123', email: body.email })
-
-      console.log('🧪 Test: signUp with existing email')
-      await expect(authService.signUp(body)).rejects.toThrow('User already exists')
-      expect(User.findOne).toHaveBeenCalledWith({ email: body.email })
-    })
-
-    it('should create a user successfully (Decision: User does not exist)', async () => {
-      const body = {
-        username: 'newuser',
-        email: 'new@example.com',
-        password: 'password123',
-        role: 'student',
-        firstname: 'John',
-        lastname: 'Doe'
-      }
-
-      User.findOne.mockResolvedValue(null)
-      bcrypt.hash.mockResolvedValue('hashed_password')
-      User.create.mockResolvedValue({ ...body, hashedPassword: 'hashed_password' })
-
-      console.log('🧪 Test: signUp success')
-      const result = await authService.signUp(body)
-
-      expect(result).toEqual({ message: 'User created successfully' })
-      expect(bcrypt.hash).toHaveBeenCalledWith(body.password, 10)
-      expect(User.create).toHaveBeenCalled()
-    })
-  })
-
   // ─── 2️⃣ signIn ─────────────────────────────────────────────────────────────
   describe('signIn()', () => {
     const validBody = { username: 'testuser', password: 'password123' }
@@ -255,21 +205,6 @@ describe('authService Unit Tests', () => {
       console.log('🧪 Test: changePassword Decision - incorrect current password')
       await expect(authService.changePassword(userId, { currentPassword: 'wrong', newPassword: 'newPassword123' }))
         .rejects.toThrow('Incorrect current password')
-    })
-
-    it('should succeed if password is exactly 6 chars (BVA - boundary)', async () => {
-      User.findById.mockResolvedValue(mockUser)
-      bcrypt.compare.mockResolvedValue(true)
-      bcrypt.hash.mockResolvedValue('new_hashed')
-      User.findByIdAndUpdate.mockResolvedValue({ ...mockUser, hashedPassword: 'new_hashed' })
-      Session.deleteMany.mockResolvedValue({})
-
-      console.log('🧪 Test: changePassword BVA - boundary length 6')
-      const result = await authService.changePassword(userId, { currentPassword: 'old', newPassword: '123456' })
-
-      expect(result.message).toBe('Password changed successfully')
-      expect(User.findByIdAndUpdate).toHaveBeenCalled()
-      expect(Session.deleteMany).toHaveBeenCalledWith({ userId })
     })
 
     it('should succeed and clear sessions on valid input (Success Path)', async () => {

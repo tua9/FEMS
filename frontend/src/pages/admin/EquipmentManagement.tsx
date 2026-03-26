@@ -4,7 +4,7 @@ import EquipmentTable from '../../components/admin/equipment/EquipmentTable';
 import BrokenAttentionCard from '../../components/admin/equipment/BrokenAttentionCard';
 import AddEquipmentModal from '../../components/admin/equipment/AddEquipmentModal';
 import EquipmentQRCodeModal from '../../components/admin/equipment/EquipmentQRCodeModal';
-import DeviceDetailsModal from '../../components/admin/equipment/DeviceDetailsModal';
+import EquipmentDetailsModal from '../../components/admin/equipment/EquipmentDetailsModal';
 import DeleteConfirmationModal from '../../components/admin/common/DeleteConfirmationModal';
 import Pagination from '../../components/shared/Pagination';
 import { useEquipmentStore } from '../../stores/useEquipmentStore';
@@ -23,10 +23,10 @@ const EquipmentManagement: React.FC = () => {
     const updateEquipment = useEquipmentStore(state => state.updateEquipment);
 
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-    const [selectedDevice, setSelectedDevice] = useState<Equipment | null>(null);
+    const [selectedEquipment, setSelectedEquipment] = useState<Equipment | null>(null);
     const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
-    const [qrDevice, setQrDevice] = useState<Equipment | null>(null);
-    const [deviceToDelete, setDeviceToDelete] = useState<Equipment | null>(null);
+    const [qrEquipment, setQrEquipment] = useState<Equipment | null>(null);
+    const [equipmentToDelete, setEquipmentToDelete] = useState<Equipment | null>(null);
     const [activeRequests, setActiveRequests] = useState<any[]>([]);
 
     const [searchQuery, setSearchQuery] = useState('');
@@ -55,18 +55,18 @@ const EquipmentManagement: React.FC = () => {
     }, [searchQuery, statusFilter, categoryFilter, sortBy]);
 
     const handleOpenDetails = (asset: Equipment) => {
-        setSelectedDevice(asset);
+        setSelectedEquipment(asset);
         setIsDetailModalOpen(true);
     };
 
-    const handleOpenQRCode = (asset: Equipment) => setQrDevice(asset);
-    const handleEditDevice = (asset: Equipment) => handleOpenDetails(asset);
-    const handleDeleteClick = (asset: Equipment) => setDeviceToDelete(asset);
+    const handleOpenQRCode = (asset: Equipment) => setQrEquipment(asset);
+    const handleEditEquipment = (asset: Equipment) => handleOpenDetails(asset);
+    const handleDeleteClick = (asset: Equipment) => setEquipmentToDelete(asset);
 
     const confirmDelete = async () => {
-        if (deviceToDelete) {
-            await deleteEquipment(deviceToDelete._id);
-            setDeviceToDelete(null);
+        if (equipmentToDelete) {
+            await deleteEquipment(equipmentToDelete._id);
+            setEquipmentToDelete(null);
         }
     };
 
@@ -115,7 +115,7 @@ const EquipmentManagement: React.FC = () => {
         );
     }
 
-    const isBlurred = isAddModalOpen || isDetailModalOpen || qrDevice || !!deviceToDelete;
+    const isBlurred = isAddModalOpen || isDetailModalOpen || !!qrEquipment || !!equipmentToDelete;
 
     return (
         <div className="max-w-7xl mx-auto px-6 pt-6 sm:pt-8 pb-16 relative z-0">
@@ -127,7 +127,7 @@ const EquipmentManagement: React.FC = () => {
                         className="items-start! text-left! mb-0!"
                     />
                     <button
-                        onClick={() => { setSelectedDevice(null); setIsAddModalOpen(true); }}
+                        onClick={() => { setSelectedEquipment(null); setIsAddModalOpen(true); }}
                         className="flex items-center gap-2 px-6 py-3 bg-[#1A2B56] text-white rounded-2xl font-semibold text-sm shadow-[0_10px_20px_rgba(26,43,86,0.3)] hover:opacity-90 transition-all border border-white/10 shrink-0"
                     >
                         <span className="material-symbols-outlined text-lg">add</span>
@@ -203,7 +203,7 @@ const EquipmentManagement: React.FC = () => {
                         equipments={paginatedEquipments}
                         onOpenDetails={handleOpenDetails}
                         onOpenQRCode={handleOpenQRCode}
-                        onEdit={handleEditDevice}
+                        onEdit={handleEditEquipment}
                         onDelete={handleDeleteClick}
                         onReportDamage={(item) => handleUpdateStatus(item._id, 'broken')}
                         activeRequests={activeRequests}
@@ -233,10 +233,10 @@ const EquipmentManagement: React.FC = () => {
                 />
             </div>
 
-            <AddEquipmentModal isOpen={isAddModalOpen} onClose={() => setIsAddModalOpen(false)} equipment={selectedDevice} onEquipmentUpdated={fetchAll} />
-            <DeviceDetailsModal isOpen={isDetailModalOpen} device={selectedDevice} onClose={() => setIsDetailModalOpen(false)} onEdit={(d) => { setIsDetailModalOpen(false); setSelectedDevice(d); setIsAddModalOpen(true); }} onReportDamage={(d) => handleUpdateStatus(d._id, 'broken')} />
-            <EquipmentQRCodeModal isOpen={!!qrDevice} equipment={qrDevice} onClose={() => setQrDevice(null)} />
-            <DeleteConfirmationModal isOpen={!!deviceToDelete} title="Decommission Equipment" message="Are you sure you want to remove this equipment?" itemName={deviceToDelete?.name} onClose={() => setDeviceToDelete(null)} onConfirm={confirmDelete} />
+            <AddEquipmentModal isOpen={isAddModalOpen} onClose={() => setIsAddModalOpen(false)} equipment={selectedEquipment} onEquipmentUpdated={fetchAll} />
+            <EquipmentDetailsModal isOpen={isDetailModalOpen} equipment={selectedEquipment} onClose={() => setIsDetailModalOpen(false)} onEdit={(e) => { setIsDetailModalOpen(false); setSelectedEquipment(e); setIsAddModalOpen(true); }} onReportDamage={(e) => handleUpdateStatus(e._id, 'broken')} />
+            <EquipmentQRCodeModal isOpen={!!qrEquipment} equipment={qrEquipment} onClose={() => setQrEquipment(null)} />
+            <DeleteConfirmationModal isOpen={!!equipmentToDelete} title="Decommission Equipment" message="Are you sure you want to remove this equipment?" itemName={equipmentToDelete?.name} onClose={() => setEquipmentToDelete(null)} onConfirm={confirmDelete} />
         </div>
     );
 };

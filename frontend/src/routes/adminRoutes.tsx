@@ -6,7 +6,7 @@ import AdminEquipment from "@/pages/admin/EquipmentManagement";
 import AdminBorrowing from "@/pages/admin/BorrowingManagement";
 import AdminUsers from "@/pages/admin/UserManagement";
 import AdminReports from "@/pages/admin/DamageReports";
-import AdminNotifications from "@/pages/admin/AdminNotifications";
+import NotificationsPage from "@/pages/shared/NotificationsPage";
 import ProfilePage from "@/pages/admin/Profile";
 import ChangePasswordPage from "@/pages/shared/ChangePasswordPage";
 
@@ -18,7 +18,7 @@ const AdminRoutes = () => (
       <Route path="/admin/borrowing" element={<AdminBorrowing />} />
       <Route path="/admin/users" element={<AdminUsers />} />
       <Route path="/admin/reports" element={<AdminReports />} />
-      <Route path="/admin/notifications" element={<AdminNotifications />} />
+      <Route path="/admin/notifications" element={<NotificationsPage />} />
       <Route path="/admin/profile" element={<ProfilePage />} />
       <Route path="/admin/change-password" element={<ChangePasswordPage />} />
     </Route>

@@ -36,6 +36,8 @@ export const getDerivedStatus = (
 
   if (equipment.status === 'broken') return 'Broken';
   if (equipment.status === 'maintenance') return 'Maintenance';
+  if (equipment.status === 'in_use') return 'In Use';
+  if (equipment.status === 'reserved') return 'Reserved';
   
   if (equipment.borrowed_by) {
     // Được gán cho ai đó -> Physical possession

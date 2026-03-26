@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
-import { getTopPerformers, type Performer, type DateRangeDays } from '@/data/technician/mockReports';
+import React, { useMemo, useState } from 'react';
+import type { Performer, DateRangeDays } from '@/data/technician/mockReports';
 import LeaderboardModal from './LeaderboardModal';
+import { useReports } from '@/hooks/technician/useReports';
 
 interface Props { dateRangeDays: DateRangeDays }
 
@@ -8,7 +9,7 @@ const PerformerRow: React.FC<{ performer: Performer }> = ({ performer: p }) => (
   <div className="flex items-center justify-between">
     {/* Left: avatar + name */}
     <div className="flex items-center gap-3">
-      <div className="relative flex-shrink-0">
+      <div className="relative shrink-0">
         {p.avatar ? (
           <img
             src={p.avatar}
@@ -43,7 +44,77 @@ const PerformerRow: React.FC<{ performer: Performer }> = ({ performer: p }) => (
 );
 
 const TopPerformers: React.FC<Props> = ({ dateRangeDays }) => {
-  const performers = getTopPerformers(dateRangeDays);
+  const { reports } = useReports();
+
+  const performers = useMemo<Performer[]>(() => {
+    const now = new Date();
+    const from = dateRangeDays === 0
+      ? null
+      : new Date(now.getTime() - dateRangeDays * 24 * 60 * 60 * 1000);
+
+    const inRange = (r: any) => {
+      if (!from) return true;
+      const created = new Date(r?.createdAt || r?.created_at || 0);
+      return created >= from && created <= now;
+    };
+
+    const list = (reports || []).filter(inRange);
+
+    // Group by assigned technician
+    const map = new Map<string, { name: string; tickets: number; resolved: number }>();
+
+    for (const r of list) {
+      const assignee = r?.assigned_to;
+      const name = assignee?.displayName || assignee?.username || 'Unassigned';
+      const key = String(assignee?._id || 'unassigned');
+
+      const entry = map.get(key) || { name, tickets: 0, resolved: 0 };
+      entry.tickets += 1;
+      if (String(r?.status).toLowerCase() === 'fixed') entry.resolved += 1;
+      map.set(key, entry);
+    }
+
+    const all = Array.from(map.values())
+      .map((v) => {
+        const rate = v.tickets > 0 ? Math.round((v.resolved / v.tickets) * 100) : 0;
+        const initials = v.name
+          .split(' ')
+          .slice(0, 2)
+          .map((w) => w[0])
+          .join('')
+          .toUpperCase();
+
+        return {
+          rank: 0,
+          rankBg: 'bg-slate-300',
+          name: v.name,
+          resolveRate: `${rate}% Resolve Rate`,
+          tickets: v.tickets,
+          initials,
+        } as Performer;
+      })
+      .sort((a, b) => b.tickets - a.tickets);
+
+    // Ensure at least 3 rows for UI
+    while (all.length < 3) {
+      all.push({
+        rank: 0,
+        rankBg: 'bg-slate-300',
+        name: '—',
+        resolveRate: '0% Resolve Rate',
+        tickets: 0,
+        initials: '—',
+      });
+    }
+
+    // Assign ranks + medal-ish colors to top 3
+    return all.slice(0, 3).map((p, i) => ({
+      ...p,
+      rank: i + 1,
+      rankBg: i === 0 ? 'bg-emerald-500' : i === 1 ? 'bg-slate-400' : 'bg-amber-600',
+    }));
+  }, [reports, dateRangeDays]);
+
   const [showLeaderboard, setShowLeaderboard] = useState(false);
 
   return (
@@ -53,7 +124,7 @@ const TopPerformers: React.FC<Props> = ({ dateRangeDays }) => {
 
         <div className="space-y-6">
           {performers.map((p) => (
-            <PerformerRow key={p.rank} performer={p} />
+            <PerformerRow key={`${p.rank}-${p.name}`} performer={p} />
           ))}
 
           <button

@@ -19,10 +19,11 @@ type BorrowRequestStore = {
   fetchApprovedByMe: () => Promise<void>;
   fetchBorrowRequestById: (id: string) => Promise<void>;
   createMyBorrowRequest: (payload: CreateBorrowRequestPayload) => Promise<void>;
+  editMyBorrowRequest: (id: string, payload: Partial<CreateBorrowRequestPayload>) => Promise<void>;
   cancelMyBorrowRequest: (id: string, decisionNote: string) => Promise<void>;
   fetchAllBorrowRequests: () => Promise<void>;
   approveBorrowRequest: (id: string) => Promise<void>;
-  rejectBorrowRequest: (id: string, reason?: string) => Promise<void>;
+  rejectBorrowRequest: (id: string, decisionNote?: string) => Promise<void>;
   handoverBorrowRequest: (id: string) => Promise<void>;
   returnBorrowRequest: (id: string) => Promise<void>;
   remindBorrowRequest: (id: string) => Promise<void>;
@@ -146,6 +147,31 @@ export const useBorrowRequestStore = create<BorrowRequestStore>((set, get) => ({
     }
   },
 
+  editMyBorrowRequest: async (id: string, payload: Partial<CreateBorrowRequestPayload>) => {
+    try {
+      set({ loading: true, error: null });
+      const updated = await borrowRequestService.editBorrowRequest(id, payload);
+      if (updated && updated.borrowRequest) {
+        set((state) => ({
+          borrowRequests: state.borrowRequests.map((item) =>
+            item._id === id ? updated.borrowRequest : item
+          ),
+          selectedBorrowRequest:
+            state.selectedBorrowRequest?._id === id
+              ? updated.borrowRequest
+              : state.selectedBorrowRequest,
+        }));
+      }
+    } catch (error: any) {
+      set({
+        error: error?.response?.data?.message || "Không cập nhật được borrow request",
+      });
+      throw error;
+    } finally {
+      set({ loading: false });
+    }
+  },
+
   fetchAllBorrowRequests: async () => {
     try {
       set({ loading: true, error: null });
@@ -168,6 +194,7 @@ export const useBorrowRequestStore = create<BorrowRequestStore>((set, get) => ({
       borrowRequests: state.borrowRequests.map((item) =>
         item._id === id ? { ...item, status: 'approved' } : item
       ),
+      pendingBorrowRequests: state.pendingBorrowRequests.filter((item) => item._id !== id),
     }));
     try {
       set({ actionLoading: id, error: null });
@@ -180,6 +207,9 @@ export const useBorrowRequestStore = create<BorrowRequestStore>((set, get) => ({
           ),
         }));
       }
+      // Refresh approved-by-me list để History tab cập nhật
+      const freshHistory = await borrowRequestService.getApprovedByMe();
+      set({ approvedByMe: freshHistory });
     } catch (error: any) {
       // Rollback nếu lỗi
       set((state) => ({
@@ -194,15 +224,16 @@ export const useBorrowRequestStore = create<BorrowRequestStore>((set, get) => ({
     }
   },
 
-  rejectBorrowRequest: async (id: string, reason?: string) => {
+  rejectBorrowRequest: async (id: string, decisionNote?: string) => {
     set((state) => ({
       borrowRequests: state.borrowRequests.map((item) =>
         item._id === id ? { ...item, status: 'rejected' } : item
       ),
+      pendingBorrowRequests: state.pendingBorrowRequests.filter((item) => item._id !== id),
     }));
     try {
       set({ actionLoading: id, error: null });
-      const updated = await borrowRequestService.rejectBorrowRequest(id, reason);
+      const updated = await borrowRequestService.rejectBorrowRequest(id, decisionNote);
       if (updated && updated._id) {
         set((state) => ({
           borrowRequests: state.borrowRequests.map((item) =>
@@ -210,8 +241,10 @@ export const useBorrowRequestStore = create<BorrowRequestStore>((set, get) => ({
           ),
         }));
       }
+      // Refresh approved-by-me list để History tab cập nhật
+      const freshHistory = await borrowRequestService.getApprovedByMe();
+      set({ approvedByMe: freshHistory });
     } catch (error: any) {
-
       set((state) => ({
         borrowRequests: state.borrowRequests.map((item) =>
           item._id === id ? { ...item, status: 'pending' } : item

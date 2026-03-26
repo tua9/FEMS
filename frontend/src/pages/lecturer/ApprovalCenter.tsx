@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { Laptop, Monitor, CheckCircle2, X, AlertTriangle, Loader2 } from 'lucide-react';
+import { toast } from 'sonner';
 
 import { ApprovalFilter } from '../../components/lecturer/approval/ApprovalFilter';
 import type { StatusFilter, TypeFilter } from '../../components/lecturer/approval/ApprovalFilter';
@@ -67,15 +68,6 @@ export const ApprovalCenter: React.FC = () => {
     const [rejectReason, setRejectReason] = useState('');
     const [rejectError, setRejectError] = useState('');
 
-    // ── Toast state ───────────────────────────────────────────────────────────
-    const [toast, setToast] = useState<{ type: 'success' | 'info' | 'error'; message: string } | null>(null);
-
-    // ── Toast helper ──────────────────────────────────────────────────────────
-    const showToast = (type: 'success' | 'info' | 'error', message: string) => {
-        setToast({ type, message });
-        setTimeout(() => setToast(null), 5000);
-    };
-
     // ── Derived counts ────────────────────────────────────────────────────────
     const pendingCount = requests.filter(r => r.status === 'pending').length;
 
@@ -122,9 +114,9 @@ export const ApprovalCenter: React.FC = () => {
         if (!approvingReq) return;
         try {
             await approveAction(approvingReq.id);
-            showToast('success', `Approved: ${approvingReq.student.name}'s request for ${approvingReq.equipment.name}.`);
+            toast.success(`Approved: ${approvingReq.student.name}'s request for ${approvingReq.equipment.name}.`);
         } catch (error: any) {
-            showToast('error', error?.response?.data?.message || `Failed to approve request.`);
+            toast.error(error?.response?.data?.message || `Failed to approve request.`);
         }
         setApprovingReq(null);
         setCurrentPage(1);
@@ -144,9 +136,9 @@ export const ApprovalCenter: React.FC = () => {
 
         try {
             await rejectAction(rejectingReq.id, rejectReason.trim());
-            showToast('success', `Rejected: ${rejectingReq.student.name}'s request.`);
+            toast.success(`Rejected: ${rejectingReq.student.name}'s request.`);
         } catch (error: any) {
-            showToast('error', error?.response?.data?.message || `Failed to reject request.`);
+            toast.error(error?.response?.data?.message || `Failed to reject request.`);
         }
         setRejectingReq(null);
         setCurrentPage(1);
@@ -165,7 +157,7 @@ export const ApprovalCenter: React.FC = () => {
         a.download = `approval-log-${new Date().toISOString().slice(0, 10)}.csv`;
         a.click();
         URL.revokeObjectURL(url);
-        showToast('success', 'Export complete! The CSV file has been downloaded.');
+        toast.success('Export complete! The CSV file has been downloaded.');
     };
 
     // ── Quick reject reasons ──────────────────────────────────────────────────
@@ -180,23 +172,6 @@ export const ApprovalCenter: React.FC = () => {
         <div className="w-full">
             <main className="pt-6 sm:pt-8 pb-10 px-4 sm:px-6 w-full max-w-[90vw] xl:max-w-7xl mx-auto flex-1 flex flex-col overflow-hidden">
                 <div className="w-full">
-
-                    {/* ── Toast notification ──────────────────────────────────── */}
-                    {toast && (
-                        <div className={`mb-6 flex items-start gap-3 px-5 py-4 rounded-[1.25rem] border text-sm font-medium animate-in fade-in slide-in-from-top-3 duration-300 ${toast.type === 'success'
-                            ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-700 dark:text-emerald-400'
-                            : (toast.type === 'error' ? 'bg-red-500/10 border-red-500/20 text-red-700 dark:text-red-400' : 'bg-blue-500/10 border-blue-500/20 text-blue-700 dark:text-blue-400')
-                            }`}>
-                            {toast.type === 'success'
-                                ? <CheckCircle2 className="w-5 h-5 shrink-0 mt-0.5" />
-                                : (toast.type === 'error' ? <AlertTriangle className="w-5 h-5 shrink-0 mt-0.5" /> : <span className="material-symbols-outlined text-[1.25rem] shrink-0 mt-0.5 leading-none">info</span>)
-                            }
-                            <span className="flex-1">{toast.message}</span>
-                            <button onClick={() => setToast(null)} className="shrink-0 opacity-60 hover:opacity-100 transition-opacity">
-                                <X className="w-4 h-4" />
-                            </button>
-                        </div>
-                    )}
 
                     {/* ── Header ──────────────────────────────────────────────── */}
                     <div className="mb-8 md:mb-12">

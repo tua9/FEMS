@@ -178,7 +178,7 @@ const TicketTable: React.FC<Props> = ({
               {/* Ticket ID */}
               <td className="px-5 py-6">
                 <span className="font-extrabold text-[#1A2B56] dark:text-blue-400 text-sm tracking-tight">
-                  #{ticket.id}
+                  #{ticket.code || ticket.id.slice(-6).toUpperCase()}
                 </span>
               </td>
 

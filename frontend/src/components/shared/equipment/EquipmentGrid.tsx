@@ -17,6 +17,11 @@ const statusConfig = {
     label: "Request Borrow",
     disabled: false,
   },
+  Reserved: {
+    color: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400",
+    label: "Reserved",
+    disabled: true,
+  },
   "In Use": {
     color: "bg-[#FEF3C7] text-[#D97706] dark:bg-[#D97706]/20 dark:text-[#FBBF24]",
     label: "In Use",
@@ -25,6 +30,11 @@ const statusConfig = {
   Maintenance: {
     color: "bg-[#FEE2E2] text-[#DC2626] dark:bg-[#DC2626]/20 dark:text-[#F87171]",
     label: "Under Maintenance",
+    disabled: true,
+  },
+  Broken: {
+    color: "bg-[#FEE2E2] text-[#DC2626] dark:bg-[#DC2626]/20 dark:text-[#F87171] opacity-80",
+    label: "Broken / Damaged",
     disabled: true,
   },
 };
@@ -40,8 +50,10 @@ const categoryIcons: Record<string, any> = {
 
 const statusMap: Record<string, keyof typeof statusConfig> = {
   good: "Available",
-  broken: "Maintenance",
+  broken: "Broken",
   maintenance: "Maintenance",
+  reserved: "Reserved",
+  in_use: "In Use"
 };
 
 export const EquipmentGrid: React.FC<EquipmentGridProps> = ({
@@ -63,7 +75,12 @@ export const EquipmentGrid: React.FC<EquipmentGridProps> = ({
     <section className="mb-[3rem]">
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-[2rem]">
         {filteredItems.map((item) => {
-          const mappedStatus = statusMap[item.status] || "Available";
+          let mappedStatus: keyof typeof statusConfig = statusMap[item.status] || "Available";
+          
+          if ((item.status === "good" || item.status === "available") && item.borrowed_by) {
+            mappedStatus = "In Use";
+          }
+
           const cfg = statusConfig[mappedStatus];
           const itemCategory = (item.category || "").toLowerCase();
           const Icon = categoryIcons[itemCategory] || HelpCircle;
@@ -72,16 +89,24 @@ export const EquipmentGrid: React.FC<EquipmentGridProps> = ({
             <div key={item._id} className="flex flex-col gap-[1.5rem]">
               <div className="glass-card aspect-[4/3] rounded-[2rem] relative flex items-center justify-center p-[2rem] group overflow-hidden border border-white/30 dark:border-slate-700/50">
                 <span
-                  className={`absolute top-[1.5rem] right-[1.5rem] px-[0.75rem] py-[0.25rem] rounded-full text-[0.65rem] font-bold uppercase tracking-[0.05em] ${cfg.color}`}
+                  className={`absolute top-[1.5rem] right-[1.5rem] px-[0.75rem] py-[0.25rem] rounded-full text-[0.65rem] font-bold uppercase tracking-[0.05em] z-10 ${cfg.color}`}
                 >
                   {mappedStatus}
                 </span>
 
-                <Icon
-                  className={`w-[6rem] h-[6rem] text-[#1E2B58] dark:text-white opacity-20 transition-transform duration-300 ${!cfg.disabled ? "group-hover:scale-110" : ""
-                    }`}
-                  strokeWidth={1}
-                />
+                {item.img ? (
+                  <img 
+                    src={item.img} 
+                    alt={item.name} 
+                    className={`absolute inset-0 w-full h-full object-cover transition-transform duration-500 ${!cfg.disabled ? "group-hover:scale-110" : ""}`}
+                  />
+                ) : (
+                  <Icon
+                    className={`w-[6rem] h-[6rem] text-[#1E2B58] dark:text-white opacity-20 transition-transform duration-300 ${!cfg.disabled ? "group-hover:scale-110" : ""
+                      }`}
+                    strokeWidth={1}
+                  />
+                )}
               </div>
 
               <div className="px-[0.5rem]">
@@ -90,7 +115,7 @@ export const EquipmentGrid: React.FC<EquipmentGridProps> = ({
                 </h4>
 
                 <p className="text-[0.6875rem] font-bold uppercase tracking-widest opacity-60 text-[#1E2B58] dark:text-white">
-                  {_idToSku(item._id)} • {item.room_id && typeof item.room_id !== 'string' ? item.room_id.name : "Phòng kho"}
+                  {item.code || _idToSku(item._id)} • {item.room_id && typeof item.room_id !== 'string' ? item.room_id.name : "Phòng kho"}
                 </p>
               </div>
 

@@ -12,6 +12,8 @@ import TicketApproveModal from '@/components/technician/tickets/TicketApproveMod
 import TicketRejectModal from '@/components/technician/tickets/TicketRejectModal';
 import { StartRepairModal, MarkResolvedModal } from '@/components/technician/tickets/TicketActionModals';
 import { getTodayLocal } from '@/utils/dateUtils';
+import { technicianApi } from '@/services/api/technicianApi';
+import { useLocation } from 'react-router-dom';
 
 // ── Equipment types derived from mock data ────────────────────────────────────
 const EQUIPMENT_TYPES = [
@@ -84,7 +86,9 @@ const SEARCH_PLACEHOLDER: Record<TicketStatus, string> = {
 };
 
 const TicketCenter: React.FC = () => {
-  const [tickets, setTickets] = useState<Ticket[]>([...MOCK_TICKETS]);
+  const location = useLocation();
+
+  const [tickets, setTickets] = useState<Ticket[]>([]);
   const [activeStatus, setActiveStatus] = useState<TicketStatus>('Pending');
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
@@ -205,12 +209,120 @@ const TicketCenter: React.FC = () => {
   // Move a ticket to a new status in local state
   const changeStatus = (id: string, newStatus: TicketStatus) => {
     setTickets((prev) =>
-      prev.map((t) => (t.id === id ? { ...t, status: newStatus } : t))
+      prev.map((t) => (t.id === id || t.code === id ? { ...t, status: newStatus } : t))
     );
   };
 
   // Lookup ticket by id from current live state
   const findTicket = (id: string) => tickets.find((t) => t.id === id)!;
+
+  // Map backend Report.status -> UI TicketStatus
+  const backendToUiStatus = (s?: string): TicketStatus => {
+    const v = String(s || '').toLowerCase();
+    if (v === 'pending') return 'Pending';
+    if (v === 'approved') return 'Approved';
+    if (v === 'processing') return 'In Progress';
+    if (v === 'fixed') return 'Completed';
+    if (v === 'rejected') return 'Rejected';
+    return 'Pending';
+  };
+
+  // Map UI TicketStatus -> backend status query
+  const uiToBackendStatus = (s: TicketStatus): string | undefined => {
+    if (s === 'Pending') return 'pending';
+    if (s === 'Approved') return 'approved';
+    if (s === 'In Progress') return 'processing';
+    if (s === 'Completed') return 'fixed';
+    if (s === 'Rejected') return 'rejected';
+    return undefined;
+  };
+
+  // Convert backend report -> Ticket shape used by existing UI/modals/table
+  const reportToTicket = (r: any): Ticket => {
+    const equipmentName = r.equipment_id?.name || r.room_id?.name || 'N/A';
+    const equipmentType = r.equipment_id?.category || r.type || 'Other';
+    const room = r.room_id?.name
+      ? `${r.room_id?.name}`
+      : 'N/A';
+
+    const reporterName = r.user_id?.displayName || r.user_id?.username || 'Unknown';
+
+    return {
+      id: String(r._id),
+      code: r.code || String(r._id).slice(-6).toUpperCase(),
+      title: equipmentName,
+      category: equipmentType,
+      description: r.description || '',
+      equipment: equipmentName,
+      equipmentType,
+      room,
+      reporter: {
+        name: reporterName,
+        initials: reporterName
+          .split(' ')
+          .slice(0, 2)
+          .map((w: string) => w[0])
+          .join('')
+          .toUpperCase(),
+      },
+      assignee: r.assigned_to
+        ? {
+            name: r.assigned_to?.displayName || r.assigned_to?.username || 'Technician',
+            initials: (r.assigned_to?.displayName || r.assigned_to?.username || 'T')
+              .split(' ')
+              .slice(0, 2)
+              .map((w: string) => w[0])
+              .join('')
+              .toUpperCase(),
+            avatar: undefined,
+          }
+        : undefined,
+      priority: (String(r.priority || 'medium').toLowerCase() === 'critical')
+        ? 'Urgent'
+        : (String(r.priority || 'medium').toLowerCase() === 'high')
+          ? 'High'
+          : (String(r.priority || 'medium').toLowerCase() === 'low')
+            ? 'Low'
+            : 'Medium',
+      status: backendToUiStatus(r.status),
+      createdAt: r.createdAt,
+    };
+  };
+
+  // Initial tab from query (?status=pending|approved|processing|fixed)
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const q = (params.get('status') || '').toLowerCase();
+    const map: Record<string, TicketStatus> = {
+      pending: 'Pending',
+      approved: 'Approved',
+      processing: 'In Progress',
+      fixed: 'Completed',
+      rejected: 'Rejected',
+    };
+    if (map[q]) {
+      setActiveStatus(map[q]);
+      setCurrentPage(1);
+    }
+  }, [location.search]);
+
+  // Fetch tickets from backend when active tab changes
+  useEffect(() => {
+    let mounted = true;
+    const status = uiToBackendStatus(activeStatus);
+    technicianApi
+      .getTickets({ status })
+      .then((data: any[]) => {
+        if (!mounted) return;
+        setTickets((data || []).map(reportToTicket));
+      })
+      .catch(() => {
+        if (!mounted) return;
+        // fallback (keep UI usable if API not wired yet)
+        setTickets([...MOCK_TICKETS]);
+      });
+    return () => { mounted = false; };
+  }, [activeStatus]);
 
   return (
     <div className="pt-6 sm:pt-8 pb-16 px-6 max-w-7xl mx-auto space-y-8">

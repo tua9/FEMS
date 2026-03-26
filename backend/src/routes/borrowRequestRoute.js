@@ -14,6 +14,7 @@ import {
   remindBorrowRequest,
   getPendingBorrowRequests,
   getApprovedByMe,
+  editBorrowRequest,
 } from '../controllers/borrowRequestController.js'
 import { restrictTo, protectedRoute } from '../middlewares/authMiddlewares.js'
 
@@ -59,6 +60,12 @@ router.patch(
 )
 
 router.patch(
+  '/:id/edit',
+  restrictTo('student', 'lecturer', 'technician', 'admin'),
+  editBorrowRequest,
+)
+
+router.patch(
   '/:id/approve',
   restrictTo('lecturer', 'technician', 'admin'),
   approveBorrowRequest,
@@ -71,12 +78,12 @@ router.patch(
 )
 router.patch(
   '/:id/handover',
-  restrictTo('technician', 'student', 'admin'),
+  restrictTo('technician', 'student', 'admin', 'lecturer'),
   handoverBorrowRequest,
 )
 router.patch(
   '/:id/return',
-  restrictTo('student', 'technician', 'admin'),
+  restrictTo('student', 'technician', 'admin', 'lecturer'),
   returnBorrowRequest,
 )
 
@@ -87,7 +94,7 @@ router.post(
 )
 
 router.get('/', restrictTo('technician', 'lecturer', 'admin'), getAllBorrowRequests)
-router.get('/:id', restrictTo('technician', 'lecturer', 'admin'), getBorrowRequestById)
+router.get('/:id', restrictTo('student', 'technician', 'lecturer', 'admin'), getBorrowRequestById)
 router.patch(
   '/:id',
   restrictTo('technician', 'lecturer', 'admin'),

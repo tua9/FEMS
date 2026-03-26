@@ -40,7 +40,7 @@ const BorrowingDetailModal: React.FC<BorrowingDetailModalProps> = ({
 
     const isOverdue = record.status === 'overdue' || (record.status === 'handed_over' && new Date(record.return_date) < new Date());
     const displayStatus = isOverdue ? 'overdue' : record.status;
-    
+
     // Resolve entity (Equipment or Room)
     const isInfrastructure = record.type === 'infrastructure';
     const entity = isInfrastructure ? record.room_id : record.equipment_id;

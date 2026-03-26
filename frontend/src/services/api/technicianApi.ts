@@ -56,4 +56,33 @@ export const technicianApi = {
     const { data } = await api.post<Task>(`${BASE}/tasks/${id}/complete`, { notes });
     return data;
   },
+
+  // ── Dashboard: Ticket pipeline counts ─────────────────────────────────────
+  getTicketPipeline: async (params?: { from?: string; to?: string }): Promise<{ newReports: number; assigned: number; resolved: number }> => {
+    const { data } = await api.get(`${BASE}/dashboard/ticket-pipeline`, { params });
+    return data;
+  },
+
+  // ── Dashboard: Device health ──────────────────────────────────────────────
+  getDeviceHealth: async (): Promise<{ totalAssets: number; healthy: number; maintenance: number; faulty: number; unknown?: number }> => {
+    const { data } = await api.get(`${BASE}/dashboard/device-health`);
+    return data;
+  },
+
+  // ── Ticket Center (reports) ───────────────────────────────────────────────
+  getTickets: async (filters?: { status?: string }): Promise<any[]> => {
+    const params = filters
+      ? Object.fromEntries(Object.entries(filters).filter(([, v]) => v !== undefined))
+      : undefined;
+
+    const { data } = await api.get<any[]>(`${BASE}/tickets`, { params });
+    return data;
+  },
+
+  // ── Reports (Performance Insights) ─────────────────────────────────────────
+  getAllReports: async (): Promise<any[]> => {
+    // Backend mounts report routes at /api/tickets
+    const { data } = await api.get<any[]>(`/tickets`);
+    return data;
+  },
 };

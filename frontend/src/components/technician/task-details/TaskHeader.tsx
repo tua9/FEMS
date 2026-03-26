@@ -1,4 +1,4 @@
-import { Task } from '@/types/technician.types';
+import type { Task } from '@/types/technician.types';
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 
@@ -69,7 +69,7 @@ const TaskHeader: React.FC<TaskHeaderProps> = ({ task }) => {
               </h1>
               <div className="flex items-center gap-3 flex-wrap">
                 <span className="text-sm text-slate-600 dark:text-slate-400 font-medium">
-                  Task ID: #{task.id}
+                  Task ID: #{task.code || task.id.slice(-6).toUpperCase()}
                 </span>
                 <span className="text-slate-400">•</span>
                 <span className="text-sm text-slate-600 dark:text-slate-400 font-medium">

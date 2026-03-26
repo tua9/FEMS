@@ -15,12 +15,15 @@ import equipmentRouters from './routes/equipmentRoute.js'
 import adminRoutes from './routes/adminRoute.js'
 import dashboardRoutes from './routes/dashboardRoute.js'
 import scheduleRoutes from './routes/scheduleRoute.js'
-
+import notificationRoutes from './routes/notificationRoute.js'
+import technicianRoutes from './routes/technicianRoute.js'
+import uploadRoutes from './routes/uploadRoute.js'
+import aiRoute from './routes/aiRoute.js'
 import { protectedRoute } from './middlewares/authMiddlewares.js'
+import { initCronJobs } from './jobs/cronJobs.js'
 
 const app = express()
 const PORT = env.PORT || 5001
-
 // middlewares
 app.use(express.json({ limit: '50mb' }))
 app.use(cookieParser())
@@ -35,9 +38,12 @@ app.use((req, res, next) => {
 // API Routes
 app.use('/api/auth', authRoutes)
 app.use('/api/tickets', reportRoutes)
+app.use('/api/upload', uploadRoutes)
 app.use('/api/equipments', equipmentRouters)
 app.use('/api/requests', borrowRequestRouters)
+app.use('/api/technician', technicianRoutes)
 
+app.use('/api/ai', aiRoute)
 app.use('/api/admin/users', protectedRoute, userRoutes)
 app.use('/api/admin', adminRoutes)
 
@@ -48,10 +54,12 @@ app.use('/api/rooms', roomRouters)
 // Lecturer/Dashboard specific routes
 app.use('/api/dashboard', dashboardRoutes)
 app.use('/api/schedules', scheduleRoutes)
+app.use('/api/notifications', notificationRoutes)
 
 import { errorHandlingMiddleware } from './middlewares/errorMiddleware.js'
 
 connectDB().then(() => {
+  initCronJobs() // Initialize background jobs
   app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`)
   })
