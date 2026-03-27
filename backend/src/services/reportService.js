@@ -139,7 +139,7 @@ const updateReportStatus = async (id, status, approverId, technicianId) => {
     if (status === 'approved') eqStatus = 'broken'
     else if (status === 'processing') eqStatus = 'maintenance'
     else if (status === 'fixed') eqStatus = 'available'
-    
+
     if (eqStatus) await Equipment.findByIdAndUpdate(report.equipment_id, { status: eqStatus })
   }
 

@@ -103,28 +103,34 @@ export const technicianApi = {
 
  // ── Equipment CRUD ────────────────────────────────────────────────────────
  listEquipment: async (params)=> {
- const { data } = await api.get('/equipment', { params });
+ const { data } = await api.get('/equipments', { params });
  return data;
  },
 
  createEquipment: async (body)=> {
- const { data } = await api.post('/equipment', body);
+ const { data } = await api.post('/equipments', body);
  return data;
  },
 
  updateEquipment: async (id, body)=> {
- const { data } = await api.patch(`/equipment/${id}`, body);
+ const { data } = await api.patch(`/equipments/${id}`, body);
  return data;
  },
 
  deleteEquipment: async (id)=> {
- const { data } = await api.delete(`/equipment/${id}`);
+ const { data } = await api.delete(`/equipments/${id}`);
  return data;
  },
 
- // ── Equipment repair reports ──────────────────────────────────────────────
+  // ── Equipment repair reports ──────────────────────────────────────────────
  getEquipmentReports: async (params)=> {
  const { data } = await api.get(`${BASE}/tickets`, { params });
  return data;
  },
+
+  // ── Mark equipment as broken (transactional: updates equipment + creates repair report) ──
+  markEquipmentBroken: async (id) => {
+    const { data } = await api.patch(`/equipments/${id}/mark-broken`);
+    return data;
+  },
 };
