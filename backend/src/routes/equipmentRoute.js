@@ -8,6 +8,7 @@ import {
   deleteEquipment,
   getEquipmentInventory,
   getEquipmentCategories,
+  markEquipmentBroken,
 } from '../controllers/equipmentController.js'
 import { restrictTo, protectedRoute } from '../middlewares/authMiddlewares.js'
 
@@ -24,6 +25,7 @@ router.get('/:id', getEquipmentById)
 router.use(protectedRoute)
 router.post('/', restrictTo('admin', 'technician'), createEquipment)
 router.put('/:id', restrictTo('admin', 'technician'), updateEquipment)
+router.patch('/:id/mark-broken', restrictTo('admin', 'technician'), markEquipmentBroken)
 router.patch('/:id', restrictTo('admin', 'technician'), updateEquipment)
 router.delete('/:id', restrictTo('admin', 'technician'), deleteEquipment)
 

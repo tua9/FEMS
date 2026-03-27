@@ -2,6 +2,7 @@ import { StatusCodes } from 'http-status-codes'
 import mongoose from 'mongoose'
 import Equipment from '../models/Equipment.js'
 import BorrowRequest from '../models/BorrowRequest.js'
+import Report from '../models/Report.js'
 import ApiError from '../utils/ApiError.js'
 
 // ── Code Generation ────────────────────────────────────────────────────────────
@@ -266,6 +267,90 @@ const getEquipmentInventory = async (queries) => {
   }
 }
 
+// ── Mark as Broken ─────────────────────────────────────────────────────────────
+// Atomically updates equipment.status and creates a Report.
+// Uses compensating transaction: if report creation fails, equipment status is rolled back.
+
+const OPEN_REPAIR_STATUSES = ['pending', 'approved', 'processing']
+
+const _generateReportCode = () => {
+  const now = new Date()
+  const year = String(now.getFullYear()).slice(-2)
+  const month = String(now.getMonth() + 1).padStart(2, '0')
+  const CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+  const random = Array.from({ length: 3 }, () => CHARS[Math.floor(Math.random() * CHARS.length)]).join('')
+  return `RP${year}${month}${random}`
+}
+
+const _generateUniqueReportCode = async () => {
+  let code
+  let exists = true
+  while (exists) {
+    code = _generateReportCode()
+    exists = !!(await Report.findOne({ code }))
+  }
+  return code
+}
+
+const _populateReport = (query) =>
+  query
+    .populate('user_id', 'displayName email username')
+    .populate('equipment_id', 'name category code img')
+    .populate('room_id', 'name type')
+    .populate('processed_by', 'displayName username')
+    .populate('assigned_to', 'displayName username')
+
+const markBroken = async (id, reportedBy) => {
+  // 1. Validate equipment exists
+  const equipment = await Equipment.findById(id).populate('roomId', 'name type floor')
+  if (!equipment) throw new ApiError(StatusCodes.NOT_FOUND, 'Equipment not found')
+
+  // 2. Check for existing open repair request — no duplicates
+  const openReport = await _populateReport(
+    Report.findOne({ equipment_id: id, status: { $in: OPEN_REPAIR_STATUSES } })
+  )
+  if (openReport) {
+    // Return the existing open report so frontend can navigate to it
+    const err = new ApiError(StatusCodes.CONFLICT, 'Equipment already has an open repair request')
+    err.existingReport = openReport
+    throw err
+  }
+
+  // 3. Update equipment status — save previous for rollback
+  const previousStatus = equipment.status
+  equipment.status = 'broken'
+  await equipment.save()
+
+  // 4. Create repair report (compensating rollback on failure)
+  let report
+  try {
+    const code = await _generateUniqueReportCode()
+    report = await Report.create({
+      user_id: reportedBy ?? null,
+      equipment_id: id,
+      type: 'equipment',
+      status: 'pending',
+      priority: 'high',
+      description: 'Marked as broken by technician from equipment list',
+      code,
+    })
+  } catch (err) {
+    // Rollback equipment status
+    equipment.status = previousStatus
+    await equipment.save()
+    throw new ApiError(StatusCodes.INTERNAL_SERVER_ERROR, 'Failed to create repair request. Equipment status rolled back.')
+  }
+
+  const populatedReport = await _populateReport(Report.findById(report._id))
+  const updatedEquipment = await Equipment.findById(id).populate('roomId', 'name type floor')
+
+  return {
+    message: 'Equipment marked as broken and repair request created',
+    equipment: updatedEquipment,
+    report: populatedReport,
+  }
+}
+
 export const equipmentService = {
   createEquipment,
   getAllEquipment,
@@ -274,4 +359,5 @@ export const equipmentService = {
   updateEquipment,
   deleteEquipment,
   getEquipmentInventory,
+  markBroken,
 }

@@ -1,4 +1,5 @@
 import Report from '../models/Report.js'
+import Equipment from '../models/Equipment.js'
 
 const TECH_STATUSES = {
   pending: 'pending',
@@ -86,10 +87,24 @@ const updateTicket = async ({ id, status, cause, outcome, decisionNote, assigned
   if (outcome) update.outcome = outcome
   if (decisionNote) update.decision_note = decisionNote
 
-  return Report.findByIdAndUpdate(id, { $set: update }, { new: true })
+  const updatedReport = await Report.findByIdAndUpdate(id, { $set: update }, { new: true })
     .populate('user_id', 'displayName username')
     .populate('equipment_id', 'name category')
     .populate('room_id', 'name')
+
+  // Sync Equipment technical status
+  if (status && updatedReport.equipment_id) {
+    let eqStatus = null
+    if (status === 'approved') eqStatus = 'broken'
+    else if (status === 'processing') eqStatus = 'maintenance'
+    else if (status === 'fixed') eqStatus = 'available'
+
+    if (eqStatus) {
+      await Equipment.findByIdAndUpdate(updatedReport.equipment_id._id, { status: eqStatus })
+    }
+  }
+
+  return updatedReport
 }
 
 export const technicianTicketService = {
