@@ -1,4 +1,8 @@
 import React, { useEffect, useState } from 'react';
+import EquipmentHealth from '../components/dashboard/EquipmentHealth';
+import StatsOverview from '../components/dashboard/StatsOverview';
+import TaskQueue from '../components/dashboard/TaskQueue';
+import TicketPipeline from '../components/dashboard/TicketPipeline';
 import EquipmentStatusPieChart from '@/features/admin/components/dashboard/EquipmentStatusPieChart';
 import MonthlyBorrowTrendChart from '@/features/admin/components/dashboard/MonthlyBorrowTrendChart';
 import DamageTrendChart from '@/features/admin/components/dashboard/DamageTrendChart';
@@ -8,7 +12,7 @@ import DamageCauseChart from '@/features/admin/components/dashboard/DamageCauseC
 import TopBrokenList from '@/features/admin/components/dashboard/TopBrokenList';
 import RepairOutcomeChart from '@/features/admin/components/dashboard/RepairOutcomeChart';
 import TopBorrowedList from '@/features/admin/components/dashboard/TopBorrowedList';
-import { PageShell, AnimatedSection } from '@/components/motion';
+import { PageShell, AnimatedSection, AnimatedList, AnimatedListItem } from '@/components/motion';
 import { technicianApi } from '@/services/technicianApi';
 
 const Dashboard = () => {
@@ -39,11 +43,33 @@ const Dashboard = () => {
       topPadding="pt-6"
       className="pb-16 px-6"
     >
+      {/* Stats Cards */}
+      <AnimatedList className="mb-10">
+        <AnimatedListItem>
+          <StatsOverview />
+        </AnimatedListItem>
+      </AnimatedList>
+
+      {/* Ticket Pipeline + Device Health */}
+      <AnimatedSection variant="fade" delay={0.1} className="grid grid-cols-1 lg:grid-cols-5 gap-6 mb-10">
+        <div className="lg:col-span-3">
+          <TicketPipeline />
+        </div>
+        <div className="lg:col-span-2">
+          <EquipmentHealth />
+        </div>
+      </AnimatedSection>
+
+      {/* Active Work Orders */}
+      <AnimatedSection variant="slide-up" delay={0.15}>
+        <TaskQueue />
+      </AnimatedSection>
+
       {/* ── Section 2: Equipment Warehouse Analytics ── */}
       {equipmentAnalytics && (
         <AnimatedSection variant="slide-up" delay={0.2} className="mt-12">
           <h3 className="text-lg font-extrabold text-[#1A2B56] dark:text-white mb-6">
-            Equipment Warehouse Analytics
+            Thống kê Quản lý Thiết bị trong Kho
           </h3>
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 mb-6">
             <div className="lg:col-span-3 dashboard-card p-6 rounded-4xl">
@@ -56,7 +82,7 @@ const Dashboard = () => {
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
             <div className="lg:col-span-4 dashboard-card p-6 rounded-4xl">
               <p className="text-[11px] font-semibold uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-4">
-                Most Borrowed Equipment
+                Top thiết bị được mượn nhiều nhất
               </p>
               <TopBorrowedList items={topBorrowed} />
             </div>
@@ -74,7 +100,7 @@ const Dashboard = () => {
       {reportAnalytics && (
         <AnimatedSection variant="slide-up" delay={0.25} className="mt-12">
           <h3 className="text-lg font-extrabold text-[#1A2B56] dark:text-white mb-6">
-            Damage Report Analytics - Technician KPIs
+            Thống kê Báo cáo Hư hỏng — KPI Technician
           </h3>
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 mb-6">
             <div className="lg:col-span-3 dashboard-card p-6 rounded-4xl">

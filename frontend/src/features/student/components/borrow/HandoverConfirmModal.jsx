@@ -4,7 +4,7 @@ import { X, HandMetal, Loader2, CheckCircle2, Package } from 'lucide-react';
 import { toast } from 'sonner';
 
 const HandoverConfirmModal = ({ isOpen, onClose, request, onConfirm, onCancelRequest, submitting }) => {
-  const [receiveNote, setReceiveNote] = useState('Equipment received and confirmed');
+  const [receiveNote, setReceiveNote] = useState('Xác nhận nhận thiết bị');
   const [receiveChecklist, setReceiveChecklist] = useState({ appearance: true, functioning: true, accessories: true });
   const [receiveFiles, setReceiveFiles] = useState([]);
   const [receivePreviews, setReceivePreviews] = useState([]);
@@ -12,7 +12,7 @@ const HandoverConfirmModal = ({ isOpen, onClose, request, onConfirm, onCancelReq
 
   useEffect(() => {
     if (!isOpen) {
-      setReceiveNote('Equipment received and confirmed');
+      setReceiveNote('Xác nhận nhận thiết bị');
       setReceiveChecklist({ appearance: true, functioning: true, accessories: true });
       setReceiveFiles([]);
       receivePreviews.forEach(url => URL.revokeObjectURL(url));
@@ -54,7 +54,7 @@ const HandoverConfirmModal = ({ isOpen, onClose, request, onConfirm, onCancelReq
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!isAllChecked && receiveFiles.length === 0) {
-      toast.error('Please provide evidence photos if any checklist item is not met.');
+      toast.error('Vui lòng cung cấp ảnh minh chứng nếu có mục không đạt yêu cầu.');
       return;
     }
     onConfirm({
@@ -66,11 +66,13 @@ const HandoverConfirmModal = ({ isOpen, onClose, request, onConfirm, onCancelReq
 
   const handleCancelClick = () => {
     if (!isAllChecked && receiveFiles.length === 0) {
-      toast.error('Please take photos of any defective items before declining receipt.');
+      toast.error('Vui lòng chụp lại hình ảnh thiết bị lỗi trước khi hủy xác nhận nhận.');
       return;
     }
-    onClose();
-    onCancelRequest?.(request);
+    const confirmed = window.confirm('Are you sure you want to cancel receiving this equipment? Your borrow request will be cancelled.');
+    if (confirmed) {
+      onCancelRequest?.(request);
+    }
   };
 
   return createPortal(
@@ -91,18 +93,18 @@ const HandoverConfirmModal = ({ isOpen, onClose, request, onConfirm, onCancelReq
             <HandMetal className="w-7 h-7" />
           </div>
           <div>
-            <p className="text-[0.625rem] font-black uppercase tracking-widest text-[#1E2B58]/50 dark:text-white/40 mb-1">Confirm Equipment Receipt</p>
-            <h3 className="text-xl font-black text-[#1E2B58] dark:text-white">{request.equipmentId?.name || 'Equipment'}</h3>
+            <p className="text-[0.625rem] font-black uppercase tracking-widest text-[#1E2B58]/50 dark:text-white/40 mb-1">Xác nhận nhận thiết bị</p>
+            <h3 className="text-xl font-black text-[#1E2B58] dark:text-white">{request.equipmentId?.name || 'Thiết bị'}</h3>
           </div>
         </div>
 
         {/* Checklist */}
         <div className="bg-white/40 dark:bg-slate-800/40 rounded-[1.25rem] p-4 mb-4 space-y-2.5">
-          <p className="text-[0.625rem] font-black uppercase tracking-widest text-[#1E2B58]/50 dark:text-white/40 mb-2">Condition Check at Receipt</p>
+          <p className="text-[0.625rem] font-black uppercase tracking-widest text-[#1E2B58]/50 dark:text-white/40 mb-2">Kiểm tra tình trạng lúc nhận</p>
           {[
-            { key: 'appearance',  label: 'Good physical condition (no cracks or damage)' },
-            { key: 'functioning', label: 'Functioning correctly' },
-            { key: 'accessories', label: 'All accessories present' },
+            { key: 'appearance',  label: 'Ngoại hình bình thường (không nứt vỡ)' },
+            { key: 'functioning', label: 'Chức năng hoạt động tốt' },
+            { key: 'accessories', label: 'Không thiếu phụ kiện' },
           ].map(({ key, label }) => (
             <label key={key} className="flex items-center gap-3 cursor-pointer">
               <input
@@ -120,10 +122,10 @@ const HandoverConfirmModal = ({ isOpen, onClose, request, onConfirm, onCancelReq
         {!isAllChecked && (
           <div className="mb-4 p-4 rounded-2xl bg-amber-50 dark:bg-amber-900/10 border border-amber-100 dark:border-amber-900/20 animate-in fade-in slide-in-from-top-2">
             <label className="text-[0.625rem] font-black uppercase tracking-widest text-amber-600 dark:text-amber-400 mb-2 block text-left">
-              Evidence Photos <span className="text-red-500">*</span>
+              Ảnh minh chứng <span className="text-red-500">*</span>
             </label>
             <p className="text-[10px] text-amber-600/80 dark:text-amber-400/80 mb-3">
-              Please photograph any items that do not meet the condition requirements (max 2 photos).
+              Vui lòng chụp lại tình trạng thiết bị không đạt yêu cầu (tối đa 2 ảnh).
             </p>
             
             <input type="file" ref={fileInputRef} onChange={handleFileChange} accept="image/*" multiple className="hidden" />
@@ -143,7 +145,7 @@ const HandoverConfirmModal = ({ isOpen, onClose, request, onConfirm, onCancelReq
                   <div className="w-8 h-8 rounded-full bg-amber-100 dark:bg-amber-900/40 flex items-center justify-center group-hover:scale-110 transition-transform">
                     <Package className="w-4 h-4 text-amber-500" />
                   </div>
-                  <span className="text-[10px] font-bold text-amber-500 uppercase tracking-widest text-center px-2">Upload Photo</span>
+                  <span className="text-[10px] font-bold text-amber-500 uppercase tracking-widest text-center px-2">Tải ảnh lên</span>
                 </button>
               )}
             </div>
@@ -153,7 +155,7 @@ const HandoverConfirmModal = ({ isOpen, onClose, request, onConfirm, onCancelReq
         {/* Notes */}
         <div className="flex flex-col gap-2 mb-6">
           <label className="text-[0.625rem] font-black uppercase tracking-widest text-[#1E2B58]/50 dark:text-white/40">
-            Notes
+            Ghi chú
           </label>
           <textarea
             rows={2}
@@ -171,7 +173,7 @@ const HandoverConfirmModal = ({ isOpen, onClose, request, onConfirm, onCancelReq
             className="w-full py-3.5 rounded-[1.25rem] font-bold text-sm bg-emerald-500 text-white hover:bg-emerald-600 transition-all shadow-lg shadow-emerald-500/20 flex items-center justify-center gap-2 disabled:opacity-50 active:scale-95"
           >
             {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
-            Confirm Receipt
+            Xác nhận nhận
           </button>
           
           <div className="flex gap-2.5 mt-1">
@@ -180,14 +182,14 @@ const HandoverConfirmModal = ({ isOpen, onClose, request, onConfirm, onCancelReq
               disabled={submitting}
               className="flex-1 py-3.5 rounded-[1.25rem] font-bold text-sm border border-[#1E2B58]/20 dark:border-white/20 text-[#1E2B58]/70 dark:text-white/70 hover:bg-[#1E2B58]/5 dark:hover:bg-white/5 transition-all"
             >
-              Close
+              Hủy
             </button>
             <button
               onClick={handleCancelClick}
               disabled={submitting}
               className="flex-1 py-3.5 rounded-[1.25rem] font-bold text-sm border border-red-200 dark:border-red-900/30 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/10 transition-all bg-white dark:bg-slate-800"
             >
-              Decline Receipt
+              Không xác nhận nhận
             </button>
           </div>
         </div>

@@ -32,7 +32,7 @@ const InfoField = ({ label, value, icon: Icon }) => (
 // ─── UserProfilePage Component ──────────────────────────────────────────────────
 const UserProfilePage = () => {
  const navigate = useNavigate();
- const { user, refreshUserProfile } = useAuthStore();
+ const { user } = useAuthStore();
  const [showEditModal, setShowEditModal] = React.useState(false);
  
  // Data stores
@@ -55,13 +55,6 @@ const UserProfilePage = () => {
  fetchAllBorrowRequests();
  }
  }, [role]);
-
- /** Students only: reload profile from API so classId is populated from DB (store may skip initial fetch). */
- useEffect(() => {
- if (user?.role === "student") {
- refreshUserProfile();
- }
- }, [user?.role, refreshUserProfile]);
 
  const displayName = user?.displayName ?? user?.username ?? "—";
  const avatarUrl = user?.avatarUrl
@@ -161,17 +154,6 @@ const UserProfilePage = () => {
  
  if (key === "_id" && user?._id) {
  value = user._id.slice(-8).toUpperCase();
- } else if (key === "classId") {
- const c = user?.classId;
- if (c && typeof c === "object") {
- const classCode = typeof c.code === "string" ? c.code.trim() : "";
- const classObjectId = typeof c._id === "string" ? c._id.trim() : "";
- value = classCode || classObjectId || "—";
- } else if (typeof c === "string") {
- value = c;
- } else {
- value = "—";
- }
  } else if (user && user[key]) {
  value = String(user[key]);
  }

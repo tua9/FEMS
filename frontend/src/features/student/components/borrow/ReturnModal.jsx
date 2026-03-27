@@ -52,7 +52,7 @@ const ReturnModal = ({ isOpen, onClose, target, onConfirm, submitting }) => {
   const handleSubmit = (e) => {
     e.preventDefault();
     if (returnFiles.length === 0) {
-      toast.error('Please provide at least one photo of the equipment being returned.');
+      toast.error('Vui lòng cung cấp ít nhất một ảnh thiết bị khi trả.');
       return;
     }
     onConfirm({
@@ -81,21 +81,21 @@ const ReturnModal = ({ isOpen, onClose, target, onConfirm, submitting }) => {
           </div>
           <div>
             <p className="text-[0.625rem] font-black uppercase tracking-widest text-[#1E2B58]/50 dark:text-white/40 mb-0.5">
-              Return Equipment
+              Hoàn trả thiết bị
             </p>
             <h3 className="text-xl font-black text-[#1E2B58] dark:text-white">
-              {target.equipmentId?.name || 'Equipment'}
+              {target.equipmentId?.name || 'Thiết bị'}
             </h3>
           </div>
         </div>
 
         {/* Checklist */}
         <div className="bg-white/40 dark:bg-slate-800/40 rounded-[1.25rem] p-4 mb-4 space-y-2.5">
-          <p className="text-[0.625rem] font-black uppercase tracking-widest text-[#1E2B58]/50 dark:text-white/40 mb-2">Condition Checklist</p>
+          <p className="text-[0.625rem] font-black uppercase tracking-widest text-[#1E2B58]/50 dark:text-white/40 mb-2">Kiểm tra tình trạng</p>
           {[
-            { key: 'appearance',  label: 'Good physical condition (no scratches or cracks)' },
-            { key: 'functioning', label: 'Functioning normally' },
-            { key: 'accessories', label: 'All accessories included' },
+            { key: 'appearance',  label: 'Ngoại hình tốt (không xước, vỡ)' },
+            { key: 'functioning', label: 'Hoạt động bình thường' },
+            { key: 'accessories', label: 'Đầy đủ phụ kiện' },
           ].map(({ key, label }) => (
             <label key={key} className="flex items-center gap-3 cursor-pointer">
               <input
@@ -112,11 +112,11 @@ const ReturnModal = ({ isOpen, onClose, target, onConfirm, submitting }) => {
         {/* Notes */}
         <div className="flex flex-col gap-2 mb-4">
           <label className="text-[0.625rem] font-black uppercase tracking-widest text-[#1E2B58]/50 dark:text-white/40">
-            Condition Notes
+            Ghi chú tình trạng
           </label>
           <textarea
             rows={2}
-            placeholder="Describe the equipment's condition when returning (scratches, missing accessories, etc.)..."
+            placeholder="Mô tả tình trạng thiết bị khi trả (xước, thiếu phụ kiện, v.v.)..."
             value={returnNote}
             onChange={e => setReturnNote(e.target.value)}
             className="w-full bg-white/40 dark:bg-slate-800/50 border border-white/40 dark:border-slate-700/50 rounded-[1rem] px-4 py-3 text-sm font-medium text-[#1E2B58] dark:text-white placeholder:text-[#1E2B58]/30 dark:placeholder:text-white/30 outline-none focus:ring-2 focus:ring-[#1E2B58]/20 dark:focus:ring-white/10 transition-all resize-none"
@@ -126,7 +126,7 @@ const ReturnModal = ({ isOpen, onClose, target, onConfirm, submitting }) => {
         {/* Images Upload */}
         <div className="mb-5">
           <label className="text-[0.625rem] font-black uppercase tracking-widest text-[#1E2B58]/50 dark:text-white/40 mb-2 block text-left">
-            Photos at Return <span className="text-red-500">*</span>
+            Ảnh thiết bị khi trả <span className="text-red-500">*</span>
           </label>
           
           <input
@@ -161,7 +161,7 @@ const ReturnModal = ({ isOpen, onClose, target, onConfirm, submitting }) => {
                 <div className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center group-hover:scale-110 transition-transform">
                   <Package className="w-4 h-4 text-slate-400" />
                 </div>
-                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest text-center px-2">Add Photo</span>
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest text-center px-2">Thêm ảnh</span>
               </button>
             )}
           </div>
@@ -173,7 +173,7 @@ const ReturnModal = ({ isOpen, onClose, target, onConfirm, submitting }) => {
             onClick={onClose}
             className="flex-1 py-3.5 rounded-[1.25rem] font-bold text-sm border border-[#1E2B58]/20 dark:border-white/20 text-[#1E2B58]/70 dark:text-white/70 hover:bg-[#1E2B58]/5 dark:hover:bg-white/5 transition-all"
           >
-            Cancel
+            Hủy
           </button>
           <button
             onClick={handleSubmit}
@@ -184,7 +184,7 @@ const ReturnModal = ({ isOpen, onClose, target, onConfirm, submitting }) => {
               ? <Loader2 className="w-4 h-4 animate-spin" />
               : <CheckCircle2 className="w-4 h-4" />
             }
-            Submit Return
+            Gửi yêu cầu trả
           </button>
         </div>
       </div>

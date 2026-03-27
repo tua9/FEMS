@@ -92,11 +92,9 @@ export const confirmReceivedBorrowRequest = asyncHandler(async (req, res) => {
  * Status: handed_over → returning
  */
 export const submitReturnBorrowRequest = asyncHandler(async (req, res) => {
-  const { checklist, notes, images } = req.body
   const result = await borrowRequestService.studentSubmitReturn(
     req.params.id,
-    req.user._id,
-    { checklist, notes, images }
+    req.user._id
   )
   res.status(StatusCodes.OK).json(result)
 })
