@@ -7,12 +7,12 @@ import { borrowRequestService } from '../services/borrowRequestService.js'
 export const initCronJobs = () => {
   console.log('⏰ Initializing background cron jobs...')
 
-  // Every 5 minutes: cancel pending/approved requests whose slot has ended
+  // Every 5 minutes: cancel pending/approved requests whose slot has ended, and mark unreturned
   cron.schedule('*/5 * * * *', async () => {
     try {
-      await borrowRequestService.autoCancelSlotEndedRequests()
+      await borrowRequestService.autoHandleEndedSessions()
     } catch (error) {
-      console.error('❌ [CRON] Error in autoCancelSlotEndedRequests:', error)
+      console.error('❌ [CRON] Error in autoHandleEndedSessions:', error)
     }
   })
 

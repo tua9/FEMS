@@ -41,46 +41,89 @@ const generateUniqueCode = async () => {
 
 const populateRequest = (query) => query.populate(BORROW_POPULATE)
 
-// ── Auto-cancel: slot-based (replaces old 17:00 deadline logic) ───────────────
+// ── Auto-handle concluded sessions ───────────────
 
 /**
- * Auto-cancel pending/approved requests whose session slot has already ended.
- * Only applies to requests with a scheduleId (i.e., created via session gate).
- * Admin direct allocations (scheduleId=null) are NOT auto-cancelled here.
+ * Auto-cancel pending/approved requests and mark handed_over/returning as unreturned
+ * when a session slot has already ended (either time passed or checked out).
  *
- * Targets: status in ['pending', 'approved']
- * Condition: schedule.endAt < now
- * Does NOT touch: handed_over, returning, returned, rejected, cancelled
+ * @param {string|ObjectId} [specificScheduleId] Optional. If provided, checks only this schedule.
  */
-const autoCancelSlotEndedRequests = async () => {
+const autoHandleEndedSessions = async (specificScheduleId = null) => {
   const now = new Date()
 
-  const requests = await BorrowRequest.find({
-    status: { $in: ['pending', 'approved'] },
+  const query = {
+    status: { $in: ['pending', 'approved', 'handed_over', 'returning'] },
     scheduleId: { $ne: null },
-  }).populate('scheduleId', 'endAt')
+  }
+
+  if (specificScheduleId) {
+    query.scheduleId = specificScheduleId
+  }
+
+  const requests = await BorrowRequest.find(query)
+    .populate('scheduleId', 'endAt status')
+    .populate('equipmentId', 'name')
+    .populate('roomId', 'name')
+    .populate('classSlotId', 'name')
 
   for (const req of requests) {
-    if (!req.scheduleId?.endAt) continue
-    if (now <= new Date(req.scheduleId.endAt)) continue
+    if (!req.scheduleId) continue
 
-    req.status = 'cancelled'
-    req.decisionNote = 'Yêu cầu đã bị hủy tự động do ca học đã kết thúc mà chưa được xử lý hoàn tất.'
-    req.cancelledAt = new Date()
-    req.cancelledBy = null // system cancellation
-    await req.save()
+    // A session is considered ended if it was manually finished (checked out)
+    // or if the current time has passed the anticipated end check
+    const isEnded = req.scheduleId.status === 'completed' || (req.scheduleId.endAt && now > new Date(req.scheduleId.endAt))
 
-    await notificationService.createNotification({
-      userId: req.borrowerId,
-      type: 'borrow',
-      title: 'Yêu cầu mượn bị hủy',
-      message: `Yêu cầu mượn #${req.code || req._id.toString().slice(-6).toUpperCase()} đã bị hủy tự động do ca học đã kết thúc.`,
-      action: {
-        type: 'open_detail',
-        resource: 'borrow',
-        resourceId: req._id,
-      },
-    }).catch(err => console.error('Failed to send slot-ended auto-cancel notification:', err))
+    if (!isEnded) continue
+
+    if (['pending', 'approved'].includes(req.status)) {
+      req.status = 'cancelled'
+      req.decisionNote = 'Yêu cầu đã bị hủy tự động do ca học đã kết thúc mà chưa được xử lý hoàn tất.'
+      req.cancelledAt = new Date()
+      req.cancelledBy = null // system cancellation
+      await req.save()
+
+      await notificationService.createNotification({
+        userId: req.borrowerId,
+        type: 'borrow',
+        title: 'Yêu cầu mượn bị hủy',
+        message: `Yêu cầu mượn #${req.code || req._id.toString().slice(-6).toUpperCase()} đã bị hủy tự động do ca học đã kết thúc.`,
+        action: {
+          type: 'open_detail',
+          resource: 'borrow',
+          resourceId: req._id,
+        },
+      }).catch(err => console.error('Failed to send slot-ended auto-cancel notification:', err))
+    } else if (['handed_over', 'returning'].includes(req.status)) {
+      req.status = 'unreturned'
+      await req.save()
+
+      const equipName = req.equipmentId?.name || 'Unknown'
+      const roomName = req.roomId?.name || 'Unknown'
+      const slotName = req.classSlotId?.name || 'slot'
+      const msg = `Unreturned equipment ${equipName} in room ${roomName} for slot ${slotName}`
+
+      // Notify Student
+      await notificationService.createNotification({
+        userId: req.borrowerId,
+        type: 'borrow',
+        title: 'Unreturned Equipment',
+        message: msg,
+        action: { type: 'open_detail', resource: 'borrow', resourceId: req._id },
+      }).catch(err => console.error('Failed to notify student about unreturned equipment:', err))
+
+      // Notify Lecturer
+      const lecturerToNotify = req.handedOverBy || req.approvedBy || null
+      if (lecturerToNotify) {
+        await notificationService.createNotification({
+          userId: lecturerToNotify,
+          type: 'borrow',
+          title: 'Unreturned Equipment',
+          message: msg,
+          action: { type: 'open_detail', resource: 'borrow', resourceId: req._id },
+        }).catch(err => console.error('Failed to notify lecturer about unreturned equipment:', err))
+      }
+    }
   }
 }
 
@@ -95,6 +138,16 @@ const autoCancelSlotEndedRequests = async () => {
  */
 const createStudentRequest = async (user, body) => {
   const { equipmentId, purpose, note } = body
+
+  // Check if student has any outstanding unreturned equipment
+  const unreturnedRequest = await BorrowRequest.findOne({
+    borrowerId: user._id,
+    status: 'unreturned'
+  }).lean()
+
+  if (unreturnedRequest) {
+    throw new ApiError(StatusCodes.FORBIDDEN, `Bạn đang có thiết bị chưa hoàn trả (Mã đơn: ${unreturnedRequest.code || 'không xác định'}). Vui lòng trả thiết bị trước khi sử dụng tiếp.`)
+  }
 
   const equipment = await Equipment.findById(equipmentId)
   if (!equipment) throw new ApiError(StatusCodes.NOT_FOUND, 'Equipment not found')
@@ -539,7 +592,7 @@ export const borrowRequestService = {
   getPersonalBorrowRequests,
   getPendingBorrowRequests,
   getApprovedByMe,
-  autoCancelSlotEndedRequests,
+  autoHandleEndedSessions,
   checkOverdueHandedOverRequests,
   remindBorrowRequest,
 }
