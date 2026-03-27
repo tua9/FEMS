@@ -1,14 +1,13 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { PageShell, AnimatedList, AnimatedListItem, AnimatedSection } from "@/components/motion";
+import { PageShell, AnimatedSection } from "@/components/motion";
 import { useDashboardStore } from "@/stores/useDashboardStore";
 import { useAuthStore } from "@/stores/useAuthStore";
 import { RecentActivityList } from "@/features/shared/components/dashboard/RecentActivityList";
 import { scheduleService } from "@/services/scheduleService";
 import { attendanceService } from "@/services/attendanceService";
 import { getTodayVN } from "@/utils/dateUtils";
-import { equipmentService } from "@/services/equipmentService";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Helpers
@@ -155,140 +154,13 @@ const SessionCard = ({ schedule, isCheckedIn, isSessionOngoing, isActionLoading,
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
-// B. Equipment in Current Session
-// NOTE: equipment label (Locked / Available) reflects borrowability in this
-//       session context — NOT the BorrowRequest lifecycle status.
-// ─────────────────────────────────────────────────────────────────────────────
-
-const BorrowabilityBadge = ({ isCheckedIn, status }) => {
-  if (!isCheckedIn) {
-    return (
-      <span className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[9px] font-black uppercase tracking-wider text-slate-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400">
-        Locked
-      </span>
-    );
-  }
-  if (status !== "good") {
-    return (
-      <span className="rounded-full border border-red-200 bg-red-50 px-2.5 py-1 text-[9px] font-black uppercase tracking-wider text-red-500 dark:border-red-900/30 dark:bg-red-900/20 dark:text-red-400">
-        Unavailable
-      </span>
-    );
-  }
-  return (
-    <span className="rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[9px] font-black uppercase tracking-wider text-emerald-600 dark:border-emerald-900/30 dark:bg-emerald-900/20 dark:text-emerald-400">
-      Available
-    </span>
-  );
-};
-
-const SessionEquipmentSection = ({ equipment, isCheckedIn, isLoading }) => (
-  <AnimatedSection variant="slide-up" delay={0.15}>
-    <div className="dashboard-card flex h-full flex-col rounded-4xl p-8">
-      {/* Header */}
-      <div className="mb-6 flex items-center gap-3">
-        <h3 className="text-xl font-extrabold text-[#1E2B58] dark:text-white">
-          Room Equipment
-        </h3>
-        <span
-          className={`rounded-full px-2.5 py-1 text-[9px] font-black uppercase tracking-wider ${
-            isCheckedIn
-              ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400"
-              : "bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400"
-          }`}
-        >
-          {isCheckedIn ? "Unlocked" : "Locked"}
-        </span>
-      </div>
-
-      {/* Content */}
-      {isLoading ? (
-        <div className="flex flex-1 items-center justify-center py-8">
-          <span className="material-symbols-rounded animate-spin text-2xl text-slate-400">
-            refresh
-          </span>
-        </div>
-      ) : equipment.length === 0 ? (
-        <div className="flex flex-1 flex-col items-center justify-center gap-2 py-8 text-center">
-          <span className="material-symbols-rounded text-3xl text-slate-300">devices</span>
-          <p className="text-sm italic text-slate-400">
-            No equipment found for this room.
-          </p>
-        </div>
-      ) : (
-        <div className="space-y-3 overflow-auto">
-          {equipment.map((eq) => (
-            <div
-              key={eq._id}
-              className="flex items-center justify-between rounded-2xl bg-[#1E2B58]/4 px-4 py-3 dark:bg-white/5"
-            >
-              <div className="flex min-w-0 items-center gap-3">
-                <span className="material-symbols-rounded shrink-0 text-base text-[#1E2B58]/50 dark:text-white/40">
-                  devices
-                </span>
-                <div className="min-w-0">
-                  <p className="truncate text-sm font-bold text-[#1E2B58] dark:text-white">
-                    {eq.name}
-                  </p>
-                  <p className="text-[10px] text-slate-400">{eq.code}</p>
-                </div>
-              </div>
-              <BorrowabilityBadge isCheckedIn={isCheckedIn} status={eq.status} />
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
-  </AnimatedSection>
-);
-
-// ─────────────────────────────────────────────────────────────────────────────
 // Main Dashboard Page
 // ─────────────────────────────────────────────────────────────────────────────
-
-const STAT_CARDS = (stats) => [
-  {
-    label: "Pending Requests",
-    value: String(stats?.pendingRequests ?? 0).padStart(2, "0"),
-    icon: "pending_actions",
-    route: "/lecturer/approval",
-    hint: "Review Requests",
-    dot: "bg-amber-400",
-    glow: "glow-amber",
-  },
-  {
-    label: "Active Borrowings",
-    value: String(stats?.equipmentBorrowed ?? 0),
-    icon: "laptop_mac",
-    route: "/lecturer/equipment",
-    hint: "Manage Borrowings",
-    dot: "bg-blue-400",
-    glow: "glow-blue",
-  },
-  {
-    label: "Reports Submitted",
-    value: String(stats?.reportsSent ?? 0),
-    icon: "assignment_turned_in",
-    route: "/lecturer/history",
-    hint: "View History",
-    dot: "bg-emerald-400",
-    glow: "glow-emerald",
-  },
-  {
-    label: "Assigned Rooms",
-    value: String(stats?.assignedRooms ?? 0).padStart(2, "0"),
-    icon: "meeting_room",
-    route: "/lecturer/calendar",
-    hint: "View Calendar",
-    dot: "bg-violet-400",
-    glow: "glow-violet",
-  },
-];
 
 const LecturerDashboard = () => {
   const navigate = useNavigate();
   const { user } = useAuthStore();
-  const { stats, activities, fetchStats, fetchActivities } = useDashboardStore();
+  const { activities, fetchActivities } = useDashboardStore();
 
   // ── Today's schedule ───────────────────────────────────────────────────────
   const [schedules, setSchedules] = useState([]);
@@ -299,15 +171,10 @@ const LecturerDashboard = () => {
   const [checkInLoading, setCheckInLoading] = useState(false);
   const [checkingIn, setCheckingIn] = useState(false);
 
-  // ── Room equipment ─────────────────────────────────────────────────────────
-  const [equipment, setEquipment] = useState([]);
-  const [equipmentLoading, setEquipmentLoading] = useState(false);
-
-  // ── Load stats and activities ──────────────────────────────────────────────
+  // ── Load activities ────────────────────────────────────────────────────────
   useEffect(() => {
-    fetchStats();
     fetchActivities();
-  }, [fetchStats, fetchActivities]);
+  }, [fetchActivities]);
 
   // ── Load today's schedule ──────────────────────────────────────────────────
   const loadSchedules = useCallback(async () => {
@@ -373,39 +240,6 @@ const LecturerDashboard = () => {
 
   const isCheckedIn = checkInStatus?.checkedIn === true;
 
-  // ── Load room equipment when session room is known ─────────────────────────
-  const sessionRoomId =
-    activeSchedule?.roomId?._id || activeSchedule?.roomId || null;
-
-  useEffect(() => {
-    if (!sessionRoomId) {
-      setEquipment([]);
-      return;
-    }
-    let cancelled = false;
-    const load = async () => {
-      setEquipmentLoading(true);
-      try {
-        // TODO: confirm backend supports GET /equipments/inventory?roomId=xxx
-        const res = await equipmentService.getInventory({ roomId: sessionRoomId });
-        if (!cancelled) {
-          const list = Array.isArray(res)
-            ? res
-            : res?.data || res?.equipments || [];
-          setEquipment(list);
-        }
-      } catch {
-        if (!cancelled) setEquipment([]);
-      } finally {
-        if (!cancelled) setEquipmentLoading(false);
-      }
-    };
-    load();
-    return () => {
-      cancelled = true;
-    };
-  }, [sessionRoomId]);
-
   // ── Check-in handler ───────────────────────────────────────────────────────
   const handleCheckIn = async () => {
     if (!activeSchedule?._id) return;
@@ -422,8 +256,6 @@ const LecturerDashboard = () => {
     }
   };
 
-  // ── Derived values ─────────────────────────────────────────────────────────
-  const statCards = STAT_CARDS(stats);
   const welcomeName = user?.displayName || user?.username || "Lecturer";
 
   // ─────────────────────────────────────────────────────────────────────────
@@ -474,65 +306,12 @@ const LecturerDashboard = () => {
         )}
       </AnimatedSection>
 
-      {/* ── B. Quick Statistics ── */}
-      <AnimatedList className="mb-8 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
-        {statCards.map((stat) => (
-          <AnimatedListItem key={stat.label}>
-            <button
-              onClick={() => navigate(stat.route)}
-              className="dashboard-card group relative flex w-full cursor-pointer items-center gap-5 rounded-4xl p-6 text-left transition-all duration-200 hover:scale-[1.02] hover:shadow-xl"
-              title={stat.hint}
-            >
-              <div
-                className={`absolute top-5 right-5 h-2 w-2 rounded-full ${stat.dot} ${stat.glow}`}
-              />
-              <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-[#1E2B58]/8 text-[#1E2B58] transition-colors group-hover:bg-[#1E2B58]/14 dark:bg-[#4f75ff]/15 dark:text-[#4f75ff] dark:group-hover:bg-[#4f75ff]/25">
-                <span className="material-symbols-rounded text-3xl">{stat.icon}</span>
-              </div>
-              <div className="min-w-0 flex-1">
-                <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500">
-                  {stat.label}
-                </p>
-                <p className="mt-1 text-3xl font-black text-[#1E2B58] dark:text-white">
-                  {stat.value}
-                </p>
-              </div>
-              <span className="material-symbols-rounded text-base text-[#1E2B58]/30 opacity-0 transition-opacity group-hover:opacity-100 dark:text-white/20">
-                arrow_forward
-              </span>
-            </button>
-          </AnimatedListItem>
-        ))}
-      </AnimatedList>
-
-      {/* ── C. Recent Activities + D. Equipment in Session ── */}
-      <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
-        {/* Recent Activities (2/3 width) — "View All" goes to Notifications */}
-        <RecentActivityList
-          activities={activities}
-          viewAllRoute="/lecturer/notifications"
-        />
-
-        {/* Equipment in Current Session (1/3 width) */}
-        {activeSchedule ? (
-          <SessionEquipmentSection
-            equipment={equipment}
-            isCheckedIn={isCheckedIn}
-            isLoading={equipmentLoading}
-          />
-        ) : (
-          <AnimatedSection variant="slide-up" delay={0.15}>
-            <div className="dashboard-card flex h-full flex-col items-center justify-center gap-2 rounded-4xl p-8 text-center">
-              <span className="material-symbols-rounded text-3xl text-slate-300">
-                devices_off
-              </span>
-              <p className="text-sm italic text-slate-400">
-                No active session — equipment overview unavailable.
-              </p>
-            </div>
-          </AnimatedSection>
-        )}
-      </div>
+      {/* ── B. Recent Activities ── */}
+      <RecentActivityList
+        activities={activities}
+        viewAllRoute="/lecturer/notifications"
+        className=""
+      />
     </PageShell>
   );
 };

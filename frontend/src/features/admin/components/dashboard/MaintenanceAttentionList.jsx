@@ -8,9 +8,9 @@ const STATUS_COLOR= {
   good: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400',
 }
 const STATUS_LABEL= {
-  available: 'Sẵn sàng', maintenance: 'Bảo trì', broken: 'Hỏng',
+  available: 'Available', maintenance: 'Maintenance', broken: 'Broken',
   // backward compatibility (old data)
-  good: 'Sẵn sàng',
+  good: 'Available',
 }
 
 const MaintenanceAttentionList = ({ items }) => {
@@ -18,9 +18,9 @@ const MaintenanceAttentionList = ({ items }) => {
     return (
       <div>
         <p className="text-[11px] font-semibold uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-4">
-          Cần quan tâm bảo trì
+          Needs Maintenance Attention
         </p>
-        <p className="text-xs text-slate-400 text-center py-8">Không có dữ liệu</p>
+        <p className="text-xs text-slate-400 text-center py-8">No data</p>
       </div>
     )
   }
@@ -30,7 +30,7 @@ const MaintenanceAttentionList = ({ items }) => {
   return (
     <div>
       <p className="text-[11px] font-semibold uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-4">
-        Cần quan tâm bảo trì
+        Needs Maintenance Attention
       </p>
       <div className="space-y-3">
         {items.map((item, idx) => {
@@ -46,8 +46,8 @@ const MaintenanceAttentionList = ({ items }) => {
                   </span>
                 </div>
                 <div className="flex gap-3 shrink-0 ml-2 text-[10px] font-semibold text-slate-500 dark:text-slate-400">
-                  <span title="Lượt mượn">📦 {item.borrowCount}</span>
-                  <span title="Lượt báo hỏng">🔧 {item.reportCount}</span>
+                  <span title="Borrow count">📦 {item.borrowCount}</span>
+                  <span title="Damage report count">🔧 {item.reportCount}</span>
                 </div>
               </div>
               <div className="h-1.5 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">

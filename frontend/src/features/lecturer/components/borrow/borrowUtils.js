@@ -5,7 +5,7 @@ export const fmtDateTime = d => d
   : '—';
 
 export const getStudentName = r =>
-  r.borrowerId?.displayName || r.borrowerId?.username || 'Sinh viên';
+  r.borrowerId?.displayName || r.borrowerId?.username || 'Student';
 
 export const getEquipmentName = r =>
-  r.equipmentId?.name || r.roomId?.name || 'Thiết bị';
+  r.equipmentId?.name || r.roomId?.name || 'Equipment';

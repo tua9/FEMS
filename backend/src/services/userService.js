@@ -18,7 +18,9 @@ const updateUser = async (id, body) => {
   const user = await User.findByIdAndUpdate(id, body, {
     new: true,
     runValidators: true,
-  }).select('-hashedPassword')
+  })
+    .select('-hashedPassword')
+    .populate('classId', 'code name')
 
   if (!user) {
     throw new ApiError(StatusCodes.NOT_FOUND, 'User not found')
@@ -72,7 +74,9 @@ const createUser = async (body) => {
 }
 
 const getUserProfile = async (id) => {
-  const user = await User.findById(id).select('-hashedPassword')
+  const user = await User.findById(id)
+    .select('-hashedPassword')
+    .populate('classId', 'code name')
   if (!user) {
     throw new ApiError(StatusCodes.NOT_FOUND, 'User not found')
   }

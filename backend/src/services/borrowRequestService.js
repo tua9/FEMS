@@ -284,7 +284,7 @@ const studentConfirmReceived = async (id, studentId, handoverForm) => {
  * @param {string} id         — BorrowRequest id
  * @param {string} studentId  — User id of the student
  */
-const studentSubmitReturn = async (id, studentId) => {
+const studentSubmitReturn = async (id, studentId, submission = {}) => {
   const request = await BorrowRequest.findById(id)
   if (!request) throw new ApiError(StatusCodes.NOT_FOUND, 'Borrow request not found')
   if (request.status !== 'handed_over') throw new ApiError(StatusCodes.BAD_REQUEST, 'Thiết bị chưa được bàn giao')
@@ -293,6 +293,12 @@ const studentSubmitReturn = async (id, studentId) => {
   }
 
   request.status = 'returning'
+  request.returnSubmission = {
+    checklist:   submission.checklist || { appearance: false, functioning: false, accessories: false },
+    notes:       submission.notes || null,
+    images:      Array.isArray(submission.images) ? submission.images : [],
+    submittedAt: new Date(),
+  }
   await request.save()
 
   // Notify the lecturer who approved it (or handed it over), otherwise notify admins

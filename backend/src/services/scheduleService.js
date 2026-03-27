@@ -1,6 +1,7 @@
 import Schedule from '../models/Schedule.js'
 import Slot from '../models/Slot.js'
 import User from '../models/User.js'
+import TeacherAttendance from '../models/TeacherAttendance.js'
 import ApiError from '../utils/ApiError.js'
 import { StatusCodes } from 'http-status-codes'
 import { buildVNDateTime, vnDayRange, vnRangeStart, vnRangeEnd } from '../utils/dateVN.js'
@@ -125,7 +126,15 @@ const getMySchedules = async (userId, filter = {}) => {
     .populate('classId', 'code name')
     .lean()
 
-  // Attach studentIds for the frontend to count enrolled students
+  // Collect scheduleIds to batch-query TeacherAttendance
+  const scheduleIds = schedules.map(s => s._id)
+  const attendanceRecords = await TeacherAttendance.find({
+    scheduleId: { $in: scheduleIds },
+    status: 'present',
+  }).select('scheduleId').lean()
+  const checkedInScheduleIds = new Set(attendanceRecords.map(a => String(a.scheduleId)))
+
+  // Attach studentIds and real-time check-in status for each schedule
   for (const sch of schedules) {
     if (sch.classId?._id) {
       sch.studentIds = await User.find({ role: 'student', classId: sch.classId._id })
@@ -133,6 +142,11 @@ const getMySchedules = async (userId, filter = {}) => {
         .lean()
     } else {
       sch.studentIds = []
+    }
+
+    // If teacher has checked in but schedule status was never updated, reflect it
+    if (checkedInScheduleIds.has(String(sch._id)) && sch.status === 'scheduled') {
+      sch.status = 'ongoing'
     }
   }
 
