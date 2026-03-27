@@ -7,15 +7,21 @@ export const corsOptions = {
   origin: (origin, callback) => {
     if (!origin && env.BUILD_MODE === 'dev') return callback(null, true)
 
-    if (WHITELIST_DOMAINS.includes(origin)) return callback(null, true)
+    const isAllowed = WHITELIST_DOMAINS.includes(origin) || 
+                     (origin && origin.endsWith('.vercel.app')) || 
+                     (origin && (origin.endsWith('.ngrok-free.app') || 
+                                origin.endsWith('.ngrok-free.dev') || 
+                                origin.endsWith('.ngrok.io')))
 
-    console.log('error')
+    if (isAllowed) return callback(null, true)
+
+    console.log(`🔥 Error: ${origin} not allowed by CORS`)
 
     return callback(
-      new ApiError(StatusCodes.FORBIDDEN, `${origin} not allowed by CORS`),
+      new ApiError(StatusCodes.FORBIDDEN, `${origin} not allowed by CORS`)
     )
   },
 
-  optionSuccessStatus: 200,
+  optionsSuccessStatus: 200,
   credentials: true,
 }
