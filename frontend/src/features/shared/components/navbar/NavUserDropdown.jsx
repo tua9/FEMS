@@ -118,14 +118,6 @@ const MENU_ITEMS= {
  iconBg: "bg-violet-50 dark:bg-violet-900/20",
  iconColor: "text-violet-500 dark:text-violet-400",
  },
- {
- to: "/lecturer/usage-stats",
- icon: "bar_chart",
- label: "Usage Statistics",
- description: "Equipment & room analytics",
- iconBg: "bg-emerald-50 dark:bg-emerald-900/20",
- iconColor: "text-emerald-500 dark:text-emerald-400",
- },
  ],
 };
 

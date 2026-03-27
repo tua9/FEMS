@@ -19,17 +19,17 @@ const RequestDetailModal = ({ isOpen, onClose, request }) => {
         </button>
 
         <p className="text-[0.625rem] font-black uppercase tracking-widest text-[#1E2B58]/50 dark:text-white/40 mb-5">
-          Chi tiết yêu cầu #{String(request._id).slice(-6).toUpperCase()}
+          Request Details #{String(request._id).slice(-6).toUpperCase()}
         </p>
 
         <div className="space-y-0">
           {[
-            ['Sinh viên', getStudentName(request)],
-            ['Thiết bị', getEquipmentName(request)],
-            ['Trạng thái', <BorrowBadge key="s" status={request.status} />],
-            ['Lý do', request.note || '—'],
-            ['Gửi lúc', fmtDateTime(request.createdAt)],
-            ['Phản hồi', request.decisionNote || '—'],
+            ['Student', getStudentName(request)],
+            ['Equipment', getEquipmentName(request)],
+            ['Status', <BorrowBadge key="s" status={request.status} />],
+            ['Reason', request.note || '—'],
+            ['Submitted', fmtDateTime(request.createdAt)],
+            ['Response', request.decisionNote || '—'],
           ].map(([label, value]) => (
             <div key={label} className="flex justify-between items-center gap-4 py-2.5 border-b border-[#1E2B58]/5 dark:border-white/5 last:border-0">
               <span className="text-[#1E2B58]/60 dark:text-white/50 font-medium text-sm shrink-0">{label}</span>
@@ -40,7 +40,7 @@ const RequestDetailModal = ({ isOpen, onClose, request }) => {
 
         <button onClick={onClose}
           className="mt-6 w-full py-3 rounded-[1.25rem] font-bold text-sm bg-[#1E2B58] text-white hover:bg-[#2A3B66] transition-all active:scale-95">
-          Đóng
+          Close
         </button>
       </div>
     </div>,
