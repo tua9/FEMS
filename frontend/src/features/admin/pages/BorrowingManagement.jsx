@@ -9,6 +9,7 @@ import ActiveBorrowingMonitor from '../components/borrowing/ActiveBorrowingMonit
 import { useBorrowRequestStore } from '@/stores/useBorrowRequestStore';
 import { PageHeader } from '@/features/shared/components/PageHeader';
 import { toast } from 'sonner';
+import { BORROW_STATUS } from '@/constants';
 
 const BorrowingManagement = () => {
  const borrowRecords = useBorrowRequestStore(state => state.borrowRequests);
@@ -24,7 +25,7 @@ const BorrowingManagement = () => {
  const [selectedRecord, setSelectedRecord] = useState(null);
  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
  const [searchQuery, setSearchQuery] = useState('');
- const [statusFilter, setStatusFilter] = useState('pending');
+ const [statusFilter, setStatusFilter] = useState(BORROW_STATUS.PENDING);
  const [sortOrder, setSortOrder] = useState('asc');
 
  useEffect(() => {
@@ -33,9 +34,9 @@ const BorrowingManagement = () => {
 
  const handleUpdateStatus = async (id, action) => {
  try {
- if (action === 'approved') await approveRequest(id);
- else if (action === 'returned') await returnRequest(id);
- else if (action === 'rejected') await rejectRequest(id);
+ if (action === BORROW_STATUS.APPROVED) await approveRequest(id);
+ else if (action === BORROW_STATUS.RETURNED) await returnRequest(id);
+ else if (action === BORROW_STATUS.REJECTED) await rejectRequest(id);
 
  toast.success(`Request ${action} successfully`);
  } catch (error) {
@@ -89,11 +90,11 @@ const BorrowingManagement = () => {
  record._id.toLowerCase().includes(searchQuery.toLowerCase());
 
  // Handle multi-status filtering for Active Loans (Handed Over + Overdue)
- const isRecOverdue = record.status === 'overdue' || (record.status === 'handed_over' && new Date(record.expectedReturnDate) < new Date());
- 
- const matchesStatus = statusFilter === 'All' 
- || (statusFilter === 'handed_over' && (record.status === 'handed_over' || isRecOverdue))
- || (statusFilter === 'overdue' && isRecOverdue)
+ const isRecOverdue = record.status === 'overdue' || (record.status === BORROW_STATUS.HANDED_OVER && new Date(record.expectedReturnDate) < new Date()); // 'overdue' là UI-derived virtual status
+
+ const matchesStatus = statusFilter === 'All'
+ || (statusFilter === BORROW_STATUS.HANDED_OVER && (record.status === BORROW_STATUS.HANDED_OVER || isRecOverdue))
+ || (statusFilter === 'overdue' && isRecOverdue) // 'overdue' là UI-derived virtual status
  || record.status === statusFilter;
 
  return matchesSearch && matchesStatus;
@@ -115,10 +116,10 @@ const BorrowingManagement = () => {
  // Filter statuses for counts
  const now = new Date();
  const isOverdueGlobal = (r) =>
- r.status === 'overdue' || (r.status === 'handed_over' && new Date(r.expectedReturnDate) < now);
+ r.status === 'overdue' || (r.status === BORROW_STATUS.HANDED_OVER && new Date(r.expectedReturnDate) < now); // 'overdue' là UI-derived virtual status
 
- const pendingCount = borrowRecords.filter(r => r.status === 'pending').length;
- const activeLoansCount = borrowRecords.filter(r => r.status === 'handed_over' || isOverdueGlobal(r)).length;
+ const pendingCount = borrowRecords.filter(r => r.status === BORROW_STATUS.PENDING).length;
+ const activeLoansCount = borrowRecords.filter(r => r.status === BORROW_STATUS.HANDED_OVER || isOverdueGlobal(r)).length;
  const overdueCount = borrowRecords.filter(isOverdueGlobal).length;
 
  const isBlurred = isNewBorrowModalOpen || isDetailModalOpen;
@@ -155,7 +156,7 @@ const BorrowingManagement = () => {
  <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
  {/* Active Loans Card */}
  <button
- onClick={() => setStatusFilter(statusFilter === 'handed_over' ? 'All' : 'handed_over')}
+ onClick={() => setStatusFilter(statusFilter === BORROW_STATUS.HANDED_OVER ? 'All' : BORROW_STATUS.HANDED_OVER)}
  className="dashboard-card p-5 rounded-2xl transition-all duration-300 flex items-center justify-between hover:scale-[1.02] active:scale-95 text-left"
  >
  <div>
@@ -163,7 +164,7 @@ const BorrowingManagement = () => {
  <h3 className="text-3xl font-bold text-[#1A2B56] dark:text-white tracking-tight">{activeLoansCount}</h3>
  </div>
  <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300
- ${statusFilter === 'handed_over'
+ ${statusFilter === BORROW_STATUS.HANDED_OVER
  ? 'bg-blue-50 dark:bg-blue-900/20 text-[#1A2B56]'
  : 'bg-slate-50 dark:bg-slate-700/30 text-slate-400 dark:text-slate-500'}`}>
  <span className="material-symbols-outlined">swap_horiz</span>
@@ -172,7 +173,7 @@ const BorrowingManagement = () => {
 
  {/* Pending Approvals Card */}
  <button
- onClick={() => setStatusFilter(statusFilter === 'pending' ? 'All' : 'pending')}
+ onClick={() => setStatusFilter(statusFilter === BORROW_STATUS.PENDING ? 'All' : BORROW_STATUS.PENDING)}
  className="dashboard-card p-5 rounded-2xl transition-all duration-300 flex items-center justify-between hover:scale-[1.02] active:scale-95 text-left"
  >
  <div>
@@ -180,7 +181,7 @@ const BorrowingManagement = () => {
  <h3 className="text-3xl font-bold text-[#1A2B56] dark:text-white tracking-tight">{pendingCount}</h3>
  </div>
  <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300
- ${statusFilter === 'pending'
+ ${statusFilter === BORROW_STATUS.PENDING
  ? 'bg-amber-50 dark:bg-amber-900/40 text-amber-500'
  : 'bg-slate-50 dark:bg-slate-700/30 text-slate-400 dark:text-slate-500'}`}>
  <span className="material-symbols-outlined">pending_actions</span>
@@ -248,13 +249,13 @@ const BorrowingManagement = () => {
  value={statusFilter}
  options={[
  { value: 'All', label: 'All Status' },
- { value: 'pending', label: 'Pending' },
- { value: 'approved', label: 'Approved' },
- { value: 'handed_over', label: 'Handed Over' },
- { value: 'overdue', label: 'Overdue' },
- { value: 'returned', label: 'Returned' },
- { value: 'rejected', label: 'Rejected' },
- { value: 'cancelled', label: 'Cancelled' },
+ { value: BORROW_STATUS.PENDING,     label: 'Pending' },
+ { value: BORROW_STATUS.APPROVED,    label: 'Approved' },
+ { value: BORROW_STATUS.HANDED_OVER, label: 'Handed Over' },
+ { value: 'overdue',                 label: 'Overdue' }, // UI-derived virtual status
+ { value: BORROW_STATUS.RETURNED,    label: 'Returned' },
+ { value: BORROW_STATUS.REJECTED,    label: 'Rejected' },
+ { value: BORROW_STATUS.CANCELLED,   label: 'Cancelled' },
  ]}
  onChange={v => setStatusFilter(v)}
  align="right"
@@ -265,10 +266,10 @@ const BorrowingManagement = () => {
 
  <BorrowingTable
  records={sortedRecords}
- onApprove={(id) => handleUpdateStatus(id, 'approved')}
+ onApprove={(id) => handleUpdateStatus(id, BORROW_STATUS.APPROVED)}
  onHandover={handleHandoverSubmit}
- onReject={(id) => handleUpdateStatus(id, 'rejected')}
- onReturn={(id) => handleUpdateStatus(id, 'returned')}
+ onReject={(id) => handleUpdateStatus(id, BORROW_STATUS.REJECTED)}
+ onReturn={(id) => handleUpdateStatus(id, BORROW_STATUS.RETURNED)}
  onAlert={handleAlert}
  onViewDetails={handleViewDetails}
  />
@@ -294,10 +295,10 @@ const BorrowingManagement = () => {
  isOpen={isDetailModalOpen}
  record={selectedRecord}
  onClose={() => setIsDetailModalOpen(false)}
- onApprove={(id) => handleUpdateStatus(id, 'approved')}
+ onApprove={(id) => handleUpdateStatus(id, BORROW_STATUS.APPROVED)}
  onHandover={handleHandoverSubmit}
- onReject={(id) => handleUpdateStatus(id, 'rejected')}
- onReturn={(id) => handleUpdateStatus(id, 'returned')}
+ onReject={(id) => handleUpdateStatus(id, BORROW_STATUS.REJECTED)}
+ onReturn={(id) => handleUpdateStatus(id, BORROW_STATUS.RETURNED)}
  onAlert={handleAlert}
  />
  </div>

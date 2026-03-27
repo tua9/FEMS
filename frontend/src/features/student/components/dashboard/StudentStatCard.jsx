@@ -4,6 +4,7 @@ import { Package, Clock, AlertCircle } from "lucide-react";
 import { AnimatedList, AnimatedListItem } from "@/components/motion";
 import { useBorrowRequestStore } from "@/stores/useBorrowRequestStore";
 import { useReportStore } from "@/stores/useReportStore";
+import { BORROW_STATUS } from "@/constants";
 
 const StudentStatCard = () => {
   const borrowRequests = useBorrowRequestStore((state) => state.borrowRequests);
@@ -15,7 +16,7 @@ const StudentStatCard = () => {
       title: "Active Borrowings",
       value: String(
         borrowRequests.filter((r) =>
-          ["approved", "handed_over", "returning"].includes(r.status)
+          [BORROW_STATUS.APPROVED, BORROW_STATUS.HANDED_OVER, BORROW_STATUS.RETURNING].includes(r.status)
         ).length
       ),
       icon: Package,
@@ -28,7 +29,7 @@ const StudentStatCard = () => {
     {
       id: "pending-requests",
       title: "Pending Requests",
-      value: String(borrowRequests.filter((r) => r.status === "pending").length),
+      value: String(borrowRequests.filter((r) => r.status === BORROW_STATUS.PENDING).length),
       icon: Clock,
       color: "bg-amber-500",
       iconShadow: "shadow-amber-500/40",

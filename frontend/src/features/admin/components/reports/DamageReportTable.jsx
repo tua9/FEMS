@@ -1,3 +1,5 @@
+import { REPORT_STATUS } from '@/constants';
+
 const DamageReportTable = ({
  reports,
  onOpenDetails,
@@ -17,22 +19,22 @@ const DamageReportTable = ({
 
  const getStatusStyle = (status) => {
  switch (status) {
- case 'fixed': return 'bg-emerald-500 shadow-emerald-500/20';
- case 'processing': return 'bg-indigo-500 shadow-indigo-500/20';
- case 'approved': return 'bg-blue-400 shadow-blue-400/20 dark:bg-blue-400/80';
- case 'pending': return 'bg-amber-500 shadow-amber-500/20';
- case 'rejected': return 'bg-red-500 shadow-red-500/20';
+ case REPORT_STATUS.FIXED:       return 'bg-emerald-500 shadow-emerald-500/20';
+ case REPORT_STATUS.PROCESSING:  return 'bg-indigo-500 shadow-indigo-500/20';
+ case REPORT_STATUS.APPROVED:    return 'bg-blue-400 shadow-blue-400/20 dark:bg-blue-400/80';
+ case REPORT_STATUS.PENDING:     return 'bg-amber-500 shadow-amber-500/20';
+ case REPORT_STATUS.REJECTED:    return 'bg-red-500 shadow-red-500/20';
  default: return 'bg-slate-500';
  }
  };
 
  const getStatusLabel = (status) => {
  switch (status) {
- case 'fixed': return 'Resolved';
- case 'processing': return 'In Progress';
- case 'approved': return 'Approved';
- case 'pending': return 'Pending';
- case 'rejected': return 'Rejected';
+ case REPORT_STATUS.FIXED:       return 'Resolved';
+ case REPORT_STATUS.PROCESSING:  return 'In Progress';
+ case REPORT_STATUS.APPROVED:    return 'Approved';
+ case REPORT_STATUS.PENDING:     return 'Pending';
+ case REPORT_STATUS.REJECTED:    return 'Rejected';
  default: return status;
  }
  };
@@ -42,7 +44,7 @@ const DamageReportTable = ({
  const renderActions = (report) => {
  const baseBtnClass = "min-h-[40px] px-3 rounded-[14px] transition-all shadow-sm flex items-center justify-center group/btn font-bold uppercase tracking-wider text-[10px] border-2";
 
- if (report.status === 'pending') {
+ if (report.status === REPORT_STATUS.PENDING) {
  return (
  <div className="flex items-center justify-end gap-2 text-right">
  <button
@@ -63,7 +65,7 @@ const DamageReportTable = ({
  );
  }
 
- if (report.status === 'rejected') {
+ if (report.status === REPORT_STATUS.REJECTED) {
  return (
  <div className="flex items-center justify-end gap-2">
  <button
@@ -77,7 +79,7 @@ const DamageReportTable = ({
  );
  }
 
- if (report.status === 'approved') {
+ if (report.status === REPORT_STATUS.APPROVED) {
  return (
  <div className="flex items-center justify-end gap-2 text-right">
  <button
@@ -91,7 +93,7 @@ const DamageReportTable = ({
  );
  }
 
- if (report.status === 'processing') {
+ if (report.status === REPORT_STATUS.PROCESSING) {
  return (
  <div className="flex items-center justify-end gap-2 text-right">
  <button
