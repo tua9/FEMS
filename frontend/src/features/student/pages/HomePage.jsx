@@ -8,6 +8,7 @@ import { useCurrentSession } from "@/hooks/student/useCurrentSession";
 import CurrentSessionCard from "@/features/student/components/dashboard/CurrentSessionCard";
 import StudentStatCard from "@/features/student/components/dashboard/StudentStatCard";
 import { RecentActivityList } from "@/features/shared/components/dashboard/RecentActivityList";
+import UpcomingDue from "@/features/student/components/dashboard/UpcomingDue";
 
 const HomePage = () => {
   const user = useAuthStore((state) => state.user);
@@ -85,11 +86,13 @@ const HomePage = () => {
         <StudentStatCard />
 
         {/* Dashboard Grid */}
-        <div className="grid grid-cols-1 gap-8">
+        <div className="grid grid-cols-1 gap-8 lg:grid-cols-12 lg:items-start">
           <RecentActivityList
             activities={mappedActivities}
             viewAllRoute="/student/borrow-history"
+            className="lg:col-span-8"
           />
+          <UpcomingDue />
         </div>
       </div>
     </PageShell>

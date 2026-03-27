@@ -16,10 +16,10 @@ const DamageCauseChart = ({ data }) => {
  return (
  <div>
  <p className="text-[11px] font-semibold uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-4">
- Damage Cause Breakdown
+ Phân loại nguyên nhân hư hỏng
  </p>
  {sorted.length === 0 ? (
- <p className="text-xs text-slate-400 text-center py-8">No cause data available</p>
+ <p className="text-xs text-slate-400 text-center py-8">Chưa có dữ liệu nguyên nhân</p>
  ) : (
  <div className="space-y-3">
  {sorted.map((item) => {
