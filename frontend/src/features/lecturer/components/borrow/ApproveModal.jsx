@@ -24,17 +24,17 @@ const ApproveModal = ({ isOpen, onClose, request, onConfirm, submitting }) => {
             <CheckCircle2 className="w-7 h-7 text-emerald-500" />
           </div>
           <div>
-            <p className="text-[0.625rem] font-black uppercase tracking-widest text-[#1E2B58]/50 dark:text-white/40 mb-1">Xác nhận duyệt</p>
-            <h3 className="text-xl font-black text-[#1E2B58] dark:text-white">Duyệt yêu cầu này?</h3>
+            <p className="text-[0.625rem] font-black uppercase tracking-widest text-[#1E2B58]/50 dark:text-white/40 mb-1">Approval Confirmation</p>
+            <h3 className="text-xl font-black text-[#1E2B58] dark:text-white">Approve this request?</h3>
           </div>
         </div>
 
         <div className="bg-white/40 dark:bg-slate-800/40 rounded-[1.25rem] p-4 mb-6 space-y-2 text-sm">
           {[
-            ['Sinh viên', getStudentName(request)],
-            ['Thiết bị', getEquipmentName(request)],
-            ['Lý do', request.note || '—'],
-            ['Gửi lúc', fmtDateTime(request.createdAt)],
+            ['Student', getStudentName(request)],
+            ['Equipment', getEquipmentName(request)],
+            ['Reason', request.note || '—'],
+            ['Submitted', fmtDateTime(request.createdAt)],
           ].map(([label, value]) => (
             <div key={label} className="flex justify-between gap-4">
               <span className="text-[#1E2B58]/60 dark:text-white/50 font-medium shrink-0">{label}</span>
@@ -45,12 +45,12 @@ const ApproveModal = ({ isOpen, onClose, request, onConfirm, submitting }) => {
 
         <div className="mb-5">
           <label className="text-[10px] font-black uppercase tracking-widest text-[#1E2B58]/50 dark:text-white/40 mb-2 block">
-            Tin nhắn gửi sinh viên <span className="normal-case font-medium opacity-70">(tùy chọn)</span>
+            Message to student <span className="normal-case font-medium opacity-70">(optional)</span>
           </label>
           <textarea
             value={approveNote}
             onChange={e => setApproveNote(e.target.value)}
-            placeholder="VD: Vui lòng đến phòng B203 để nhận thiết bị sau tiết 2..."
+            placeholder="Example: Please come to room B203 to receive the equipment after slot 2..."
             rows={3}
             className="w-full rounded-[1rem] border border-[#1E2B58]/10 dark:border-white/10 bg-white/60 dark:bg-white/5 px-4 py-3 text-sm font-medium text-[#1E2B58] dark:text-white placeholder-slate-400 outline-none focus:ring-2 focus:ring-emerald-400/30 resize-none transition-all"
           />
@@ -59,12 +59,12 @@ const ApproveModal = ({ isOpen, onClose, request, onConfirm, submitting }) => {
         <div className="flex gap-3">
           <button onClick={onClose}
             className="flex-1 py-3.5 rounded-[1.25rem] font-bold text-sm border border-[#1E2B58]/20 dark:border-white/20 text-[#1E2B58]/70 dark:text-white/70 hover:bg-[#1E2B58]/5 dark:hover:bg-white/5 transition-all">
-            Hủy
+            Cancel
           </button>
           <button onClick={() => onConfirm(approveNote)} disabled={submitting}
             className="flex-[2] py-3.5 rounded-[1.25rem] font-bold text-sm bg-emerald-500 text-white hover:bg-emerald-600 transition-all shadow-lg shadow-emerald-500/20 flex items-center justify-center gap-2 disabled:opacity-60 active:scale-95">
             {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
-            Xác nhận duyệt
+            Confirm Approval
           </button>
         </div>
       </div>

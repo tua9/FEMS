@@ -75,6 +75,19 @@ export const useAuthStore = create((set, get) => ({
     }
   },
 
+  /** Always GET /auth/me — use when profile must match DB (e.g. student classId populate). */
+  refreshUserProfile: async () => {
+    try {
+      set({ loading: true });
+      const fetched = await authService.fetchUserProfile();
+      set({ user: fetched });
+    } catch {
+      // Silently fail — refreshToken will handle auth errors globally
+    } finally {
+      set({ loading: false });
+    }
+  },
+
   refreshToken: async () => {
     try {
       set({ loading: true });

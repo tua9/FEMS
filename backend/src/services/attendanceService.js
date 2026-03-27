@@ -62,6 +62,11 @@ const teacherCheckIn = async (scheduleId, lecturerId, method = 'manual') => {
     { upsert: true, new: true, runValidators: true },
   )
 
+  // Mark schedule as ongoing so students can see borrowing is unlocked
+  if (schedule.status === 'scheduled') {
+    await Schedule.findByIdAndUpdate(scheduleId, { status: 'ongoing' })
+  }
+
   return record
 }
 
