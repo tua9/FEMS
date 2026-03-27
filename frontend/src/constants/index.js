@@ -13,6 +13,7 @@ export const BORROW_STATUS = Object.freeze({
   RETURNING:   'returning',
   RETURNED:    'returned',
   CANCELLED:   'cancelled',
+  UNRETURNED:  'unreturned',
 });
 
 /**

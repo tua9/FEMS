@@ -150,7 +150,7 @@ const StudentBorrowPage = () => {
   const myActiveByEqId = useMemo(() => {
     const map = {};
     myRequests.forEach(r => {
-      if (['pending', 'approved', 'handed_over', 'returning'].includes(r.status)) {
+      if (['pending', 'approved', 'handed_over', 'returning', 'unreturned'].includes(r.status)) {
         const id = String(r.equipmentId?._id || r.equipmentId);
         map[id] = r;
       }
@@ -161,7 +161,7 @@ const StudentBorrowPage = () => {
   const occupiedByMeIds = useMemo(() => new Set(Object.keys(myActiveByEqId)), [myActiveByEqId]);
 
   const activeRequests = useMemo(
-    () => myRequests.filter(r => ['pending', 'approved', 'handed_over', 'returning'].includes(r.status)),
+    () => myRequests.filter(r => ['pending', 'approved', 'handed_over', 'returning', 'unreturned'].includes(r.status)),
     [myRequests]
   );
 
