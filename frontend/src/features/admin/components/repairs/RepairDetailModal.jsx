@@ -1,14 +1,15 @@
 import React from 'react';
 import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
+import { REPORT_STATUS } from '@/constants';
 
 const STATUS_LABELS = {
- pending: 'Pending',
- approved: 'Approved',
- processing: 'In progress',
- rejected: 'Rejected',
- fixed: 'Completed',
- cancelled: 'Cancelled',
+ [REPORT_STATUS.PENDING]:    'Pending',
+ [REPORT_STATUS.APPROVED]:   'Approved',
+ [REPORT_STATUS.PROCESSING]: 'In progress',
+ [REPORT_STATUS.REJECTED]:   'Rejected',
+ [REPORT_STATUS.FIXED]:      'Completed',
+ [REPORT_STATUS.CANCELLED]:  'Cancelled',
 };
 
 const RepairDetailModal = ({ isOpen, onClose, equipment, reports }) => {

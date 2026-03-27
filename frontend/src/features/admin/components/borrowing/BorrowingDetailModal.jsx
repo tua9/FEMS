@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
+import { BORROW_STATUS } from '@/constants';
 
 // ── Handover Form (Lecturer fills checklist + images before student confirms) ──
 const HandoverFormPanel = ({ onSubmit, onCancel, loading }) => {
@@ -132,19 +133,19 @@ const BorrowingDetailModal = ({
 
   const getStatusStyle = (status) => {
     switch (status) {
-      case 'pending':    return 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 border-amber-200/50';
-      case 'approved':   return 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 border-blue-200/50';
-      case 'handed_over':return 'bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400 border-indigo-200/50';
-      case 'returning':  return 'bg-violet-100 dark:bg-violet-900/30 text-violet-700 dark:text-violet-400 border-violet-200/50';
-      case 'overdue':    return 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 border-red-200/50';
-      case 'returned':   return 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 border-emerald-200/50';
-      case 'rejected':   return 'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400 border-orange-200/50';
-      case 'cancelled':  return 'bg-slate-200 dark:bg-slate-800/50 text-slate-800 dark:text-slate-200 border-slate-300/50';
-      default:           return 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200/50';
+      case BORROW_STATUS.PENDING:     return 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 border-amber-200/50';
+      case BORROW_STATUS.APPROVED:    return 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 border-blue-200/50';
+      case BORROW_STATUS.HANDED_OVER: return 'bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400 border-indigo-200/50';
+      case BORROW_STATUS.RETURNING:   return 'bg-violet-100 dark:bg-violet-900/30 text-violet-700 dark:text-violet-400 border-violet-200/50';
+      case 'overdue':                 return 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 border-red-200/50'; // UI-derived virtual status
+      case BORROW_STATUS.RETURNED:    return 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 border-emerald-200/50';
+      case BORROW_STATUS.REJECTED:    return 'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400 border-orange-200/50';
+      case BORROW_STATUS.CANCELLED:   return 'bg-slate-200 dark:bg-slate-800/50 text-slate-800 dark:text-slate-200 border-slate-300/50';
+      default:                        return 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200/50';
     }
   };
 
-  const isOverdue = record.status === 'overdue' || (record.status === 'handed_over' && new Date(record.expectedReturnDate) < new Date());
+  const isOverdue = record.status === 'overdue' || (record.status === BORROW_STATUS.HANDED_OVER && new Date(record.expectedReturnDate) < new Date()); // 'overdue' là UI-derived virtual status
   const displayStatus = isOverdue ? 'overdue' : record.status;
 
   const isInfrastructure = record.type === 'infrastructure';
@@ -403,7 +404,7 @@ const BorrowingDetailModal = ({
           <div className="flex gap-3 flex-wrap">
 
             {/* pending → approve / reject */}
-            {record.status === 'pending' && (
+            {record.status === BORROW_STATUS.PENDING && (
               <>
                 <button
                   onClick={() => { onApprove?.(record._id); onClose(); }}
@@ -423,7 +424,7 @@ const BorrowingDetailModal = ({
             )}
 
             {/* approved (no handoverInfo yet) → open handover form */}
-            {record.status === 'approved' && !hasHandoverForm && !showHandoverForm && (
+            {record.status === BORROW_STATUS.APPROVED && !hasHandoverForm && !showHandoverForm && (
               <button
                 onClick={() => setShowHandoverForm(true)}
                 className="px-8 py-3 bg-[#1A2B56] text-white rounded-xl font-black text-[10px] uppercase tracking-widest hover:opacity-90 transition-all shadow-lg shadow-blue-900/20 active:scale-95 flex items-center gap-2"
@@ -434,7 +435,7 @@ const BorrowingDetailModal = ({
             )}
 
             {/* approved with handoverForm — waiting for student, show info only */}
-            {record.status === 'approved' && hasHandoverForm && (
+            {record.status === BORROW_STATUS.APPROVED && hasHandoverForm && (
               <span className="px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 border-2 border-amber-100 dark:border-amber-900/30 flex items-center gap-2">
                 <span className="material-symbols-outlined text-[16px]">hourglass_top</span>
                 Chờ sinh viên xác nhận
@@ -442,7 +443,7 @@ const BorrowingDetailModal = ({
             )}
 
             {/* returning → confirm return */}
-            {record.status === 'returning' && (
+            {record.status === BORROW_STATUS.RETURNING && (
               <button
                 onClick={() => { onReturn?.(record._id); onClose(); }}
                 className="px-8 py-3 bg-emerald-600 text-white rounded-xl font-black text-[10px] uppercase tracking-widest hover:opacity-90 transition-all shadow-lg shadow-emerald-900/20 active:scale-95 flex items-center gap-2"

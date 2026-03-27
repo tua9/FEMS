@@ -2,6 +2,7 @@ import React from 'react';
 import { Laptop, LogOut, CheckCircle2, X } from 'lucide-react';
 import BorrowBadge from './BorrowBadge';
 import { fmtDateTime } from './borrowUtils';
+import { BORROW_STATUS } from '@/constants';
 
 const ActiveRequestItem = ({ req, onReturn, onConfirmReceived, onCancel }) => {
   const eqName = req.equipmentId?.name || 'Thiết bị';
@@ -31,7 +32,7 @@ const ActiveRequestItem = ({ req, onReturn, onConfirmReceived, onCancel }) => {
       </div>
       <div className="flex items-center gap-3 shrink-0">
         <BorrowBadge status={req.status} req={req} />
-        {req.status === 'handed_over' && (
+        {req.status === BORROW_STATUS.HANDED_OVER && (
           <button
             onClick={() => onReturn(req)}
             className="px-4 py-2 rounded-xl bg-[#1E2B58] dark:bg-blue-700 text-white font-black text-[10px] uppercase tracking-widest hover:bg-[#2A3B66] transition-all active:scale-95 shadow-md shadow-blue-900/20"
@@ -39,7 +40,7 @@ const ActiveRequestItem = ({ req, onReturn, onConfirmReceived, onCancel }) => {
             Yêu cầu trả thiết bị
           </button>
         )}
-        {req.status === 'approved' && (
+        {req.status === BORROW_STATUS.APPROVED && (
           <button
             onClick={() => onConfirmReceived(req)}
             className="px-4 py-2 rounded-xl bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 font-black text-[10px] uppercase tracking-widest hover:bg-emerald-100 transition-all active:scale-95 border border-emerald-100 dark:border-emerald-900/30"
@@ -47,7 +48,7 @@ const ActiveRequestItem = ({ req, onReturn, onConfirmReceived, onCancel }) => {
             Xác nhận nhận
           </button>
         )}
-        {req.status === 'pending' && (
+        {req.status === BORROW_STATUS.PENDING && (
           <button
             onClick={() => onCancel(req)}
             className="px-4 py-2 rounded-xl bg-red-50 dark:bg-red-900/20 text-red-500 dark:text-red-400 font-black text-[10px] uppercase tracking-widest hover:bg-red-100 transition-all active:scale-95 border border-red-100 dark:border-red-900/30"

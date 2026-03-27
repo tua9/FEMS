@@ -85,6 +85,14 @@ const teacherCheckOut = async (scheduleId, lecturerId) => {
   // Update schedule status to completed so no new device borrows can happen
   await Schedule.findByIdAndUpdate(scheduleId, { status: 'completed' })
 
+  // Trigger early slot end logic to gracefully cancel/mark unreturned
+  try {
+    const { borrowRequestService } = await import('./borrowRequestService.js')
+    await borrowRequestService.autoHandleEndedSessions(scheduleId)
+  } catch (err) {
+    console.error('Failed to trigger autoHandleEndedSessions on checkout:', err)
+  }
+
   return record
 }
 

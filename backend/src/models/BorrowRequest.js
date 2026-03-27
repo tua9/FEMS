@@ -90,7 +90,7 @@ const borrowRequestSchema = new mongoose.Schema(
     // pending/approved → cancelled (auto when slot ends, or manual by borrower)
     status: {
       type: String,
-      enum: ['pending', 'approved', 'rejected', 'handed_over', 'returning', 'returned', 'cancelled'],
+      enum: ['pending', 'approved', 'rejected', 'handed_over', 'returning', 'returned', 'cancelled', 'unreturned'],
       default: 'pending',
     },
 

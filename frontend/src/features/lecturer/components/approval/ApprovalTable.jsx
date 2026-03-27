@@ -1,17 +1,18 @@
 import { CheckCircle2, ChevronLeft, ChevronRight, Clock, XCircle } from 'lucide-react';
 import React from 'react';
+import { BORROW_STATUS } from '@/constants';
 
 // ─── Shared Types (exported so ApprovalCenter can use them) ──────────────────
 
 // ─── Status badge helper ──────────────────────────────────────────────────────
 
 const StatusBadge = ({ status }) => {
- if (status === 'approved') return (
+ if (status === BORROW_STATUS.APPROVED) return (
  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[0.5625rem] font-black uppercase tracking-widest">
  <CheckCircle2 className="w-3 h-3" /> Approved
  </span>
  );
- if (status === 'rejected') return (
+ if (status === BORROW_STATUS.REJECTED) return (
  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-red-500/10 text-red-500 dark:text-red-400 text-[0.5625rem] font-black uppercase tracking-widest">
  <XCircle className="w-3 h-3" /> Rejected
  </span>
@@ -58,7 +59,7 @@ export const ApprovalTable = ({
  <tbody className="divide-y divide-black/5 dark:divide-white/5">
  {items.map((req) => {
  const Icon = req.equipment.icon;
- const isPending = req.status === 'pending';
+ const isPending = req.status === BORROW_STATUS.PENDING;
 
  return (
  <tr key={req.id} className="transition-all duration-200 hover:bg-white/50 dark:hover:bg-white/5 group">

@@ -1,10 +1,12 @@
+import { BORROW_STATUS, EQUIPMENT_STATUS } from '@/constants';
+
 /**
  * Pushes items with 'available' status to the top of the list.
  */
 export const sortEquipmentByAvailability = (items)=> {
  return [...items].sort((a, b) => {
- const aIsAvailable = a.status === "available" && !a.borrowed_by;
- const bIsAvailable = b.status === "available" && !b.borrowed_by;
+ const aIsAvailable = a.status === EQUIPMENT_STATUS.AVAILABLE && !a.borrowed_by;
+ const bIsAvailable = b.status === EQUIPMENT_STATUS.AVAILABLE && !b.borrowed_by;
 
  if (aIsAvailable && !bIsAvailable) return -1;
  if (!aIsAvailable && bIsAvailable) return 1;
@@ -17,7 +19,7 @@ export const sortEquipmentByAvailability = (items)=> {
  */
 export const hasActiveBorrowRequest = (
  equipmentId, myRequests) => {
- const activeStatuses = ["pending", "approved", "handed_over"];
+ const activeStatuses = [BORROW_STATUS.PENDING, BORROW_STATUS.APPROVED, BORROW_STATUS.HANDED_OVER];
 
  return myRequests.find((req) => {
  const reqEqId = typeof req.equipmentId === "object" ? (req.equipmentId)?._id : req.equipmentId;
@@ -59,8 +61,8 @@ export const getDerivedStatus = (
 ) => {
  if (!equipment) return 'Available';
 
- if (equipment.status === 'broken') return 'Broken';
- if (equipment.status === 'maintenance') return 'Maintenance';
+ if (equipment.status === EQUIPMENT_STATUS.BROKEN) return 'Broken';
+ if (equipment.status === EQUIPMENT_STATUS.MAINTENANCE) return 'Maintenance';
 
  return 'Available';
 };
