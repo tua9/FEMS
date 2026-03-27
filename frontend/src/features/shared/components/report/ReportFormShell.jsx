@@ -16,6 +16,7 @@ export const ReportFormShell = ({
  prefillDescription,
  prefillEquipmentId,
  rooms,
+ buildings,
  isSubmitting,
  onQRDetected,
  onSubmit,
@@ -44,6 +45,7 @@ export const ReportFormShell = ({
  onSubmit={onSubmit}
  isSubmitting={isSubmitting}
  rooms={rooms}
+ buildings={buildings}
  />
 
  {children}

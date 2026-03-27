@@ -4,6 +4,7 @@ import { toast } from 'sonner';
 
 import { useReportStore } from '@/stores/useReportStore';
 import { useRoomStore } from '@/stores/useRoomStore';
+import { useBuildingStore } from '@/stores/useBuildingStore';
 import { equipmentService } from '@/services/equipmentService';
 import { uploadImages } from '@/utils/uploadHelper';
 
@@ -38,10 +39,12 @@ export function useReportForm() {
 
  const { createReport } = useReportStore();
  const { rooms, fetchAll: fetchRooms } = useRoomStore();
+ const { buildings, fetchAll: fetchBuildings } = useBuildingStore();
 
  useEffect(() => {
- fetchRooms();
- }, [fetchRooms]);
+    fetchRooms();
+    fetchBuildings();
+ }, [fetchRooms, fetchBuildings]);
 
  // ── Prefill ───────────────────────────────────────────────────────────────
  const [prefillRoomId, setPrefillRoomId] = useState(routeState.prefillRoom ?? '');
@@ -147,6 +150,7 @@ export function useReportForm() {
  prefillEquipmentId,
  qrEquipmentCode,
  rooms,
+ buildings,
  isSubmitting,
  showSuccess,
  reportId,

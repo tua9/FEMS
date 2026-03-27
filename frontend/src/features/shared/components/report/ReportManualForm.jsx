@@ -18,6 +18,7 @@ import {
  CheckCircle2,
 } from "lucide-react";
 import { useEquipmentStore } from "@/stores/useEquipmentStore";
+import { roomService } from "@/services/roomService";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -46,6 +47,7 @@ export const ReportManualForm = ({
  onSubmit,
  isSubmitting = false,
  rooms: roomsProp,
+ buildings: buildingsProp,
 }) => {
  const rooms = Array.isArray(roomsProp) ? roomsProp : [];
  const [category, setCategory] = useState(prefillCategory ?? "equipment");
@@ -57,6 +59,12 @@ export const ReportManualForm = ({
  const [dragOver, setDragOver] = useState(false);
  const [errors, setErrors] = useState({});
  const [selectedBuildingId, setSelectedBuildingId] = useState("");
+ const [buildingSearch, setBuildingSearch] = useState("");
+ const [showBuildingResults, setShowBuildingResults] = useState(false);
+ const [roomSearch, setRoomSearch] = useState("");
+ const [showRoomResults, setShowRoomResults] = useState(false);
+ const [roomsForBuilding, setRoomsForBuilding] = useState([]);
+ const [roomsLoading, setRoomsLoading] = useState(false);
 
  // Equipment selection state
  const [eqSearch, setEqSearch] = useState("");
@@ -80,8 +88,12 @@ export const ReportManualForm = ({
  if (prefillRoomId) {
  setRoomId(prefillRoomId);
  const room = rooms.find(r => r._id === prefillRoomId);
- if (room && room.buildingId) {
- setSelectedBuildingId(typeof room.buildingId === 'string' ? room.buildingId : room.buildingId._id);
+ if (room) {
+ setRoomSearch(room.name || "");
+ if (room.buildingId) {
+ const bId = typeof room.buildingId === 'string' ? room.buildingId : room.buildingId._id;
+ setSelectedBuildingId(bId);
+ }
  }
  }
  }, [prefillRoomId, rooms]);
@@ -102,38 +114,85 @@ export const ReportManualForm = ({
   useEffect(() => {
     if (roomId && rooms.length > 0) {
       const room = rooms.find(r => r._id === roomId);
-      if (room && room.buildingId) {
-        const bId = typeof room.buildingId === 'object' ? room.buildingId._id : room.buildingId;
-        setSelectedBuildingId(prev => (prev !== bId ? bId : prev));
+      if (room) {
+        setRoomSearch(room.name || "");
+        if (room.buildingId) {
+          const bId = typeof room.buildingId === 'object' ? room.buildingId._id : room.buildingId;
+          setSelectedBuildingId(prev => (prev !== bId ? bId : prev));
+        }
       }
     }
   }, [roomId, rooms]);
 
- // Extract unique buildings from rooms
- const buildings = React.useMemo(() => {
- const map = new Map();
- rooms.forEach((room) => {
- if (!room.buildingId) return;
- const id = typeof room.buildingId === 'string' ? room.buildingId : room.buildingId._id;
- const name = typeof room.buildingId === 'string' ? room.buildingId : room.buildingId.name;
- if (!map.has(id)) map.set(id, { id, name });
- });
- return Array.from(map.values()).sort((a, b) =>
- String(a.name ?? "").localeCompare(String(b.name ?? ""), undefined, { sensitivity: "base" })
- );
- }, [rooms]);
+  // Sync building search text when buildingId changes
+  useEffect(() => {
+    if (selectedBuildingId && buildingsProp) {
+      const buildingsList = Array.isArray(buildingsProp) ? buildingsProp : [];
+      const match = buildingsList.find(b => b._id === selectedBuildingId);
+      if (match) setBuildingSearch(match.name || "");
+    } else if (!selectedBuildingId) {
+      setBuildingSearch("");
+    }
+  }, [selectedBuildingId, buildingsProp]);
 
- // Filter rooms by selected building
- const filteredRooms = React.useMemo(() => {
- if (!selectedBuildingId) return [];
- return rooms.filter((room) => {
- if (!room.buildingId) return false;
- const bId = typeof room.buildingId === 'string' ? room.buildingId : room.buildingId._id;
- return bId === selectedBuildingId;
- }).sort((a, b) =>
- String(a.name ?? "").localeCompare(String(b.name ?? ""), undefined, { sensitivity: "base" })
- );
- }, [rooms, selectedBuildingId]);
+  // Fetch rooms for selected building directly from API (avoids race condition with pre-loaded rooms)
+  useEffect(() => {
+    if (!selectedBuildingId) {
+      setRoomsForBuilding([]);
+      return;
+    }
+    let cancelled = false;
+    setRoomsLoading(true);
+    roomService.getByBuildingId(selectedBuildingId)
+      .then(data => {
+        if (cancelled) return;
+        const list = Array.isArray(data) ? data : data?.rooms ?? [];
+        setRoomsForBuilding(Array.isArray(list) ? list : []);
+      })
+      .catch(() => { if (!cancelled) setRoomsForBuilding([]); })
+      .finally(() => { if (!cancelled) setRoomsLoading(false); });
+    return () => { cancelled = true; };
+  }, [selectedBuildingId]);
+
+  // Extract / Map buildings
+  const buildings = React.useMemo(() => {
+    // If buildings are provided via prop, use them
+    if (Array.isArray(buildingsProp) && buildingsProp.length > 0) {
+      return buildingsProp.map(b => ({ id: b._id, name: b.name }));
+    }
+
+    // Fallback: derive from rooms
+    const map = new Map();
+    rooms.forEach((room) => {
+      if (!room.buildingId) return;
+      const id = typeof room.buildingId === 'string' ? room.buildingId : room.buildingId._id;
+      const name = typeof room.buildingId === 'string' ? room.buildingId : room.buildingId.name;
+      if (!map.has(id)) map.set(id, { id, name });
+    });
+    return Array.from(map.values()).sort((a, b) =>
+      String(a.name ?? "").localeCompare(String(b.name ?? ""), undefined, { sensitivity: "base" })
+    );
+  }, [rooms, buildingsProp]);
+
+  // Filter buildings based on search
+  const filteredBuildingsList = useMemo(() => {
+    if (!buildingSearch) return buildings;
+    const term = buildingSearch.toUpperCase();
+    return buildings.filter(b => (b.name || "").toUpperCase().includes(term));
+  }, [buildings, buildingSearch]);
+
+  // Filter rooms fetched for selected building by search text
+  const filteredRooms = React.useMemo(() => {
+    if (!selectedBuildingId) return [];
+    let list = roomsForBuilding;
+    if (roomSearch) {
+      const term = roomSearch.toUpperCase();
+      list = list.filter(r => (r.name || "").toUpperCase().includes(term));
+    }
+    return list.sort((a, b) =>
+      String(a.name ?? "").localeCompare(String(b.name ?? ""), undefined, { sensitivity: "base" })
+    );
+  }, [roomsForBuilding, selectedBuildingId, roomSearch]);
 
  // Filter equipments based on search
  const filteredEquipments = useMemo(() => {
@@ -151,10 +210,19 @@ export const ReportManualForm = ({
  setShowEqResults(false);
  setErrors(prev => ({ ...prev, equipmentCode: undefined }));
  
- // Auto populate room_id if equipment has one
- if (eq.room_id) {
- const rid = typeof eq.room_id === 'object' ? eq.room_id._id : eq.room_id;
+ // Auto populate room_id if equipment has one (handle both camelCase roomId and snake_case room_id)
+ const rm = eq.roomId ?? eq.room_id;
+ if (rm) {
+ const rid = typeof rm === 'object' ? rm._id : rm;
  setRoomId(rid);
+      const room = rooms.find(r => r._id === rid);
+      if (room) {
+        setRoomSearch(room.name || "");
+        if (room.buildingId) {
+          const bId = typeof room.buildingId === 'object' ? room.buildingId._id : room.buildingId;
+          setSelectedBuildingId(bId);
+        }
+      }
  }
  };
 
@@ -249,6 +317,8 @@ export const ReportManualForm = ({
                   // Clear room and building to avoid stale state from previous category
                   setRoomId("");
                   setSelectedBuildingId("");
+                  setBuildingSearch("");
+                  setRoomSearch("");
                 }}
  />
  <div
@@ -318,7 +388,7 @@ export const ReportManualForm = ({
  </div>
  <div className="text-right">
  <p className="text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest italic opacity-60">
- Room: {(eq.room_id)?.name || "N/A"}
+ Room: {(eq.roomId ?? eq.room_id)?.name || "N/A"}
  </p>
  </div>
  </button>
@@ -339,62 +409,136 @@ export const ReportManualForm = ({
  </p>
  )}
  </div>
- ) : (
- <div>
- <h3 className="mb-[1rem] text-[0.625rem] font-black tracking-[0.2em] text-slate-500 uppercase dark:text-slate-400 opacity-60">
- 2. Incident Location
- </h3>
- <div className="grid grid-cols-1 sm:grid-cols-2 gap-[1rem]">
- <div className="relative">
- <div className="pointer-events-none absolute inset-y-0 left-[1.25rem] flex items-center">
- <MapPin className={`h-[1.25rem] w-[1.25rem] ${errors.roomId && !selectedBuildingId ? "text-red-400" : "text-slate-400"}`} />
- </div>
- <select
- value={selectedBuildingId}
- onChange={(e) => {
- setSelectedBuildingId(e.target.value);
- setRoomId("");
- }}
- className={`text-[#1E2B58] h-[3.5rem] w-full appearance-none rounded-[1.5rem] border bg-white/40 pl-[3rem] pr-[3rem] font-bold shadow-sm outline-none transition-all cursor-pointer focus:ring-2 focus:border-[#1E2B58]/30 dark:bg-white/5 dark:text-white ${errors.roomId && !selectedBuildingId
- ? "border-red-400/60 focus:ring-red-400/20"
- : "border-white/50 focus:ring-[#1E2B58]/10 dark:border-white/10"
- }`}
- >
- <option value="">Select Building</option>
- {buildings.map((b) => (
- <option key={b.id} value={b.id}>{b.name}</option>
- ))}
- </select>
- <div className="pointer-events-none absolute inset-y-0 right-[1.25rem] flex items-center">
- <ChevronDown className="h-[1.25rem] w-[1.25rem] text-slate-400" />
- </div>
- </div>
- <div className="relative">
- <select
- value={roomId}
- onChange={(e) => {
- setRoomId(e.target.value);
- setErrors((p) => ({ ...p, roomId: undefined }));
- }}
- disabled={!selectedBuildingId}
- className={`text-[#1E2B58] h-[3.5rem] w-full appearance-none rounded-[1.5rem] border bg-white/40 pl-[1.5rem] pr-[3rem] font-bold shadow-sm outline-none transition-all cursor-pointer focus:ring-2 focus:border-[#1E2B58]/30 dark:bg-white/5 dark:text-white disabled:opacity-50 disabled:cursor-not-allowed ${errors.roomId
- ? "border-red-400/60 focus:ring-red-400/20"
- : "border-white/50 focus:ring-[#1E2B58]/10 dark:border-white/10"
- }`}
- >
- <option value="">{selectedBuildingId ? "Select Room" : "Select Building First"}</option>
- {filteredRooms.map((room) => (
- <option key={room._id} value={room._id}>{room.name}</option>
- ))}
- </select>
- <div className="pointer-events-none absolute inset-y-0 right-[1.25rem] flex items-center">
- <ChevronDown className="h-[1.25rem] w-[1.25rem] text-slate-400" />
- </div>
- </div>
- </div>
- {errors.roomId && <p className="mt-2 pl-4 text-[10px] font-black text-red-500 dark:text-red-400 uppercase tracking-widest">{errors.roomId}</p>}
- </div>
- )}
+                  ) : (
+                <div>
+                  <h3 className="mb-[1rem] text-[0.625rem] font-black tracking-[0.2em] text-slate-500 uppercase dark:text-slate-400 opacity-60">
+                    2. Incident Location
+                  </h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-[1rem]">
+                    {/* Building Search */}
+                    <div className="relative">
+                      <div className="pointer-events-none absolute inset-y-0 left-[1.25rem] flex items-center">
+                        <MapPin className={`h-[1.25rem] w-[1.25rem] ${errors.roomId && !selectedBuildingId ? "text-red-400" : "text-slate-400"}`} />
+                      </div>
+                      <input
+                        type="text"
+                        placeholder="Search Building..."
+                        value={buildingSearch}
+                        onChange={(e) => {
+                          setBuildingSearch(e.target.value);
+                          setShowBuildingResults(true);
+                          if (selectedBuildingId) {
+                            setSelectedBuildingId("");
+                            setRoomId("");
+                            setRoomSearch("");
+                          }
+                        }}
+                        onFocus={() => setShowBuildingResults(true)}
+                        onBlur={() => setTimeout(() => setShowBuildingResults(false), 150)}
+                        className={`text-[#1E2B58] h-[3.5rem] w-full rounded-[1.5rem] border bg-white/40 pl-[3.25rem] pr-[1.5rem] font-bold shadow-sm outline-none transition-all placeholder:text-slate-400 focus:ring-2 dark:bg-white/5 dark:text-white ${errors.roomId && !selectedBuildingId
+                          ? "border-red-400/60 focus:ring-red-400/20"
+                          : "border-white/50 focus:ring-[#1E2B58]/10 dark:border-white/10"
+                          }`}
+                      />
+
+                      {selectedBuildingId && (
+                        <div className="absolute inset-y-0 right-[1.25rem] flex items-center">
+                          <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                        </div>
+                      )}
+
+                      {showBuildingResults && !selectedBuildingId && (
+                        <div className="absolute top-[110%] left-0 right-0 z-50 max-h-[15rem] overflow-y-auto rounded-3xl border border-white/50 bg-white shadow-2xl backdrop-blur-xl dark:border-white/10 dark:bg-slate-800 no-scrollbar animate-in zoom-in-95 duration-200">
+                          {filteredBuildingsList.length > 0 ? (
+                            filteredBuildingsList.map((b) => (
+                              <button
+                                key={b.id}
+                                type="button"
+                                onClick={() => {
+                                  setSelectedBuildingId(b.id);
+                                  setBuildingSearch(b.name);
+                                  setShowBuildingResults(false);
+                                  setRoomId("");
+                                  setRoomSearch("");
+                                }}
+                                className="flex w-full items-center px-6 py-4 transition-colors hover:bg-slate-50 dark:hover:bg-white/5 border-b border-black/5 dark:border-white/5 last:border-0"
+                              >
+                                <p className="text-sm font-black text-[#1E2B58] dark:text-white uppercase tracking-tight">{b.name}</p>
+                              </button>
+                            ))
+                          ) : (
+                            <div className="px-6 py-4 text-center">
+                              <p className="text-xs font-bold text-slate-400 uppercase tracking-widest italic">No matching building</p>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Room Search */}
+                    <div className="relative">
+                      <div className="pointer-events-none absolute inset-y-0 left-[1.25rem] flex items-center">
+                        <ChevronDown className={`h-[1.25rem] w-[1.25rem] ${errors.roomId ? "text-red-400" : "text-slate-400"}`} />
+                      </div>
+                      <input
+                        type="text"
+                        placeholder={selectedBuildingId ? "Search Room..." : "Select Building First"}
+                        value={roomSearch}
+                        disabled={!selectedBuildingId}
+                        onChange={(e) => {
+                          setRoomSearch(e.target.value);
+                          setShowRoomResults(true);
+                          if (roomId) setRoomId("");
+                        }}
+                        onFocus={() => setShowRoomResults(true)}
+                        onBlur={() => setTimeout(() => setShowRoomResults(false), 150)}
+                        className={`text-[#1E2B58] h-[3.5rem] w-full rounded-[1.5rem] border bg-white/40 pl-[3.25rem] pr-[1.5rem] font-bold shadow-sm outline-none transition-all placeholder:text-slate-400 focus:ring-2 dark:bg-white/5 dark:text-white disabled:opacity-50 disabled:cursor-not-allowed ${errors.roomId
+                          ? "border-red-400/60 focus:ring-red-400/20"
+                          : "border-white/50 focus:ring-[#1E2B58]/10 dark:border-white/10"
+                          }`}
+                      />
+
+                      {roomId && (
+                        <div className="absolute inset-y-0 right-[1.25rem] flex items-center">
+                          <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                        </div>
+                      )}
+
+                      {showRoomResults && !roomId && selectedBuildingId && (
+                        <div className="absolute top-[110%] left-0 right-0 z-50 max-h-[15rem] overflow-y-auto rounded-3xl border border-white/50 bg-white shadow-2xl backdrop-blur-xl dark:border-white/10 dark:bg-slate-800 no-scrollbar animate-in zoom-in-95 duration-200">
+                          {roomsLoading ? (
+                            <div className="flex items-center justify-center gap-2 px-6 py-4">
+                              <Loader2 className="h-4 w-4 animate-spin text-slate-400" />
+                              <p className="text-xs font-bold text-slate-400 uppercase tracking-widest italic">Loading rooms…</p>
+                            </div>
+                          ) : filteredRooms.length > 0 ? (
+                            filteredRooms.map((room) => (
+                              <button
+                                key={room._id}
+                                type="button"
+                                onClick={() => {
+                                  setRoomId(room._id);
+                                  setRoomSearch(room.name);
+                                  setShowRoomResults(false);
+                                  setErrors((p) => ({ ...p, roomId: undefined }));
+                                }}
+                                className="flex w-full items-center px-6 py-4 transition-colors hover:bg-slate-50 dark:hover:bg-white/5 border-b border-black/5 dark:border-white/5 last:border-0"
+                              >
+                                <p className="text-sm font-black text-[#1E2B58] dark:text-white uppercase tracking-tight">{room.name}</p>
+                              </button>
+                            ))
+                          ) : (
+                            <div className="px-6 py-4 text-center">
+                              <p className="text-xs font-bold text-slate-400 uppercase tracking-widest italic">No matching room</p>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  {errors.roomId && <p className="mt-2 pl-4 text-[10px] font-black text-red-500 dark:text-red-400 uppercase tracking-widest">{errors.roomId}</p>}
+                </div>
+              )}
  </div>
 
  {/* 3. Severity ──────────────────────────────────────────────────── */}

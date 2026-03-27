@@ -7,7 +7,7 @@ import { useAuthStore } from "@/stores/useAuthStore";
 import { RecentActivityList } from "@/features/shared/components/dashboard/RecentActivityList";
 import { scheduleService } from "@/services/scheduleService";
 import { attendanceService } from "@/services/attendanceService";
-import { getTodayVN } from "@/utils/dateUtils";
+import { getTodayVN, getSlotTimeStatus } from "@/utils/dateUtils";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Helpers
@@ -170,6 +170,7 @@ const LecturerDashboard = () => {
   const [checkInStatus, setCheckInStatus] = useState(null);
   const [checkInLoading, setCheckInLoading] = useState(false);
   const [checkingIn, setCheckingIn] = useState(false);
+  const [nowTick, setNowTick] = useState(Date.now());
 
   // ── Load activities ────────────────────────────────────────────────────────
   useEffect(() => {
@@ -196,23 +197,40 @@ const LecturerDashboard = () => {
   // ── Derive current/active session (ongoing first, then next upcoming) ──────
   const activeSchedule = useMemo(() => {
     if (!schedules.length) return null;
-    const now = new Date();
     
-    // First, try to find an ongoing session (or one that should be ongoing by time and isn't completed yet)
-    const ongoing = schedules.find(s => s.status === 'ongoing' || (new Date(s.startAt) <= now && new Date(s.endAt) >= now && s.status !== 'completed'));
+    // 1. Ongoing: current time is within [startAt, endAt] AND not completed
+    const ongoing = schedules.find(s => 
+      s.status !== 'completed' && 
+      getSlotTimeStatus(s.startAt, s.endAt) === 'ongoing'
+    );
     if (ongoing) return ongoing;
     
-    // Next, try to find the next upcoming session
-    const upcoming = schedules.find(s => new Date(s.startAt) > now && s.status !== 'completed');
-    return upcoming || null;
-  }, [schedules]);
+    // 2. Upcoming: starts in the future AND not completed
+    const upcoming = schedules.find(s => 
+      s.status !== 'completed' && 
+      getSlotTimeStatus(s.startAt, s.endAt) === 'upcoming'
+    );
+    if (upcoming) return upcoming;
+
+    // 3. Fallback: Recently ended session of today (so lecturer can still checkout)
+    const recentlyEnded = [...schedules]
+      .filter(s => getSlotTimeStatus(s.startAt, s.endAt) === 'ended')
+      .sort((a,b) => new Date(b.endAt) - new Date(a.endAt))[0];
+
+    return recentlyEnded || null;
+  }, [schedules, nowTick]);
 
   const isSessionOngoing = useMemo(() => {
     if (!activeSchedule) return false;
     if (activeSchedule.status === 'completed') return false;
-    const now = new Date();
-    return new Date(activeSchedule.startAt) <= now && new Date(activeSchedule.endAt) >= now;
-  }, [activeSchedule]);
+    return getSlotTimeStatus(activeSchedule.startAt, activeSchedule.endAt) === 'ongoing';
+  }, [activeSchedule, nowTick]);
+
+  // ── Tick & Auto-Refresh ────────────────────────────────────────────────────
+  useEffect(() => {
+    const id = setInterval(() => setNowTick(Date.now()), 30_000);
+    return () => clearInterval(id);
+  }, []);
 
   // ── Load check-in status once session is known ─────────────────────────────
   useEffect(() => {
@@ -239,6 +257,26 @@ const LecturerDashboard = () => {
   }, [activeSchedule]);
 
   const isCheckedIn = checkInStatus?.checkedIn === true;
+
+  // ── Checkout Reminder ──────────────────────────────────────────────────────
+  useEffect(() => {
+    if (activeSchedule && isCheckedIn && getSlotTimeStatus(activeSchedule.startAt, activeSchedule.endAt) === 'ended' && activeSchedule.status !== 'completed') {
+      const timer = setTimeout(() => {
+        toast.warning(
+          `Your session "${activeSchedule.title}" has ended. Please remember to end the session.`,
+          { id: 'checkout-reminder', duration: 10000 }
+        );
+      }, 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [activeSchedule, isCheckedIn, nowTick]);
+
+  const isCheckedInUI = useMemo(() => {
+    if (!activeSchedule) return false;
+    // Session is considered "Active" only if checked in AND time hasn't passed long ago
+    // If time has passed, we'll still show Session Active but maybe with a warning in management
+    return isCheckedIn;
+  }, [activeSchedule, isCheckedIn]);
 
   // ── Check-in handler ───────────────────────────────────────────────────────
   const handleCheckIn = async () => {
@@ -279,7 +317,7 @@ const LecturerDashboard = () => {
         ) : activeSchedule ? (
           <SessionCard
             schedule={activeSchedule}
-            isCheckedIn={isCheckedIn}
+            isCheckedIn={isCheckedInUI}
             isSessionOngoing={isSessionOngoing}
             isActionLoading={checkInLoading || checkingIn}
             onCheckIn={handleCheckIn}

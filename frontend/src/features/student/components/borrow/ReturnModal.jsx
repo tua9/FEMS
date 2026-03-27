@@ -4,16 +4,16 @@ import { X, LogOut, Package, CheckCircle2, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 
 const ReturnModal = ({ isOpen, onClose, target, onConfirm, submitting }) => {
-  const [returnNote, setReturnNote] = useState('');
-  const [returnChecklist, setReturnChecklist] = useState({ appearance: false, functioning: false, accessories: false });
+  const [returnNote, setReturnNote] = useState('Muốn trả thiết bị');
+  const [returnChecklist, setReturnChecklist] = useState({ appearance: true, functioning: true, accessories: true });
   const [returnFiles, setReturnFiles] = useState([]);
   const [returnPreviews, setReturnPreviews] = useState([]);
   const fileInputRef = useRef(null);
 
   useEffect(() => {
     if (!isOpen) {
-      setReturnNote('');
-      setReturnChecklist({ appearance: false, functioning: false, accessories: false });
+      setReturnNote('Muốn trả thiết bị');
+      setReturnChecklist({ appearance: true, functioning: true, accessories: true });
       setReturnFiles([]);
       returnPreviews.forEach(url => URL.revokeObjectURL(url));
       setReturnPreviews([]);

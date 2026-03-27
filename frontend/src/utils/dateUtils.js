@@ -64,7 +64,36 @@ export function getNowLocalDateTime() {
   return fmt.format(now).replace(' ', 'T');
 }
 
-// ─── Helpers hiển thị ─────────────────────────────────────────────────────────
+/**
+ * So sánh một slot học với thời gian hiện tại (theo giờ VN).
+ * Trả về 'upcoming', 'ongoing', hoặc 'ended'.
+ */
+export function getSlotTimeStatus(startAt, endAt) {
+  if (!startAt || !endAt) return 'ended';
+  
+  // Lấy thời gian hiện tại theo "YYYY-MM-DDTHH:mm" (giờ VN)
+  const nowVN = getNowLocalDateTime();
+  
+  // Format startAt và endAt về cùng dạng "YYYY-MM-DDTHH:mm" để so sánh chuỗi (an toàn nhất)
+  // Lưu ý: data từ backend có thể là ISO (có Z) hoặc local string. 
+  // Chúng ta sẽ parse qua Date rồi format lại theo giờ VN để đồng nhất.
+  const format = (d) => {
+    const dateObj = new Date(d);
+    const fmt = new Intl.DateTimeFormat('sv-SE', {
+      timeZone: VN_TZ,
+      year: 'numeric', month: '2-digit', day: '2-digit',
+      hour: '2-digit', minute: '2-digit',
+    });
+    return fmt.format(dateObj).replace(' ', 'T');
+  };
+
+  const startVN = format(startAt);
+  const endVN = format(endAt);
+
+  if (nowVN < startVN) return 'upcoming';
+  if (nowVN > endVN) return 'ended';
+  return 'ongoing';
+}
 
 /**
  * Format ngày hiển thị dạng "dd/MM/yyyy" theo giờ Việt Nam.
