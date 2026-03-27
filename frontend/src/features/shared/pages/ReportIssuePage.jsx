@@ -20,6 +20,13 @@ export const ReportIssuePage = () => {
  showSuccess, reportId, reportSubject, reportDate,
  handleQRDetected, handleFormSubmit,
  handleSubmitAnother, closeSuccess,
+
+ category, setCategory,
+ roomId, setRoomId,
+ equipmentId, setEquipmentId,
+ description, setDescription,
+ files, setFiles,
+ resetFileInputRef,
  } = useReportForm();
 
  return (
@@ -36,6 +43,18 @@ export const ReportIssuePage = () => {
  isSubmitting={isSubmitting}
  onQRDetected={handleQRDetected}
  onSubmit={handleFormSubmit}
+
+ category={category}
+ setCategory={setCategory}
+ roomId={roomId}
+ setRoomId={setRoomId}
+ equipmentId={equipmentId}
+ setEquipmentId={setEquipmentId}
+ description={description}
+ setDescription={setDescription}
+ files={files}
+ setFiles={setFiles}
+ resetFileInputRef={resetFileInputRef}
  >
  <RecentReports />
  </ReportFormShell>

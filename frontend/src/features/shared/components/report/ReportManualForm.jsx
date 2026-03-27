@@ -27,14 +27,6 @@ import { roomService } from "@/services/roomService";
 const CATEGORIES = [
  { id: "equipment", icon: Monitor, label: "Equipment" },
  { id: "infrastructure", icon: Armchair, label: "Infrastructure" },
- { id: "other", icon: MoreHorizontal, label: "Other" },
-];
-
-const SEVERITIES = [
- { id: 'low', icon: Info, label: 'Low', colorClass: 'text-blue-500', bgActive: 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800' },
- { id: 'medium', icon: AlertTriangle, label: 'Medium', colorClass: 'text-yellow-500', bgActive: 'bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800' },
- { id: 'high', icon: Flame, label: 'High', colorClass: 'text-orange-500', bgActive: 'bg-orange-50 dark:bg-orange-900/20 border-orange-200 dark:border-orange-800' },
- { id: 'critical', icon: AlertOctagon, label: 'Critical', colorClass: 'text-red-500', bgActive: 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800' },
 ];
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -48,14 +40,21 @@ export const ReportManualForm = ({
  isSubmitting = false,
  rooms: roomsProp,
  buildings: buildingsProp,
+ // Controlled state from hook
+ category,
+ setCategory,
+ roomId,
+ setRoomId,
+ equipmentId,
+ setEquipmentId,
+ description,
+ setDescription,
+ files,
+ setFiles,
+ onResetFileInput,
 }) => {
  const rooms = Array.isArray(roomsProp) ? roomsProp : [];
- const [category, setCategory] = useState(prefillCategory ?? "equipment");
- const [roomId, setRoomId] = useState(prefillRoomId ?? "");
- const [equipmentId, setEquipmentId] = useState(prefillEquipmentId ?? "");
- const [description, setDescription] = useState(prefillDescription ?? "");
  const [severity, setSeverity] = useState("medium");
- const [files, setFiles] = useState([]);
  const [dragOver, setDragOver] = useState(false);
  const [errors, setErrors] = useState({});
  const [selectedBuildingId, setSelectedBuildingId] = useState("");
@@ -75,14 +74,22 @@ export const ReportManualForm = ({
 
  const fileInputRef = useRef(null);
 
+ // Let hook clear the actual DOM file input value
+ useEffect(() => {
+ if (!onResetFileInput) return;
+ onResetFileInput.current = () => {
+ if (fileInputRef.current) fileInputRef.current.value = "";
+ };
+ }, [onResetFileInput]);
+
  useEffect(() => {
  fetchEquipments();
  }, [fetchEquipments]);
 
- // Sync if props change (from QR scan)
+ // Sync from prefill (QR scan)
  useEffect(() => {
  if (prefillCategory) setCategory(prefillCategory);
- }, [prefillCategory]);
+ }, [prefillCategory, setCategory]);
 
  useEffect(() => {
  if (prefillRoomId) {
@@ -96,7 +103,7 @@ export const ReportManualForm = ({
  }
  }
  }
- }, [prefillRoomId, rooms]);
+ }, [prefillRoomId, rooms, setRoomId]);
 
  useEffect(() => {
  if (prefillEquipmentId) {
@@ -104,95 +111,103 @@ export const ReportManualForm = ({
  const eq = equipments.find((e) => String(e._id) === String(prefillEquipmentId));
  if (eq) setEqSearch(eq.code || eq.name || "");
  }
- }, [prefillEquipmentId, equipments]);
+ }, [prefillEquipmentId, equipments, setEquipmentId]);
 
  useEffect(() => {
  if (prefillDescription) setDescription(prefillDescription);
- }, [prefillDescription]);
+ }, [prefillDescription, setDescription]);
 
-  // Sync selectedBuildingId whenever roomId is set (from prefill or equipment resolve)
-  useEffect(() => {
-    if (roomId && rooms.length > 0) {
-      const room = rooms.find(r => r._id === roomId);
-      if (room) {
-        setRoomSearch(room.name || "");
-        if (room.buildingId) {
-          const bId = typeof room.buildingId === 'object' ? room.buildingId._id : room.buildingId;
-          setSelectedBuildingId(prev => (prev !== bId ? bId : prev));
-        }
-      }
-    }
-  }, [roomId, rooms]);
+ // When category changes, wipe dependent selections for controlled values
+ useEffect(() => {
+ if (category !== 'equipment') {
+ setEquipmentId("");
+ setEqSearch("");
+ }
+ }, [category, setEquipmentId]);
 
-  // Sync building search text when buildingId changes
-  useEffect(() => {
-    if (selectedBuildingId && buildingsProp) {
-      const buildingsList = Array.isArray(buildingsProp) ? buildingsProp : [];
-      const match = buildingsList.find(b => b._id === selectedBuildingId);
-      if (match) setBuildingSearch(match.name || "");
-    } else if (!selectedBuildingId) {
-      setBuildingSearch("");
-    }
-  }, [selectedBuildingId, buildingsProp]);
+ // Sync selectedBuildingId whenever roomId is set (from prefill or equipment resolve)
+ useEffect(() => {
+ if (roomId && rooms.length > 0) {
+ const room = rooms.find(r => r._id === roomId);
+ if (room) {
+ setRoomSearch(room.name || "");
+ if (room.buildingId) {
+ const bId = typeof room.buildingId === 'object' ? room.buildingId._id : room.buildingId;
+ setSelectedBuildingId(prev => (prev !== bId ? bId : prev));
+ }
+ }
+ }
+ }, [roomId, rooms]);
 
-  // Fetch rooms for selected building directly from API (avoids race condition with pre-loaded rooms)
-  useEffect(() => {
-    if (!selectedBuildingId) {
-      setRoomsForBuilding([]);
-      return;
-    }
-    let cancelled = false;
-    setRoomsLoading(true);
-    roomService.getByBuildingId(selectedBuildingId)
-      .then(data => {
-        if (cancelled) return;
-        const list = Array.isArray(data) ? data : data?.rooms ?? [];
-        setRoomsForBuilding(Array.isArray(list) ? list : []);
-      })
-      .catch(() => { if (!cancelled) setRoomsForBuilding([]); })
-      .finally(() => { if (!cancelled) setRoomsLoading(false); });
-    return () => { cancelled = true; };
-  }, [selectedBuildingId]);
+ // Sync building search text when buildingId changes
+ useEffect(() => {
+ if (selectedBuildingId && buildingsProp) {
+ const buildingsList = Array.isArray(buildingsProp) ? buildingsProp : [];
+ const match = buildingsList.find(b => b._id === selectedBuildingId);
+ if (match) setBuildingSearch(match.name || "");
+ } else if (!selectedBuildingId) {
+ setBuildingSearch("");
+ }
+ }, [selectedBuildingId, buildingsProp]);
 
-  // Extract / Map buildings
-  const buildings = React.useMemo(() => {
-    // If buildings are provided via prop, use them
-    if (Array.isArray(buildingsProp) && buildingsProp.length > 0) {
-      return buildingsProp.map(b => ({ id: b._id, name: b.name }));
-    }
+ // Fetch rooms for selected building directly from API (avoids race condition with pre-loaded rooms)
+ useEffect(() => {
+ if (!selectedBuildingId) {
+ setRoomsForBuilding([]);
+ return;
+ }
+ let cancelled = false;
+ setRoomsLoading(true);
+ roomService.getByBuildingId(selectedBuildingId)
+ .then(data => {
+ if (cancelled) return;
+ const list = Array.isArray(data) ? data : data?.rooms ?? [];
+ setRoomsForBuilding(Array.isArray(list) ? list : []);
+ })
+ .catch(() => { if (!cancelled) setRoomsForBuilding([]); })
+ .finally(() => { if (!cancelled) setRoomsLoading(false); });
+ return () => { cancelled = true; };
+ }, [selectedBuildingId]);
 
-    // Fallback: derive from rooms
-    const map = new Map();
-    rooms.forEach((room) => {
-      if (!room.buildingId) return;
-      const id = typeof room.buildingId === 'string' ? room.buildingId : room.buildingId._id;
-      const name = typeof room.buildingId === 'string' ? room.buildingId : room.buildingId.name;
-      if (!map.has(id)) map.set(id, { id, name });
-    });
-    return Array.from(map.values()).sort((a, b) =>
-      String(a.name ?? "").localeCompare(String(b.name ?? ""), undefined, { sensitivity: "base" })
-    );
-  }, [rooms, buildingsProp]);
+ // Extract / Map buildings
+ const buildings = React.useMemo(() => {
+ // If buildings are provided via prop, use them
+ if (Array.isArray(buildingsProp) && buildingsProp.length > 0) {
+ return buildingsProp.map(b => ({ id: b._id, name: b.name }));
+ }
 
-  // Filter buildings based on search
-  const filteredBuildingsList = useMemo(() => {
-    if (!buildingSearch) return buildings;
-    const term = buildingSearch.toUpperCase();
-    return buildings.filter(b => (b.name || "").toUpperCase().includes(term));
-  }, [buildings, buildingSearch]);
+ // Fallback: derive from rooms
+ const map = new Map();
+ rooms.forEach((room) => {
+ if (!room.buildingId) return;
+ const id = typeof room.buildingId === 'string' ? room.buildingId : room.buildingId._id;
+ const name = typeof room.buildingId === 'string' ? room.buildingId : room.buildingId.name;
+ if (!map.has(id)) map.set(id, { id, name });
+ });
+ return Array.from(map.values()).sort((a, b) =>
+ String(a.name ?? "").localeCompare(String(b.name ?? ""), undefined, { sensitivity: "base" })
+ );
+ }, [rooms, buildingsProp]);
 
-  // Filter rooms fetched for selected building by search text
-  const filteredRooms = React.useMemo(() => {
-    if (!selectedBuildingId) return [];
-    let list = roomsForBuilding;
-    if (roomSearch) {
-      const term = roomSearch.toUpperCase();
-      list = list.filter(r => (r.name || "").toUpperCase().includes(term));
-    }
-    return list.sort((a, b) =>
-      String(a.name ?? "").localeCompare(String(b.name ?? ""), undefined, { sensitivity: "base" })
-    );
-  }, [roomsForBuilding, selectedBuildingId, roomSearch]);
+ // Filter buildings based on search
+ const filteredBuildingsList = useMemo(() => {
+ if (!buildingSearch) return buildings;
+ const term = buildingSearch.toUpperCase();
+ return buildings.filter(b => (b.name || "").toUpperCase().includes(term));
+ }, [buildings, buildingSearch]);
+
+ // Filter rooms fetched for selected building by search text
+ const filteredRooms = React.useMemo(() => {
+ if (!selectedBuildingId) return [];
+ let list = roomsForBuilding;
+ if (roomSearch) {
+ const term = roomSearch.toUpperCase();
+ list = list.filter(r => (r.name || "").toUpperCase().includes(term));
+ }
+ return list.sort((a, b) =>
+ String(a.name ?? "").localeCompare(String(b.name ?? ""), undefined, { sensitivity: "base" })
+ );
+ }, [roomsForBuilding, selectedBuildingId, roomSearch]);
 
  // Filter equipments based on search
  const filteredEquipments = useMemo(() => {
@@ -239,12 +254,18 @@ export const ReportManualForm = ({
  setErrors(prev => ({ ...prev, files: undefined }));
  }, [files]);
 
- const removeFile = (index) => setFiles(prev => prev.filter((_, i) => i !== index));
+ const removeFile = (index) => {
+ setFiles(prev => prev.filter((_, i) => i !== index));
+ // If last file removed, clear native input so same file can be selected again
+ if (files.length === 1 && fileInputRef.current) fileInputRef.current.value = "";
+ };
 
+ // Ensure drag-and-drop upload doesn't crash if a file is dropped.
  const handleDrop = (e) => {
  e.preventDefault();
  setDragOver(false);
- addFiles(e.dataTransfer.files);
+ const dropped = e.dataTransfer?.files;
+ if (dropped && dropped.length) addFiles(dropped);
  };
 
  // ── Validation + submit ────────────────────────────────────────────────────
@@ -267,19 +288,23 @@ export const ReportManualForm = ({
 
  if (description.length < 10) newErrors.description = "Description must be at least 10 characters.";
  if (description.length > 200) newErrors.description = "Description cannot exceed 200 characters.";
- 
+
+ // Evidence is required
+ if (!files || files.length < 1) newErrors.files = "Please upload at least 1 evidence image.";
+
  if (Object.keys(newErrors).length > 0) {
  setErrors(newErrors);
  return;
  }
  setErrors({});
 
- const formData= {
+ const formData = {
  category,
  room_id: roomId,
  description,
  files,
- severity
+ // UI removed severity selection; backend still expects a value
+ severity: "medium",
  };
  if (equipmentId) formData.equipment_id = equipmentId;
 
@@ -542,42 +567,12 @@ export const ReportManualForm = ({
  </div>
 
  {/* 3. Severity ──────────────────────────────────────────────────── */}
- <div>
- <h3 className="mb-[1rem] text-[0.625rem] font-black tracking-[0.2em] text-slate-500 uppercase dark:text-slate-400 opacity-60">
- 3. Severity Level
- </h3>
- <div className="grid grid-cols-2 sm:grid-cols-4 gap-[1rem]">
- {SEVERITIES.map(sev => {
- const Icon = sev.icon;
- const isSelected = severity === sev.id;
- return (
- <label key={sev.id} className="cursor-pointer group">
- <input
- type="radio"
- name="severity"
- className="hidden"
- checked={isSelected}
- onChange={() => setSeverity(sev.id)}
- />
- <div className={`flex items-center gap-[0.75rem] p-[1rem] rounded-[1.25rem] border transition-all hover:bg-white/80 dark:hover:bg-white/10 hover:scale-[1.02] active:scale-95 ${isSelected
- ? `${sev.bgActive} shadow-sm ring-1 ring-black/5 dark:ring-white/10 scale-[1.01]`
- : 'bg-white/40 dark:bg-slate-800/40 border-white/60 dark:border-white/5 opacity-80'
- }`}>
- <Icon className={`w-4 h-4 ${isSelected ? sev.colorClass : 'text-slate-400'}`} strokeWidth={2.5} />
- <span className={`text-[0.6875rem] font-black uppercase tracking-widest ${isSelected ? 'text-[#1E2B58] dark:text-white' : 'text-slate-500 dark:text-slate-400'}`}>
- {sev.label}
- </span>
- </div>
- </label>
- );
- })}
- </div>
- </div>
+ {/* (Removed from UI; severity is sent as fixed `medium`) */}
 
  {/* 4. Description ───────────────────────────────────────────────── */}
  <div>
  <h3 className="mb-[1rem] text-[0.625rem] font-black tracking-[0.2em] text-slate-500 uppercase dark:text-slate-400 opacity-60">
- 4. Issue Description
+ 3. Issue Description
  </h3>
  <textarea
  value={description}
@@ -601,9 +596,16 @@ export const ReportManualForm = ({
  {/* 5. Evidence ──────────────────────────────────────────────────── */}
  <div>
  <h3 className="mb-[1rem] text-[0.625rem] font-black tracking-[0.2em] text-slate-500 uppercase dark:text-slate-400 opacity-60">
- 5. Upload Evidence <span className="font-medium normal-case opacity-60 tracking-normal">(optional, max 2 files)</span>
+ 4. Upload Evidence <span className="font-medium normal-case opacity-60 tracking-normal">(required, max 2 files)</span>
  </h3>
- <input ref={fileInputRef} type="file" accept="image/*" multiple className="hidden" onChange={(e) => addFiles(e.target.files)} />
+ <input
+ ref={fileInputRef}
+ type="file"
+ accept="image/*"
+ multiple
+ className="hidden"
+ onChange={(e) => addFiles(e.target.files)}
+ />
  <div
  onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
  onDragLeave={() => setDragOver(false)}
@@ -612,7 +614,7 @@ export const ReportManualForm = ({
  className={`relative flex h-[10rem] w-full cursor-pointer flex-col items-center justify-center gap-[0.75rem] rounded-[2rem] border-2 border-dashed transition-all ${dragOver
  ? "scale-[1.01] border-[#1E2B58] bg-[#1E2B58]/5 dark:border-sky-400 dark:bg-sky-400/5"
  : "border-white/60 bg-white/40 hover:bg-white/50 dark:border-slate-600 dark:bg-white/5 dark:hover:bg-slate-800/50"
- }`}
+ } ${errors.files ? "ring-2 ring-red-400/30 border-red-400/60" : ""}`}
  >
  <div className="group-hover:scale-110 flex h-[2.5rem] w-[2.5rem] items-center justify-center rounded-2xl bg-white shadow-sm transition-transform dark:bg-slate-700/50 border border-slate-100 dark:border-slate-600">
  <Camera className="h-[1.25rem] w-[1.25rem] text-slate-500 dark:text-slate-400" />
@@ -624,6 +626,11 @@ export const ReportManualForm = ({
  <p className="mt-[0.25rem] text-[0.5rem] font-bold tracking-widest text-slate-400 uppercase dark:text-slate-500">PNG, JPG up to 10MB</p>
  </div>
  </div>
+ {errors.files && (
+ <p className="mt-2 pl-4 text-[10px] font-black text-red-500 dark:text-red-400 uppercase tracking-widest">
+ {errors.files}
+ </p>
+ )}
  {files.length > 0 && (
  <div className="mt-3 flex flex-wrap gap-2 animate-in fade-in zoom-in-95 duration-200">
  {files.map((file, i) => (
@@ -651,7 +658,7 @@ export const ReportManualForm = ({
  </>
  ) : (
  <>
- Emit Report Signal
+ Create Report
  <ArrowRight className="h-[1.25rem] w-[1.25rem]" />
  </>
  )}

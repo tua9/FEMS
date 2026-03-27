@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 import { toast } from 'sonner';
 
@@ -83,62 +83,97 @@ export function useReportForm() {
  const [reportSubject, setReportSubject] = useState('');
  const [reportDate, setReportDate] = useState('');
 
+ // Controlled form state (single source of truth)
+ const [category, setCategory] = useState(qrEquipmentId ? 'equipment' : (routeState.prefillCategory ?? 'equipment'));
+ const [roomId, setRoomId] = useState(routeState.prefillRoom ?? '');
+ const [equipmentId, setEquipmentId] = useState(qrEquipmentId ?? '');
+ const [description, setDescription] = useState(routeState.prefillDescription ?? '');
+ const [files, setFiles] = useState([]);
+
+ // Ref that ReportManualForm assigns so hook can clear native file input value
+ const resetFileInputRef = useRef(null);
+
  // ── Handlers ──────────────────────────────────────────────────────────────
  const handleQRDetected = (result) => {
- setPrefillRoomId(result.roomId);
- setPrefillCategory(result.category);
- setPrefillDescription(result.description);
+    // keep prefill states for backward compatibility
+    setPrefillRoomId(result.roomId);
+    setPrefillCategory(result.category);
+    setPrefillDescription(result.description);
+
+    // update controlled states (source of truth)
+    if (result.category) setCategory(result.category);
+    if (result.roomId) setRoomId(result.roomId);
+    if (typeof result.description === 'string') setDescription(result.description);
  };
 
- const handleFormSubmit = async (data) => {
- setIsSubmitting(true);
- try {
- let imageUrls= [];
- if (data.files && data.files.length > 0) {
- // Limit to 2 files as per requirement
- const filesToUpload = data.files.slice(0, 2);
- imageUrls = await uploadImages(filesToUpload);
- }
+ const handleResetForm = () => {
+ setPrefillRoomId('');
+ setPrefillCategory(undefined);
+ setPrefillDescription('');
+ setPrefillEquipmentId('');
 
- const response = await createReport({
- room_id: data.room_id,
- equipment_id: data.equipment_id,
- type: CATEGORY_TO_TYPE[data.category],
- description: data.description,
- severity: data.severity,
- images: imageUrls,
- img: imageUrls.length > 0 ? imageUrls[0] : undefined,
- });
+ setCategory('equipment');
+ setRoomId('');
+ setEquipmentId('');
+ setDescription('');
+ setFiles([]);
 
- const newReport = response.report;
- const room = rooms.find(r => r._id === data.room_id);
- const locationStr = room ? room.name : 'Unknown Location';
- const subject = `${CATEGORY_LABELS[data.category]} Issue — ${locationStr}`;
- const today = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+ if (resetFileInputRef.current) resetFileInputRef.current();
+ };
 
- if (newReport) {
- setReportId(newReport.code || newReport._id.slice(-6).toUpperCase());
- } else {
- setReportId(response.report_id?.slice(-6).toUpperCase() || "SUCCESS");
- }
+ const handleFormSubmit = async () => {
+    // Evidence required
+    if (!files || files.length < 1) {
+      toast.error('Please upload at least 1 evidence image.');
+      return;
+    }
 
- setReportSubject(subject);
- setReportDate(today);
- setShowSuccess(true);
- } catch (err) {
- toast.error('Failed to submit report', {
- description: err?.response?.data?.message || 'Please try again.',
- });
- } finally {
- setIsSubmitting(false);
- }
+    setIsSubmitting(true);
+    try {
+      let imageUrls = [];
+      if (files && files.length > 0) {
+        // Limit to 2 files as per requirement
+        const filesToUpload = files.slice(0, 2);
+        imageUrls = await uploadImages(filesToUpload);
+      }
+
+      const response = await createReport({
+        room_id: roomId,
+        equipment_id: equipmentId || undefined,
+        type: CATEGORY_TO_TYPE[category],
+        description,
+        severity: 'medium',
+        images: imageUrls,
+        img: imageUrls.length > 0 ? imageUrls[0] : undefined,
+      });
+
+      const newReport = response.report;
+      const room = rooms.find(r => r._id === roomId);
+      const locationStr = room ? room.name : 'Unknown Location';
+      const subject = `${CATEGORY_LABELS[category]} Issue — ${locationStr}`;
+      const today = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+
+      if (newReport) {
+        setReportId(newReport.code || newReport._id.slice(-6).toUpperCase());
+      } else {
+        setReportId(response.report_id?.slice(-6).toUpperCase() || "SUCCESS");
+      }
+
+      setReportSubject(subject);
+      setReportDate(today);
+      setShowSuccess(true);
+    } catch (err) {
+      toast.error('Failed to submit report', {
+        description: err?.response?.data?.message || 'Please try again.',
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
  };
 
  const handleSubmitAnother = () => {
  setShowSuccess(false);
- setPrefillRoomId('');
- setPrefillCategory(undefined);
- setPrefillDescription('');
+ handleResetForm();
  };
 
  const closeSuccess = () => setShowSuccess(false);
@@ -160,5 +195,19 @@ export function useReportForm() {
  handleFormSubmit,
  handleSubmitAnother,
  closeSuccess,
+
+ // Expose controlled state to form
+ category,
+ setCategory,
+ roomId,
+ setRoomId,
+ equipmentId,
+ setEquipmentId,
+ description,
+ setDescription,
+ files,
+ setFiles,
+ resetFileInputRef,
+ handleResetForm,
  };
 }
