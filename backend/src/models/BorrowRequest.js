@@ -143,17 +143,7 @@ const borrowRequestSchema = new mongoose.Schema(
     },
 
     // ── Return submission (from student) ──────────────────────────────────────
-    // Checklist + evidence filled by STUDENT when submitting the return request
-    returnSubmission: {
-      checklist: {
-        appearance:  { type: Boolean, default: false },
-        functioning: { type: Boolean, default: false },
-        accessories: { type: Boolean, default: false },
-      },
-      notes:       { type: String, default: null },
-      images:      [{ type: String }],
-      submittedAt: { type: Date, default: null },
-    },
+    // Student simply requests return (no form) (status becomes 'returning')
 
     // ── Return confirmation (by lecturer) ─────────────────────────────────────
     // Filled by LECTURER when confirming return (status becomes 'returned')

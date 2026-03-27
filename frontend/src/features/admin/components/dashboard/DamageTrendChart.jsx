@@ -14,7 +14,7 @@ const DamageTrendChart = ({ data }) => {
  <div>
  <div className="flex items-start justify-between mb-4">
  <p className="text-[11px] font-semibold uppercase tracking-widest text-slate-500 dark:text-slate-400">
- Monthly Damage Trend
+ Xu hướng hư hỏng theo tháng
  </p>
  {prev > 0 && (
  <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${trendUp ? 'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400' : 'bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400'}`}>

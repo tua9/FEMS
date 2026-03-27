@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 import { PageHeader } from '@/features/shared/components/PageHeader';
 import { scheduleService } from '@/services/scheduleService';
@@ -72,139 +72,6 @@ const Select = ({ children, className = '', ...props }) => (
     {children}
   </select>
 );
-
-/**
- * SearchableSelect — reusable styled dropdown with live search.
- * Props:
- *   value     — currently selected value (string)
- *   onChange  — (value: string) => void
- *   options   — Array<{ value: string, label: string }>
- *   placeholder — string
- *   className — extra classes for the trigger button
- *   disabled  — boolean
- */
-const SearchableSelect = ({ value, onChange, options = [], placeholder = 'Select…', className = '', disabled = false }) => {
-  const [open, setOpen]   = useState(false);
-  const [query, setQuery] = useState('');
-  const ref               = useRef(null);
-  const inputRef          = useRef(null);
-
-  const selected = options.find(o => String(o.value) === String(value));
-  const filtered = query.trim()
-    ? options.filter(o => o.label.toLowerCase().includes(query.toLowerCase()))
-    : options;
-
-  // Close on outside click
-  useEffect(() => {
-    const handler = (e) => {
-      if (ref.current && !ref.current.contains(e.target)) {
-        setOpen(false);
-        setQuery('');
-      }
-    };
-    document.addEventListener('mousedown', handler);
-    return () => document.removeEventListener('mousedown', handler);
-  }, []);
-
-  // Focus search when opening
-  useEffect(() => {
-    if (open) setTimeout(() => inputRef.current?.focus(), 50);
-  }, [open]);
-
-  const handleSelect = (opt) => {
-    onChange(opt.value);
-    setOpen(false);
-    setQuery('');
-  };
-
-  const triggerErr = className.includes('border-red');
-
-  return (
-    <div ref={ref} className="relative">
-      {/* Trigger */}
-      <button
-        type="button"
-        disabled={disabled}
-        onClick={() => !disabled && setOpen(o => !o)}
-        className={`w-full flex items-center justify-between rounded-xl border px-3 py-2.5 text-sm font-semibold text-left outline-none transition-all
-          bg-white/60 dark:bg-white/5
-          ${triggerErr
-            ? 'border-red-400 dark:border-red-500 focus:ring-2 focus:ring-red-200'
-            : open
-              ? 'border-[#1E2B58]/30 dark:border-white/20 ring-2 ring-[#1E2B58]/20 dark:ring-white/10'
-              : 'border-[#1E2B58]/10 dark:border-white/10 hover:border-[#1E2B58]/20 dark:hover:border-white/20'
-          }
-          ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
-        `}
-      >
-        <span className={`truncate ${selected ? 'text-[#1E2B58] dark:text-white' : 'text-slate-400'}`}>
-          {selected?.label || placeholder}
-        </span>
-        <span className={`material-symbols-rounded text-base text-slate-400 shrink-0 transition-transform duration-200 ${open ? 'rotate-180' : ''}`}>
-          expand_more
-        </span>
-      </button>
-
-      {/* Dropdown panel */}
-      {open && (
-        <div className="absolute z-[60] left-0 right-0 mt-1.5 dashboard-card rounded-2xl shadow-2xl shadow-[#1E2B58]/10 border border-[#1E2B58]/8 dark:border-white/8 overflow-hidden">
-          {/* Search bar */}
-          <div className="p-2 border-b border-[#1E2B58]/8 dark:border-white/8">
-            <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-[#1E2B58]/5 dark:bg-white/5">
-              <span className="material-symbols-rounded text-sm text-slate-400 shrink-0">search</span>
-              <input
-                ref={inputRef}
-                value={query}
-                onChange={e => setQuery(e.target.value)}
-                placeholder="Search…"
-                className="flex-1 min-w-0 bg-transparent text-sm font-semibold text-[#1E2B58] dark:text-white outline-none placeholder-slate-400"
-              />
-              {query && (
-                <button
-                  type="button"
-                  onClick={() => setQuery('')}
-                  className="shrink-0 text-slate-400 hover:text-[#1E2B58] dark:hover:text-white transition-colors"
-                >
-                  <span className="material-symbols-rounded text-sm">close</span>
-                </button>
-              )}
-            </div>
-          </div>
-
-          {/* Options */}
-          <div className="max-h-52 overflow-y-auto py-1 hide-scrollbar">
-            {filtered.length === 0 ? (
-              <div className="px-4 py-4 text-xs font-semibold text-slate-400 text-center">
-                No results found
-              </div>
-            ) : (
-              filtered.map(opt => {
-                const isSelected = String(opt.value) === String(value);
-                return (
-                  <button
-                    key={opt.value}
-                    type="button"
-                    onClick={() => handleSelect(opt)}
-                    className={`w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-left transition-colors
-                      ${isSelected
-                        ? 'bg-[#1E2B58]/8 dark:bg-white/8 text-[#1E2B58] dark:text-white font-bold'
-                        : 'text-[#1E2B58]/80 dark:text-white/70 font-semibold hover:bg-[#1E2B58]/5 dark:hover:bg-white/5'
-                      }`}
-                  >
-                    <span className={`material-symbols-rounded text-sm shrink-0 transition-opacity ${isSelected ? 'text-[#1E2B58] dark:text-white opacity-100' : 'opacity-0'}`}>
-                      check
-                    </span>
-                    <span className="truncate">{opt.label}</span>
-                  </button>
-                );
-              })
-            )}
-          </div>
-        </div>
-      )}
-    </div>
-  );
-};
 
 const BtnPrimary = ({ children, loading, className = '', ...props }) => (
   <button
@@ -397,7 +264,7 @@ const ScheduleFormModal = ({ initial, slots, rooms, lecturers, classes, onSave, 
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm px-4 py-6" onClick={onClose}>
-        <div className="dashboard-card rounded-3xl w-full max-w-lg shadow-2xl overflow-auto max-h-[90vh] hide-scrollbar" onClick={e => e.stopPropagation()}>
+      <div className="dashboard-card rounded-3xl w-full max-w-lg shadow-2xl overflow-auto max-h-[90vh]" onClick={e => e.stopPropagation()}>
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-[#1E2B58]/8 dark:border-white/8">
           <div>
@@ -417,26 +284,24 @@ const ScheduleFormModal = ({ initial, slots, rooms, lecturers, classes, onSave, 
           {/* Subject */}
           <div>
             <FieldLabel>Subject *</FieldLabel>
-            <SearchableSelect
-              value={form.title}
-              onChange={v => set('title', v)}
-              options={MOCK_SUBJECTS.map(s => ({ value: s, label: s }))}
-              placeholder="Select subject…"
-              className={errCls('title')}
-            />
+            <Select value={form.title} onChange={e => set('title', e.target.value)} className={errCls('title')}>
+              <option value="">Select subject…</option>
+              {MOCK_SUBJECTS.map(s => (
+                <option key={s} value={s}>{s}</option>
+              ))}
+            </Select>
             <FieldError name="title" />
           </div>
 
           {/* Class */}
           <div>
             <FieldLabel>Class *</FieldLabel>
-            <SearchableSelect
-              value={form.classId}
-              onChange={v => set('classId', v)}
-              options={classes.map(c => ({ value: c._id, label: `${c.code} — ${c.name}` }))}
-              placeholder="Select class…"
-              className={errCls('classId')}
-            />
+            <Select value={form.classId} onChange={e => set('classId', e.target.value)} className={errCls('classId')}>
+              <option value="">Select class…</option>
+              {classes.map(c => (
+                <option key={c._id} value={c._id}>{c.code} — {c.name}</option>
+              ))}
+            </Select>
             <FieldError name="classId" />
           </div>
 
@@ -449,13 +314,14 @@ const ScheduleFormModal = ({ initial, slots, rooms, lecturers, classes, onSave, 
             </div>
             <div>
               <FieldLabel>Time Slot *</FieldLabel>
-              <SearchableSelect
-                value={form.slotId}
-                onChange={v => set('slotId', v)}
-                options={slots.map(s => ({ value: s._id, label: `${s.name} (${s.startTime}–${s.endTime})` }))}
-                placeholder="Select slot…"
-                className={errCls('slotId')}
-              />
+              <Select value={form.slotId} onChange={e => set('slotId', e.target.value)} className={errCls('slotId')}>
+                <option value="">Select slot…</option>
+                {slots.map(s => (
+                  <option key={s._id} value={s._id}>
+                    {s.name} ({s.startTime}–{s.endTime})
+                  </option>
+                ))}
+              </Select>
               <FieldError name="slotId" />
             </div>
           </div>
@@ -463,26 +329,26 @@ const ScheduleFormModal = ({ initial, slots, rooms, lecturers, classes, onSave, 
           {/* Room */}
           <div>
             <FieldLabel>Room *</FieldLabel>
-            <SearchableSelect
-              value={form.roomId}
-              onChange={v => set('roomId', v)}
-              options={rooms.map(r => ({ value: r._id, label: `${r.name} (${r.type})` }))}
-              placeholder="Select room…"
-              className={errCls('roomId')}
-            />
+            <Select value={form.roomId} onChange={e => set('roomId', e.target.value)} className={errCls('roomId')}>
+              <option value="">Select room…</option>
+              {rooms.map(r => (
+                <option key={r._id} value={r._id}>{r.name} ({r.type})</option>
+              ))}
+            </Select>
             <FieldError name="roomId" />
           </div>
 
           {/* Lecturer */}
           <div>
             <FieldLabel>Assigned Lecturer *</FieldLabel>
-            <SearchableSelect
-              value={form.lecturerId}
-              onChange={v => set('lecturerId', v)}
-              options={lecturers.map(u => ({ value: u._id, label: `${u.displayName || u.username} (${u.email || u.username})` }))}
-              placeholder="Select lecturer…"
-              className={errCls('lecturerId')}
-            />
+            <Select value={form.lecturerId} onChange={e => set('lecturerId', e.target.value)} className={errCls('lecturerId')}>
+              <option value="">Select lecturer…</option>
+              {lecturers.map(u => (
+                <option key={u._id} value={u._id}>
+                  {u.displayName || u.username} ({u.email || u.username})
+                </option>
+              ))}
+            </Select>
             <FieldError name="lecturerId" />
           </div>
 
@@ -490,16 +356,12 @@ const ScheduleFormModal = ({ initial, slots, rooms, lecturers, classes, onSave, 
           {isEdit && (
             <div>
               <FieldLabel>Status</FieldLabel>
-              <SearchableSelect
-                value={form.status}
-                onChange={v => set('status', v)}
-                options={[
-                  { value: 'scheduled', label: 'Scheduled' },
-                  { value: 'ongoing',   label: 'Ongoing' },
-                  { value: 'completed', label: 'Completed' },
-                  { value: 'cancelled', label: 'Cancelled' },
-                ]}
-              />
+              <Select value={form.status} onChange={e => set('status', e.target.value)}>
+                <option value="scheduled">Scheduled</option>
+                <option value="ongoing">Ongoing</option>
+                <option value="completed">Completed</option>
+                <option value="cancelled">Cancelled</option>
+              </Select>
             </div>
           )}
 

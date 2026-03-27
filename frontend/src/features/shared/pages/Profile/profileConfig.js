@@ -3,7 +3,6 @@ import {
  Calendar,
  Mail,
  Phone,
- School,
 } from "lucide-react";
 
 // ─── Role-aware constants ───────────────────────────────────────────────────────
@@ -55,30 +54,17 @@ export const ROLE_STATS_CONFIG= {
  ],
 };
 
-export const getInfoFields = (userRole) => {
-  const idField = {
-    label:
-      userRole === "student"
-        ? "Student ID"
-        : userRole === "admin"
-          ? "Admin ID"
-          : userRole === "technician"
-            ? "Technician ID"
-            : "Employee ID",
-    icon: BadgeCheck,
-    key: "_id",
-  };
-
-  const fields = [
-    { label: "Email Address", icon: Mail, key: "email" },
-    { label: "Phone Number", icon: Phone, key: "phone" },
-    { label: "Date of Birth", icon: Calendar, key: "dob" },
-  ];
-
-  if (userRole === "student") {
-    fields.push({ label: "Student Class", icon: School, key: "classId" });
-  }
-
-  fields.push(idField);
-  return fields;
-};
+export const getInfoFields = (userRole) => [
+ { label: "Email Address", icon: Mail, key: "email" },
+ { label: "Phone Number", icon: Phone, key: "phone" },
+ { label: "Date of Birth", icon: Calendar, key: "dob" },
+ {
+ label:
+ userRole === "student" ? "Student ID" :
+ userRole === "admin" ? "Admin ID" :
+ userRole === "technician" ? "Technician ID" :
+ "Employee ID",
+ icon: BadgeCheck,
+ key: "_id"
+ }
+];
