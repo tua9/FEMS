@@ -1,6 +1,7 @@
 import { env } from '../config/environment.js'
 export const WHITELIST_DOMAINS = [
   env.CLIENT_URL,
+  'https://femsproject.vercel.app',
   'https://bianca-appendicular-boldheartedly.ngrok-free.dev',
   'http://localhost:5175',
   'http://localhost:5174',
