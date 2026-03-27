@@ -56,7 +56,7 @@ export const PageHeader = ({
  "bg-clip-text text-transparent",
  "dark:from-white dark:to-slate-300",
  // size: mobile 1.875rem → sm 2.25rem → md 3rem
- "text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight leading-[1.1]",
+ "text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight leading-[1.2] pb-1",
  "select-none",
  ].join(" ")}
  >

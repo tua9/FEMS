@@ -10,8 +10,4 @@ export const dashboardService = {
  return response.data;
  },
 
- getLecturerUsageStats: async ()=> {
- const response = await api.get('/dashboard/lecturer/usage-stats');
- return response.data;
- },
 };

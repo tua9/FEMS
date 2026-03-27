@@ -6,7 +6,6 @@ import AdminEquipment from "@/features/admin/pages/EquipmentManagement";
 import AdminBorrowing from "@/features/admin/pages/BorrowingManagement";
 import AdminUsers from "@/features/admin/pages/UserManagement";
 import AdminReports from "@/features/admin/pages/DamageReports";
-import RepairManagement from "@/features/admin/pages/RepairManagement";
 import ScheduleManagement from "@/features/admin/pages/ScheduleManagement";
 import NotificationsPage from "@/features/shared/pages/NotificationsPage";
 import ProfilePage from "@/features/admin/pages/Profile";
@@ -20,7 +19,6 @@ const AdminRoutes = () => (
  <Route path="/admin/borrowing" element={<AdminBorrowing />} />
  <Route path="/admin/users" element={<AdminUsers />} />
  <Route path="/admin/reports" element={<AdminReports />} />
- <Route path="/admin/repairs" element={<RepairManagement />} />
  <Route path="/admin/schedule" element={<ScheduleManagement />} />
  <Route path="/admin/notifications" element={<NotificationsPage />} />
  <Route path="/admin/profile" element={<ProfilePage />} />
