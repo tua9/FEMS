@@ -16,7 +16,7 @@ export const ReportIssuePage = () => {
 
  const {
  prefillRoomId, prefillCategory, prefillDescription, prefillEquipmentId,
- rooms, isSubmitting,
+ rooms, buildings, isSubmitting,
  showSuccess, reportId, reportSubject, reportDate,
  handleQRDetected, handleFormSubmit,
  handleSubmitAnother, closeSuccess,
@@ -32,6 +32,7 @@ export const ReportIssuePage = () => {
  prefillDescription={prefillDescription}
  prefillEquipmentId={prefillEquipmentId}
  rooms={rooms}
+ buildings={buildings}
  isSubmitting={isSubmitting}
  onQRDetected={handleQRDetected}
  onSubmit={handleFormSubmit}

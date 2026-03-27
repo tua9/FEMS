@@ -20,7 +20,7 @@ const parseQRText = (text) => {
       isInternal,
       path: url.pathname + url.search + url.hash,
       href: url.href,
-      displayText: text.length > 60 ? text.slice(0, 57) + '…' : text,
+      displayText: text.length > 100 ? text.slice(0, 97) + '...' : text,
     };
   } catch {
     // Not a URL — return raw text
@@ -28,7 +28,7 @@ const parseQRText = (text) => {
       isInternal: false,
       path: null,
       href: null,
-      displayText: text.length > 60 ? text.slice(0, 57) + '…' : text,
+      displayText: text.length > 100 ? text.slice(0, 97) + '...' : text,
     };
   }
 };
@@ -150,7 +150,7 @@ export const QuickScanReport = ({ onQRDetected }) => {
       if (equipmentId || equipmentCode) {
         // Navigate to report page with QR params → useReportForm will auto-prefill
         closeModal();
-        navigate(`/report?${params.toString()}`);
+        navigate(`/report-issue?${params.toString()}`);
         return;
       }
     } catch { /* fall through */ }

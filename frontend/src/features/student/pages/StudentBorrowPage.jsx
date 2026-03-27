@@ -10,7 +10,7 @@ import { equipmentService } from '@/services/equipmentService';
 import { borrowRequestService } from '@/services/borrowRequestService';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { PageHeader } from '@/features/shared/components/PageHeader';
-import { getTodayVN } from '@/utils/dateUtils';
+import { getTodayVN, getSlotTimeStatus } from '@/utils/dateUtils';
 import { uploadImages } from '@/utils/uploadHelper';
 
 // ─── Borrow Components ────────────────────────────────────────────────────────
@@ -50,28 +50,49 @@ const StudentBorrowPage = () => {
   const [reqCurrentPage, setReqCurrentPage] = useState(1);
   const REQ_ITEMS_PER_PAGE = 3;
 
+  const [nowTick, setNowTick] = useState(Date.now());
+
   // ── Derived: active schedule ──────────────────────────────────────────────
   const activeSchedule = useMemo(() => {
     if (!schedules.length) return null;
-    const now = new Date();
-    
-    // First, try to find an ongoing session (or one that should be ongoing by time and isn't completed yet)
-    const ongoing = schedules.find(s => s.status === 'ongoing' || (new Date(s.startAt) <= now && new Date(s.endAt) >= now && s.status !== 'completed'));
+
+    // 1. Ongoing: current time is within [startAt, endAt] AND not completed
+    const ongoing = schedules.find(s =>
+      s.status !== 'completed' &&
+      getSlotTimeStatus(s.startAt, s.endAt) === 'ongoing'
+    );
     if (ongoing) return ongoing;
-    
-    // Next, try to find the next upcoming session
-    const upcoming = schedules.find(s => new Date(s.startAt) > now && s.status !== 'completed');
-    return upcoming || null;
-  }, [schedules]);
+
+    // 2. Upcoming: starts in the future AND not completed
+    const upcoming = schedules.find(s =>
+      s.status !== 'completed' &&
+      getSlotTimeStatus(s.startAt, s.endAt) === 'upcoming'
+    );
+    if (upcoming) return upcoming;
+
+    // 3. Fallback: Recently ended session of today
+    const recentlyEnded = [...schedules]
+      .filter(s => getSlotTimeStatus(s.startAt, s.endAt) === 'ended')
+      .sort((a, b) => new Date(b.endAt) - new Date(a.endAt))[0];
+
+    return recentlyEnded || null;
+  }, [schedules, nowTick]);
 
   const isSessionOngoing = useMemo(() => {
     if (!activeSchedule) return false;
-    return activeSchedule.status === 'ongoing';
-  }, [activeSchedule]);
+    if (activeSchedule.status === 'completed') return false;
+    return getSlotTimeStatus(activeSchedule.startAt, activeSchedule.endAt) === 'ongoing';
+  }, [activeSchedule, nowTick]);
+
+  // ── Tick ──────────────────────────────────────────────────────────────────
+  useEffect(() => {
+    const id = setInterval(() => setNowTick(Date.now()), 30_000);
+    return () => clearInterval(id);
+  }, []);
 
   // ── Load schedules ────────────────────────────────────────────────────────
   const loadSchedules = useCallback(async () => {
-    setScheduleLoading(true);
+    if (schedules.length === 0) setScheduleLoading(true);
     try {
       const res = await scheduleService.getMySchedules(getTodayVN());
       setSchedules(Array.isArray(res) ? res : []);
@@ -80,17 +101,22 @@ const StudentBorrowPage = () => {
     } finally {
       setScheduleLoading(false);
     }
-  }, []);
+  }, [schedules.length]);
 
   useEffect(() => { loadSchedules(); }, [loadSchedules]);
 
   // ── Load room equipment when session is known ─────────────────────────────
   useEffect(() => {
     const roomId = activeSchedule?.roomId?._id || activeSchedule?.roomId;
-    if (!roomId) { setRoomEquipment([]); return; }
+    if (!roomId) {
+      setRoomEquipment([]);
+      return;
+    }
+
     let cancelled = false;
     const load = async () => {
-      setEquipmentLoading(true);
+      // Only show main loading if we don't have equipment for this room yet
+      if (roomEquipment.length === 0) setEquipmentLoading(true);
       try {
         const res = await equipmentService.getInventory({ roomId, limit: 50 });
         if (!cancelled) setRoomEquipment(res.items || []);
@@ -102,11 +128,11 @@ const StudentBorrowPage = () => {
     };
     load();
     return () => { cancelled = true; };
-  }, [activeSchedule]);
+  }, [activeSchedule?._id]); // Stable dependency
 
   // ── Load my requests ──────────────────────────────────────────────────────
   const loadMyRequests = useCallback(async () => {
-    setRequestsLoading(true);
+    if (myRequests.length === 0) setRequestsLoading(true);
     try {
       const res = await borrowRequestService.getMyBorrowRequests();
       setMyRequests(Array.isArray(res) ? res : res.data || []);
@@ -115,7 +141,7 @@ const StudentBorrowPage = () => {
     } finally {
       setRequestsLoading(false);
     }
-  }, []);
+  }, [myRequests.length]);
 
   useEffect(() => { loadMyRequests(); }, [loadMyRequests]);
 
@@ -285,19 +311,17 @@ const StudentBorrowPage = () => {
                 </div>
 
                 {/* Status badge */}
-                <span className={`flex items-center gap-2 px-4 py-2 rounded-2xl text-[10px] font-black uppercase tracking-widest border shrink-0 ${
-                  activeSchedule.status === 'ongoing'
-                    ? 'bg-emerald-50 text-emerald-600 border-emerald-200 dark:bg-emerald-900/20 dark:text-emerald-400 dark:border-emerald-900/30'
-                    : activeSchedule.status === 'completed'
+                <span className={`flex items-center gap-2 px-4 py-2 rounded-2xl text-[10px] font-black uppercase tracking-widest border shrink-0 ${(activeSchedule.status === 'completed' || getSlotTimeStatus(activeSchedule.startAt, activeSchedule.endAt) === 'ended')
                     ? 'bg-slate-100 text-slate-500 border-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700'
-                    : 'bg-amber-50 text-amber-600 border-amber-200 dark:bg-amber-900/20 dark:text-amber-400 dark:border-amber-900/30'
-                }`}>
-                  <span className={`w-1.5 h-1.5 rounded-full ${
-                    activeSchedule.status === 'ongoing' ? 'bg-emerald-500 animate-pulse' :
-                    activeSchedule.status === 'completed' ? 'bg-slate-400' : 'bg-amber-500'
-                  }`} />
-                  {activeSchedule.status === 'ongoing' ? 'Đang diễn ra' : 
-                   activeSchedule.status === 'completed' ? 'Đã kết thúc' : 'Sắp diễn ra'}
+                    : isSessionOngoing
+                      ? 'bg-emerald-50 text-emerald-600 border-emerald-200 dark:bg-emerald-900/20 dark:text-emerald-400 dark:border-emerald-900/30'
+                      : 'bg-amber-50 text-amber-600 border-amber-200 dark:bg-amber-900/20 dark:text-amber-400 dark:border-amber-900/30'
+                  }`}>
+                  <span className={`w-1.5 h-1.5 rounded-full ${(activeSchedule.status === 'completed' || getSlotTimeStatus(activeSchedule.startAt, activeSchedule.endAt) === 'ended') ? 'bg-slate-400' :
+                      isSessionOngoing ? 'bg-emerald-500 animate-pulse' : 'bg-amber-500'
+                    }`} />
+                  {(activeSchedule.status === 'completed' || getSlotTimeStatus(activeSchedule.startAt, activeSchedule.endAt) === 'ended') ? 'Completed' :
+                    isSessionOngoing ? 'Ongoing' : 'Upcoming'}
                 </span>
               </div>
 
@@ -306,9 +330,9 @@ const StudentBorrowPage = () => {
                 <div className="mt-5 p-3 rounded-2xl bg-amber-50 dark:bg-amber-900/10 border border-amber-100 dark:border-amber-900/20 flex items-start gap-2.5">
                   <AlertTriangle className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
                   <p className="text-xs font-bold text-amber-600 dark:text-amber-400">
-                    {activeSchedule.status === 'completed'
-                      ? 'Buổi học này đã kết thúc. Bạn không thể yêu cầu mượn thiết bị nữa.'
-                      : 'Chức năng mượn thiết bị chưa được mở. Vui lòng đợi giảng viên bắt đầu điểm danh (Check-in).'}
+                    {activeSchedule.status === 'completed' || getSlotTimeStatus(activeSchedule.startAt, activeSchedule.endAt) === 'ended'
+                      ? 'This session has ended. Equipment borrowing is no longer available.'
+                      : 'Equipment borrowing is not yet open. Please wait for the lecturer to check in.'}
                   </p>
                 </div>
               )}
@@ -330,7 +354,7 @@ const StudentBorrowPage = () => {
             </div>
           </div>
 
-          {requestsLoading ? (
+          {requestsLoading && activeRequests.length === 0 ? (
             <div className="flex justify-center py-10">
               <Loader2 className="w-6 h-6 animate-spin text-[#1E2B58]/20 dark:text-white/20" />
             </div>
@@ -393,7 +417,7 @@ const StudentBorrowPage = () => {
               </span>
             </div>
 
-            {equipmentLoading ? (
+            {equipmentLoading && roomEquipment.length === 0 ? (
               <div className="flex justify-center py-16">
                 <Loader2 className="w-8 h-8 animate-spin text-[#1E2B58]/20 dark:text-white/20" />
               </div>

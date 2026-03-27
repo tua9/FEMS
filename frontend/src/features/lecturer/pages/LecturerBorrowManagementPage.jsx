@@ -9,7 +9,7 @@ import { scheduleService } from '@/services/scheduleService';
 import { attendanceService } from '@/services/attendanceService';
 import { borrowRequestService } from '@/services/borrowRequestService';
 import { PageHeader } from '@/features/shared/components/PageHeader';
-import { getTodayVN } from '@/utils/dateUtils';
+import { getTodayVN, getSlotTimeStatus } from '@/utils/dateUtils';
 import { uploadImages } from '@/utils/uploadHelper';
 
 // Sub-components
@@ -19,6 +19,7 @@ import ApproveModal from '../components/borrow/ApproveModal';
 import RejectModal from '../components/borrow/RejectModal';
 import ReturnConfirmModal from '../components/borrow/ReturnConfirmModal';
 import RequestDetailModal from '../components/borrow/RequestDetailModal';
+import BorrowRequestRow from '../components/borrow/BorrowRequestRow';
 import ConfirmModal from '@/features/shared/components/ConfirmModal';
 
 // Utilities
@@ -54,27 +55,45 @@ const LecturerBorrowManagementPage = () => {
   const [viewDetailReq, setViewDetailReq] = useState(null);
   const [showEndSessionModal, setShowEndSessionModal] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [nowTick, setNowTick] = useState(Date.now());
 
   // ── Derived: active (ongoing) teaching schedule ───────────────────────────
   const activeSchedule = useMemo(() => {
     if (!schedules.length) return null;
-    const now = new Date();
     
-    // First, try to find an ongoing session (or one that should be ongoing by time and isn't completed yet)
-    const ongoing = schedules.find(s => s.status === 'ongoing' || (new Date(s.startAt) <= now && new Date(s.endAt) >= now && s.status !== 'completed'));
+    // 1. Ongoing: current time is within [startAt, endAt] AND not completed
+    const ongoing = schedules.find(s => 
+      s.status !== 'completed' && 
+      getSlotTimeStatus(s.startAt, s.endAt) === 'ongoing'
+    );
     if (ongoing) return ongoing;
     
-    // Next, try to find the next upcoming session
-    const upcoming = schedules.find(s => new Date(s.startAt) > now && s.status !== 'completed');
-    return upcoming || null;
-  }, [schedules]);
+    // 2. Upcoming: starts in the future AND not completed
+    const upcoming = schedules.find(s => 
+      s.status !== 'completed' && 
+      getSlotTimeStatus(s.startAt, s.endAt) === 'upcoming'
+    );
+    if (upcoming) return upcoming;
+
+    // 3. Fallback: Recently ended session of today (so lecturer can still checkout)
+    const recentlyEnded = [...schedules]
+      .filter(s => getSlotTimeStatus(s.startAt, s.endAt) === 'ended')
+      .sort((a,b) => new Date(b.endAt) - new Date(a.endAt))[0];
+
+    return recentlyEnded || null;
+  }, [schedules, nowTick]);
 
   const isSessionOngoing = useMemo(() => {
     if (!activeSchedule) return false;
     if (activeSchedule.status === 'completed') return false;
-    const now = new Date();
-    return new Date(activeSchedule.startAt) <= now && new Date(activeSchedule.endAt) >= now;
-  }, [activeSchedule]);
+    return getSlotTimeStatus(activeSchedule.startAt, activeSchedule.endAt) === 'ongoing';
+  }, [activeSchedule, nowTick]);
+
+  // ── Tick ──────────────────────────────────────────────────────────────────
+  useEffect(() => {
+    const id = setInterval(() => setNowTick(Date.now()), 30_000);
+    return () => clearInterval(id);
+  }, []);
 
   const isCheckedIn = checkInStatus?.checkedIn === true;
 
@@ -261,60 +280,6 @@ const LecturerBorrowManagementPage = () => {
   // RENDER
   // ─────────────────────────────────────────────────────────────────────────
 
-  const renderRequestRow = (req, actions) => {
-    const studentName = getStudentName(req);
-    const eqName = getEquipmentName(req);
-    return (
-      <div
-        key={req._id}
-        className="flex flex-col sm:flex-row sm:items-center gap-4 py-4 px-5 border-b border-[#1E2B58]/5 dark:border-white/5 last:border-0"
-      >
-        {/* Student */}
-        <div className="flex items-center gap-3 sm:w-48 shrink-0">
-          <BorrowAvatar name={studentName} avatarUrl={req.borrowerId?.avatarUrl} />
-          <div className="min-w-0">
-            <p className="font-black text-[#1E2B58] dark:text-white text-sm truncate">{studentName}</p>
-            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-              {String(req.borrowerId?._id || 'ID').slice(-8).toUpperCase()}
-            </p>
-          </div>
-        </div>
-
-        {/* Equipment */}
-        <div className="flex items-center gap-2.5 flex-1 min-w-0">
-          <div className="w-9 h-9 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center shrink-0 overflow-hidden">
-            {req.equipmentId?.img
-              ? <img src={req.equipmentId.img} alt="" className="w-full h-full object-cover" />
-              : <Laptop className="w-4 h-4 text-slate-400" />
-            }
-          </div>
-          <div className="min-w-0">
-            <p className="font-bold text-[#1E2B58] dark:text-white text-sm truncate">{eqName}</p>
-            {req.note && (
-              <p className="text-[10px] text-slate-400 truncate">"{req.note}"</p>
-            )}
-          </div>
-        </div>
-
-        {/* Time */}
-        <div className="shrink-0">
-          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Gửi lúc</p>
-          <p className="text-xs font-bold text-[#1E2B58]/70 dark:text-white/60">{fmtDateTime(req.createdAt)}</p>
-        </div>
-
-        {/* Actions */}
-        <div className="flex items-center gap-2 shrink-0">
-          {actions}
-          <button
-            onClick={() => setViewDetailReq(req)}
-            className="w-8 h-8 flex items-center justify-center rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-[#1E2B58] dark:hover:text-white hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
-          >
-            <Eye className="w-3.5 h-3.5" />
-          </button>
-        </div>
-      </div>
-    );
-  };
 
   return (
     <div className="w-full">
@@ -379,17 +344,17 @@ const LecturerBorrowManagementPage = () => {
                 <div className="flex flex-col items-end gap-3 shrink-0">
                   {/* Session status badge */}
                   <span className={`flex items-center gap-2 px-4 py-2 rounded-2xl text-[10px] font-black uppercase tracking-widest border ${
-                    activeSchedule.status === 'completed'
+                    (activeSchedule.status === 'completed' || getSlotTimeStatus(activeSchedule.startAt, activeSchedule.endAt) === 'ended')
                       ? 'bg-slate-50 text-slate-500 border-slate-200 dark:bg-slate-900/40 dark:text-slate-400 dark:border-slate-800'
                       : isSessionOngoing
                         ? 'bg-emerald-50 text-emerald-600 border-emerald-200 dark:bg-emerald-900/20 dark:text-emerald-400 dark:border-emerald-900/30'
                         : 'bg-amber-50 text-amber-600 border-amber-200 dark:bg-amber-900/20 dark:text-amber-400 dark:border-amber-900/30'
                   }`}>
                     <span className={`w-1.5 h-1.5 rounded-full ${
-                      activeSchedule.status === 'completed' ? 'bg-slate-400' :
+                      (activeSchedule.status === 'completed' || getSlotTimeStatus(activeSchedule.startAt, activeSchedule.endAt) === 'ended') ? 'bg-slate-400' :
                       isSessionOngoing ? 'bg-emerald-500 animate-pulse' : 'bg-amber-500'
                     }`} />
-                    {activeSchedule.status === 'completed' ? 'Đã kết thúc' : isSessionOngoing ? 'Đang diễn ra' : 'Sắp diễn ra'}
+                    {(activeSchedule.status === 'completed' || getSlotTimeStatus(activeSchedule.startAt, activeSchedule.endAt) === 'ended') ? 'Completed' : isSessionOngoing ? 'Ongoing' : 'Upcoming'}
                   </span>
 
                   {/* Check-in button */}
@@ -400,7 +365,7 @@ const LecturerBorrowManagementPage = () => {
                   ) : isCheckedIn ? (
                     <div className="flex items-center gap-3">
                       <span className={`flex items-center gap-2 text-xs font-black px-3 py-1.5 rounded-xl border ${
-                        activeSchedule.status === 'completed' 
+                        (activeSchedule.status === 'completed' || getSlotTimeStatus(activeSchedule.startAt, activeSchedule.endAt) === 'ended')
                           ? 'text-slate-500 bg-slate-50 border-slate-200 dark:bg-slate-900/40 dark:text-slate-400 dark:border-slate-800'
                           : 'text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-900/30'
                       }`}>
@@ -412,7 +377,11 @@ const LecturerBorrowManagementPage = () => {
                         <button
                           onClick={() => setShowEndSessionModal(true)}
                           disabled={checkingIn}
-                          className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-black text-[10px] uppercase tracking-widest hover:bg-slate-200 dark:hover:bg-slate-700 transition-all active:scale-95 disabled:opacity-60"
+                          className={`flex items-center gap-1.5 px-4 py-2 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all active:scale-95 disabled:opacity-60 ${
+                            getSlotTimeStatus(activeSchedule.startAt, activeSchedule.endAt) === 'ended'
+                              ? 'bg-red-500 text-white shadow-lg shadow-red-500/20 hover:bg-red-600'
+                              : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200'
+                          }`}
                         >
                           {checkingIn ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <LogOut className="w-3.5 h-3.5" />}
                           Kết thúc
@@ -443,42 +412,56 @@ const LecturerBorrowManagementPage = () => {
         {activeSchedule && (
           <section className="mb-8">
             <div className={`rounded-3xl p-5 flex items-start gap-4 border ${
-              isCheckedIn
-                ? 'bg-emerald-50 border-emerald-200 dark:bg-emerald-900/10 dark:border-emerald-900/20'
-                : 'bg-amber-50 border-amber-200 dark:bg-amber-900/10 dark:border-amber-900/20'
+              (activeSchedule.status !== 'completed' && new Date(activeSchedule.endAt) < new Date() && isCheckedIn)
+                ? 'bg-red-50 border-red-200 dark:bg-red-900/10 dark:border-red-900/20 animate-pulse'
+                : isCheckedIn
+                  ? 'bg-emerald-50 border-emerald-200 dark:bg-emerald-900/10 dark:border-emerald-900/20'
+                  : 'bg-amber-50 border-amber-200 dark:bg-amber-900/10 dark:border-amber-900/20'
             }`}>
               <div className={`w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 ${
-                isCheckedIn
-                  ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400'
-                  : 'bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400'
+                (activeSchedule.status !== 'completed' && new Date(activeSchedule.endAt) < new Date() && isCheckedIn)
+                  ? 'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400'
+                  : isCheckedIn
+                    ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400'
+                    : 'bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400'
               }`}>
-                {isCheckedIn
-                  ? <ShieldCheck className="w-5 h-5" />
-                  : <AlertTriangle className="w-5 h-5" />
+                {(activeSchedule.status !== 'completed' && new Date(activeSchedule.endAt) < new Date() && isCheckedIn)
+                  ? <AlertTriangle className="w-5 h-5" />
+                  : isCheckedIn
+                    ? <ShieldCheck className="w-5 h-5" />
+                    : <AlertTriangle className="w-5 h-5" />
                 }
               </div>
               <div>
                 <p className={`font-black text-sm ${
-                  activeSchedule.status === 'completed'
-                    ? 'text-slate-600 dark:text-slate-300'
-                    : isCheckedIn ? 'text-emerald-700 dark:text-emerald-400' : 'text-amber-700 dark:text-amber-400'
+                  (activeSchedule.status !== 'completed' && getSlotTimeStatus(activeSchedule.startAt, activeSchedule.endAt) === 'ended' && isCheckedIn)
+                    ? 'text-red-700 dark:text-red-400'
+                    : activeSchedule.status === 'completed' || getSlotTimeStatus(activeSchedule.startAt, activeSchedule.endAt) === 'ended'
+                      ? 'text-slate-600 dark:text-slate-300'
+                      : isCheckedIn ? 'text-emerald-700 dark:text-emerald-400' : 'text-amber-700 dark:text-amber-400'
                 }`}>
-                  {activeSchedule.status === 'completed'
-                    ? 'Buổi dạy đã kết thúc'
-                    : isCheckedIn
-                      ? 'Cho phép mượn thiết bị đã được kích hoạt'
-                      : 'Sinh viên chưa thể mượn thiết bị'}
+                  {activeSchedule.status !== 'completed' && getSlotTimeStatus(activeSchedule.startAt, activeSchedule.endAt) === 'ended' && isCheckedIn
+                    ? 'ACTION REQUIRED: End Session'
+                    : activeSchedule.status === 'completed' || getSlotTimeStatus(activeSchedule.startAt, activeSchedule.endAt) === 'ended'
+                      ? 'Session has ended'
+                      : isCheckedIn
+                        ? 'Equipment borrowing is enabled'
+                        : 'Students cannot borrow equipment yet'}
                 </p>
                 <p className={`text-xs mt-0.5 ${
-                  activeSchedule.status === 'completed'
-                    ? 'text-slate-500 dark:text-slate-400'
-                    : isCheckedIn ? 'text-emerald-600/70 dark:text-emerald-400/60' : 'text-amber-600/70 dark:text-amber-400/60'
+                  (activeSchedule.status !== 'completed' && getSlotTimeStatus(activeSchedule.startAt, activeSchedule.endAt) === 'ended' && isCheckedIn)
+                    ? 'text-red-600/70 dark:text-red-400/60'
+                    : activeSchedule.status === 'completed' || getSlotTimeStatus(activeSchedule.startAt, activeSchedule.endAt) === 'ended'
+                      ? 'text-slate-500 dark:text-slate-400'
+                      : isCheckedIn ? 'text-emerald-600/70 dark:text-emerald-400/60' : 'text-amber-600/70 dark:text-amber-400/60'
                 }`}>
-                  {activeSchedule.status === 'completed'
-                    ? 'Sinh viên không thể gửi thêm yêu cầu mượn thiết bị trong ca học này.'
-                    : isCheckedIn
-                      ? 'Bạn đã điểm danh. Sinh viên trong phòng có thể gửi yêu cầu mượn thiết bị.'
-                      : 'Bạn cần điểm danh trước khi sinh viên có thể gửi yêu cầu mượn thiết bị.'}
+                  {activeSchedule.status !== 'completed' && getSlotTimeStatus(activeSchedule.startAt, activeSchedule.endAt) === 'ended' && isCheckedIn
+                    ? 'The scheduled time for this slot has passed. Please click "End Session" to complete your check-out.'
+                    : activeSchedule.status === 'completed' || getSlotTimeStatus(activeSchedule.startAt, activeSchedule.endAt) === 'ended'
+                      ? 'Students can no longer submit borrow requests for this session.'
+                      : isCheckedIn
+                        ? 'You are checked in. Students in this room can now submit borrow requests.'
+                        : 'You must check in before students can submit borrow requests.'}
                 </p>
               </div>
             </div>
@@ -518,24 +501,29 @@ const LecturerBorrowManagementPage = () => {
                 </div>
               ) : (
                 <div className="divide-y divide-[#1E2B58]/5 dark:divide-white/5">
-                  {pendingRequests.map(req =>
-                    renderRequestRow(req, (
-                      <>
-                        <button
-                          onClick={() => setRejectingReq(req)}
-                          className="px-4 py-2 rounded-xl bg-red-50 dark:bg-red-900/20 text-red-500 dark:text-red-400 font-black text-[10px] uppercase tracking-widest hover:bg-red-100 dark:hover:bg-red-900/30 transition-all active:scale-95 border border-red-100 dark:border-red-900/30"
-                        >
-                          Từ chối
-                        </button>
-                        <button
-                          onClick={() => setApprovingReq(req)}
-                          className="px-4 py-2 rounded-xl bg-emerald-500 text-white font-black text-[10px] uppercase tracking-widest hover:bg-emerald-600 transition-all active:scale-95 shadow-md shadow-emerald-500/20"
-                        >
-                          Duyệt
-                        </button>
-                      </>
-                    ))
-                  )}
+                  {pendingRequests.map(req => (
+                    <BorrowRequestRow
+                      key={req._id}
+                      req={req}
+                      onViewDetail={setViewDetailReq}
+                      actions={
+                        <>
+                          <button
+                            onClick={() => setRejectingReq(req)}
+                            className="px-4 py-2 rounded-xl bg-red-50 dark:bg-red-900/20 text-red-500 dark:text-red-400 font-black text-[10px] uppercase tracking-widest hover:bg-red-100 dark:hover:bg-red-900/30 transition-all active:scale-95 border border-red-100 dark:border-red-900/30"
+                          >
+                            Reject
+                          </button>
+                          <button
+                            onClick={() => setApprovingReq(req)}
+                            className="px-4 py-2 rounded-xl bg-emerald-500 text-white font-black text-[10px] uppercase tracking-widest hover:bg-emerald-600 transition-all active:scale-95 shadow-md shadow-emerald-500/20"
+                          >
+                            Approve
+                          </button>
+                        </>
+                      }
+                    />
+                  ))}
                 </div>
               )}
             </div>
@@ -555,13 +543,18 @@ const LecturerBorrowManagementPage = () => {
 
             <div className="dashboard-card rounded-4xl overflow-hidden">
               <div className="divide-y divide-[#1E2B58]/5 dark:divide-white/5">
-                {approvedRequests.map(req =>
-                  renderRequestRow(req, (
-                    <span className="px-3 py-1.5 rounded-lg bg-blue-50 dark:bg-blue-900/20 text-[10px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-widest border border-blue-100 dark:border-blue-900/30">
-                      Chờ xác nhận
-                    </span>
-                  ))
-                )}
+                {approvedRequests.map(req => (
+                  <BorrowRequestRow
+                    key={req._id}
+                    req={req}
+                    onViewDetail={setViewDetailReq}
+                    actions={
+                      <span className="px-3 py-1.5 rounded-lg bg-blue-50 dark:bg-blue-900/20 text-[10px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-widest border border-blue-100 dark:border-blue-900/30">
+                        Awaiting Confirmation
+                      </span>
+                    }
+                  />
+                ))}
               </div>
             </div>
           </section>
@@ -580,16 +573,21 @@ const LecturerBorrowManagementPage = () => {
 
             <div className="dashboard-card rounded-4xl overflow-hidden border-2 border-emerald-500/20">
               <div className="divide-y divide-[#1E2B58]/5 dark:divide-white/5">
-                {returningRequests.map(req =>
-                  renderRequestRow(req, (
-                    <button
-                      onClick={() => setConfirmReturnReq(req)}
-                      className="px-4 py-2 rounded-xl bg-emerald-500 text-white font-black text-[10px] uppercase tracking-widest hover:bg-emerald-600 transition-all active:scale-95 flex items-center gap-1.5 shadow-lg shadow-emerald-500/20"
-                    >
-                      <CheckCircle2 className="w-3.5 h-3.5" /> Xác nhận trả
-                    </button>
-                  ))
-                )}
+                {returningRequests.map(req => (
+                  <BorrowRequestRow
+                    key={req._id}
+                    req={req}
+                    onViewDetail={setViewDetailReq}
+                    actions={
+                      <button
+                        onClick={() => setConfirmReturnReq(req)}
+                        className="px-4 py-2 rounded-xl bg-emerald-500 text-white font-black text-[10px] uppercase tracking-widest hover:bg-emerald-600 transition-all active:scale-95 flex items-center gap-1.5 shadow-lg shadow-emerald-500/20"
+                      >
+                        <CheckCircle2 className="w-3.5 h-3.5" /> Confirm Return
+                      </button>
+                    }
+                  />
+                ))}
               </div>
             </div>
           </section>
@@ -608,13 +606,18 @@ const LecturerBorrowManagementPage = () => {
 
             <div className="dashboard-card rounded-4xl overflow-hidden">
               <div className="divide-y divide-[#1E2B58]/5 dark:divide-white/5">
-                {handedOverRequests.map(req =>
-                  renderRequestRow(req, (
-                    <span className="px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-[10px] font-bold text-slate-500 uppercase tracking-widest">
-                      Chưa trả
-                    </span>
-                  ))
-                )}
+                {handedOverRequests.map(req => (
+                  <BorrowRequestRow
+                    key={req._id}
+                    req={req}
+                    onViewDetail={setViewDetailReq}
+                    actions={
+                      <span className="px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+                        Not Returned
+                      </span>
+                    }
+                  />
+                ))}
               </div>
             </div>
           </section>

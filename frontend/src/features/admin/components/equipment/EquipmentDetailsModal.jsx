@@ -173,16 +173,23 @@ const EquipmentDetailsModal = ({ isOpen, equipment, onClose, onEdit, onReportDam
  {/* QR Code / Placeholder for more info */}
  <div className="p-8 rounded-4xl border-2 border-slate-200 dark:border-slate-700 border-dashed flex flex-col items-center justify-center text-center">
  <p className="text-[10px] text-slate-400 font-black tracking-widest uppercase mb-3">Equipment QR</p>
- <div className="bg-white p-3 rounded-2xl shadow-inner mx-auto w-44 h-44 flex items-center justify-center border border-slate-100">
- <img
- src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(qrData || equipment.code || equipment._id)}`}
- alt="Equipment QR"
- className="w-full h-full opacity-95"
- />
- </div>
- <p className="mt-3 text-[10px] text-center text-slate-500 dark:text-slate-400 font-medium break-all px-2">
- {equipment.code ? `Code: ${equipment.code}` : `ID: ${equipment._id}`}
- </p>
+  <div className="bg-white p-3 rounded-2xl shadow-inner mx-auto w-44 h-44 flex items-center justify-center border border-slate-100">
+  <img
+  src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(qrData || equipment.code || equipment._id)}`}
+  alt="Equipment QR"
+  className="w-full h-full opacity-95"
+  />
+  </div>
+  {qrData ? (
+  <div className="mt-3 px-3 py-1.5 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-100 dark:border-slate-700/50 w-full max-w-[280px]">
+    <p className="text-[8px] text-center text-slate-400 dark:text-slate-500 font-medium break-all leading-tight">
+      {qrData}
+    </p>
+  </div>
+  ) : null}
+  <p className="mt-2 text-[9px] text-center text-slate-500 dark:text-slate-400 font-bold uppercase tracking-widest opacity-60">
+    {equipment.code ? `Code: ${equipment.code}` : `ID: ${equipment._id}`}
+  </p>
  </div>
  </div>
 
