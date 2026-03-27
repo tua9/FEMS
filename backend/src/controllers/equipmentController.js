@@ -4,7 +4,7 @@ import { asyncHandler } from '../middlewares/asyncHandler.js'
 import Equipment from '../models/Equipment.js'
 
 export const createEquipment = asyncHandler(async (req, res) => {
-  console.log('💻 create equipment')
+  console.log('💻 create equipment | body fields:', Object.keys(req.body))
   const result = await equipmentService.createEquipment(req.body)
   res.status(StatusCodes.CREATED).json(result)
 })
@@ -40,7 +40,22 @@ export const getEquipmentInventory = asyncHandler(async (req, res) => {
 })
 
 export const getEquipmentCategories = asyncHandler(async (req, res) => {
-  // Distinct categories from DB (read-only)
   const categories = await Equipment.distinct('category')
   res.status(StatusCodes.OK).json((categories || []).filter(Boolean))
+})
+
+export const markEquipmentBroken = asyncHandler(async (req, res) => {
+  try {
+    const result = await equipmentService.markBroken(req.params.id, req.user._id)
+    res.status(StatusCodes.OK).json(result)
+  } catch (err) {
+    // 409 Conflict: existing open repair — surface the existing report to frontend
+    if (err.statusCode === 409 && err.existingReport) {
+      return res.status(StatusCodes.CONFLICT).json({
+        message: err.message,
+        existingReport: err.existingReport,
+      })
+    }
+    throw err
+  }
 })

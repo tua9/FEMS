@@ -1,298 +1,529 @@
-import React, { useState, useMemo, useEffect, useCallback } from 'react';
+import React, { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import { toast } from 'sonner';
+import { createPortal } from 'react-dom';
 import { technicianApi } from '@/services/technicianApi';
-import EquipmentSidebar from '@/features/technician/components/equipment/EquipmentSidebar';
-import AssetGrid from '@/features/technician/components/equipment/AssetGrid';
-import AssetPagination from '@/features/technician/components/equipment/AssetPagination';
-import AssetDetailModal from '@/features/technician/components/equipment/AssetDetailModal';
 import AssetEditModal from '@/features/technician/components/equipment/AssetEditModal';
 import AddEquipmentModal from '@/features/technician/components/equipment/AddEquipmentModal';
+import EquipmentSuccessModal from '@/features/technician/components/equipment/EquipmentSuccessModal';
 import QRCodeModal from '@/features/technician/components/equipment/QRCodeModal';
 import RepairTable from '@/features/technician/components/equipment/RepairTable';
 import { PageHeader } from '@/features/shared/components/PageHeader';
 
-const ITEMS_PER_PAGE = 6;
-
-// ── Status mapping: backend → UI ─────────────────────────────────────────────
-const STATUS_MAP = {
-  available:   { label: 'Available',   dot: 'bg-emerald-500', color: 'text-emerald-600 dark:text-emerald-400', border: 'border-emerald-200', bg: 'bg-emerald-50' },
-  maintenance: { label: 'Maintenance', dot: 'bg-amber-500',   color: 'text-amber-600 dark:text-amber-400',   border: 'border-amber-200',   bg: 'bg-amber-50' },
-  broken:      { label: 'Broken',      dot: 'bg-red-500',     color: 'text-red-600 dark:text-red-400',      border: 'border-red-200',     bg: 'bg-red-50' },
-  // backward compatibility (old data)
-  good:        { label: 'Available',   dot: 'bg-emerald-500', color: 'text-emerald-600 dark:text-emerald-400', border: 'border-emerald-200', bg: 'bg-emerald-50' },
+// ── Status config ─────────────────────────────────────────────────────────────
+const STATUS_CONFIG = {
+  available:   { label: 'AVAILABLE',    badge: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400', dot: 'bg-emerald-500' },
+  maintenance: { label: 'MAINTENANCE',  badge: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400',       dot: 'bg-amber-500' },
+  broken:      { label: 'BROKEN',       badge: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',               dot: 'bg-red-500' },
+  good:        { label: 'AVAILABLE',    badge: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400', dot: 'bg-emerald-500' },
 };
-
-const CATEGORY_ICON = {
-  Computing: 'laptop_mac', 'AV Display': 'monitor', Networking: 'router',
-  Peripherals: 'print', Other: 'category',
-};
-
-// Map backend equipment to AssetCard format
-const toAsset = (eq) => ({
-  _id: eq._id,
-  id:  eq._id,
-  name: eq.name,
-  serial: eq.code ?? eq._id?.slice(-8).toUpperCase(),
-  category: eq.category ?? 'Other',
-  status: STATUS_MAP[eq.status]?.label ?? 'Available',
-  _status: eq.status,
-  icon: CATEGORY_ICON[eq.category] ?? 'category',
-  imageUrl: eq.img ?? undefined,
-  location: (eq.roomId ?? eq.room_id)?.name ?? undefined,
-  code: eq.code,
-});
 
 const STATUS_FILTERS = [
-  { key: 'all',         label: 'Tất cả' },
-  { key: 'available',   label: 'Sẵn sàng' },
-  { key: 'maintenance', label: 'Bảo trì' },
-  { key: 'broken',      label: 'Hỏng' },
+  { key: 'all',         label: 'All' },
+  { key: 'available',   label: 'Available' },
+  { key: 'maintenance', label: 'Maintenance' },
+  { key: 'broken',      label: 'Broken' },
 ];
 
+// ── Confirm Delete Modal ──────────────────────────────────────────────────────
+const ConfirmDeleteModal = ({ equipment, onConfirm, onClose, loading }) =>
+  createPortal(
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center px-4 bg-black/40 backdrop-blur-sm"
+      onClick={onClose}
+    >
+      <div
+        className="dashboard-card rounded-4xl shadow-2xl w-full max-w-sm p-7 flex flex-col gap-5"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex flex-col items-center text-center gap-3">
+          <div className="w-14 h-14 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
+            <span className="material-symbols-outlined text-3xl text-red-500">delete_forever</span>
+          </div>
+          <div>
+            <h3 className="text-lg font-extrabold text-[#1A2B56] dark:text-white">Delete Equipment</h3>
+            <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+              Are you sure you want to delete{' '}
+              <span className="font-bold text-[#1A2B56] dark:text-white">{equipment?.name}</span>?
+              <br />
+              This action cannot be undone.
+            </p>
+          </div>
+        </div>
+        <div className="flex gap-3">
+          <button
+            onClick={onClose}
+            className="flex-1 py-3 rounded-[1.25rem] border border-slate-200 dark:border-slate-700 text-sm font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={onConfirm}
+            disabled={loading}
+            className="flex-1 py-3 rounded-[1.25rem] bg-red-500 text-white text-sm font-bold hover:bg-red-600 transition flex items-center justify-center gap-2 disabled:opacity-60"
+          >
+            {loading
+              ? <span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+              : <span className="material-symbols-outlined text-base">delete</span>
+            }
+            Delete
+          </button>
+        </div>
+      </div>
+    </div>,
+    document.body
+  );
+
+// ── Confirm Mark Broken Modal ─────────────────────────────────────────────────
+const ConfirmMarkBrokenModal = ({ equipment, onConfirm, onClose, loading }) =>
+  createPortal(
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center px-4 bg-black/40 backdrop-blur-sm"
+      onClick={onClose}
+    >
+      <div
+        className="dashboard-card rounded-4xl shadow-2xl w-full max-w-sm p-7 flex flex-col gap-5"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex flex-col items-center text-center gap-3">
+          <div className="w-14 h-14 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
+            <span className="material-symbols-outlined text-3xl text-red-500">build_circle</span>
+          </div>
+          <div>
+            <h3 className="text-lg font-extrabold text-[#1A2B56] dark:text-white">Mark as Broken</h3>
+            <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+              Mark{' '}
+              <span className="font-bold text-[#1A2B56] dark:text-white">{equipment?.name}</span>{' '}
+              as broken? This will create a repair request and the equipment will be taken out of service.
+            </p>
+          </div>
+        </div>
+        <div className="flex gap-3">
+          <button
+            onClick={onClose}
+            className="flex-1 py-3 rounded-[1.25rem] border border-slate-200 dark:border-slate-700 text-sm font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={onConfirm}
+            disabled={loading}
+            className="flex-1 py-3 rounded-[1.25rem] bg-red-500 text-white text-sm font-bold hover:bg-red-600 transition flex items-center justify-center gap-2 disabled:opacity-60"
+          >
+            {loading
+              ? <span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+              : <span className="material-symbols-outlined text-base">build_circle</span>
+            }
+            Confirm
+          </button>
+        </div>
+      </div>
+    </div>,
+    document.body
+  );
+
+// ── Equipment Row ─────────────────────────────────────────────────────────────
+const EquipmentRow = React.memo(({ eq, onQR, onEdit, onDelete, onMarkBroken }) => {
+  const cfg  = STATUS_CONFIG[eq.status] ?? STATUS_CONFIG.available;
+  const room = eq.roomId?.name ?? eq.roomId ?? '—';
+
+  return (
+    <tr className="border-b border-slate-100 dark:border-slate-800/60 hover:bg-slate-50/60 dark:hover:bg-slate-800/30 transition-colors">
+      {/* Equipment */}
+      <td className="py-3.5 pl-5 pr-4">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-700 flex items-center justify-center flex-shrink-0 overflow-hidden">
+            {eq.img
+              ? <img src={eq.img} alt={eq.name} className="w-full h-full object-cover" />
+              : <span className="material-symbols-outlined text-lg text-slate-400">devices</span>
+            }
+          </div>
+          <div className="min-w-0">
+            <div className="font-semibold text-sm text-slate-800 dark:text-slate-200 truncate">{eq.name}</div>
+            <div className="text-[10px] text-slate-400 mt-0.5">Code: {eq.code ?? '—'}</div>
+          </div>
+        </div>
+      </td>
+
+      {/* Category */}
+      <td className="py-3.5 pr-4 text-xs text-slate-600 dark:text-slate-400">{eq.category ?? '—'}</td>
+
+      {/* Location */}
+      <td className="py-3.5 pr-4 text-xs text-slate-600 dark:text-slate-400">{room}</td>
+
+      {/* Status */}
+      <td className="py-3.5 pr-4">
+        <span className={`inline-flex items-center gap-1.5 text-[10px] font-black px-2.5 py-1 rounded-full ${cfg.badge}`}>
+          <span className={`w-1.5 h-1.5 rounded-full ${cfg.dot}`} />
+          {cfg.label}
+        </span>
+      </td>
+
+      {/* Actions */}
+      <td className="py-3.5 pr-5">
+        <div className="flex items-center gap-0.5">
+          <button
+            title="View QR Code"
+            onClick={() => onQR(eq)}
+            className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition"
+          >
+            <span className="material-symbols-outlined text-[18px]">qr_code</span>
+          </button>
+          <button
+            title="Edit"
+            onClick={() => onEdit(eq)}
+            className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition"
+          >
+            <span className="material-symbols-outlined text-[18px]">edit</span>
+          </button>
+          {eq.status !== 'broken' && (
+            <button
+              title="Mark as Broken"
+              onClick={() => onMarkBroken(eq)}
+              className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 text-slate-400 hover:text-red-500 transition"
+            >
+              <span className="material-symbols-outlined text-[18px]">build_circle</span>
+            </button>
+          )}
+          <button
+            title="Delete"
+            onClick={() => onDelete(eq)}
+            className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 text-slate-400 hover:text-red-500 transition"
+          >
+            <span className="material-symbols-outlined text-[18px]">delete</span>
+          </button>
+        </div>
+      </td>
+    </tr>
+  );
+});
+
+// ── Main Page ─────────────────────────────────────────────────────────────────
 const EquipmentInventory = () => {
-  const [assets, setAssets] = useState([]);
+  const [equipment,     setEquipment]     = useState([]);
   const [repairReports, setRepairReports] = useState([]);
-  const [loadingAssets, setLoadingAssets] = useState(true);
-  const [loadingRepairs, setLoadingRepairs] = useState(true);
+  const [loadingEq,     setLoadingEq]     = useState(true);
+  const [loadingRepair, setLoadingRepair] = useState(true);
 
-  const [activeCategory, setActiveCategory] = useState('All Assets');
-  const [activeStatus, setActiveStatus] = useState('all');
-  const [currentPage, setCurrentPage] = useState(1);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [modal, setModal] = useState({ type: 'none' });
+  // Equipment filters
+  const [statusFilter,  setStatusFilter]  = useState('all');
+  const [searchQuery,   setSearchQuery]   = useState('');
 
-  // ── Fetch equipment ──────────────────────────────────────────────────────────
-  const fetchEquipment = useCallback(async () => {
-    setLoadingAssets(true);
+  // Repair section: controlled filter + highlight
+  const [repairFilter,     setRepairFilter]     = useState('all');
+  const [highlightedRepId, setHighlightedRepId] = useState(null);
+
+  // Modal state
+  const [modal,        setModal]        = useState({ type: 'none' });
+  const [actionTarget, setActionTarget] = useState(null);
+  const [actioning,    setActioning]    = useState(false);
+
+  // Ref for scroll-to-repair
+  const repairSectionRef = useRef(null);
+
+  // ── Data loaders ────────────────────────────────────────────────────────────
+  const loadEquipment = useCallback(async () => {
+    setLoadingEq(true);
     try {
       const data = await technicianApi.listEquipment();
-      setAssets((Array.isArray(data) ? data : []).map(toAsset));
+      setEquipment(Array.isArray(data) ? data : []);
     } catch {
-      toast.error('Không thể tải danh sách thiết bị');
+      toast.error('Failed to load equipment list');
     } finally {
-      setLoadingAssets(false);
+      setLoadingEq(false);
     }
   }, []);
 
-  const fetchRepairs = useCallback(async () => {
-    setLoadingRepairs(true);
+  const loadRepairs = useCallback(async () => {
+    setLoadingRepair(true);
     try {
       const data = await technicianApi.getEquipmentReports({ type: 'equipment' });
       setRepairReports(Array.isArray(data) ? data.filter((r) => r.equipment_id) : []);
     } catch {
-      toast.error('Không thể tải danh sách sửa chữa');
+      toast.error('Failed to load repair requests');
     } finally {
-      setLoadingRepairs(false);
+      setLoadingRepair(false);
     }
   }, []);
 
   useEffect(() => {
-    fetchEquipment();
-    fetchRepairs();
-  }, [fetchEquipment, fetchRepairs]);
+    loadEquipment();
+    loadRepairs();
+  }, [loadEquipment, loadRepairs]);
 
-  // ── Derived list ─────────────────────────────────────────────────────────────
-  const filtered = useMemo(() => {
-    let list = assets;
-    if (activeCategory !== 'All Assets') list = list.filter((a) => a.category === activeCategory);
-    if (activeStatus !== 'all') list = list.filter((a) => a._status === activeStatus);
+  // ── Filtered equipment list ──────────────────────────────────────────────────
+  const filteredEquipment = useMemo(() => {
+    let list = equipment;
+    if (statusFilter !== 'all') list = list.filter((e) => e.status === statusFilter);
     if (searchQuery.trim()) {
       const q = searchQuery.trim().toLowerCase();
       list = list.filter(
-        (a) => a.name.toLowerCase().includes(q) || a.serial.toLowerCase().includes(q) || (a.location ?? '').toLowerCase().includes(q),
+        (e) =>
+          e.name?.toLowerCase().includes(q) ||
+          e.code?.toLowerCase().includes(q) ||
+          e.category?.toLowerCase().includes(q) ||
+          e.roomId?.name?.toLowerCase().includes(q),
       );
     }
     return list;
-  }, [assets, activeCategory, activeStatus, searchQuery]);
+  }, [equipment, statusFilter, searchQuery]);
 
-  const totalPages = Math.max(1, Math.ceil(filtered.length / ITEMS_PER_PAGE));
-  const safePage = Math.min(currentPage, totalPages);
-  const paged = filtered.slice((safePage - 1) * ITEMS_PER_PAGE, safePage * ITEMS_PER_PAGE);
+  // ── Count per status ─────────────────────────────────────────────────────────
+  const countByStatus = useMemo(() => {
+    const counts = { available: 0, maintenance: 0, broken: 0 };
+    equipment.forEach((e) => {
+      const k = e.status === 'good' ? 'available' : e.status;
+      if (k in counts) counts[k]++;
+    });
+    return counts;
+  }, [equipment]);
 
-  // ── Handlers ─────────────────────────────────────────────────────────────────
+  // ── Scroll + highlight helper ────────────────────────────────────────────────
+  const focusRepairRecord = useCallback((reportId) => {
+    // 1. Ensure the filter shows the record
+    setRepairFilter('all');
+    // 2. Set highlight
+    setHighlightedRepId(reportId);
+    // 3. Scroll to repair section
+    setTimeout(() => {
+      repairSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 100);
+    // 4. Clear highlight after 3.5s
+    setTimeout(() => setHighlightedRepId(null), 3500);
+  }, []);
+
+  // ── Action handlers ──────────────────────────────────────────────────────────
   const handleAdd = async (body) => {
-    try {
-      const created = await technicianApi.createEquipment(body);
-      const asset = toAsset(created);
-      setAssets((prev) => [asset, ...prev]);
-      setModal({ type: 'success', asset });
-    } catch (err) {
-      toast.error(err?.response?.data?.message ?? 'Không thể thêm thiết bị');
-    }
+    // NOTE: errors are intentionally re-thrown so the modal can show them inline
+    const res = await technicianApi.createEquipment(body);
+    const created = res.equipment ?? res;
+    setEquipment((prev) => [created, ...prev]);
+    setModal({ type: 'none' });
+    // Open success modal with QR
+    setTimeout(() => setModal({ type: 'addSuccess', equipment: created }), 50);
   };
 
   const handleSave = async (updated) => {
     try {
-      const res = await technicianApi.updateEquipment(updated._id, { name: updated.name, category: updated.category, status: updated._status });
-      setAssets((prev) => prev.map((a) => (a._id === res._id ? toAsset(res) : a)));
+      const res = await technicianApi.updateEquipment(updated._id, {
+        name:        updated.name,
+        category:    updated.category,
+        status:      updated.status,
+        description: updated.description,
+        roomId:      updated.roomId?._id ?? updated.roomId,
+      });
+      const saved = res.equipment ?? res;
+      setEquipment((prev) => prev.map((e) => (e._id === saved._id ? saved : e)));
       setModal({ type: 'none' });
-      toast.success('Đã cập nhật thiết bị');
+      toast.success('Equipment updated');
     } catch {
-      toast.error('Không thể cập nhật thiết bị');
+      toast.error('Failed to update equipment');
     }
   };
 
-  const handleDelete = async (asset) => {
-    if (!window.confirm(`Xoá thiết bị "${asset.name}"?`)) return;
+  const handleDeleteConfirm = async () => {
+    if (!actionTarget) return;
+    setActioning(true);
     try {
-      await technicianApi.deleteEquipment(asset._id);
-      setAssets((prev) => prev.filter((a) => a._id !== asset._id));
+      await technicianApi.deleteEquipment(actionTarget._id);
+      setEquipment((prev) => prev.filter((e) => e._id !== actionTarget._id));
       setModal({ type: 'none' });
-      toast.success('Đã xoá thiết bị');
+      setActionTarget(null);
+      toast.success('Equipment deleted');
     } catch {
-      toast.error('Không thể xoá thiết bị');
+      toast.error('Failed to delete equipment');
+    } finally {
+      setActioning(false);
     }
   };
 
-  const handleMarkBroken = async (asset) => {
-    if (!window.confirm(`Đánh dấu thiết bị "${asset.name}" là hỏng?`)) return;
+  const handleMarkBrokenConfirm = async () => {
+    if (!actionTarget) return;
+    setActioning(true);
     try {
-      await technicianApi.updateEquipment(asset._id, { status: 'broken' });
-      setAssets((prev) => prev.map((a) => a._id === asset._id ? { ...a, _status: 'broken', status: 'Faulty' } : a));
-      setModal({ type: 'none' });
-      toast.success('Đã đánh dấu hỏng');
-    } catch {
-      toast.error('Không thể cập nhật trạng thái');
+      const res = await technicianApi.markEquipmentBroken(actionTarget._id);
+      // Update equipment row status
+      const updatedEq = res.equipment ?? { ...actionTarget, status: 'broken' };
+      setEquipment((prev) => prev.map((e) => (e._id === updatedEq._id ? updatedEq : e)));
+      // Prepend new repair report
+      const newReport = res.report;
+      if (newReport) {
+        setRepairReports((prev) => [newReport, ...prev]);
+        setModal({ type: 'none' });
+        setActionTarget(null);
+        toast.success(`"${actionTarget.name}" marked as broken — repair request created`);
+        focusRepairRecord(newReport._id);
+      } else {
+        setModal({ type: 'none' });
+        setActionTarget(null);
+        toast.success(`"${actionTarget.name}" marked as broken`);
+      }
+    } catch (err) {
+      const status = err?.response?.status;
+      if (status === 409) {
+        // Equipment already has an open repair — navigate to existing record
+        const existingReport = err?.response?.data?.existingReport;
+        setModal({ type: 'none' });
+        setActionTarget(null);
+        toast.info('Equipment already has an open repair request — scrolling to it');
+        if (existingReport) {
+          // Ensure equipment is shown as broken
+          setEquipment((prev) =>
+            prev.map((e) => (e._id === actionTarget._id ? { ...e, status: 'broken' } : e)),
+          );
+          // Make sure it's in repair list
+          setRepairReports((prev) => {
+            const already = prev.find((r) => r._id === existingReport._id);
+            return already ? prev : [existingReport, ...prev];
+          });
+          focusRepairRecord(existingReport._id);
+        }
+      } else {
+        toast.error(err?.response?.data?.message ?? 'Failed to mark equipment as broken');
+      }
+    } finally {
+      setActioning(false);
     }
   };
 
   const handleUpdateRepairStatus = async (id, payload) => {
     try {
       await technicianApi.updateTicket(id, payload);
-      await fetchRepairs();
-      toast.success('Cập nhật trạng thái thành công');
+      await loadRepairs();
+      // If fixed → equipment may need status update too
+      if (payload.status === 'fixed') await loadEquipment();
+      toast.success('Repair status updated');
     } catch (err) {
-      toast.error(err?.response?.data?.message ?? 'Không thể cập nhật');
+      toast.error(err?.response?.data?.message ?? 'Failed to update status');
     }
   };
 
-  const closeModal = () => setModal({ type: 'none' });
+  const closeModal = () => { setModal({ type: 'none' }); setActionTarget(null); };
 
+  // ── Render ───────────────────────────────────────────────────────────────────
   return (
-    <div className="pt-6 sm:pt-8 pb-16 px-6 max-w-7xl mx-auto">
-      <PageHeader title="Quản lý Thiết bị" subtitle="Quản lý và theo dõi thiết bị kỹ thuật" />
+    <div className="pt-6 sm:pt-8 pb-20 px-4 sm:px-6 max-w-7xl mx-auto">
+      <PageHeader
+        title="Equipment Management"
+        subtitle="Manage, monitor, and report equipment issues"
+      />
 
-      <div className="flex flex-col md:flex-row gap-8">
-        {/* Sidebar */}
-        <EquipmentSidebar
-          activeCategory={activeCategory}
-          storagePercentage={Math.round((assets.filter((a) => a._status === 'available').length / Math.max(assets.length, 1)) * 100)}
-          onCategorySelect={(cat) => { setActiveCategory(cat); setCurrentPage(1); }}
-        />
-
-        {/* Main */}
-        <div className="flex-1 space-y-6">
-          {/* Toolbar */}
-          <div className="flex items-center gap-3 justify-end flex-wrap">
-            <div className="relative flex-1 max-w-sm">
-              <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[#232F58]/50 dark:text-slate-400 text-[20px] pointer-events-none">search</span>
-              <input
-                type="text" value={searchQuery}
-                onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }}
-                placeholder="Tìm theo tên, mã, vị trí…"
-                className="w-full pl-10 pr-9 py-3 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm text-slate-700 dark:text-slate-200 placeholder-slate-400 shadow-sm focus:outline-none focus:ring-2 focus:ring-[#232F58]/30 transition"
-              />
-              {searchQuery && (
-                <button onClick={() => { setSearchQuery(''); setCurrentPage(1); }} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition">
-                  <span className="material-symbols-outlined text-[18px]">close</span>
+      {/* ── Equipment Section ─────────────────────────────────────────────── */}
+      <div className="dashboard-card rounded-4xl overflow-hidden mb-8">
+        {/* Toolbar */}
+        <div className="px-6 pt-6 pb-4 flex flex-wrap items-center gap-3 border-b border-slate-100 dark:border-slate-800">
+          {/* Status filter tabs */}
+          <div className="flex gap-2 flex-wrap flex-1">
+            {STATUS_FILTERS.map((f) => {
+              const count = f.key === 'all' ? equipment.length : (countByStatus[f.key] ?? 0);
+              return (
+                <button
+                  key={f.key}
+                  onClick={() => setStatusFilter(f.key)}
+                  className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition-all ${
+                    statusFilter === f.key
+                      ? 'bg-[#1A2B56] text-white shadow-md'
+                      : 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600'
+                  }`}
+                >
+                  {f.label}
+                  <span className="ml-1.5 opacity-70">{count}</span>
                 </button>
-              )}
-            </div>
-            <button
-              onClick={() => setModal({ type: 'add' })}
-              className="flex items-center gap-2 px-6 py-3.5 bg-[#232F58] text-white rounded-2xl text-sm font-bold shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all whitespace-nowrap"
-            >
-              <span className="material-symbols-outlined text-xl">add</span>
-              Thêm thiết bị
-            </button>
+              );
+            })}
           </div>
 
-          {/* Status filter pills */}
-          <div className="flex gap-2 flex-wrap">
-            {STATUS_FILTERS.map((f) => (
-              <button
-                key={f.key}
-                onClick={() => { setActiveStatus(f.key); setCurrentPage(1); }}
-                className={`px-4 py-2 rounded-full text-xs font-bold transition-all ${
-                  activeStatus === f.key
-                    ? 'bg-[#232F58] text-white'
-                    : 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600'
-                }`}
-              >
-                {f.label}
-                <span className="ml-1.5 opacity-70">
-                  {f.key === 'all' ? assets.length : assets.filter((a) => a._status === f.key).length}
-                </span>
-              </button>
-            ))}
-          </div>
-
-          {/* Grid */}
-          {loadingAssets ? (
-            <div className="flex items-center justify-center py-20">
-              <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#1A2B56]" />
-            </div>
-          ) : (
-            <AssetGrid
-              assets={paged}
-              onAssetClick={(asset) => setModal({ type: 'detail', asset })}
-              extraActions={(asset) => (
-                <div className="flex gap-1 mt-2">
-                  <button
-                    title="QR Code" onClick={(e) => { e.stopPropagation(); setModal({ type: 'qr', asset }); }}
-                    className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-500 transition"
-                  >
-                    <span className="material-symbols-outlined text-base">qr_code</span>
-                  </button>
-                  <button
-                    title="Chỉnh sửa" onClick={(e) => { e.stopPropagation(); setModal({ type: 'edit', asset }); }}
-                    className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-500 transition"
-                  >
-                    <span className="material-symbols-outlined text-base">edit</span>
-                  </button>
-                  <button
-                    title="Đánh dấu hỏng" onClick={(e) => { e.stopPropagation(); handleMarkBroken(asset); }}
-                    className="p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 text-slate-500 hover:text-red-500 transition"
-                  >
-                    <span className="material-symbols-outlined text-base">build_circle</span>
-                  </button>
-                  <button
-                    title="Xoá" onClick={(e) => { e.stopPropagation(); handleDelete(asset); }}
-                    className="p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 text-slate-500 hover:text-red-500 transition"
-                  >
-                    <span className="material-symbols-outlined text-base">delete</span>
-                  </button>
-                </div>
-              )}
+          {/* Search */}
+          <div className="relative w-56">
+            <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[18px] pointer-events-none">search</span>
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search equipment…"
+              className="w-full pl-9 pr-8 py-2 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs text-slate-700 dark:text-slate-200 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#1A2B56]/20 transition"
             />
-          )}
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery('')}
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition"
+              >
+                <span className="material-symbols-outlined text-[16px]">close</span>
+              </button>
+            )}
+          </div>
 
-          <AssetPagination
-            currentPage={safePage} totalPages={totalPages}
-            visibleCount={paged.length} totalCount={filtered.length}
-            onPageChange={setCurrentPage}
-          />
+          {/* Add button */}
+          <button
+            onClick={() => setModal({ type: 'add' })}
+            className="flex items-center gap-1.5 px-4 py-2 bg-[#1A2B56] text-white rounded-2xl text-xs font-bold shadow hover:shadow-lg hover:-translate-y-0.5 transition-all whitespace-nowrap"
+          >
+            <span className="material-symbols-outlined text-base">add</span>
+            Add Equipment
+          </button>
         </div>
+
+        {/* Table */}
+        {loadingEq ? (
+          <div className="flex items-center justify-center py-20">
+            <div className="animate-spin rounded-full h-9 w-9 border-b-2 border-[#1A2B56]" />
+          </div>
+        ) : filteredEquipment.length === 0 ? (
+          <div className="text-center py-16 text-slate-400">
+            <span className="material-symbols-outlined text-5xl mb-3 block">inventory_2</span>
+            <p className="text-sm font-medium">No equipment found</p>
+            <p className="text-xs mt-1">Try changing the filter or search term</p>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-slate-100 dark:border-slate-800">
+                  {['Equipment', 'Category', 'Location', 'Status', 'Actions'].map((h) => (
+                    <th
+                      key={h}
+                      className={`text-left text-[10px] font-black uppercase tracking-widest text-slate-400 py-3 pr-4 ${h === 'Equipment' ? 'pl-5' : ''} ${h === 'Actions' ? 'pr-5' : ''}`}
+                    >
+                      {h}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {filteredEquipment.map((eq) => (
+                  <EquipmentRow
+                    key={eq._id}
+                    eq={eq}
+                    onQR={(e)        => setModal({ type: 'qr',   asset: e })}
+                    onEdit={(e)      => setModal({ type: 'edit', asset: e })}
+                    onDelete={(e)    => { setActionTarget(e); setModal({ type: 'delete' }); }}
+                    onMarkBroken={(e)=> { setActionTarget(e); setModal({ type: 'markBroken' }); }}
+                  />
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
 
-      {/* ── Repair Table ─────────────────────────────────────────────────────── */}
-      <div className="mt-12 dashboard-card p-6 rounded-4xl">
+      {/* ── Repair Requests Section ───────────────────────────────────────── */}
+      <div ref={repairSectionRef} className="dashboard-card rounded-4xl p-6">
         <RepairTable
           reports={repairReports}
-          loading={loadingRepairs}
+          loading={loadingRepair}
           onUpdateStatus={handleUpdateRepairStatus}
+          statusFilter={repairFilter}
+          onStatusFilterChange={setRepairFilter}
+          highlightedId={highlightedRepId}
         />
       </div>
 
-      {/* ── Modals ───────────────────────────────────────────────────────────── */}
-      {modal.type === 'detail' && (
-        <AssetDetailModal
-          asset={modal.asset} onClose={closeModal}
-          onEdit={(a) => setModal({ type: 'edit', asset: a })}
-        />
-      )}
+      {/* ── Modals ────────────────────────────────────────────────────────── */}
       {modal.type === 'edit' && (
-        <AssetEditModal asset={modal.asset} onClose={closeModal} onSave={handleSave} />
+        <AssetEditModal
+          asset={modal.asset}
+          onClose={closeModal}
+          onSave={handleSave}
+        />
       )}
       {modal.type === 'qr' && (
         <QRCodeModal equipment={modal.asset} onClose={closeModal} />
@@ -300,54 +531,24 @@ const EquipmentInventory = () => {
       {modal.type === 'add' && (
         <AddEquipmentModal onClose={closeModal} onAdd={handleAdd} />
       )}
-
-      {modal.type === 'success' && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center px-4 py-6 bg-black/30 backdrop-blur-sm" onClick={closeModal}>
-          <div className="relative dashboard-card rounded-4xl shadow-2xl p-8 flex flex-col items-center gap-5 w-full max-w-sm" onClick={(e) => e.stopPropagation()}>
-            <button onClick={closeModal} className="absolute top-4 right-4 w-8 h-8 rounded-full flex items-center justify-center text-[#1E2B58]/50 hover:text-[#1E2B58] hover:bg-[#1E2B58]/8 transition">
-              <span className="material-symbols-outlined text-lg">close</span>
-            </button>
-
-            <div className="w-16 h-16 rounded-full bg-emerald-500/10 flex items-center justify-center">
-              <div className="w-11 h-11 rounded-full bg-emerald-500 flex items-center justify-center shadow-lg shadow-emerald-500/30">
-                <span className="material-symbols-outlined text-white text-2xl">check</span>
-              </div>
-            </div>
-
-            <div className="text-center space-y-1">
-              <p className="text-[0.625rem] font-black uppercase tracking-widest text-[#1E2B58]/50">Thành công</p>
-              <h3 className="text-xl font-extrabold text-[#1E2B58] dark:text-white">Đã thêm thiết bị!</h3>
-              <p className="text-sm text-slate-400">
-                <span className="font-semibold text-[#1E2B58] dark:text-white">{modal.asset?.name}</span> đã được đăng ký.
-              </p>
-            </div>
-
-            {/* QR Code preview */}
-            {modal.asset?.code && (
-              <div className="flex flex-col items-center gap-2">
-                <p className="text-xs text-slate-500">Mã QR để báo hỏng nhanh:</p>
-                <button
-                  onClick={() => { const a = modal.asset; closeModal(); setTimeout(() => setModal({ type: 'qr', asset: a }), 100); }}
-                  className="flex items-center gap-2 px-4 py-2.5 rounded-xl border-2 border-dashed border-[#1E2B58]/20 hover:border-[#1E2B58]/40 hover:bg-[#1E2B58]/5 transition text-[#1E2B58] dark:text-white"
-                >
-                  <span className="material-symbols-outlined text-xl">qr_code</span>
-                  <span className="text-sm font-bold">{modal.asset.code}</span>
-                </button>
-              </div>
-            )}
-
-            <div className="w-full flex gap-3">
-              <button onClick={closeModal} className="flex-1 py-3 rounded-[1.25rem] border border-[#1E2B58]/15 text-sm font-bold text-[#1E2B58]/70 hover:bg-[#1E2B58]/5 transition">Đóng</button>
-              <button
-                onClick={() => { const a = modal.asset; closeModal(); setTimeout(() => setModal({ type: 'qr', asset: a }), 100); }}
-                className="flex-1 py-3 rounded-[1.25rem] bg-[#1E2B58] text-white text-sm font-bold hover:bg-[#151f40] shadow-lg flex items-center justify-center gap-2 transition"
-              >
-                <span className="material-symbols-outlined text-base">qr_code</span>
-                Xem QR
-              </button>
-            </div>
-          </div>
-        </div>
+      {modal.type === 'addSuccess' && modal.equipment && (
+        <EquipmentSuccessModal equipment={modal.equipment} onClose={closeModal} />
+      )}
+      {modal.type === 'delete' && actionTarget && (
+        <ConfirmDeleteModal
+          equipment={actionTarget}
+          onClose={closeModal}
+          onConfirm={handleDeleteConfirm}
+          loading={actioning}
+        />
+      )}
+      {modal.type === 'markBroken' && actionTarget && (
+        <ConfirmMarkBrokenModal
+          equipment={actionTarget}
+          onClose={closeModal}
+          onConfirm={handleMarkBrokenConfirm}
+          loading={actioning}
+        />
       )}
     </div>
   );
