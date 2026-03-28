@@ -20,6 +20,7 @@ import AvailabilityLabel from '../components/borrow/AvailabilityLabel';
 import BorrowModal from '../components/borrow/BorrowModal';
 import HandoverConfirmModal from '../components/borrow/HandoverConfirmModal';
 import RequestDetailModal from '../components/borrow/RequestDetailModal';
+import ReturnModal from '../components/borrow/ReturnModal';
 import EquipmentCard from '../components/borrow/EquipmentCard';
 import ActiveRequestItem from '../components/borrow/ActiveRequestItem';
 
@@ -43,6 +44,7 @@ const StudentBorrowPage = () => {
   // ── Modal state ───────────────────────────────────────────────────────────
   const [borrowTarget, setBorrowTarget] = useState(null);
   const [handoverViewTarget, setHandoverViewTarget] = useState(null);
+  const [returnTarget, setReturnTarget] = useState(null);
   const [viewRequest, setViewRequest] = useState(null);
   const [submitting, setSubmitting] = useState(false);
 
@@ -223,18 +225,31 @@ const StudentBorrowPage = () => {
   };
 
   // ── Return submit (student submits return request) ───────────────────────
-  const handleReturnSubmit = async (req) => {
-    if (!window.confirm(`Bạn muốn yêu cầu trả thiết bị "${req.equipmentId?.name}"?`)) return;
+  const handleReturnSubmit = async (formData) => {
+    if (!returnTarget) return;
     setSubmitting(true);
     try {
-      await borrowRequestService.submitReturn(req._id);
+      let imageUrls = [];
+      if (formData.files && formData.files.length > 0) {
+        imageUrls = await uploadImages(formData.files);
+      }
+      await borrowRequestService.submitReturn(returnTarget._id, {
+        checklist: formData.checklist,
+        notes: formData.notes,
+        images: imageUrls,
+      });
       toast.success('Đã gửi yêu cầu hoàn trả. Chờ giảng viên xác nhận.');
+      setReturnTarget(null);
       await loadMyRequests();
     } catch (err) {
       toast.error(err?.response?.data?.message || 'Không thể gửi yêu cầu hoàn trả.');
     } finally {
       setSubmitting(false);
     }
+  };
+
+  const openReturnModal = (req) => {
+    setReturnTarget(req);
   };
 
   // ── Cancel request ────────────────────────────────────────────────────────
@@ -381,7 +396,7 @@ const StudentBorrowPage = () => {
                 <ActiveRequestItem
                   key={req._id}
                   req={req}
-                  onReturn={handleReturnSubmit}
+                  onReturn={openReturnModal}
                   onConfirmReceived={setHandoverViewTarget}
                   onCancel={handleCancelRequest}
                   onViewDetail={() => setViewRequest(req)}
@@ -446,6 +461,7 @@ const StudentBorrowPage = () => {
                     item={item}
                     myReq={myActiveByEqId[item._id]}
                     isSessionOngoing={isSessionOngoing && activeSchedule.isLecturerCheckedIn}
+                    hasActiveRequest={activeRequests.length > 0}
                     onBorrow={(it) => {
                       if (!isSessionOngoing) {
                         toast.warning('Buổi học chưa bắt đầu. Vui lòng chờ đến giờ học.');
@@ -455,9 +471,13 @@ const StudentBorrowPage = () => {
                         toast.warning('Giảng viên chưa điểm danh. Bạn không thể mượn thiết bị lúc này.');
                         return;
                       }
+                      if (activeRequests.length > 0) {
+                        toast.warning('Bạn phải hoàn tất hoặc hủy đơn hiện tại trước khi mượn thêm.');
+                        return;
+                      }
                       setBorrowTarget(it);
                     }}
-                    onReturn={handleReturnSubmit}
+                    onReturn={openReturnModal}
                     onConfirmReceived={setHandoverViewTarget}
                     onCancel={handleCancelRequest}
                     onViewDetail={setViewRequest}
@@ -490,6 +510,15 @@ const StudentBorrowPage = () => {
         request={handoverViewTarget}
         onConfirm={handleConfirmReceived}
         onCancelRequest={handleCancelRequest}
+        submitting={submitting}
+      />
+
+      {/* Return Modal */}
+      <ReturnModal
+        isOpen={!!returnTarget}
+        onClose={() => setReturnTarget(null)}
+        target={returnTarget}
+        onConfirm={handleReturnSubmit}
         submitting={submitting}
       />
 
