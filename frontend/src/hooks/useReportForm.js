@@ -82,6 +82,7 @@ export function useReportForm() {
  const [reportId, setReportId] = useState(null);
  const [reportSubject, setReportSubject] = useState('');
  const [reportDate, setReportDate] = useState('');
+ const [reportImages, setReportImages] = useState([]);
 
  // Controlled form state (single source of truth)
  const [category, setCategory] = useState(qrEquipmentId ? 'equipment' : (routeState.prefillCategory ?? 'equipment'));
@@ -121,46 +122,51 @@ export function useReportForm() {
  if (resetFileInputRef.current) resetFileInputRef.current();
  };
 
- const handleFormSubmit = async () => {
+ // formData is passed directly from the form's validated submit handler
+ const handleFormSubmit = async (formData) => {
+    const submittedFiles       = formData?.files       ?? files;
+    const submittedRoomId      = formData?.room_id     ?? roomId;
+    const submittedEquipmentId = formData?.equipment_id ?? (equipmentId || undefined);
+    const submittedCategory    = formData?.category    ?? category;
+    const submittedDescription = formData?.description ?? description;
+
     // Evidence required
-    if (!files || files.length < 1) {
+    if (!submittedFiles || submittedFiles.length < 1) {
       toast.error('Please upload at least 1 evidence image.');
       return;
     }
 
     setIsSubmitting(true);
     try {
-      let imageUrls = [];
-      if (files && files.length > 0) {
-        // Limit to 2 files as per requirement
-        const filesToUpload = files.slice(0, 2);
-        imageUrls = await uploadImages(filesToUpload);
-      }
+      const filesToUpload = submittedFiles.slice(0, 2);
+      const imageUrls = await uploadImages(filesToUpload);
 
-      const response = await createReport({
-        room_id: roomId,
-        equipment_id: equipmentId || undefined,
-        type: CATEGORY_TO_TYPE[category],
-        description,
+      // Backend returns { message, report_id, report: populated }
+      const data = await createReport({
+        room_id: submittedRoomId,
+        equipment_id: submittedEquipmentId || undefined,
+        type: CATEGORY_TO_TYPE[submittedCategory],
+        description: submittedDescription,
         severity: 'medium',
         images: imageUrls,
         img: imageUrls.length > 0 ? imageUrls[0] : undefined,
       });
 
-      const newReport = response.report;
-      const room = rooms.find(r => r._id === roomId);
+      const newReport = data?.report;
+      const room = rooms.find(r => r._id === submittedRoomId);
       const locationStr = room ? room.name : 'Unknown Location';
-      const subject = `${CATEGORY_LABELS[category]} Issue — ${locationStr}`;
+      const subject = `${CATEGORY_LABELS[submittedCategory]} Issue — ${locationStr}`;
       const today = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
 
-      if (newReport) {
-        setReportId(newReport.code || newReport._id.slice(-6).toUpperCase());
-      } else {
-        setReportId(response.report_id?.slice(-6).toUpperCase() || "SUCCESS");
-      }
-
+      setReportId(
+        newReport?.code
+        || newReport?._id?.slice(-6).toUpperCase()
+        || data?.report_id?.toString().slice(-6).toUpperCase()
+        || 'NEW'
+      );
       setReportSubject(subject);
       setReportDate(today);
+      setReportImages(imageUrls);
       setShowSuccess(true);
     } catch (err) {
       toast.error('Failed to submit report', {
@@ -173,6 +179,7 @@ export function useReportForm() {
 
  const handleSubmitAnother = () => {
  setShowSuccess(false);
+ setReportImages([]);
  handleResetForm();
  };
 
@@ -191,6 +198,7 @@ export function useReportForm() {
  reportId,
  reportSubject,
  reportDate,
+ reportImages,
  handleQRDetected,
  handleFormSubmit,
  handleSubmitAnother,

@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { createPortal } from 'react-dom';
 import {
   Loader2, BookOpen, MapPin, Clock, Package, AlertTriangle,
   Search, ChevronLeft, ChevronRight
@@ -10,6 +9,7 @@ import { equipmentService } from '@/services/equipmentService';
 import { borrowRequestService } from '@/services/borrowRequestService';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { PageHeader } from '@/features/shared/components/PageHeader';
+import ConfirmModal from '@/features/shared/components/ConfirmModal';
 import { getTodayVN, getSlotTimeStatus } from '@/utils/dateUtils';
 import { uploadImages } from '@/utils/uploadHelper';
 
@@ -22,6 +22,13 @@ import HandoverConfirmModal from '../components/borrow/HandoverConfirmModal';
 import RequestDetailModal from '../components/borrow/RequestDetailModal';
 import EquipmentCard from '../components/borrow/EquipmentCard';
 import ActiveRequestItem from '../components/borrow/ActiveRequestItem';
+
+/** Avoid "Slot Slot 1" when API already returns name like "Slot 1". */
+const formatSlotLabel = (slot) => {
+  const raw = String(slot?.name || slot?.code || '').trim();
+  if (!raw) return null;
+  return /^slot\b/i.test(raw) ? raw : `Slot ${raw}`;
+};
 
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
@@ -44,6 +51,7 @@ const StudentBorrowPage = () => {
   const [borrowTarget, setBorrowTarget] = useState(null);
   const [handoverViewTarget, setHandoverViewTarget] = useState(null);
   const [viewRequest, setViewRequest] = useState(null);
+  const [returnConfirmReq, setReturnConfirmReq] = useState(null);
   const [submitting, setSubmitting] = useState(false);
 
   // ── Pagination for My Requests ────────────────────────────────────────────
@@ -188,11 +196,11 @@ const StudentBorrowPage = () => {
         borrowDate: new Date().toISOString(),
         expectedReturnDate: activeSchedule?.endAt || new Date(Date.now() + 4 * 3600 * 1000).toISOString(),
       });
-      toast.success(`Đã gửi yêu cầu mượn "${borrowTarget.name}"!`);
+      toast.success(`Borrow request sent for "${borrowTarget.name}".`);
       setBorrowTarget(null);
       await loadMyRequests();
     } catch (err) {
-      toast.error(err?.response?.data?.message || 'Không thể gửi yêu cầu mượn.');
+      toast.error(err?.response?.data?.message || 'Could not send borrow request.');
     } finally {
       setSubmitting(false);
     }
@@ -212,26 +220,32 @@ const StudentBorrowPage = () => {
         notes: formData.notes,
         images: imageUrls,
       });
-      toast.success('Đã xác nhận nhận thiết bị.');
+      toast.success('Equipment receipt confirmed.');
       setHandoverViewTarget(null);
       await loadMyRequests();
     } catch (err) {
-      toast.error(err?.response?.data?.message || 'Không thể xác nhận nhận thiết bị.');
+      toast.error(err?.response?.data?.message || 'Could not confirm receipt.');
     } finally {
       setSubmitting(false);
     }
   };
 
-  // ── Return submit (student submits return request) ───────────────────────
-  const handleReturnSubmit = async (req) => {
-    if (!window.confirm(`Bạn muốn yêu cầu trả thiết bị "${req.equipmentId?.name}"?`)) return;
+  // ── Return request: open confirm modal, then submit ─────────────────────
+  const handleReturnClick = (req) => {
+    setReturnConfirmReq(req);
+  };
+
+  const handleReturnConfirm = async () => {
+    if (!returnConfirmReq) return;
+    const req = returnConfirmReq;
     setSubmitting(true);
     try {
       await borrowRequestService.submitReturn(req._id);
-      toast.success('Đã gửi yêu cầu hoàn trả. Chờ giảng viên xác nhận.');
+      toast.success('Return request sent. Waiting for lecturer confirmation.');
+      setReturnConfirmReq(null);
       await loadMyRequests();
     } catch (err) {
-      toast.error(err?.response?.data?.message || 'Không thể gửi yêu cầu hoàn trả.');
+      toast.error(err?.response?.data?.message || 'Could not submit return request.');
     } finally {
       setSubmitting(false);
     }
@@ -240,11 +254,11 @@ const StudentBorrowPage = () => {
   // ── Cancel request ────────────────────────────────────────────────────────
   const handleCancelRequest = async (req) => {
     try {
-      await borrowRequestService.cancelBorrowRequest(req._id, 'Sinh viên tự hủy');
-      toast.success('Đã hủy yêu cầu mượn thiết bị.');
+      await borrowRequestService.cancelBorrowRequest(req._id, 'Cancelled by student');
+      toast.success('Borrow request cancelled.');
       await loadMyRequests();
     } catch (err) {
-      toast.error(err?.response?.data?.message || 'Không thể hủy yêu cầu.');
+      toast.error(err?.response?.data?.message || 'Could not cancel request.');
     }
   };
 
@@ -256,8 +270,8 @@ const StudentBorrowPage = () => {
       <main className="mx-auto flex w-full max-w-[90vw] flex-1 flex-col px-4 pt-6 sm:pt-24 pb-10 sm:px-6 xl:max-w-7xl">
 
         <PageHeader
-          title="Mượn Thiết Bị"
-          subtitle="Xem và yêu cầu mượn thiết bị trong phòng học hiện tại của bạn."
+          title="Borrow Equipment"
+          subtitle="View and request equipment in your current classroom session."
         />
 
         {/* ══ SECTION 1: Session Info ══════════════════════════════════════════ */}
@@ -265,15 +279,15 @@ const StudentBorrowPage = () => {
           {scheduleLoading ? (
             <div className="dashboard-card rounded-4xl p-8 flex items-center gap-4">
               <Loader2 className="w-5 h-5 animate-spin text-[#1E2B58]/30 dark:text-white/20" />
-              <span className="text-sm text-[#1E2B58]/50 dark:text-white/40">Đang tải lịch học...</span>
+              <span className="text-sm text-[#1E2B58]/50 dark:text-white/40">Loading schedule…</span>
             </div>
           ) : !activeSchedule ? (
             <div className="dashboard-card rounded-4xl p-12 flex flex-col items-center justify-center text-center gap-4">
               <BookOpen className="w-12 h-12 text-[#1E2B58]/15 dark:text-white/15" />
               <div>
-                <p className="font-black text-[#1E2B58]/50 dark:text-white/40">Không có buổi học nào tiếp theo</p>
+                <p className="font-black text-[#1E2B58]/50 dark:text-white/40">No upcoming class session</p>
                 <p className="text-xs text-[#1E2B58]/30 dark:text-white/30 mt-1">
-                  Việc mượn thiết bị chỉ khả dụng trong buổi học được lên lịch.
+                  Borrowing is only available during a scheduled class.
                 </p>
               </div>
             </div>
@@ -287,7 +301,7 @@ const StudentBorrowPage = () => {
                   </div>
                   <div>
                     <p className="text-[0.625rem] font-black uppercase tracking-widest text-[#1E2B58]/50 dark:text-white/40 mb-1">
-                      Buổi học hôm nay
+                      Today&apos;s session
                     </p>
                     <h2 className="text-xl font-black text-[#1E2B58] dark:text-white leading-tight">
                       {activeSchedule.title}
@@ -301,11 +315,15 @@ const StudentBorrowPage = () => {
                         <Clock className="w-3.5 h-3.5 shrink-0" />
                         {activeSchedule.slotId?.startTime || fmtTime(activeSchedule.startAt)} – {activeSchedule.slotId?.endTime || fmtTime(activeSchedule.endAt)}
                       </span>
-                      {activeSchedule.slotId && (
-                        <span className="text-xs font-bold text-slate-400 dark:text-slate-500">
-                          Tiết {activeSchedule.slotId.name || activeSchedule.slotId.code}
-                        </span>
-                      )}
+                      {(() => {
+                        const slotLabel = formatSlotLabel(activeSchedule.slotId);
+                        if (!slotLabel) return null;
+                        return (
+                          <span className="text-xs font-bold text-slate-400 dark:text-slate-500">
+                            {slotLabel}
+                          </span>
+                        );
+                      })()}
                     </div>
                   </div>
                 </div>
@@ -327,7 +345,7 @@ const StudentBorrowPage = () => {
                   
                   {isSessionOngoing && !activeSchedule.isLecturerCheckedIn && (
                     <span className="text-[10px] font-bold text-amber-500 dark:text-amber-400 italic pr-1">
-                      ( lecturer chưa điểm danh )
+                      ( Lecturer has not checked in )
                     </span>
                   )}
                 </div>
@@ -339,10 +357,10 @@ const StudentBorrowPage = () => {
                   <AlertTriangle className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
                   <p className="text-xs font-bold text-amber-600 dark:text-amber-400">
                     {activeSchedule.status === 'completed' || getSlotTimeStatus(activeSchedule.startAt, activeSchedule.endAt) === 'ended'
-                      ? 'Buổi học này đã kết thúc. Không thể mượn thêm thiết bị.'
+                      ? 'This session has ended. You can no longer borrow equipment.'
                       : !isSessionOngoing
-                        ? 'Chưa đến giờ học. Vui lòng chờ đến khi bắt đầu ca học để mượn thiết bị.'
-                        : 'Giảng viên chưa điểm danh. Việc mượn thiết bị hiện đang bị khóa tạm thời.'}
+                        ? 'Class has not started yet. Please wait until your slot begins to borrow equipment.'
+                        : 'The lecturer has not checked in. Borrowing is temporarily locked.'}
                   </p>
                 </div>
               )}
@@ -355,7 +373,7 @@ const StudentBorrowPage = () => {
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 px-1">
             <div className="flex items-center gap-3">
               <div className="w-1.5 h-8 bg-amber-400 dark:bg-amber-500 rounded-full" />
-              <h3 className="text-xl font-black text-[#1E2B58] dark:text-white">Yêu cầu của tôi</h3>
+              <h3 className="text-xl font-black text-[#1E2B58] dark:text-white">My requests</h3>
               {!requestsLoading && (
                 <span className="text-[10px] font-black px-2.5 py-1 rounded-full bg-amber-50 dark:bg-amber-400/10 text-amber-600 dark:text-amber-400 border border-amber-100 dark:border-amber-400/20">
                   {activeRequests.length}
@@ -372,7 +390,7 @@ const StudentBorrowPage = () => {
             <div className="dashboard-card rounded-3xl p-8 flex flex-col items-center justify-center text-center gap-3 bg-white/50 dark:bg-[#1E2B58]/20">
               <BookOpen className="w-8 h-8 text-slate-300 dark:text-slate-600" />
               <p className="text-sm font-bold text-slate-400 dark:text-slate-500">
-                Bạn chưa có yêu cầu mượn thiết bị nào!
+                You don&apos;t have any borrow requests yet.
               </p>
             </div>
           ) : (
@@ -381,7 +399,7 @@ const StudentBorrowPage = () => {
                 <ActiveRequestItem
                   key={req._id}
                   req={req}
-                  onReturn={handleReturnSubmit}
+                  onReturn={handleReturnClick}
                   onConfirmReceived={setHandoverViewTarget}
                   onCancel={handleCancelRequest}
                   onViewDetail={() => setViewRequest(req)}
@@ -399,7 +417,7 @@ const StudentBorrowPage = () => {
                     <ChevronLeft className="w-4 h-4" />
                   </button>
                   <span className="text-xs font-bold text-slate-500 dark:text-slate-400">
-                    Trang {reqCurrentPage} / {reqTotalPages}
+                    Page {reqCurrentPage} / {reqTotalPages}
                   </span>
                   <button
                     onClick={() => setReqCurrentPage(p => Math.min(reqTotalPages, p + 1))}
@@ -420,10 +438,10 @@ const StudentBorrowPage = () => {
             <div className="flex items-center gap-3 mb-6 px-1">
               <div className="w-1.5 h-8 bg-[#1E2B58] dark:bg-blue-500 rounded-full" />
               <h3 className="text-xl font-black text-[#1E2B58] dark:text-white">
-                Thiết bị trong phòng
+                Equipment in room
               </h3>
               <span className="text-[10px] font-black px-2.5 py-1 rounded-full bg-blue-50 dark:bg-blue-400/10 text-blue-600 dark:text-blue-400 border border-blue-100 dark:border-blue-400/20">
-                {roomEquipment.length} THIẾT BỊ
+                {roomEquipment.length} {roomEquipment.length === 1 ? 'ITEM' : 'ITEMS'}
               </span>
             </div>
 
@@ -435,7 +453,7 @@ const StudentBorrowPage = () => {
               <div className="dashboard-card rounded-4xl p-10 flex flex-col items-center justify-center text-center gap-3">
                 <Package className="w-10 h-10 text-slate-300 dark:text-slate-600" />
                 <p className="text-sm font-bold text-slate-400 dark:text-slate-500">
-                  Phòng này chưa có thiết bị nào được đăng ký.
+                  No equipment is registered for this room.
                 </p>
               </div>
             ) : (
@@ -448,16 +466,16 @@ const StudentBorrowPage = () => {
                     isSessionOngoing={isSessionOngoing && activeSchedule.isLecturerCheckedIn}
                     onBorrow={(it) => {
                       if (!isSessionOngoing) {
-                        toast.warning('Buổi học chưa bắt đầu. Vui lòng chờ đến giờ học.');
+                        toast.warning('Class has not started yet. Please wait for your slot.');
                         return;
                       }
                       if (!activeSchedule.isLecturerCheckedIn) {
-                        toast.warning('Giảng viên chưa điểm danh. Bạn không thể mượn thiết bị lúc này.');
+                        toast.warning('The lecturer has not checked in. You cannot borrow equipment yet.');
                         return;
                       }
                       setBorrowTarget(it);
                     }}
-                    onReturn={handleReturnSubmit}
+                    onReturn={handleReturnClick}
                     onConfirmReceived={setHandoverViewTarget}
                     onCancel={handleCancelRequest}
                     onViewDetail={setViewRequest}
@@ -498,6 +516,24 @@ const StudentBorrowPage = () => {
         isOpen={!!viewRequest}
         onClose={() => setViewRequest(null)}
         request={viewRequest}
+      />
+
+      <ConfirmModal
+        isOpen={!!returnConfirmReq}
+        onClose={() => {
+          if (!submitting) setReturnConfirmReq(null);
+        }}
+        title="Request return"
+        message={
+          returnConfirmReq
+            ? `Submit a return request for "${returnConfirmReq.equipmentId?.name || 'this equipment'}"? Your lecturer will confirm once you return the item.`
+            : ''
+        }
+        confirmText="Submit request"
+        cancelText="Cancel"
+        onConfirm={handleReturnConfirm}
+        submitting={submitting}
+        type="info"
       />
     </div>
   );

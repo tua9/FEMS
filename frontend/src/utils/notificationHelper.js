@@ -8,7 +8,7 @@ export const NOTIFICATION_TYPE_CONFIG= {
 };
 
 export const getNotificationAction = (notification) => {
-  // Ưu tiên đọc từ state
+  // Prefer payload from notification.state
   const entityState = notification.state;
   if (entityState?.type && entityState?.id) {
     return { type: "modal", modalType: entityState.type, id: entityState.id };

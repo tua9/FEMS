@@ -75,6 +75,19 @@ export const useAuthStore = create((set, get) => ({
     }
   },
 
+  /** Always refetch /auth/me (e.g. after backend adds populated fields). */
+  refreshUserProfile: async () => {
+    try {
+      set({ loading: true });
+      const fetched = await authService.fetchUserProfile();
+      set({ user: fetched });
+    } catch {
+      // Leave existing user on failure
+    } finally {
+      set({ loading: false });
+    }
+  },
+
   refreshToken: async () => {
     try {
       set({ loading: true });

@@ -17,7 +17,7 @@ export const ReportIssuePage = () => {
  const {
  prefillRoomId, prefillCategory, prefillDescription, prefillEquipmentId,
  rooms, buildings, isSubmitting,
- showSuccess, reportId, reportSubject, reportDate,
+ showSuccess, reportId, reportSubject, reportDate, reportImages,
  handleQRDetected, handleFormSubmit,
  handleSubmitAnother, closeSuccess,
 
@@ -66,9 +66,14 @@ export const ReportIssuePage = () => {
  reportId={reportId}
  reportSubject={reportSubject}
  reportDate={reportDate}
+ reportImages={reportImages}
  primaryLabel="View in My History"
  primaryIcon={<ClipboardList className="w-4 h-4" />}
- onPrimary={() => { closeSuccess(); navigate(`/${user?.role}/history`); }}
+ onPrimary={() => {
+   closeSuccess();
+   // Navigate to history page and default to Report History tab
+   navigate(`/${user?.role}/history`, { state: { tab: 'report' } });
+ }}
  onSubmitAnother={handleSubmitAnother}
  onClose={closeSuccess}
  />

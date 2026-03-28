@@ -6,7 +6,7 @@ import { CheckCircle2, X, ArrowRight } from 'lucide-react';
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export const ReportSuccessModal = ({
- reportId, reportSubject, reportDate,
+ reportId, reportSubject, reportDate, reportImages,
  primaryLabel, primaryIcon,
  onPrimary, onSubmitAnother, onClose,
 }) => (
@@ -14,7 +14,7 @@ export const ReportSuccessModal = ({
  className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm px-4"
  onClick={e => { if (e.target === e.currentTarget) onClose(); }}
  >
- <div className="dashboard-card rounded-4xl p-8 w-full max-w-sm shadow-2xl shadow-[#1E2B58]/20 relative animate-in fade-in zoom-in-95 duration-200">
+ <div className="dashboard-card rounded-4xl p-8 w-full max-w-sm shadow-2xl shadow-[#1E2B58]/20 relative animate-in fade-in zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto">
  {/* Close */}
  <button
  onClick={onClose}
@@ -37,7 +37,7 @@ export const ReportSuccessModal = ({
  </p>
 
  {/* Report details */}
- <div className="bg-white/40 dark:bg-slate-800/40 rounded-[1.25rem] p-4 mb-6 space-y-2.5">
+ <div className="bg-white/40 dark:bg-slate-800/40 rounded-[1.25rem] p-4 mb-4 space-y-2.5">
  {[
  ['Report ID', reportId],
  ['Subject', reportSubject],
@@ -55,6 +55,22 @@ export const ReportSuccessModal = ({
  </span>
  </div>
  </div>
+
+ {/* Evidence images */}
+ {reportImages && reportImages.length > 0 && (
+ <div className="mb-6">
+ <p className="text-[0.625rem] font-black uppercase tracking-widest text-[#1E2B58]/50 dark:text-white/40 mb-2">
+ Evidence Photos
+ </p>
+ <div className={`grid gap-2 ${reportImages.length === 1 ? 'grid-cols-1' : 'grid-cols-2'}`}>
+ {reportImages.map((url, i) => (
+ <div key={i} className="aspect-video rounded-2xl overflow-hidden bg-slate-100 dark:bg-slate-800 border border-white/60 dark:border-white/10">
+ <img src={url} alt={`Evidence ${i + 1}`} className="w-full h-full object-cover" />
+ </div>
+ ))}
+ </div>
+ </div>
+ )}
 
  {/* Actions */}
  <div className="flex flex-col gap-3">

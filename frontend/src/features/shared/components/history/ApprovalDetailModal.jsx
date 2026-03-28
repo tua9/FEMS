@@ -58,12 +58,6 @@ export const ApprovalDetailModal = ({ item: a, onClose, onViewRequests }) => {
 
  <div className="flex gap-3">
  <button
- onClick={onViewRequests}
- className="flex-1 py-3 rounded-[1.25rem] font-bold text-sm bg-[#1E2B58] text-white hover:bg-[#151f40] hover:scale-[1.02] active:scale-95 transition-all shadow-lg shadow-[#1E2B58]/20 flex items-center justify-center gap-2"
- >
- View Student Requests <ArrowRight className="w-3.5 h-3.5" />
- </button>
- <button
  onClick={onClose}
  className="flex-1 py-3 rounded-[1.25rem] font-bold text-sm border border-[#1E2B58]/20 dark:border-white/20 text-[#1E2B58]/70 dark:text-white/70 hover:bg-[#1E2B58]/5 transition-all"
  >

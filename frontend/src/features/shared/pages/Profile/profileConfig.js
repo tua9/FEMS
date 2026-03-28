@@ -1,6 +1,7 @@
 import {
  BadgeCheck,
  Calendar,
+ GraduationCap,
  Mail,
  Phone,
 } from "lucide-react";
@@ -54,17 +55,27 @@ export const ROLE_STATS_CONFIG= {
  ],
 };
 
-export const getInfoFields = (userRole) => [
- { label: "Email Address", icon: Mail, key: "email" },
- { label: "Phone Number", icon: Phone, key: "phone" },
- { label: "Date of Birth", icon: Calendar, key: "dob" },
- {
- label:
- userRole === "student" ? "Student ID" :
- userRole === "admin" ? "Admin ID" :
- userRole === "technician" ? "Technician ID" :
- "Employee ID",
- icon: BadgeCheck,
- key: "_id"
- }
-];
+export const getInfoFields = (userRole) => {
+  const rows = [
+    { label: "Email Address", icon: Mail, key: "email" },
+    { label: "Phone Number", icon: Phone, key: "phone" },
+    { label: "Date of Birth", icon: Calendar, key: "dob" },
+  ];
+  if (userRole === "student") {
+    rows.push({
+      label: "Student Class",
+      icon: GraduationCap,
+      key: "studentClass",
+    });
+  }
+  rows.push({
+    label:
+      userRole === "student" ? "Student ID" :
+      userRole === "admin" ? "Admin ID" :
+      userRole === "technician" ? "Technician ID" :
+      "Employee ID",
+    icon: BadgeCheck,
+    key: "_id",
+  });
+  return rows;
+};

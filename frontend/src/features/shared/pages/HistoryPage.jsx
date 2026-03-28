@@ -48,15 +48,24 @@ export const HistoryPage = () => {
  cancelMyReport,
  } = useReportStore();
 
- // Re-fetch every time the user navigates to this page
+ // Re-fetch every time the user navigates to this page.
+ // fetchMyBorrowRequests and fetchApprovedByMe share the same loading flag, so calling
+ // them simultaneously causes the second one to bail early. Fetch only what each role needs.
  useEffect(() => {
- fetchMyBorrowRequests();
  fetchMyReports();
- if (!isStudent) fetchApprovedByMe();
+ if (isStudent) {
+   fetchMyBorrowRequests();
+ } else {
+   fetchApprovedByMe();
+ }
  }, [location.pathname, isStudent]);
 
  // ── Tab ───────────────────────────────────────────────────────────────────
- const [activeTab, setActiveTab] = useState('report');
+ // Respect tab from navigation state (e.g. from ReportSuccessModal), otherwise
+ // default to 'approval' for lecturers since their borrow tab is hidden.
+ const [activeTab, setActiveTab] = useState(
+   location.state?.tab ?? (isLecturer ? 'approval' : 'report')
+ );
 
  // ── Filters ───────────────────────────────────────────────────────────────
  const [searchTerm, setSearchTerm] = useState('');
@@ -109,9 +118,12 @@ export const HistoryPage = () => {
  };
 
  const handleRetry = () => {
- fetchMyBorrowRequests();
  fetchMyReports();
- if (!isStudent) fetchApprovedByMe();
+ if (isStudent) {
+   fetchMyBorrowRequests();
+ } else {
+   fetchApprovedByMe();
+ }
  };
 
  const handleExportCsv = () => {

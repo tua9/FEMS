@@ -5,7 +5,7 @@ import { toast } from 'sonner';
 import { getStudentName, getEquipmentName } from './borrowUtils';
 
 const ReturnConfirmModal = ({ isOpen, onClose, request, onConfirm, submitting }) => {
-  const [returnNote, setReturnNote] = useState('Xác nhận nhận lại thiết bị');
+  const [returnNote, setReturnNote] = useState('Equipment return received — condition OK');
   const [returnChecklist, setReturnChecklist] = useState({ appearance: true, functioning: true, accessories: true });
   const [returnFiles, setReturnFiles] = useState([]);
   const [returnPreviews, setReturnPreviews] = useState([]);
@@ -13,7 +13,7 @@ const ReturnConfirmModal = ({ isOpen, onClose, request, onConfirm, submitting })
 
   useEffect(() => {
     if (!isOpen) {
-      setReturnNote('Xác nhận nhận lại thiết bị');
+      setReturnNote('Equipment return received — condition OK');
       setReturnChecklist({ appearance: true, functioning: true, accessories: true });
       setReturnFiles([]);
       returnPreviews.forEach(url => URL.revokeObjectURL(url));
@@ -30,7 +30,7 @@ const ReturnConfirmModal = ({ isOpen, onClose, request, onConfirm, submitting })
     if (!files.length) return;
 
     if (returnFiles.length + files.length > 2) {
-      toast.error('Chỉ được tải lên tối đa 2 ảnh.');
+      toast.error('You can upload at most 2 photos.');
       return;
     }
 
@@ -55,7 +55,7 @@ const ReturnConfirmModal = ({ isOpen, onClose, request, onConfirm, submitting })
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!isAllChecked && returnFiles.length === 0) {
-      toast.error('Vui lòng cung cấp ảnh minh chứng nếu có mục không đạt yêu cầu.');
+      toast.error('Please upload photo evidence if any checklist item is not satisfied.');
       return;
     }
     onConfirm({
@@ -81,21 +81,21 @@ const ReturnConfirmModal = ({ isOpen, onClose, request, onConfirm, submitting })
             <LogOut className="w-7 h-7 text-slate-500 dark:text-slate-300" />
           </div>
           <div>
-            <p className="text-[0.625rem] font-black uppercase tracking-widest text-[#1E2B58]/50 dark:text-white/40 mb-1">Xác nhận hoàn trả</p>
+            <p className="text-[0.625rem] font-black uppercase tracking-widest text-[#1E2B58]/50 dark:text-white/40 mb-1">Confirm return</p>
             <h3 className="text-xl font-black text-[#1E2B58] dark:text-white">{getEquipmentName(request)}</h3>
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-              Trả bởi {getStudentName(request)}
+              Returned by {getStudentName(request)}
             </p>
           </div>
         </div>
 
         {/* Checklist */}
         <div className="bg-white/40 dark:bg-slate-800/40 rounded-[1.25rem] p-4 mb-4 space-y-2.5">
-          <p className="text-[0.625rem] font-black uppercase tracking-widest text-[#1E2B58]/50 dark:text-white/40 mb-2">Kiểm tra tình trạng lúc nhận lại</p>
+          <p className="text-[0.625rem] font-black uppercase tracking-widest text-[#1E2B58]/50 dark:text-white/40 mb-2">Condition on receipt</p>
           {[
-            { key: 'appearance',  label: 'Ngoại hình bình thường (không nứt vỡ)' },
-            { key: 'functioning', label: 'Chức năng hoạt động tốt' },
-            { key: 'accessories', label: 'Không thiếu phụ kiện' },
+            { key: 'appearance',  label: 'Appearance OK (no cracks or damage)' },
+            { key: 'functioning', label: 'Functions properly' },
+            { key: 'accessories', label: 'No missing accessories' },
           ].map(({ key, label }) => (
             <label key={key} className="flex items-center gap-3 cursor-pointer">
               <input
@@ -113,10 +113,10 @@ const ReturnConfirmModal = ({ isOpen, onClose, request, onConfirm, submitting })
         {!isAllChecked && (
           <div className="mb-4 p-4 rounded-2xl bg-amber-50 dark:bg-amber-900/10 border border-amber-100 dark:border-amber-900/20 animate-in fade-in slide-in-from-top-2">
             <label className="text-[0.625rem] font-black uppercase tracking-widest text-amber-600 dark:text-amber-400 mb-2 block text-left">
-              Ảnh minh chứng <span className="text-red-500">*</span>
+              Evidence photos <span className="text-red-500">*</span>
             </label>
             <p className="text-[10px] text-amber-600/80 dark:text-amber-400/80 mb-3">
-              Vui lòng chụp lại tình trạng thiết bị không đạt yêu cầu (tối đa 2 ảnh).
+              Photograph any condition issues (up to 2 photos).
             </p>
             
             <input type="file" ref={fileInputRef} onChange={handleFileChange} accept="image/*" multiple className="hidden" />
@@ -136,7 +136,7 @@ const ReturnConfirmModal = ({ isOpen, onClose, request, onConfirm, submitting })
                   <div className="w-8 h-8 rounded-full bg-amber-100 dark:bg-amber-900/40 flex items-center justify-center group-hover:scale-110 transition-transform">
                     <Package className="w-4 h-4 text-amber-500" />
                   </div>
-                  <span className="text-[10px] font-bold text-amber-500 uppercase tracking-widest text-center px-2">Tải ảnh lên</span>
+                  <span className="text-[10px] font-bold text-amber-500 uppercase tracking-widest text-center px-2">Upload</span>
                 </button>
               )}
             </div>
@@ -146,7 +146,7 @@ const ReturnConfirmModal = ({ isOpen, onClose, request, onConfirm, submitting })
         {/* Notes */}
         <div className="flex flex-col gap-2 mb-6">
           <label className="text-[0.625rem] font-black uppercase tracking-widest text-[#1E2B58]/50 dark:text-white/40">
-            Ghi chú
+            Notes
           </label>
           <textarea
             rows={2}
@@ -159,12 +159,12 @@ const ReturnConfirmModal = ({ isOpen, onClose, request, onConfirm, submitting })
         <div className="flex gap-3">
           <button onClick={onClose}
             className="flex-1 py-3.5 rounded-[1.25rem] font-bold text-sm border border-[#1E2B58]/20 dark:border-white/20 text-[#1E2B58]/70 dark:text-white/70 hover:bg-[#1E2B58]/5 dark:hover:bg-white/5 transition-all">
-            Hủy
+            Cancel
           </button>
           <button onClick={handleSubmit} disabled={submitting}
             className="flex-[2] py-3.5 rounded-[1.25rem] font-bold text-sm bg-[#1E2B58] text-white hover:bg-[#2A3B66] transition-all shadow-lg shadow-blue-900/20 flex items-center justify-center gap-2 disabled:opacity-60 active:scale-95">
             {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
-            Xác nhận đã nhận lại
+            Confirm receipt
           </button>
         </div>
       </div>

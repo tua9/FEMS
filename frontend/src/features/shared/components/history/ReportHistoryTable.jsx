@@ -100,14 +100,6 @@ export const ReportHistoryTable = ({
  <td className="px-[2rem] py-[1.5rem] text-right">
  <div className="flex items-center justify-end gap-[0.25rem]">
  {item.original.status === 'pending' && (
- <>
- <button
- onClick={e => { e.stopPropagation(); onEdit && onEdit(item); }}
- className="p-[0.5rem] rounded-full hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-all hover:scale-110 active:scale-90"
- title="Edit Report"
- >
- <span className="material-symbols-outlined text-[1.1rem] text-[#1E2B58] dark:text-blue-400">edit</span>
- </button>
  <button
  onClick={e => { e.stopPropagation(); onCancel && onCancel(item); }}
  className="p-[0.5rem] rounded-full hover:bg-red-50 dark:hover:bg-red-900/30 transition-all hover:scale-110 active:scale-90"
@@ -115,7 +107,6 @@ export const ReportHistoryTable = ({
  >
  <span className="material-symbols-outlined text-[1.1rem] text-red-500">delete_forever</span>
  </button>
- </>
  )}
  <button
  onClick={e => { e.stopPropagation(); onViewDetail(item); }}
