@@ -1,32 +1,36 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import ConfirmModal from "@/features/shared/components/ConfirmModal";
+import { PageHeader } from "@/features/shared/components/PageHeader";
+import { borrowRequestService } from "@/services/borrowRequestService";
+import { equipmentService } from "@/services/equipmentService";
+import { scheduleService } from "@/services/scheduleService";
+import { useAuthStore } from "@/stores/useAuthStore";
+import { getSlotTimeStatus, getTodayVN } from "@/utils/dateUtils";
+import { uploadImages } from "@/utils/uploadHelper";
 import {
-  Loader2, BookOpen, MapPin, Clock, Package, AlertTriangle,
-  Search, ChevronLeft, ChevronRight
-} from 'lucide-react';
-import { toast } from 'sonner';
-import { scheduleService } from '@/services/scheduleService';
-import { equipmentService } from '@/services/equipmentService';
-import { borrowRequestService } from '@/services/borrowRequestService';
-import { useAuthStore } from '@/stores/useAuthStore';
-import { PageHeader } from '@/features/shared/components/PageHeader';
-import ConfirmModal from '@/features/shared/components/ConfirmModal';
-import { getTodayVN, getSlotTimeStatus } from '@/utils/dateUtils';
-import { uploadImages } from '@/utils/uploadHelper';
+  AlertTriangle,
+  BookOpen,
+  ChevronLeft,
+  ChevronRight,
+  Clock,
+  Loader2,
+  MapPin,
+  Package,
+} from "lucide-react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { toast } from "sonner";
 
 // ─── Borrow Components ────────────────────────────────────────────────────────
-import { fmtTime, fmtDateTime } from '../components/borrow/borrowUtils';
-import BorrowBadge from '../components/borrow/BorrowBadge';
-import AvailabilityLabel from '../components/borrow/AvailabilityLabel';
-import BorrowModal from '../components/borrow/BorrowModal';
-import HandoverConfirmModal from '../components/borrow/HandoverConfirmModal';
-import RequestDetailModal from '../components/borrow/RequestDetailModal';
-import ReturnModal from '../components/borrow/ReturnModal';
-import EquipmentCard from '../components/borrow/EquipmentCard';
-import ActiveRequestItem from '../components/borrow/ActiveRequestItem';
+import ActiveRequestItem from "../components/borrow/ActiveRequestItem";
+import BorrowModal from "../components/borrow/BorrowModal";
+import { fmtTime } from "../components/borrow/borrowUtils";
+import EquipmentCard from "../components/borrow/EquipmentCard";
+import HandoverConfirmModal from "../components/borrow/HandoverConfirmModal";
+import RequestDetailModal from "../components/borrow/RequestDetailModal";
+import ReturnModal from "../components/borrow/ReturnModal";
 
 /** Avoid "Slot Slot 1" when API already returns name like "Slot 1". */
 const formatSlotLabel = (slot) => {
-  const raw = String(slot?.name || slot?.code || '').trim();
+  const raw = String(slot?.name || slot?.code || "").trim();
   if (!raw) return null;
   return /^slot\b/i.test(raw) ? raw : `Slot ${raw}`;
 };
@@ -67,22 +71,24 @@ const StudentBorrowPage = () => {
     if (!schedules.length) return null;
 
     // 1. Ongoing: current time is within [startAt, endAt] AND not completed
-    const ongoing = schedules.find(s =>
-      s.status !== 'completed' &&
-      getSlotTimeStatus(s.startAt, s.endAt) === 'ongoing'
+    const ongoing = schedules.find(
+      (s) =>
+        s.status !== "completed" &&
+        getSlotTimeStatus(s.startAt, s.endAt) === "ongoing",
     );
     if (ongoing) return ongoing;
 
     // 2. Upcoming: starts in the future AND not completed
-    const upcoming = schedules.find(s =>
-      s.status !== 'completed' &&
-      getSlotTimeStatus(s.startAt, s.endAt) === 'upcoming'
+    const upcoming = schedules.find(
+      (s) =>
+        s.status !== "completed" &&
+        getSlotTimeStatus(s.startAt, s.endAt) === "upcoming",
     );
     if (upcoming) return upcoming;
 
     // 3. Fallback: Recently ended session of today
     const recentlyEnded = [...schedules]
-      .filter(s => getSlotTimeStatus(s.startAt, s.endAt) === 'ended')
+      .filter((s) => getSlotTimeStatus(s.startAt, s.endAt) === "ended")
       .sort((a, b) => new Date(b.endAt) - new Date(a.endAt))[0];
 
     return recentlyEnded || null;
@@ -90,8 +96,11 @@ const StudentBorrowPage = () => {
 
   const isSessionOngoing = useMemo(() => {
     if (!activeSchedule) return false;
-    if (activeSchedule.status === 'completed') return false;
-    return getSlotTimeStatus(activeSchedule.startAt, activeSchedule.endAt) === 'ongoing';
+    if (activeSchedule.status === "completed") return false;
+    return (
+      getSlotTimeStatus(activeSchedule.startAt, activeSchedule.endAt) ===
+      "ongoing"
+    );
   }, [activeSchedule, nowTick]);
 
   // ── Tick ──────────────────────────────────────────────────────────────────
@@ -113,7 +122,9 @@ const StudentBorrowPage = () => {
     }
   }, [schedules.length]);
 
-  useEffect(() => { loadSchedules(); }, [loadSchedules]);
+  useEffect(() => {
+    loadSchedules();
+  }, [loadSchedules]);
 
   // ── Load room equipment when session is known ─────────────────────────────
   useEffect(() => {
@@ -137,7 +148,9 @@ const StudentBorrowPage = () => {
       }
     };
     load();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [activeSchedule?._id]); // Stable dependency
 
   // ── Load my requests ──────────────────────────────────────────────────────
@@ -153,14 +166,24 @@ const StudentBorrowPage = () => {
     }
   }, [myRequests.length]);
 
-  useEffect(() => { loadMyRequests(); }, [loadMyRequests]);
+  useEffect(() => {
+    loadMyRequests();
+  }, [loadMyRequests]);
 
   // ── Derived maps ──────────────────────────────────────────────────────────
   // My active request keyed by equipmentId
   const myActiveByEqId = useMemo(() => {
     const map = {};
-    myRequests.forEach(r => {
-      if (['pending', 'approved', 'handed_over', 'returning', 'unreturned'].includes(r.status)) {
+    myRequests.forEach((r) => {
+      if (
+        [
+          "pending",
+          "approved",
+          "handed_over",
+          "returning",
+          "unreturned",
+        ].includes(r.status)
+      ) {
         const id = String(r.equipmentId?._id || r.equipmentId);
         map[id] = r;
       }
@@ -168,16 +191,34 @@ const StudentBorrowPage = () => {
     return map;
   }, [myRequests]);
 
-  const occupiedByMeIds = useMemo(() => new Set(Object.keys(myActiveByEqId)), [myActiveByEqId]);
+  const occupiedByMeIds = useMemo(
+    () => new Set(Object.keys(myActiveByEqId)),
+    [myActiveByEqId],
+  );
 
   const activeRequests = useMemo(
-    () => myRequests.filter(r => ['pending', 'approved', 'handed_over', 'returning', 'unreturned'].includes(r.status)),
-    [myRequests]
+    () =>
+      myRequests.filter((r) =>
+        [
+          "pending",
+          "approved",
+          "handed_over",
+          "returning",
+          "unreturned",
+        ].includes(r.status),
+      ),
+    [myRequests],
   );
 
   // ── Pagination active requests ────────────────────────────────────────────
-  const reqTotalPages = Math.max(1, Math.ceil(activeRequests.length / REQ_ITEMS_PER_PAGE));
-  const validReqCurrentPage = Math.min(Math.max(1, reqCurrentPage), reqTotalPages);
+  const reqTotalPages = Math.max(
+    1,
+    Math.ceil(activeRequests.length / REQ_ITEMS_PER_PAGE),
+  );
+  const validReqCurrentPage = Math.min(
+    Math.max(1, reqCurrentPage),
+    reqTotalPages,
+  );
 
   const paginatedActiveRequests = useMemo(() => {
     const start = (validReqCurrentPage - 1) * REQ_ITEMS_PER_PAGE;
@@ -194,15 +235,19 @@ const StudentBorrowPage = () => {
         equipmentId: borrowTarget._id,
         roomId: roomId || undefined,
         note: note,
-        type: 'equipment',
+        type: "equipment",
         borrowDate: new Date().toISOString(),
-        expectedReturnDate: activeSchedule?.endAt || new Date(Date.now() + 4 * 3600 * 1000).toISOString(),
+        expectedReturnDate:
+          activeSchedule?.endAt ||
+          new Date(Date.now() + 4 * 3600 * 1000).toISOString(),
       });
       toast.success(`Borrow request sent for "${borrowTarget.name}".`);
       setBorrowTarget(null);
       await loadMyRequests();
     } catch (err) {
-      toast.error(err?.response?.data?.message || 'Could not send borrow request.');
+      toast.error(
+        err?.response?.data?.message || "Could not send borrow request.",
+      );
     } finally {
       setSubmitting(false);
     }
@@ -222,11 +267,11 @@ const StudentBorrowPage = () => {
         notes: formData.notes,
         images: imageUrls,
       });
-      toast.success('Equipment receipt confirmed.');
+      toast.success("Equipment receipt confirmed.");
       setHandoverViewTarget(null);
       await loadMyRequests();
     } catch (err) {
-      toast.error(err?.response?.data?.message || 'Could not confirm receipt.');
+      toast.error(err?.response?.data?.message || "Could not confirm receipt.");
     } finally {
       setSubmitting(false);
     }
@@ -246,11 +291,13 @@ const StudentBorrowPage = () => {
         notes: formData.notes,
         images: imageUrls,
       });
-      toast.success('Đã gửi yêu cầu hoàn trả. Chờ giảng viên xác nhận.');
+      toast.success("Đã gửi yêu cầu hoàn trả. Chờ giảng viên xác nhận.");
       setReturnTarget(null);
       await loadMyRequests();
     } catch (err) {
-      toast.error(err?.response?.data?.message || 'Could not submit return request.');
+      toast.error(
+        err?.response?.data?.message || "Could not submit return request.",
+      );
     } finally {
       setSubmitting(false);
     }
@@ -263,11 +310,14 @@ const StudentBorrowPage = () => {
   // ── Cancel request ────────────────────────────────────────────────────────
   const handleCancelRequest = async (req) => {
     try {
-      await borrowRequestService.cancelBorrowRequest(req._id, 'Cancelled by student');
-      toast.success('Borrow request cancelled.');
+      await borrowRequestService.cancelBorrowRequest(
+        req._id,
+        "Cancelled by student",
+      );
+      toast.success("Borrow request cancelled.");
       await loadMyRequests();
     } catch (err) {
-      toast.error(err?.response?.data?.message || 'Could not cancel request.');
+      toast.error(err?.response?.data?.message || "Could not cancel request.");
     }
   };
 
@@ -276,8 +326,7 @@ const StudentBorrowPage = () => {
   // ─────────────────────────────────────────────────────────────────────────
   return (
     <div className="w-full">
-      <main className="mx-auto flex w-full max-w-[90vw] flex-1 flex-col px-4 pt-6 sm:pt-24 pb-10 sm:px-6 xl:max-w-7xl">
-
+      <main className="mx-auto flex w-full max-w-[90vw] flex-1 flex-col px-4 pt-6 pb-10 sm:px-6 sm:pt-24 xl:max-w-7xl">
         <PageHeader
           title="Borrow Equipment"
           subtitle="View and request equipment in your current classroom session."
@@ -286,16 +335,20 @@ const StudentBorrowPage = () => {
         {/* ══ SECTION 1: Session Info ══════════════════════════════════════════ */}
         <section className="mb-8">
           {scheduleLoading ? (
-            <div className="dashboard-card rounded-4xl p-8 flex items-center gap-4">
-              <Loader2 className="w-5 h-5 animate-spin text-[#1E2B58]/30 dark:text-white/20" />
-              <span className="text-sm text-[#1E2B58]/50 dark:text-white/40">Loading schedule…</span>
+            <div className="dashboard-card flex items-center gap-4 rounded-4xl p-8">
+              <Loader2 className="h-5 w-5 animate-spin text-[#1E2B58]/30 dark:text-white/20" />
+              <span className="text-sm text-[#1E2B58]/50 dark:text-white/40">
+                Loading schedule…
+              </span>
             </div>
           ) : !activeSchedule ? (
-            <div className="dashboard-card rounded-4xl p-12 flex flex-col items-center justify-center text-center gap-4">
-              <BookOpen className="w-12 h-12 text-[#1E2B58]/15 dark:text-white/15" />
+            <div className="dashboard-card flex flex-col items-center justify-center gap-4 rounded-4xl p-12 text-center">
+              <BookOpen className="h-12 w-12 text-[#1E2B58]/15 dark:text-white/15" />
               <div>
-                <p className="font-black text-[#1E2B58]/50 dark:text-white/40">No upcoming class session</p>
-                <p className="text-xs text-[#1E2B58]/30 dark:text-white/30 mt-1">
+                <p className="font-black text-[#1E2B58]/50 dark:text-white/40">
+                  No upcoming class session
+                </p>
+                <p className="mt-1 text-xs text-[#1E2B58]/30 dark:text-white/30">
                   Borrowing is only available during a scheduled class.
                 </p>
               </div>
@@ -305,27 +358,33 @@ const StudentBorrowPage = () => {
               <div className="flex flex-wrap items-start justify-between gap-4">
                 {/* Session details */}
                 <div className="flex items-start gap-5">
-                  <div className="w-14 h-14 rounded-3xl bg-[#1E2B58]/8 dark:bg-white/5 flex items-center justify-center shrink-0">
-                    <BookOpen className="w-7 h-7 text-[#1E2B58] dark:text-white" />
+                  <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-3xl bg-[#1E2B58]/8 dark:bg-white/5">
+                    <BookOpen className="h-7 w-7 text-[#1E2B58] dark:text-white" />
                   </div>
                   <div>
-                    <p className="text-[0.625rem] font-black uppercase tracking-widest text-[#1E2B58]/50 dark:text-white/40 mb-1">
+                    <p className="mb-1 text-[0.625rem] font-black tracking-widest text-[#1E2B58]/50 uppercase dark:text-white/40">
                       Today&apos;s session
                     </p>
-                    <h2 className="text-xl font-black text-[#1E2B58] dark:text-white leading-tight">
+                    <h2 className="text-xl leading-tight font-black text-[#1E2B58] dark:text-white">
                       {activeSchedule.title}
                     </h2>
-                    <div className="flex flex-wrap items-center gap-x-5 gap-y-1.5 mt-2">
+                    <div className="mt-2 flex flex-wrap items-center gap-x-5 gap-y-1.5">
                       <span className="flex items-center gap-1.5 text-xs font-bold text-slate-500 dark:text-slate-400">
-                        <MapPin className="w-3.5 h-3.5 shrink-0" />
-                        {activeSchedule.roomId?.name || 'N/A'}
+                        <MapPin className="h-3.5 w-3.5 shrink-0" />
+                        {activeSchedule.roomId?.name || "N/A"}
                       </span>
                       <span className="flex items-center gap-1.5 text-xs font-bold text-slate-500 dark:text-slate-400">
-                        <Clock className="w-3.5 h-3.5 shrink-0" />
-                        {activeSchedule.slotId?.startTime || fmtTime(activeSchedule.startAt)} – {activeSchedule.slotId?.endTime || fmtTime(activeSchedule.endAt)}
+                        <Clock className="h-3.5 w-3.5 shrink-0" />
+                        {activeSchedule.slotId?.startTime ||
+                          fmtTime(activeSchedule.startAt)}{" "}
+                        –{" "}
+                        {activeSchedule.slotId?.endTime ||
+                          fmtTime(activeSchedule.endAt)}
                       </span>
                       {(() => {
-                        const slotLabel = formatSlotLabel(activeSchedule.slotId);
+                        const slotLabel = formatSlotLabel(
+                          activeSchedule.slotId,
+                        );
                         if (!slotLabel) return null;
                         return (
                           <span className="text-xs font-bold text-slate-400 dark:text-slate-500">
@@ -338,22 +397,46 @@ const StudentBorrowPage = () => {
                 </div>
 
                 {/* Status badge */}
-                <div className="flex flex-col items-end gap-1.5 shrink-0">
-                  <span className={`flex items-center gap-2 px-4 py-2 rounded-2xl text-[10px] font-black uppercase tracking-widest border ${(activeSchedule.status === 'completed' || getSlotTimeStatus(activeSchedule.startAt, activeSchedule.endAt) === 'ended')
-                      ? 'bg-slate-100 text-slate-500 border-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700'
+                <div className="flex shrink-0 flex-col items-end gap-1.5">
+                  <span
+                    className={`flex items-center gap-2 rounded-2xl border px-4 py-2 text-[10px] font-black tracking-widest uppercase ${
+                      activeSchedule.status === "completed" ||
+                      getSlotTimeStatus(
+                        activeSchedule.startAt,
+                        activeSchedule.endAt,
+                      ) === "ended"
+                        ? "border-slate-200 bg-slate-100 text-slate-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400"
+                        : isSessionOngoing
+                          ? "border-emerald-200 bg-emerald-50 text-emerald-600 dark:border-emerald-900/30 dark:bg-emerald-900/20 dark:text-emerald-400"
+                          : "border-amber-200 bg-amber-50 text-amber-600 dark:border-amber-900/30 dark:bg-amber-900/20 dark:text-amber-400"
+                    }`}
+                  >
+                    <span
+                      className={`h-1.5 w-1.5 rounded-full ${
+                        activeSchedule.status === "completed" ||
+                        getSlotTimeStatus(
+                          activeSchedule.startAt,
+                          activeSchedule.endAt,
+                        ) === "ended"
+                          ? "bg-slate-400"
+                          : isSessionOngoing
+                            ? "animate-pulse bg-emerald-500"
+                            : "bg-amber-500"
+                      }`}
+                    />
+                    {activeSchedule.status === "completed" ||
+                    getSlotTimeStatus(
+                      activeSchedule.startAt,
+                      activeSchedule.endAt,
+                    ) === "ended"
+                      ? "Completed"
                       : isSessionOngoing
-                        ? 'bg-emerald-50 text-emerald-600 border-emerald-200 dark:bg-emerald-900/20 dark:text-emerald-400 dark:border-emerald-900/30'
-                        : 'bg-amber-50 text-amber-600 border-amber-200 dark:bg-amber-900/20 dark:text-amber-400 dark:border-amber-900/30'
-                    }`}>
-                    <span className={`w-1.5 h-1.5 rounded-full ${(activeSchedule.status === 'completed' || getSlotTimeStatus(activeSchedule.startAt, activeSchedule.endAt) === 'ended') ? 'bg-slate-400' :
-                        isSessionOngoing ? 'bg-emerald-500 animate-pulse' : 'bg-amber-500'
-                      }`} />
-                    {(activeSchedule.status === 'completed' || getSlotTimeStatus(activeSchedule.startAt, activeSchedule.endAt) === 'ended') ? 'Completed' :
-                      isSessionOngoing ? 'Ongoing' : 'Upcoming'}
+                        ? "Ongoing"
+                        : "Upcoming"}
                   </span>
-                  
+
                   {isSessionOngoing && !activeSchedule.isLecturerCheckedIn && (
-                    <span className="text-[10px] font-bold text-amber-500 dark:text-amber-400 italic pr-1">
+                    <span className="pr-1 text-[10px] font-bold text-amber-500 italic dark:text-amber-400">
                       ( Lecturer has not checked in )
                     </span>
                   )}
@@ -362,14 +445,18 @@ const StudentBorrowPage = () => {
 
               {/* Warning banner if session not yet started or ended */}
               {(!isSessionOngoing || !activeSchedule.isLecturerCheckedIn) && (
-                <div className="mt-5 p-3 rounded-2xl bg-amber-50 dark:bg-amber-900/10 border border-amber-100 dark:border-amber-900/20 flex items-start gap-2.5">
-                  <AlertTriangle className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
+                <div className="mt-5 flex items-start gap-2.5 rounded-2xl border border-amber-100 bg-amber-50 p-3 dark:border-amber-900/20 dark:bg-amber-900/10">
+                  <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-500" />
                   <p className="text-xs font-bold text-amber-600 dark:text-amber-400">
-                    {activeSchedule.status === 'completed' || getSlotTimeStatus(activeSchedule.startAt, activeSchedule.endAt) === 'ended'
-                      ? 'This session has ended. You can no longer borrow equipment.'
+                    {activeSchedule.status === "completed" ||
+                    getSlotTimeStatus(
+                      activeSchedule.startAt,
+                      activeSchedule.endAt,
+                    ) === "ended"
+                      ? "This session has ended. You can no longer borrow equipment."
                       : !isSessionOngoing
-                        ? 'Class has not started yet. Please wait until your slot begins to borrow equipment.'
-                        : 'The lecturer has not checked in. Borrowing is temporarily locked.'}
+                        ? "Class has not started yet. Please wait until your slot begins to borrow equipment."
+                        : "The lecturer has not checked in. Borrowing is temporarily locked."}
                   </p>
                 </div>
               )}
@@ -379,12 +466,14 @@ const StudentBorrowPage = () => {
 
         {/* ══ SECTION 2: My Active Requests ═══════════════════════════════════ */}
         <section className="mb-10">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 px-1">
+          <div className="mb-6 flex flex-col justify-between gap-4 px-1 sm:flex-row sm:items-center">
             <div className="flex items-center gap-3">
-              <div className="w-1.5 h-8 bg-amber-400 dark:bg-amber-500 rounded-full" />
-              <h3 className="text-xl font-black text-[#1E2B58] dark:text-white">My requests</h3>
+              <div className="h-8 w-1.5 rounded-full bg-amber-400 dark:bg-amber-500" />
+              <h3 className="text-xl font-black text-[#1E2B58] dark:text-white">
+                My requests
+              </h3>
               {!requestsLoading && (
-                <span className="text-[10px] font-black px-2.5 py-1 rounded-full bg-amber-50 dark:bg-amber-400/10 text-amber-600 dark:text-amber-400 border border-amber-100 dark:border-amber-400/20">
+                <span className="rounded-full border border-amber-100 bg-amber-50 px-2.5 py-1 text-[10px] font-black text-amber-600 dark:border-amber-400/20 dark:bg-amber-400/10 dark:text-amber-400">
                   {activeRequests.length}
                 </span>
               )}
@@ -393,26 +482,22 @@ const StudentBorrowPage = () => {
 
           {requestsLoading && activeRequests.length === 0 ? (
             <div className="flex justify-center py-10">
-              <Loader2 className="w-6 h-6 animate-spin text-[#1E2B58]/20 dark:text-white/20" />
+              <Loader2 className="h-6 w-6 animate-spin text-[#1E2B58]/20 dark:text-white/20" />
             </div>
           ) : activeRequests.length === 0 ? (
-            <div className="dashboard-card rounded-3xl p-8 flex flex-col items-center justify-center text-center gap-3 bg-white/50 dark:bg-[#1E2B58]/20">
-              <BookOpen className="w-8 h-8 text-slate-300 dark:text-slate-600" />
+            <div className="dashboard-card flex flex-col items-center justify-center gap-3 rounded-3xl bg-white/50 p-8 text-center dark:bg-[#1E2B58]/20">
+              <BookOpen className="h-8 w-8 text-slate-300 dark:text-slate-600" />
               <p className="text-sm font-bold text-slate-400 dark:text-slate-500">
                 You don&apos;t have any borrow requests yet.
               </p>
             </div>
           ) : (
             <div className="flex flex-col gap-3">
-              {paginatedActiveRequests.map(req => (
+              {paginatedActiveRequests.map((req) => (
                 <ActiveRequestItem
                   key={req._id}
                   req={req}
-<<<<<<< HEAD
-                  onReturn={handleReturnClick}
-=======
                   onReturn={openReturnModal}
->>>>>>> origin/NewDev
                   onConfirmReceived={setHandoverViewTarget}
                   onCancel={handleCancelRequest}
                   onViewDetail={() => setViewRequest(req)}
@@ -421,23 +506,25 @@ const StudentBorrowPage = () => {
 
               {/* Pagination */}
               {reqTotalPages > 1 && (
-                <div className="flex items-center justify-center gap-2 mt-4">
+                <div className="mt-4 flex items-center justify-center gap-2">
                   <button
-                    onClick={() => setReqCurrentPage(p => Math.max(1, p - 1))}
+                    onClick={() => setReqCurrentPage((p) => Math.max(1, p - 1))}
                     disabled={reqCurrentPage === 1}
-                    className="w-8 h-8 flex items-center justify-center rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 disabled:opacity-50 hover:bg-slate-200 dark:hover:bg-slate-700 transition"
+                    className="flex h-8 w-8 items-center justify-center rounded-xl bg-slate-100 text-slate-600 transition hover:bg-slate-200 disabled:opacity-50 dark:bg-slate-800 dark:text-slate-400 dark:hover:bg-slate-700"
                   >
-                    <ChevronLeft className="w-4 h-4" />
+                    <ChevronLeft className="h-4 w-4" />
                   </button>
                   <span className="text-xs font-bold text-slate-500 dark:text-slate-400">
                     Page {reqCurrentPage} / {reqTotalPages}
                   </span>
                   <button
-                    onClick={() => setReqCurrentPage(p => Math.min(reqTotalPages, p + 1))}
+                    onClick={() =>
+                      setReqCurrentPage((p) => Math.min(reqTotalPages, p + 1))
+                    }
                     disabled={reqCurrentPage === reqTotalPages}
-                    className="w-8 h-8 flex items-center justify-center rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 disabled:opacity-50 hover:bg-slate-200 dark:hover:bg-slate-700 transition"
+                    className="flex h-8 w-8 items-center justify-center rounded-xl bg-slate-100 text-slate-600 transition hover:bg-slate-200 disabled:opacity-50 dark:bg-slate-800 dark:text-slate-400 dark:hover:bg-slate-700"
                   >
-                    <ChevronRight className="w-4 h-4" />
+                    <ChevronRight className="h-4 w-4" />
                   </button>
                 </div>
               )}
@@ -448,56 +535,61 @@ const StudentBorrowPage = () => {
         {/* ══ SECTION 3: Equipment in Room ════════════════════════════════════ */}
         {activeSchedule && (
           <section className="mb-10">
-            <div className="flex items-center gap-3 mb-6 px-1">
-              <div className="w-1.5 h-8 bg-[#1E2B58] dark:bg-blue-500 rounded-full" />
+            <div className="mb-6 flex items-center gap-3 px-1">
+              <div className="h-8 w-1.5 rounded-full bg-[#1E2B58] dark:bg-blue-500" />
               <h3 className="text-xl font-black text-[#1E2B58] dark:text-white">
                 Equipment in room
               </h3>
-              <span className="text-[10px] font-black px-2.5 py-1 rounded-full bg-blue-50 dark:bg-blue-400/10 text-blue-600 dark:text-blue-400 border border-blue-100 dark:border-blue-400/20">
-                {roomEquipment.length} {roomEquipment.length === 1 ? 'ITEM' : 'ITEMS'}
+              <span className="rounded-full border border-blue-100 bg-blue-50 px-2.5 py-1 text-[10px] font-black text-blue-600 dark:border-blue-400/20 dark:bg-blue-400/10 dark:text-blue-400">
+                {roomEquipment.length}{" "}
+                {roomEquipment.length === 1 ? "ITEM" : "ITEMS"}
               </span>
             </div>
 
             {equipmentLoading && roomEquipment.length === 0 ? (
               <div className="flex justify-center py-16">
-                <Loader2 className="w-8 h-8 animate-spin text-[#1E2B58]/20 dark:text-white/20" />
+                <Loader2 className="h-8 w-8 animate-spin text-[#1E2B58]/20 dark:text-white/20" />
               </div>
             ) : roomEquipment.length === 0 ? (
-              <div className="dashboard-card rounded-4xl p-10 flex flex-col items-center justify-center text-center gap-3">
-                <Package className="w-10 h-10 text-slate-300 dark:text-slate-600" />
+              <div className="dashboard-card flex flex-col items-center justify-center gap-3 rounded-4xl p-10 text-center">
+                <Package className="h-10 w-10 text-slate-300 dark:text-slate-600" />
                 <p className="text-sm font-bold text-slate-400 dark:text-slate-500">
                   No equipment is registered for this room.
                 </p>
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {roomEquipment.map(item => (
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+                {roomEquipment.map((item) => (
                   <EquipmentCard
                     key={item._id}
                     item={item}
                     myReq={myActiveByEqId[item._id]}
-                    isSessionOngoing={isSessionOngoing && activeSchedule.isLecturerCheckedIn}
+                    isSessionOngoing={
+                      isSessionOngoing && activeSchedule.isLecturerCheckedIn
+                    }
                     hasActiveRequest={activeRequests.length > 0}
                     onBorrow={(it) => {
                       if (!isSessionOngoing) {
-                        toast.warning('Class has not started yet. Please wait for your slot.');
+                        toast.warning(
+                          "Class has not started yet. Please wait for your slot.",
+                        );
                         return;
                       }
                       if (!activeSchedule.isLecturerCheckedIn) {
-                        toast.warning('The lecturer has not checked in. You cannot borrow equipment yet.');
+                        toast.warning(
+                          "The lecturer has not checked in. You cannot borrow equipment yet.",
+                        );
                         return;
                       }
                       if (activeRequests.length > 0) {
-                        toast.warning('Bạn phải hoàn tất hoặc hủy đơn hiện tại trước khi mượn thêm.');
+                        toast.warning(
+                          "Bạn phải hoàn tất hoặc hủy đơn hiện tại trước khi mượn thêm.",
+                        );
                         return;
                       }
                       setBorrowTarget(it);
                     }}
-<<<<<<< HEAD
-                    onReturn={handleReturnClick}
-=======
                     onReturn={openReturnModal}
->>>>>>> origin/NewDev
                     onConfirmReceived={setHandoverViewTarget}
                     onCancel={handleCancelRequest}
                     onViewDetail={setViewRequest}
@@ -557,8 +649,8 @@ const StudentBorrowPage = () => {
         title="Request return"
         message={
           returnConfirmReq
-            ? `Submit a return request for "${returnConfirmReq.equipmentId?.name || 'this equipment'}"? Your lecturer will confirm once you return the item.`
-            : ''
+            ? `Submit a return request for "${returnConfirmReq.equipmentId?.name || "this equipment"}"? Your lecturer will confirm once you return the item.`
+            : ""
         }
         confirmText="Submit request"
         cancelText="Cancel"
