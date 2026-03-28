@@ -93,17 +93,17 @@ const getRecentDamageReports = async () => {
   const reports = await Report.find({ type: 'equipment' })
     .sort({ createdAt: -1 })
     .limit(5)
-    .populate('reporterId', 'displayName avatarUrl username')
+    .populate('user_id', 'displayName avatarUrl username')
     .populate('equipment_id', 'name')
     .lean()
 
   return reports.map((r) => ({
     ...r,
-    reporterId: r.reporterId
+    user_id: r.user_id
       ? {
-          ...r.reporterId,
-          name: r.reporterId.displayName || r.reporterId.username,
-          avatar: r.reporterId.avatarUrl,
+          ...r.user_id,
+          name: r.user_id.displayName || r.user_id.username,
+          avatar: r.user_id.avatarUrl,
         }
       : null,
   }))

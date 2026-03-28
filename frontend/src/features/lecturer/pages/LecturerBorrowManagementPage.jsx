@@ -190,21 +190,17 @@ const LecturerBorrowManagementPage = () => {
   const unreturnedRequests = useMemo(() => {
     if (!user?._id) return [];
     const uid = String(user._id);
+
     return allRequests.filter(r => {
       if (r.status !== 'unreturned') return false;
-      const aId = r.approvedBy ? String(r.approvedBy._id || r.approvedBy) : null;
-      const hId = r.handedOverBy ? String(r.handedOverBy._id || r.handedOverBy) : null;
-      return aId === uid || hId === uid;
+      
+      const isMyAction = (r.approvedBy && String(r.approvedBy._id || r.approvedBy) === uid) || 
+                         (r.handedOverBy && String(r.handedOverBy._id || r.handedOverBy) === uid);
+      const isCurrentRoom = sessionRoomId && String(r.roomId?._id || r.roomId) === String(sessionRoomId);
+      
+      return isMyAction || isCurrentRoom;
     });
-  }, [allRequests, user]);
-
-  const unreturnedRequests = useMemo(() =>
-    allRequests.filter(r =>
-      r.status === 'unreturned' &&
-      (!sessionRoomId || String(r.roomId?._id || r.roomId) === String(sessionRoomId))
-    ),
-    [allRequests, sessionRoomId]
-  );
+  }, [allRequests, user, sessionRoomId]);
 
   // ── Helpers ───────────────────────────────────────────────────────────────
   // (Moved to borrowUtils.js)
