@@ -1,5 +1,7 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { createPortal } from 'react-dom';
+import TicketTable from '@/features/technician/components/tickets/TicketTable';
+import Pagination from '@/features/shared/components/Pagination';
 
 const STATUS_CONFIG = {
   pending:    { label: 'Pending',     color: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400' },
@@ -215,6 +217,8 @@ const RepairDetailModal = ({ report, onClose, onUpdateStatus }) => {
 };
 
 // ── Repair Table ──────────────────────────────────────────────────────────────
+const ITEMS_PER_PAGE = 4;
+
 const RepairTable = ({
   reports,
   onUpdateStatus,
@@ -224,10 +228,83 @@ const RepairTable = ({
   highlightedId,
 }) => {
   const [selected, setSelected] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
   const highlightRowRef = useRef(null);
 
-  const filtered = (reports ?? []).filter(
-    (r) => statusFilter === 'all' || r.status === statusFilter,
+  // Map backend Report.status -> UI TicketStatus
+  const backendToUiStatus = (s) => {
+    const v = String(s || '').toLowerCase();
+    if (v === 'pending') return 'Pending';
+    if (v === 'approved') return 'Approved';
+    if (v === 'processing') return 'In Progress';
+    if (v === 'fixed') return 'Completed';
+    if (v === 'rejected') return 'Rejected';
+    return 'Pending';
+  };
+
+  // Map UI TicketStatus -> backend status
+  const uiToBackendStatus = (s) => {
+    if (s === 'Pending') return 'pending';
+    if (s === 'Approved') return 'approved';
+    if (s === 'In Progress') return 'processing';
+    if (s === 'Completed') return 'fixed';
+    if (s === 'Rejected') return 'rejected';
+    return undefined;
+  };
+
+  // Convert a repair report -> TicketTable row shape
+  const reportToTicket = (r) => {
+    const equipment = r.equipment_id?.name || 'N/A';
+    const equipmentType = r.equipment_id?.category || 'Equipment';
+    const room = r.room_id?.name || r.equipment_id?.roomId?.name || 'N/A';
+    const reporterName = r.user_id?.displayName || r.user_id?.username || 'Unknown';
+
+    // Replace Ticket ID column with Equipment ID (per requirement)
+    const equipmentId = r.equipment_id?._id || r.equipment_id || '';
+
+    return {
+      id: String(r._id),
+      // TicketTable shows "#" + code, so we put EquipmentId suffix here
+      code: equipmentId ? String(equipmentId).slice(-6).toUpperCase() : String(r._id).slice(-6).toUpperCase(),
+      equipment,
+      equipmentType,
+      room,
+      reporter: {
+        name: reporterName,
+        initials: reporterName
+          .split(' ')
+          .slice(0, 2)
+          .map((w) => w[0])
+          .join('')
+          .toUpperCase(),
+      },
+      priority: 'Medium',
+      status: backendToUiStatus(r.status),
+      createdAt: r.createdAt,
+      _raw: r,
+    };
+  };
+
+  const allTickets = useMemo(() => (reports ?? []).map(reportToTicket), [reports]);
+
+  // Reset to page 1 when filter changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [statusFilter, reports]);
+
+  const filteredTickets = useMemo(() => {
+    if (statusFilter === 'all') return allTickets;
+    const ui = backendToUiStatus(statusFilter);
+    // statusFilter in this component is backend key; map to UI label
+    return allTickets.filter((t) => t.status === ui);
+  }, [allTickets, statusFilter]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredTickets.length / ITEMS_PER_PAGE));
+  const safePage = Math.min(currentPage, totalPages);
+
+  const pagedTickets = filteredTickets.slice(
+    (safePage - 1) * ITEMS_PER_PAGE,
+    safePage * ITEMS_PER_PAGE,
   );
 
   // Scroll the highlighted row into view when it appears
@@ -237,126 +314,108 @@ const RepairTable = ({
     }
   }, [highlightedId]);
 
+  // Action handlers (same as ticket center)
+  const findReportByTicketId = (ticketId) => {
+    const t = allTickets.find((x) => x.id === ticketId);
+    return t?._raw;
+  };
+
+  const updateStatus = async (ticketId, uiStatus, extra) => {
+    const r = findReportByTicketId(ticketId);
+    if (!r) return;
+    const backendStatus = uiToBackendStatus(uiStatus);
+    if (!backendStatus) return;
+
+    await onUpdateStatus(r._id, {
+      status: backendStatus,
+      // For parity with ticket center: reject/resolve notes go to outcome
+      outcome: typeof extra === 'string' ? extra : undefined,
+    });
+  };
+
   return (
     <div>
-      <div className="flex items-center justify-between mb-5">
+      <div className="flex items-center justify-between mb-6">
         <div>
-          <h3 className="text-base font-extrabold text-[#1A2B56] dark:text-white">
-            Repair Requests
-          </h3>
+          <h3 className="text-base font-extrabold text-[#1A2B56] dark:text-white">Repair Requests</h3>
           <p className="text-xs text-slate-400 mt-0.5">Equipment damage reports and repair workflow</p>
         </div>
-        <span className="text-xs text-slate-400 font-semibold">
-          {(reports ?? []).length} total
-        </span>
+        <span className="text-xs text-slate-400 font-semibold">{(reports ?? []).length} total</span>
       </div>
 
-      {/* Status filter pills */}
-      <div className="flex gap-2 flex-wrap mb-5">
-        {STATUS_FILTERS.map((f) => (
+      {/* Status tabs (same labels as ticket center) */}
+      <div className="flex gap-3 flex-wrap mb-6">
+        {[
+          { key: 'pending', label: 'Pending' },
+          { key: 'approved', label: 'Approved' },
+          { key: 'processing', label: 'In Progress' },
+          { key: 'rejected', label: 'Rejected' },
+          { key: 'fixed', label: 'Completed' },
+        ].map((t) => (
           <button
-            key={f.key}
-            onClick={() => onStatusFilterChange(f.key)}
-            className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all ${
-              statusFilter === f.key
-                ? 'bg-[#1A2B56] text-white dark:bg-blue-600'
-                : 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600'
+            key={t.key}
+            onClick={() => onStatusFilterChange(t.key)}
+            className={`px-6 py-3 rounded-full text-sm font-semibold transition-all ${
+              statusFilter === t.key
+                ? 'bg-white text-[#1A2B56] shadow-sm'
+                : 'bg-white/30 text-slate-600 hover:bg-white/50'
             }`}
           >
-            {f.label}
-            {f.key !== 'all' && (
-              <span className="ml-1.5 opacity-70">
-                {(reports ?? []).filter((r) => r.status === f.key).length}
-              </span>
-            )}
+            {t.label}
           </button>
         ))}
       </div>
 
-      {loading ? (
-        <div className="flex items-center justify-center py-12">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#1A2B56] dark:border-blue-400" />
-        </div>
-      ) : filtered.length === 0 ? (
-        <div className="text-center py-12 text-slate-400">
-          <span className="material-symbols-outlined text-4xl mb-2 block">inbox</span>
-          <p className="text-sm">No repair requests found</p>
-        </div>
-      ) : (
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-slate-100 dark:border-slate-700">
-                {['Equipment', 'Reported By', 'Priority', 'Status', 'Reported At', 'Source', ''].map((h) => (
-                  <th key={h} className="text-left text-[10px] font-bold uppercase tracking-widest text-slate-400 pb-3 pr-4">
-                    {h}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-50 dark:divide-slate-800">
-              {filtered.map((r) => {
-                const cfg       = STATUS_CONFIG[r.status] ?? STATUS_CONFIG.pending;
-                const isHighlit = r._id === highlightedId;
-                return (
-                  <tr
-                    key={r._id}
-                    ref={isHighlit ? highlightRowRef : null}
-                    className={`cursor-pointer transition-colors duration-300 ${
-                      isHighlit
-                        ? 'bg-amber-50 dark:bg-amber-900/20'
-                        : 'hover:bg-slate-50 dark:hover:bg-slate-800/40'
-                    }`}
-                    onClick={() => setSelected(r)}
-                  >
-                    <td className="py-3 pr-4">
-                      <div className="font-semibold text-slate-800 dark:text-slate-200">
-                        {r.equipment_id?.name ?? '—'}
-                      </div>
-                      <div className="text-[10px] text-slate-400">
-                        {r.equipment_id?.code ?? r.code ?? r._id?.slice(-8).toUpperCase()}
-                      </div>
-                    </td>
-                    <td className="py-3 pr-4 text-xs text-slate-600 dark:text-slate-400">
-                      {r.user_id?.displayName ?? '—'}
-                    </td>
-                    <td className="py-3 pr-4">
-                      <span className={`text-[10px] font-bold uppercase ${PRIORITY_COLOR[r.priority] ?? ''}`}>
-                        {r.priority ?? '—'}
-                      </span>
-                    </td>
-                    <td className="py-3 pr-4">
-                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${cfg.color}`}>
-                        {cfg.label}
-                      </span>
-                    </td>
-                    <td className="py-3 pr-4 text-xs text-slate-400">
-                      {r.createdAt ? new Date(r.createdAt).toLocaleDateString('en-GB') : '—'}
-                    </td>
-                    <td className="py-3 pr-4">
-                      <span className="text-[10px] text-slate-400">
-                        {r.description?.includes('technician') ? 'Manual' : 'QR / User'}
-                      </span>
-                    </td>
-                    <td className="py-3">
-                      <span className="material-symbols-outlined text-slate-300 dark:text-slate-600 text-base">
-                        chevron_right
-                      </span>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-      )}
+      <div className="overflow-hidden rounded-4xl">
+        {loading ? (
+          <div className="flex items-center justify-center py-20">
+            <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#1A2B56]" />
+          </div>
+        ) : (
+          <>
+            <TicketTable
+              tickets={pagedTickets}
+              activeStatus={backendToUiStatus(statusFilter)}
+              currentPage={1}
+              itemsPerPage={ITEMS_PER_PAGE}
+              onView={(id) => {
+                const r = findReportByTicketId(id);
+                if (r) setSelected(r);
+              }}
+              onApprove={(id) => updateStatus(id, 'Approved')}
+              onReject={(id) => {
+                const r = findReportByTicketId(id);
+                if (r) setSelected(r); // reuse detail modal to collect note
+              }}
+              onStartRepair={(id) => updateStatus(id, 'In Progress')}
+              onMarkResolved={(id) => {
+                const r = findReportByTicketId(id);
+                if (r) setSelected(r); // reuse detail modal to collect note
+              }}
+            />
 
+            <div className="mt-8 flex items-center justify-between px-2">
+              <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                Showing {filteredTickets.length === 0 ? 0 : (safePage - 1) * ITEMS_PER_PAGE + 1} - {Math.min(filteredTickets.length, safePage * ITEMS_PER_PAGE)} of {filteredTickets.length} tickets
+              </p>
+              <Pagination currentPage={safePage} totalPages={totalPages} onPageChange={setCurrentPage} />
+            </div>
+          </>
+        )}
+      </div>
+
+      {/* Keep existing detail modal for now to show full report info + capture notes */}
       {selected && (
         <RepairDetailModal
           report={selected}
           onClose={() => setSelected(null)}
           onUpdateStatus={async (id, payload) => {
-            await onUpdateStatus(id, payload);
+            // Map detail modal payload to ticket-center style: note -> outcome
+            const next = payload?.status;
+            await onUpdateStatus(id, {
+              ...payload,
+              outcome: payload?.decision_note || payload?.outcome,
+            });
             setSelected(null);
           }}
         />

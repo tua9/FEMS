@@ -1,5 +1,6 @@
 import Report from '../models/Report.js'
 import Equipment from '../models/Equipment.js'
+import { notificationService } from './notificationService.js'
 
 const TECH_STATUSES = {
   pending: 'pending',
@@ -67,6 +68,7 @@ const VALID_TRANSITIONS = {
 
 const updateTicket = async ({ id, status, cause, outcome, decisionNote, assignedTo, technicianId }) => {
   const report = await Report.findById(id)
+    .populate('user_id', 'role displayName username')
   if (!report) throw new Error('Ticket not found')
 
   const allowed = VALID_TRANSITIONS[report.status] ?? []
@@ -84,11 +86,14 @@ const updateTicket = async ({ id, status, cause, outcome, decisionNote, assigned
     if (status === 'processing') update.assigned_to = assignedTo ?? technicianId
   }
   if (cause) update.cause = cause
-  if (outcome) update.outcome = outcome
+  if (typeof outcome === 'string') {
+    const trimmed = outcome.trim()
+    update.outcome = trimmed.length ? trimmed : null
+  }
   if (decisionNote) update.decision_note = decisionNote
 
   const updatedReport = await Report.findByIdAndUpdate(id, { $set: update }, { new: true })
-    .populate('user_id', 'displayName username')
+    .populate('user_id', 'displayName username role')
     .populate('equipment_id', 'name category')
     .populate('room_id', 'name')
 
@@ -102,6 +107,45 @@ const updateTicket = async ({ id, status, cause, outcome, decisionNote, assigned
     if (eqStatus) {
       await Equipment.findByIdAndUpdate(updatedReport.equipment_id._id, { status: eqStatus })
     }
+  }
+
+  // ── Notifications ─────────────────────────────────────────────────────────
+  const reportCode = updatedReport.code || updatedReport._id.toString().slice(-6).toUpperCase()
+
+  // Always notify admins
+  await notificationService.notifyAdmins({
+    type: 'report',
+    title: 'Technician updated report status',
+    message: `Report #${reportCode} was updated to ${updatedReport.status}${updatedReport.outcome ? ` (note: ${updatedReport.outcome})` : ''}.`,
+    action: { type: 'open_detail', resource: 'report', resourceId: updatedReport._id },
+  }).catch((err) => console.error('Failed to notify admins:', err))
+
+  // Notify the reporter only if student/lecturer
+  const reporterRole = updatedReport.user_id?.role
+  const shouldNotifyReporter = reporterRole === 'student' || reporterRole === 'lecturer'
+
+  if (shouldNotifyReporter && updatedReport.user_id?._id) {
+    let notifTitle = 'Report Update'
+    let notifMessage = `Your report #${reportCode} status has been updated to ${updatedReport.status}.`
+
+    if (updatedReport.status === 'approved' || updatedReport.status === 'processing') {
+      notifTitle = 'Report Being Processed'
+      notifMessage = `Your report #${reportCode} is being processed.`
+    } else if (updatedReport.status === 'fixed') {
+      notifTitle = 'Issue Resolved'
+      notifMessage = `Your reported issue #${reportCode} has been resolved.${updatedReport.outcome ? ` Note: ${updatedReport.outcome}` : ''}`
+    } else if (updatedReport.status === 'rejected') {
+      notifTitle = 'Report Rejected'
+      notifMessage = `Your report #${reportCode} was rejected.${updatedReport.outcome ? ` Reason: ${updatedReport.outcome}` : ''}`
+    }
+
+    await notificationService.createNotification({
+      userId: updatedReport.user_id._id,
+      type: 'report',
+      title: notifTitle,
+      message: notifMessage,
+      action: { type: 'open_detail', resource: 'report', resourceId: updatedReport._id },
+    }).catch((err) => console.error('Failed to notify reporter:', err))
   }
 
   return updatedReport

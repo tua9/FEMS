@@ -1,28 +1,31 @@
 import { groq, AI_CONFIG } from "./config.js";
 import { tools } from "./tools.js";
-import { get_equipment_detail, get_equipment_list, get_my_equipment } from "./tools/equipment-tool.js";
-import { create_borrow_request } from "./tools/borrowRequest-tool.js";
+import { get_equipment_detail, get_equipment_list } from "./tools/equipment-tool.js";
+import { create_borrow_request, get_my_borrow_requests } from "./tools/borrowRequest-tool.js";
+import { get_my_schedule_today, get_next_borrowable_time } from "./tools/schedule-tool.js";
 
 /**
  * Điều phối gọi các tool dựa trên phản hồi của AI
  */
 async function callTool(toolCall, user) {
     const { name: functionName, arguments: argsString } = toolCall.function;
-    const args = JSON.parse(argsString || "{}"); // Bảo mật nếu argsString trống
+    const args = JSON.parse(argsString || "{}");
 
     console.log(`     + Thực thi [${functionName}]:`, args || "(Không có tham số)");
 
-    const toolArgs = args || {}; // Luôn đảm bảo là một object
-
     switch (functionName) {
         case "get_equipment_list":
-            return await get_equipment_list(toolArgs);
+            return await get_equipment_list({ ...args, user_id: user._id });
         case "get_equipment_detail":
-            return await get_equipment_detail(toolArgs);
-        case "get_my_equipment":
-            return await get_my_equipment({ ...toolArgs, user_id: user._id });
+            return await get_equipment_detail(args);
+        case "get_my_borrow_requests":
+            return await get_my_borrow_requests({ user_id: user._id });
         case "create_borrow_request":
-            return await create_borrow_request({ ...toolArgs, user_id: user._id });
+            return await create_borrow_request({ ...args, user_id: user._id });
+        case "get_my_schedule_today":
+            return await get_my_schedule_today({ user_id: user._id });
+        case "get_next_borrowable_time":
+            return await get_next_borrowable_time({ user_id: user._id });
         default:
             throw new Error(`Công cụ [${functionName}] không tồn tại.`);
     }
@@ -30,55 +33,63 @@ async function callTool(toolCall, user) {
 
 /**
  * Hàm thực thi Agent chính (Llama 3.1)
- * logic: Gửi tin nhắn -> nhận phản hồi -> gọi tool nếu cần -> lặp lại tối đa 5 lần -> trả kết quả cuối cùng.
  */
 async function runAgent(user, prompt, history = []) {
     try {
-        const today = new Date().toISOString().split('T')[0];
-        const tomorrowDate = new Date(); tomorrowDate.setDate(tomorrowDate.getDate() + 1);
-        const tomorrow = tomorrowDate.toISOString().split('T')[0];
-
-        // 1. Chuẩn bị ngữ cảnh hội thoại (Incorporate history if provided)
         const messages = [
             {
                 role: "system",
                 content: `
-                # VAI TRÒ
-                Bạn là Trợ lý Quản lý Thiết bị (FEMS AI). Chỉ sử dụng công cụ được cung cấp để hỗ trợ người dùng.
-                Ngày hiện tại: ${today} (Dùng định dạng YYYY-MM-DD cho các tool).
+# VAI TRÒ
+Bạn là Trợ lý Quản lý Thiết bị (FEMS AI). Hỗ trợ sinh viên tra cứu thiết bị, xem lịch học và tạo đơn mượn. Chỉ sử dụng các công cụ được cung cấp.
 
-                # THÔNG TIN NGƯỜI DÙNG
-                - Tên: ${user.name || user.displayName} (ID: ${user._id})
+# THÔNG TIN NGƯỜI DÙNG
+- Tên: ${user.name || user.displayName} (vai trò: sinh viên)
 
-                # QUY TẮC SỬ DỤNG CÔNG CỤ
-                - Hỏi danh sách -> gọi 'get_equipment_list'.
-                - Hỏi chi tiết một máy -> gọi 'get_equipment_detail' (chỉ dùng 'code').
-                - Xem lịch sử -> gọi 'get_my_equipment'.
+# HƯỚNG DẪN SỬ DỤNG CÔNG CỤ
+- Hỏi thiết bị có thể mượn → gọi 'get_equipment_list'
+- Hỏi chi tiết một thiết bị → gọi 'get_equipment_detail' (chỉ dùng 'code')
+- Xem đơn mượn / lịch sử → gọi 'get_my_borrow_requests'
+- Hỏi lịch học hôm nay → gọi 'get_my_schedule_today'
+- Hỏi "bao giờ mượn được" / "tại sao không mượn được" → gọi 'get_next_borrowable_time'
 
-                # QUY TRÌNH MƯỢN MÁY (BẮT BUỘC TUÂN THỦ 2 BƯỚC)
-                Tuyệt đối KHÔNG gọi tool 'create_borrow_request' ngay khi người dùng nói muốn mượn. BẠN PHẢI LÀM ĐÚNG 2 BƯỚC:
-                - BƯỚC 1 (TẠO BẢN NHÁP VÀ CHỜ): Viết ra thông tin mượn chuẩn bị gửi đi (vd: "Mã thiết bị: ..., Ngày mượn: ${today}, Ngày trả: ${tomorrow}, Lý do: để học"). Dưới danh sách này, bạn PHẢI HỎI: "Bạn có đồng ý tạo đơn mượn với thông tin này không?". TỚI ĐÂY DỪNG LẠI (Không gọi tool mượn).
-                - BƯỚC 2 (THỰC THI TOOL): Mãi đến khi vòng chat tiếp theo, khi người dùng nói rõ "Đồng ý", "Xác nhận", "Tạo đi"... CHỈ LÚC ĐÓ bạn mới gởi thông tin vào tool 'create_borrow_request'.
+# XỬ LÝ KẾT QUẢ TOOL (QUAN TRỌNG)
+Khi tool trả về JSON có field 'empty: true', hãy đọc 'reason' và giải thích thân thiện:
+- 'has_unreturned'       → Báo có thiết bị chưa hoàn trả, cần trả trước
+- 'has_pending_request'  → Báo đã có đơn đang chờ duyệt
+- 'no_session'           → Báo không có ca học đang diễn ra, gợi ý gọi 'get_next_borrowable_time'
+- 'teacher_not_checked_in' → Báo GV chưa điểm danh, nhắc sinh viên chờ
+- 'no_class'             → Báo chưa có lớp học
+- 'no_equipment'         → Báo không còn thiết bị trống trong phòng
 
-                # QUY TẮC CỐT LÕI
-                1. LUÔN LUÔN DỪNG VÀ TRẢ LỜI NGƯỜI DÙNG ngay sau khi nhận được JSON kết quả từ 1 tool bất kì (như list, hoặc chi tiết). KHÔNG gọi liên tiếp nhiều tool một cách vô tội vạ.
-                2. BẢO MẬT: Báo cáo kết quả bằng tiếng Việt tự nhiên và KHÔNG trả ra chuỗi _id.
-                `
+# QUY TRÌNH MƯỢN THIẾT BỊ (BẮT BUỘC 2 BƯỚC)
+Tuyệt đối KHÔNG gọi 'create_borrow_request' ngay. PHẢI LÀM ĐÚNG 2 BƯỚC:
+
+BƯỚC 1 – HIỂN THỊ THÔNG TIN VÀ CHỜ XÁC NHẬN:
+Viết ra bản nháp đơn mượn: tên thiết bị, mã, phòng, mục đích (nếu có).
+Kết thúc bằng: "Bạn có xác nhận tạo đơn mượn với thông tin này không?"
+→ DỪNG LẠI.
+
+BƯỚC 2 – TẠO ĐƠN (chỉ khi được xác nhận):
+Khi người dùng nói "Đồng ý", "Xác nhận", "Tạo đi"... CHỈ LÚC ĐÓ mới gọi 'create_borrow_request'.
+
+# QUY TẮC CỐT LÕI
+1. Luôn DỪNG và trả lời sau mỗi tool. KHÔNG gọi liên tiếp nhiều tool.
+2. Trả lời bằng tiếng Việt tự nhiên. KHÔNG hiển thị _id.
+3. Dịch statusLabel ra tiếng Việt khi hiển thị trạng thái đơn mượn.
+                `,
             },
-            // Sanitize history: chỉ giữ 'role' & 'content', loại bỏ các trường frontend-only (như isError)
-            // Chỉ giữ 4 tin nhắn gần nhất để giảm token & tăng tốc phản hồi
             ...history.slice(-4).map(({ role, content }) => ({ role, content })),
-            { role: "user", content: prompt }
+            { role: "user", content: prompt },
         ];
 
         console.log(`\n--- [CHAT SESSION START] ---`);
         console.log(`User  : ${user.name || user.displayName}`);
         console.log(`Prompt: "${prompt}"`);
 
-        // 2. Vòng lặp Agent Step (Max 5 turns)
         for (let i = 0; i < AI_CONFIG.MAX_ITERATIONS; i++) {
             const response = await groq.chat.completions.create({
-                model: AI_CONFIG.MODEL_ID,
+                model:       AI_CONFIG.MODEL_ID,
                 messages,
                 tools,
                 tool_choice: "auto",
@@ -88,7 +99,6 @@ async function runAgent(user, prompt, history = []) {
             const aiResponse = response.choices[0].message;
             messages.push(aiResponse);
 
-            // Nếu AI không gọi tool nữa -> hoàn tất và trả về text
             if (!aiResponse.tool_calls || aiResponse.tool_calls.length === 0) {
                 console.log(`--- [CHAT SESSION END] ---\n`);
                 return aiResponse.content;
@@ -96,29 +106,27 @@ async function runAgent(user, prompt, history = []) {
 
             console.log(`---> [Turn ${i + 1}] yêu cầu gọi ${aiResponse.tool_calls.length} tool(s)`);
 
-            // Thực thi toàn bộ tool calls trong turn này
             const toolResults = await Promise.all(
                 aiResponse.tool_calls.map(async (tc) => {
                     try {
                         const result = await callTool(tc, user);
                         return {
                             tool_call_id: tc.id,
-                            role: "tool",
-                            name: tc.function.name,
-                            content: String(result),
+                            role:         "tool",
+                            name:         tc.function.name,
+                            content:      String(result),
                         };
                     } catch (err) {
                         return {
                             tool_call_id: tc.id,
-                            role: "tool",
-                            name: tc.function.name,
-                            content: `Lỗi: ${err.message}`,
+                            role:         "tool",
+                            name:         tc.function.name,
+                            content:      `Lỗi: ${err.message}`,
                         };
                     }
                 })
             );
 
-            // Gửi kết quả tool lại cho AI
             messages.push(...toolResults);
         }
 

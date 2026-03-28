@@ -2,10 +2,11 @@ import React, { useState, useMemo, useEffect, useCallback, useRef } from 'react'
 import { toast } from 'sonner';
 import { createPortal } from 'react-dom';
 import { technicianApi } from '@/services/technicianApi';
-import AssetEditModal from '@/features/technician/components/equipment/AssetEditModal';
-import AddEquipmentModal from '@/features/technician/components/equipment/AddEquipmentModal';
+// Use admin modals for parity
+import AddEquipmentModal from '@/features/admin/components/equipment/AddEquipmentModal';
+import EquipmentQRCodeModal from '@/features/admin/components/equipment/EquipmentQRCodeModal';
+import DeleteConfirmationModal from '@/features/admin/components/common/DeleteConfirmationModal';
 import EquipmentSuccessModal from '@/features/technician/components/equipment/EquipmentSuccessModal';
-import QRCodeModal from '@/features/technician/components/equipment/QRCodeModal';
 import RepairTable from '@/features/technician/components/equipment/RepairTable';
 import { PageHeader } from '@/features/shared/components/PageHeader';
 
@@ -455,9 +456,9 @@ const EquipmentInventory = () => {
           {/* Add button */}
           <button
             onClick={() => setModal({ type: 'add' })}
-            className="flex items-center gap-1.5 px-4 py-2 bg-[#1A2B56] text-white rounded-2xl text-xs font-bold shadow hover:shadow-lg hover:-translate-y-0.5 transition-all whitespace-nowrap"
+            className="flex items-center gap-2 px-6 py-3 bg-[#1A2B56] text-white rounded-2xl font-semibold text-sm shadow-[0_10px_20px_rgba(26,43,86,0.3)] hover:opacity-90 transition-all border border-white/10 shrink-0"
           >
-            <span className="material-symbols-outlined text-base">add</span>
+            <span className="material-symbols-outlined text-lg">add</span>
             Add Equipment
           </button>
         </div>
@@ -518,30 +519,52 @@ const EquipmentInventory = () => {
       </div>
 
       {/* ── Modals ────────────────────────────────────────────────────────── */}
-      {modal.type === 'edit' && (
-        <AssetEditModal
-          asset={modal.asset}
-          onClose={closeModal}
-          onSave={handleSave}
-        />
-      )}
-      {modal.type === 'qr' && (
-        <QRCodeModal equipment={modal.asset} onClose={closeModal} />
-      )}
-      {modal.type === 'add' && (
-        <AddEquipmentModal onClose={closeModal} onAdd={handleAdd} />
-      )}
+      <AddEquipmentModal
+        isOpen={modal.type === 'edit'}
+        onClose={closeModal}
+        equipment={modal.asset}
+        onEquipmentUpdated={() => { loadEquipment(); loadRepairs(); }}
+        onCreated={(created) => {
+          // In case the admin modal ever calls onCreated during edit (shouldn't), keep behavior safe
+          closeModal();
+          setTimeout(() => setModal({ type: 'addSuccess', equipment: created }), 50);
+        }}
+      />
+
+      {/* Admin-style QR modal */}
+      <EquipmentQRCodeModal
+        isOpen={modal.type === 'qr'}
+        equipment={modal.asset}
+        onClose={closeModal}
+      />
+
+      {/* Admin-style Add modal (create-only in technician flow) */}
+      <AddEquipmentModal
+        isOpen={modal.type === 'add'}
+        onClose={closeModal}
+        equipment={null}
+        onEquipmentUpdated={() => { loadEquipment(); loadRepairs(); }}
+        onCreated={(created) => {
+          closeModal();
+          // Keep technician success flow (QR + success state)
+          setTimeout(() => setModal({ type: 'addSuccess', equipment: created }), 50);
+        }}
+      />
+
       {modal.type === 'addSuccess' && modal.equipment && (
         <EquipmentSuccessModal equipment={modal.equipment} onClose={closeModal} />
       )}
-      {modal.type === 'delete' && actionTarget && (
-        <ConfirmDeleteModal
-          equipment={actionTarget}
-          onClose={closeModal}
-          onConfirm={handleDeleteConfirm}
-          loading={actioning}
-        />
-      )}
+
+      {/* Admin-style Delete confirmation */}
+      <DeleteConfirmationModal
+        isOpen={modal.type === 'delete' && !!actionTarget}
+        title="Decommission Equipment"
+        message="Are you sure you want to remove this equipment?"
+        itemName={actionTarget?.name}
+        onClose={closeModal}
+        onConfirm={handleDeleteConfirm}
+      />
+
       {modal.type === 'markBroken' && actionTarget && (
         <ConfirmMarkBrokenModal
           equipment={actionTarget}

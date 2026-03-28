@@ -1,20 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import EquipmentHealthChart from '../components/dashboard/EquipmentHealthChart';
 import TopBorrowedList from '../components/dashboard/TopBorrowedList';
-import BorrowRequestList from '../components/dashboard/BorrowRequestList';
 import RecentDamageReports from '../components/dashboard/RecentDamageReports';
-import EquipmentStatusPieChart from '../components/dashboard/EquipmentStatusPieChart';
-import MonthlyBorrowTrendChart from '../components/dashboard/MonthlyBorrowTrendChart';
-import DamageTrendChart from '../components/dashboard/DamageTrendChart';
 import MaintenanceAttentionList from '../components/dashboard/MaintenanceAttentionList';
-import MTTRCard from '../components/dashboard/MTTRCard';
-import DamageCauseChart from '../components/dashboard/DamageCauseChart';
 import TopBrokenList from '../components/dashboard/TopBrokenList';
 import RepairOutcomeChart from '../components/dashboard/RepairOutcomeChart';
 import TechnicianPerformanceCard from '../components/dashboard/TechnicianPerformanceCard';
 import { useAdminStore } from '@/stores/useAdminStore';
 import { useNavigate } from 'react-router-dom';
-import { PageShell, AnimatedSection, AnimatedList, AnimatedListItem } from '@/components/motion';
+import { PageShell, AnimatedSection } from '@/components/motion';
 
 const AdminDashboard = () => {
     const navigate = useNavigate();
@@ -22,7 +16,6 @@ const AdminDashboard = () => {
         stats, fetchStats,
         healthStatus, fetchHealthStatus,
         chartData, fetchChartData,
-        borrowRequests, fetchBorrowRequests,
         damageReports, fetchDamageReports,
         equipmentAnalytics, fetchEquipmentAnalytics,
         reportAnalytics, fetchReportAnalytics,
@@ -39,7 +32,6 @@ const AdminDashboard = () => {
                     fetchStats(),
                     fetchHealthStatus(),
                     fetchChartData(),
-                    fetchBorrowRequests(),
                     fetchDamageReports(),
                     fetchEquipmentAnalytics(),
                     fetchReportAnalytics(),
@@ -53,7 +45,7 @@ const AdminDashboard = () => {
         };
 
         fetchDashboardData();
-    }, [fetchStats, fetchHealthStatus, fetchChartData, fetchBorrowRequests, fetchDamageReports, fetchEquipmentAnalytics, fetchReportAnalytics, fetchTechnicianPerformance]);
+    }, [fetchStats, fetchHealthStatus, fetchChartData, fetchDamageReports, fetchEquipmentAnalytics, fetchReportAnalytics, fetchTechnicianPerformance]);
 
     const topBorrowedDisplay = React.useMemo(() => {
         const raw =
@@ -87,32 +79,28 @@ const AdminDashboard = () => {
             className="px-6 pb-16"
         >
 
-            {/* ── Analytics ── */}
-            <AnimatedSection variant="fade" delay={0.1} className="grid grid-cols-1 lg:grid-cols-12 gap-8 mb-8">
-                <div className="lg:col-span-8 dashboard-card p-10 rounded-4xl transition-all duration-300 flex flex-col justify-between">
+            {/* ── Section 1: Equipment Performance Analytics ── */}
+            <AnimatedSection variant="fade" delay={0.1} className="mb-8">
+                <div className="dashboard-card p-10 rounded-4xl transition-all duration-300">
                     <h4 className="font-extrabold text-[#1A2B56] dark:text-white text-xl mb-10">Equipment Performance Analytics</h4>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-16 flex-1">
-                        <EquipmentHealthChart
-                            healthyPercentage={healthStatus.healthy}
-                            availableNodes={healthStatus.available}
-                            maintenanceNodes={healthStatus.maintenance}
-                            brokenNodes={healthStatus.broken}
-                        />
-                        <TopBorrowedList items={topBorrowedDisplay} />
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-16">
+                        <div className="md:col-span-1 border-r border-slate-100 dark:border-slate-700/50 pr-8">
+                            <EquipmentHealthChart
+                                healthyPercentage={healthStatus.healthy}
+                                availableNodes={healthStatus.available}
+                                maintenanceNodes={healthStatus.maintenance}
+                                brokenNodes={healthStatus.broken}
+                            />
+                        </div>
+                        <div className="md:col-span-1 lg:col-span-2">
+                            <TopBorrowedList items={topBorrowedDisplay} />
+                        </div>
                     </div>
-                </div>
-                <div className="lg:col-span-4 h-full">
-                    <BorrowRequestList
-                        requests={borrowRequests}
-                        efficiencyRate={stats.efficiencyRate}
-                        onViewAll={() => navigate('/admin/borrowing')}
-                        onItemClick={(req) => navigate('/admin/borrowing', { state: { requestId: req._id } })}
-                    />
                 </div>
             </AnimatedSection>
 
-            {/* ── Damage Reports ── */}
-            <AnimatedSection variant="slide-up" delay={0.15}>
+            {/* ── Section 2: Recent Damage Reports (Table) ── */}
+            <AnimatedSection variant="slide-up" delay={0.15} className="mb-10">
                 <RecentDamageReports
                     reports={damageReports}
                     onViewAll={() => navigate('/admin/reports')}
@@ -120,77 +108,37 @@ const AdminDashboard = () => {
                 />
             </AnimatedSection>
 
-            {/* ── Section 2: Equipment Warehouse Analytics ── */}
-            {equipmentAnalytics && (
-                <AnimatedSection variant="slide-up" delay={0.2} className="mt-10">
-                    <h3 className="text-lg font-extrabold text-[#1A2B56] dark:text-white mb-6">
-                        Warehouse and borrowing analytics
-                    </h3>
-                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 mb-6">
-                        {/* Status pie */}
-                        <div className="lg:col-span-3 dashboard-card p-6 rounded-4xl">
-                            <EquipmentStatusPieChart data={equipmentAnalytics.statusDistribution} />
-                        </div>
-                        {/* Monthly trend */}
-                        <div className="lg:col-span-9 dashboard-card p-6 rounded-4xl">
-                            <MonthlyBorrowTrendChart data={equipmentAnalytics.monthlyBorrowTrend} />
-                        </div>
+            {/* ── Section 3: Strategic Analytics Matrix ── */}
+            <AnimatedSection variant="slide-up" delay={0.2}>
+                <h3 className="text-lg font-extrabold text-[#1A2B56] dark:text-white mb-6">
+                    Fleet and Repair Performance Matrix
+                </h3>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 auto-rows-fr">
+                    {/* Repair Quality - 3/4 Wide Landscape */}
+                    <div className="lg:col-span-3 md:col-span-2 dashboard-card p-8 rounded-4xl">
+                        <RepairOutcomeChart data={reportAnalytics?.repairOutcomes || []} />
                     </div>
-                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-                        {/* Top borrowed */}
-                        <div className="lg:col-span-4 dashboard-card p-6 rounded-4xl">
-                            <p className="text-[11px] font-semibold uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-4">
-                                Most borrowed equipment (by model)
-                            </p>
-                            <TopBorrowedList items={topBorrowedDisplay} />
-                        </div>
-                        {/* Damage trend */}
-                        <div className="lg:col-span-4 dashboard-card p-6 rounded-4xl">
-                            <DamageTrendChart data={equipmentAnalytics.damageTrend} />
-                        </div>
-                        {/* Maintenance attention */}
-                        <div className="lg:col-span-4 dashboard-card p-6 rounded-4xl">
-                            <MaintenanceAttentionList items={equipmentAnalytics.maintenanceAttention} />
-                        </div>
-                    </div>
-                </AnimatedSection>
-            )}
 
-            {/* ── Section 3: Fault Report Analytics ── */}
-            {reportAnalytics && (
-                <AnimatedSection variant="slide-up" delay={0.25} className="mt-10">
-                    <h3 className="text-lg font-extrabold text-[#1A2B56] dark:text-white mb-6">
-                        Fault report analytics
-                    </h3>
-                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 mb-6">
-                        {/* MTTR */}
-                        <div className="lg:col-span-3 dashboard-card p-6 rounded-4xl">
-                            <MTTRCard
-                                mttrHours={reportAnalytics.mttrHours}
-                                fixedCount={reportAnalytics.fixedCount}
-                                damageReportRate={reportAnalytics.damageReportRate}
-                            />
-                        </div>
-                        {/* Cause chart */}
-                        <div className="lg:col-span-5 dashboard-card p-6 rounded-4xl">
-                            <DamageCauseChart data={reportAnalytics.causeDistribution} />
-                        </div>
-                        {/* Repair outcome */}
-                        <div className="lg:col-span-4 dashboard-card p-6 rounded-4xl">
-                            <RepairOutcomeChart data={reportAnalytics.repairOutcomes} />
-                        </div>
+                    {/* Team Productivity - 1/4 Compact Portrait */}
+                    <div className="lg:col-span-1 md:col-span-1 dashboard-card p-8 rounded-4xl">
+                        <TechnicianPerformanceCard data={technicianPerformance} />
                     </div>
-                    {/* Top broken + Technician performance */}
-                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-                        <div className="lg:col-span-8 dashboard-card p-6 rounded-4xl">
-                            <TopBrokenList items={reportAnalytics.topBrokenEquipment} />
-                        </div>
-                        <div className="lg:col-span-4 dashboard-card p-6 rounded-4xl">
-                            <TechnicianPerformanceCard data={technicianPerformance} />
-                        </div>
+
+                    {/* Problematic Assets - 2/4 Medium Wide */}
+                    <div className="lg:col-span-2 md:col-span-1 dashboard-card p-8 rounded-4xl">
+                        <TopBrokenList items={reportAnalytics?.topBrokenEquipment || []} />
                     </div>
-                </AnimatedSection>
-            )}
+
+                    {/* System Reliability - 2/4 Medium Wide */}
+                    <div className="lg:col-span-2 md:col-span-1 dashboard-card p-8 rounded-4xl">
+                        <MaintenanceAttentionList 
+                            items={equipmentAnalytics?.maintenanceAttention || []} 
+                            trendData={equipmentAnalytics?.damageTrend || []}
+                        />
+                    </div>
+                </div>
+            </AnimatedSection>
         </PageShell>
     );
 };

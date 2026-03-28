@@ -91,8 +91,9 @@ export const technicianApi = {
   updateTicketStatus: async (
     id: string,
     status: 'pending' | 'approved' | 'rejected' | 'processing' | 'fixed' | 'cancelled',
+    outcome?: string,
   ): Promise<any> => {
-    const { data } = await api.patch<any>(`/tickets/${id}/status`, { status });
+    const { data } = await api.patch<any>(`/tickets/${id}/status`, { status, outcome });
     return data;
   },
 };
