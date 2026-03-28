@@ -26,10 +26,10 @@ const RepairOutcomeChart = ({ data }) => {
  return (
  <div>
  <p className="text-[11px] font-semibold uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-4">
- Tỷ lệ sửa chữa thành công
+ Repair success rate
  </p>
  {total === 0 ? (
- <p className="text-xs text-slate-400 text-center py-8">Chưa có sự cố nào được đóng</p>
+ <p className="text-xs text-slate-400 text-center py-8">No closed incidents yet</p>
  ) : (
  <>
  <div className="relative flex items-center justify-center py-2">
@@ -51,7 +51,7 @@ const RepairOutcomeChart = ({ data }) => {
  </svg>
  <div className="absolute inset-0 flex flex-col items-center justify-center">
  <span className="text-2xl font-black text-[#1A2B56] dark:text-white">{fixedPct}%</span>
- <span className="text-[9px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">Thành công</span>
+ <span className="text-[9px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">Success</span>
  </div>
  </div>
  <div className="mt-4 space-y-2">
