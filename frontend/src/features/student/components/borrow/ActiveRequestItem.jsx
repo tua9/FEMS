@@ -32,7 +32,7 @@ const ActiveRequestItem = ({ req, onReturn, onConfirmReceived, onCancel }) => {
       </div>
       <div className="flex items-center gap-3 shrink-0">
         <BorrowBadge status={req.status} req={req} />
-        {req.status === BORROW_STATUS.HANDED_OVER && (
+        {(req.status === BORROW_STATUS.HANDED_OVER || req.status === BORROW_STATUS.UNRETURNED) && (
           <button
             onClick={() => onReturn(req)}
             className="px-4 py-2 rounded-xl bg-[#1E2B58] dark:bg-blue-700 text-white font-black text-[10px] uppercase tracking-widest hover:bg-[#2A3B66] transition-all active:scale-95 shadow-md shadow-blue-900/20"

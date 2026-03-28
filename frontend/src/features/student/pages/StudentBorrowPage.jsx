@@ -311,28 +311,38 @@ const StudentBorrowPage = () => {
                 </div>
 
                 {/* Status badge */}
-                <span className={`flex items-center gap-2 px-4 py-2 rounded-2xl text-[10px] font-black uppercase tracking-widest border shrink-0 ${(activeSchedule.status === 'completed' || getSlotTimeStatus(activeSchedule.startAt, activeSchedule.endAt) === 'ended')
-                    ? 'bg-slate-100 text-slate-500 border-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700'
-                    : isSessionOngoing
-                      ? 'bg-emerald-50 text-emerald-600 border-emerald-200 dark:bg-emerald-900/20 dark:text-emerald-400 dark:border-emerald-900/30'
-                      : 'bg-amber-50 text-amber-600 border-amber-200 dark:bg-amber-900/20 dark:text-amber-400 dark:border-amber-900/30'
-                  }`}>
-                  <span className={`w-1.5 h-1.5 rounded-full ${(activeSchedule.status === 'completed' || getSlotTimeStatus(activeSchedule.startAt, activeSchedule.endAt) === 'ended') ? 'bg-slate-400' :
-                      isSessionOngoing ? 'bg-emerald-500 animate-pulse' : 'bg-amber-500'
-                    }`} />
-                  {(activeSchedule.status === 'completed' || getSlotTimeStatus(activeSchedule.startAt, activeSchedule.endAt) === 'ended') ? 'Completed' :
-                    isSessionOngoing ? 'Ongoing' : 'Upcoming'}
-                </span>
+                <div className="flex flex-col items-end gap-1.5 shrink-0">
+                  <span className={`flex items-center gap-2 px-4 py-2 rounded-2xl text-[10px] font-black uppercase tracking-widest border ${(activeSchedule.status === 'completed' || getSlotTimeStatus(activeSchedule.startAt, activeSchedule.endAt) === 'ended')
+                      ? 'bg-slate-100 text-slate-500 border-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700'
+                      : isSessionOngoing
+                        ? 'bg-emerald-50 text-emerald-600 border-emerald-200 dark:bg-emerald-900/20 dark:text-emerald-400 dark:border-emerald-900/30'
+                        : 'bg-amber-50 text-amber-600 border-amber-200 dark:bg-amber-900/20 dark:text-amber-400 dark:border-amber-900/30'
+                    }`}>
+                    <span className={`w-1.5 h-1.5 rounded-full ${(activeSchedule.status === 'completed' || getSlotTimeStatus(activeSchedule.startAt, activeSchedule.endAt) === 'ended') ? 'bg-slate-400' :
+                        isSessionOngoing ? 'bg-emerald-500 animate-pulse' : 'bg-amber-500'
+                      }`} />
+                    {(activeSchedule.status === 'completed' || getSlotTimeStatus(activeSchedule.startAt, activeSchedule.endAt) === 'ended') ? 'Completed' :
+                      isSessionOngoing ? 'Ongoing' : 'Upcoming'}
+                  </span>
+                  
+                  {isSessionOngoing && !activeSchedule.isLecturerCheckedIn && (
+                    <span className="text-[10px] font-bold text-amber-500 dark:text-amber-400 italic pr-1">
+                      ( lecturer chưa điểm danh )
+                    </span>
+                  )}
+                </div>
               </div>
 
               {/* Warning banner if session not yet started or ended */}
-              {!isSessionOngoing && (
+              {(!isSessionOngoing || !activeSchedule.isLecturerCheckedIn) && (
                 <div className="mt-5 p-3 rounded-2xl bg-amber-50 dark:bg-amber-900/10 border border-amber-100 dark:border-amber-900/20 flex items-start gap-2.5">
                   <AlertTriangle className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
                   <p className="text-xs font-bold text-amber-600 dark:text-amber-400">
                     {activeSchedule.status === 'completed' || getSlotTimeStatus(activeSchedule.startAt, activeSchedule.endAt) === 'ended'
-                      ? 'This session has ended. Equipment borrowing is no longer available.'
-                      : 'Equipment borrowing is not yet open. Please wait for the lecturer to check in.'}
+                      ? 'Buổi học này đã kết thúc. Không thể mượn thêm thiết bị.'
+                      : !isSessionOngoing
+                        ? 'Chưa đến giờ học. Vui lòng chờ đến khi bắt đầu ca học để mượn thiết bị.'
+                        : 'Giảng viên chưa điểm danh. Việc mượn thiết bị hiện đang bị khóa tạm thời.'}
                   </p>
                 </div>
               )}
@@ -435,10 +445,14 @@ const StudentBorrowPage = () => {
                     key={item._id}
                     item={item}
                     myReq={myActiveByEqId[item._id]}
-                    isSessionOngoing={isSessionOngoing}
+                    isSessionOngoing={isSessionOngoing && activeSchedule.isLecturerCheckedIn}
                     onBorrow={(it) => {
                       if (!isSessionOngoing) {
                         toast.warning('Buổi học chưa bắt đầu. Vui lòng chờ đến giờ học.');
+                        return;
+                      }
+                      if (!activeSchedule.isLecturerCheckedIn) {
+                        toast.warning('Giảng viên chưa điểm danh. Bạn không thể mượn thiết bị lúc này.');
                         return;
                       }
                       setBorrowTarget(it);

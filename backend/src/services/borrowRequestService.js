@@ -340,7 +340,7 @@ const studentConfirmReceived = async (id, studentId, handoverForm) => {
 const studentSubmitReturn = async (id, studentId) => {
   const request = await BorrowRequest.findById(id)
   if (!request) throw new ApiError(StatusCodes.NOT_FOUND, 'Borrow request not found')
-  if (request.status !== 'handed_over') throw new ApiError(StatusCodes.BAD_REQUEST, 'Thiết bị chưa được bàn giao')
+  if (!['handed_over', 'unreturned'].includes(request.status)) throw new ApiError(StatusCodes.BAD_REQUEST, 'Thiết bị chưa được bàn giao hoặc không thể trả')
   if (request.borrowerId.toString() !== studentId.toString()) {
     throw new ApiError(StatusCodes.FORBIDDEN, 'Chỉ người mượn mới có thể gửi yêu cầu trả')
   }
@@ -569,12 +569,26 @@ const checkOverdueHandedOverRequests = async () => {
   }
 }
 
-const remindBorrowRequest = async (id) => {
+const remindBorrowRequest = async (id, lecturerId, note) => {
   const request = await BorrowRequest.findById(id).populate('borrowerId', 'displayName email')
   if (!request) throw new ApiError(StatusCodes.NOT_FOUND, 'Borrow request not found')
+  if (request.status !== 'unreturned' && request.status !== 'handed_over') {
+    throw new ApiError(StatusCodes.BAD_REQUEST, 'Chỉ có thể nhắc nhở các thiết bị đang được sử dụng hoặc chưa trả')
+  }
 
-  console.log(`Reminder sent to ${request.borrowerId?.displayName} for request ${id}`)
-  return { message: 'Reminder sent successfully' }
+  const lecturer = await User.findById(lecturerId).select('displayName')
+  const title = `Nhắc nhở từ Giảng viên ${lecturer?.displayName || ''}`
+  const message = note ? note.trim() : `Vui lòng hoàn trả thiết bị ${request.code} sớm nhất có thể.`
+
+  await notificationService.createNotification({
+    userId: request.borrowerId,
+    type: 'borrow',
+    title: title,
+    message: message,
+    action: { type: 'open_detail', resource: 'borrow', resourceId: request._id },
+  })
+
+  return { message: 'Đã gửi nhắc nhở thành công' }
 }
 
 export const borrowRequestService = {
