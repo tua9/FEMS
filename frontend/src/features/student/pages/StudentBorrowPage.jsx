@@ -1,4 +1,4 @@
-import ConfirmModal from "@/features/shared/components/ConfirmModal";
+
 import { PageHeader } from "@/features/shared/components/PageHeader";
 import { borrowRequestService } from "@/services/borrowRequestService";
 import { equipmentService } from "@/services/equipmentService";
@@ -57,7 +57,7 @@ const StudentBorrowPage = () => {
   const [handoverViewTarget, setHandoverViewTarget] = useState(null);
   const [returnTarget, setReturnTarget] = useState(null);
   const [viewRequest, setViewRequest] = useState(null);
-  const [returnConfirmReq, setReturnConfirmReq] = useState(null);
+
   const [submitting, setSubmitting] = useState(false);
 
   // ── Pagination for My Requests ────────────────────────────────────────────
@@ -641,23 +641,7 @@ const StudentBorrowPage = () => {
         request={viewRequest}
       />
 
-      <ConfirmModal
-        isOpen={!!returnConfirmReq}
-        onClose={() => {
-          if (!submitting) setReturnConfirmReq(null);
-        }}
-        title="Request return"
-        message={
-          returnConfirmReq
-            ? `Submit a return request for "${returnConfirmReq.equipmentId?.name || "this equipment"}"? Your lecturer will confirm once you return the item.`
-            : ""
-        }
-        confirmText="Submit request"
-        cancelText="Cancel"
-        onConfirm={handleReturnConfirm}
-        submitting={submitting}
-        type="info"
-      />
+
     </div>
   );
 };
