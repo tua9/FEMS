@@ -1,7 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
  MODAL_OVERLAY, MODAL_CARD, CLOSE_BTN,
- BTN_SECONDARY,
+ BTN_SECONDARY, SECTION_LABEL, TEXTAREA_CLASS,
 } from '@/features/technician/components/common/modalStyles';
 
 // ── Start Repair Confirm Modal ─────────────────────────────────────────────
@@ -75,7 +75,10 @@ export const StartRepairModal = ({ ticket, onClose, onConfirm }) => (
 );
 
 // ── Mark Resolved Confirm Modal ────────────────────────────────────────────
-export const MarkResolvedModal = ({ ticket, onClose, onConfirm }) => (
+export const MarkResolvedModal = ({ ticket, onClose, onConfirm }) => {
+ const [note, setNote] = useState('');
+
+ return (
  <div className={MODAL_OVERLAY} onClick={onClose}>
  <div
  className={`${MODAL_CARD} max-w-sm`}
@@ -110,6 +113,18 @@ export const MarkResolvedModal = ({ ticket, onClose, onConfirm }) => (
  </p>
  </div>
  </div>
+
+ {/* Note */}
+ <div className="space-y-1.5">
+ <label className={SECTION_LABEL}>Note (optional)</label>
+ <textarea
+ value={note}
+ onChange={(e) => setNote(e.target.value)}
+ placeholder="Describe what was fixed / outcome after repair..."
+ rows={3}
+ className={TEXTAREA_CLASS}
+ />
+ </div>
  </div>
 
  <div className="px-7 py-5 border-t border-slate-100 flex gap-3">
@@ -118,7 +133,7 @@ export const MarkResolvedModal = ({ ticket, onClose, onConfirm }) => (
  </button>
  <button
  type="button"
- onClick={() => { onConfirm(ticket.id); onClose(); }}
+ onClick={() => { onConfirm(ticket.id, note); onClose(); }}
  className="flex-1 py-3 rounded-xl bg-emerald-600 text-white text-sm font-bold hover:bg-emerald-700 active:scale-[0.98] transition-all flex items-center justify-center gap-2 shadow-sm"
  >
  <span className="material-symbols-outlined text-base">task_alt</span>
@@ -127,4 +142,5 @@ export const MarkResolvedModal = ({ ticket, onClose, onConfirm }) => (
  </div>
  </div>
  </div>
-);
+ );
+};

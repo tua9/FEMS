@@ -48,7 +48,8 @@ export const updateReportStatus = async (req, res) => {
     req.params.id,
     req.body.status,
     req.user._id,
-    req.body.technicianId
+    req.body.technicianId,
+    req.body.outcome,
   )
   res.status(StatusCodes.OK).json(result)
 }
