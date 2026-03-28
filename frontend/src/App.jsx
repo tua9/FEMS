@@ -6,19 +6,19 @@ import { useAuthStore } from "./stores/useAuthStore";
 import ChatBox from "./components/chat/ChatBox";
 
 export default function App() {
- const { refreshToken } = useAuthStore();
+    const { refreshToken, user } = useAuthStore();
 
- useEffect(() => {
- refreshToken();
- }, [refreshToken]);
+    useEffect(() => {
+        refreshToken();
+    }, [refreshToken]);
 
- return (
- <>
- <Toaster richColors />
- <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
- <ChatBox />
- <Outlet />
- </ThemeProvider>
- </>
- );
+    return (
+        <>
+            <Toaster richColors />
+            <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
+                {user && <ChatBox />}
+                <Outlet />
+            </ThemeProvider>
+        </>
+    );
 }

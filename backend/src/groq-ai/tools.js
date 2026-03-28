@@ -37,7 +37,7 @@ export const tools = [
         type: "function",
         function: {
             name: "create_borrow_request",
-            description: "Tạo đơn mượn thiết bị. Chỉ gọi khi người dùng ĐÃ XÁC NHẬN đồng ý. Hệ thống tự kiểm tra: ca học đang diễn ra, GV đã điểm danh, thiết bị còn trống.",
+            description: "Tạo đơn mượn thiết bị. Chỉ gọi khi người dùng ĐÃ XÁC NHẬN đồng ý VÀ bạn đã có MÃ THIẾT BỊ chính xác (code). Nếu người dùng chỉ nói tên máy, hãy gọi get_equipment_list để tìm mã trước.",
             parameters: {
                 type: "object",
                 properties: {

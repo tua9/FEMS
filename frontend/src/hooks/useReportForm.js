@@ -54,7 +54,7 @@ export function useReportForm() {
 
  // QR with only ?eq=CODE — resolve equipment (public GET /equipments/code/:code)
  useEffect(() => {
- if (!qrEquipmentCode || qrEquipmentId) return;
+ if (!qrEquipmentCode) return;
  let cancelled = false;
  (async () => {
  try {

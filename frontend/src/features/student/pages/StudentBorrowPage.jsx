@@ -16,7 +16,7 @@ import {
   MapPin,
   Package,
 } from "lucide-react";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 
 // ─── Borrow Components ────────────────────────────────────────────────────────
@@ -126,6 +126,10 @@ const StudentBorrowPage = () => {
     loadSchedules();
   }, [loadSchedules]);
 
+  // Stable ref so polling interval always calls latest version
+  const loadSchedulesRef = useRef(loadSchedules);
+  useEffect(() => { loadSchedulesRef.current = loadSchedules; }, [loadSchedules]);
+
   // ── Load room equipment when session is known ─────────────────────────────
   useEffect(() => {
     const roomId = activeSchedule?.roomId?._id || activeSchedule?.roomId;
@@ -169,6 +173,36 @@ const StudentBorrowPage = () => {
   useEffect(() => {
     loadMyRequests();
   }, [loadMyRequests]);
+
+  // Stable ref so polling interval always calls latest version
+  const loadMyRequestsRef = useRef(loadMyRequests);
+  useEffect(() => { loadMyRequestsRef.current = loadMyRequests; }, [loadMyRequests]);
+
+  // ── Polling: silently refresh requests + equipment every 30s ──────────────
+  const activeScheduleRoomIdRef = useRef(null);
+  useEffect(() => {
+    activeScheduleRoomIdRef.current = activeSchedule?.roomId?._id || activeSchedule?.roomId || null;
+  }, [activeSchedule]);
+
+  useEffect(() => {
+    const id = setInterval(async () => {
+      // Silently refresh requests (no loading spinner)
+      try {
+        const res = await borrowRequestService.getMyBorrowRequests();
+        setMyRequests(Array.isArray(res) ? res : res.data || []);
+      } catch { /* silent */ }
+
+      // Silently refresh room equipment if a room is known
+      const roomId = activeScheduleRoomIdRef.current;
+      if (roomId) {
+        try {
+          const res = await equipmentService.getInventory({ roomId, limit: 50 });
+          setRoomEquipment(res.items || []);
+        } catch { /* silent */ }
+      }
+    }, 2_000);
+    return () => clearInterval(id);
+  }, []);
 
   // ── Derived maps ──────────────────────────────────────────────────────────
   // My active request keyed by equipmentId

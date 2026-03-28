@@ -18,7 +18,7 @@ import {
   ShieldCheck,
   Users,
 } from "lucide-react";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 
 // Sub-components
@@ -169,6 +169,17 @@ const LecturerBorrowManagementPage = () => {
   useEffect(() => {
     loadRequests();
   }, [loadRequests]);
+
+  // ── Polling: silently refresh requests every 30s ──────────────────────────
+  useEffect(() => {
+    const id = setInterval(async () => {
+      try {
+        const res = await borrowRequestService.getAllBorrowRequests();
+        setAllRequests(Array.isArray(res) ? res : res.data || []);
+      } catch { /* silent */ }
+    }, 2_000);
+    return () => clearInterval(id);
+  }, []);
 
   // ── Filter requests relevant to current session ───────────────────────────
   const sessionRoomId = activeSchedule?.roomId?._id || activeSchedule?.roomId;

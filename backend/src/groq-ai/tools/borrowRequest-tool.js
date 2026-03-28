@@ -26,15 +26,36 @@ const generateUniqueCode = async () => {
 
 const STATUS_LABEL = {
     pending:     'Chờ duyệt',
-    approved:    'Đã duyệt',
+    approved:    'Đã duyệt – chờ nhận thiết bị',
     rejected:    'Bị từ chối',
     handed_over: 'Đang mượn',
-    returning:   'Chờ xác nhận trả',
-    returned:    'Đã trả',
+    returning:   'Chờ giảng viên xác nhận trả',
+    returned:    'Đã trả xong',
     cancelled:   'Đã hủy',
-    unreturned:  'Chưa hoàn trả',
-    dispute:     'Tranh chấp',
+    unreturned:  'Chưa hoàn trả (quá hạn)',
+    dispute:     'Đang tranh chấp',
 };
+
+const STATUS_ACTION = {
+    pending:     'Đang chờ giảng viên xét duyệt. Vui lòng chờ.',
+    approved:    'Giảng viên đã duyệt. Hãy đến gặp giảng viên để nhận thiết bị.',
+    rejected:    'Đơn đã bị từ chối.',
+    handed_over: 'Bạn đang giữ thiết bị. Nhớ trả trước khi kết thúc ca học.',
+    returning:   'Bạn đã gửi yêu cầu trả. Chờ giảng viên xác nhận.',
+    returned:    'Hoàn tất. Thiết bị đã được trả thành công.',
+    cancelled:   'Đơn đã bị hủy (thường do ca học kết thúc trước khi xử lý xong).',
+    unreturned:  'Thiết bị chưa được trả sau khi ca học kết thúc. Cần liên hệ giảng viên ngay.',
+    dispute:     'Thiết bị đang trong tình trạng tranh chấp. Vui lòng liên hệ quản trị viên.',
+};
+
+function formatVNDate(dateVal) {
+    if (!dateVal) return null;
+    return new Date(dateVal).toLocaleString('vi-VN', {
+        day: '2-digit', month: '2-digit', year: 'numeric',
+        hour: '2-digit', minute: '2-digit',
+        timeZone: 'Asia/Ho_Chi_Minh',
+    });
+}
 
 // ── Tools ─────────────────────────────────────────────────────────────────────
 
@@ -151,7 +172,7 @@ export async function create_borrow_request(args) {
             equipment_name:  equipment.name,
             room:            equipment.roomId?.name || null,
             slot:            session.slotId?.name   || null,
-            expected_return: session.endAt,
+            expected_return: formatVNDate(session.endAt),
         });
 
     } catch (error) {
@@ -182,16 +203,16 @@ export async function get_my_borrow_requests(args) {
 
         const result = requests.map(req => ({
             code:           req.code,
-            status:         req.status,
-            statusLabel:    STATUS_LABEL[req.status] || req.status,
-            equipment:      req.equipmentId?.name    || 'Không rõ',
-            equipmentCode:  req.equipmentId?.code    || null,
-            room:           req.roomId?.name         || null,
-            borrowDate:     req.borrowDate,
-            expectedReturn: req.expectedReturnDate,
-            actualReturn:   req.actualReturnDate     || null,
-            purpose:        req.purpose              || null,
-            decisionNote:   req.decisionNote         || null,
+            statusLabel:    STATUS_LABEL[req.status]  || req.status,
+            actionNote:     STATUS_ACTION[req.status]  || '',
+            equipment:      req.equipmentId?.name      || 'Không rõ',
+            equipmentCode:  req.equipmentId?.code      || null,
+            room:           req.roomId?.name           || null,
+            borrowDate:     formatVNDate(req.borrowDate),
+            expectedReturn: formatVNDate(req.expectedReturnDate),
+            actualReturn:   formatVNDate(req.actualReturnDate),
+            purpose:        req.purpose                || null,
+            decisionNote:   req.decisionNote           || null,
         }));
 
         return JSON.stringify(result);
