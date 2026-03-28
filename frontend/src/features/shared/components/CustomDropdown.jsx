@@ -34,35 +34,58 @@ const CustomDropdown = ({
  return () => document.removeEventListener('mousedown', handler);
  }, [open]);
 
- // Recalc position on resize
+ // Recalc position on resize/scroll
  useEffect(() => {
- if (!open) return;
- const recalc = () => {
- if (!triggerRef.current) return;
- const r = triggerRef.current.getBoundingClientRect();
- setCoords(
- align === 'right'
- ? { top: r.bottom + 8, right: window.innerWidth - r.right, width: fullWidth ? r.width : undefined }
- : { top: r.bottom + 8, left: r.left, width: fullWidth ? r.width : undefined }
- );
- };
- window.addEventListener('resize', recalc);
- return () => {
- window.removeEventListener('resize', recalc);
- };
+   if (!open) return;
+   const recalc = () => {
+     if (!triggerRef.current) return;
+     const r = triggerRef.current.getBoundingClientRect();
+     setCoords(
+       align === 'right'
+         ? {
+             top: r.bottom + 8,
+             right: window.innerWidth - r.right,
+             left: 'auto',
+             width: fullWidth ? r.width : undefined
+           }
+         : {
+             top: r.bottom + 8,
+             left: r.left,
+             right: 'auto',
+             width: fullWidth ? r.width : undefined
+           }
+     );
+   };
+
+   window.addEventListener('resize', recalc);
+   window.addEventListener('scroll', recalc, true); // Use capture to catch scroll in parents
+   return () => {
+     window.removeEventListener('resize', recalc);
+     window.removeEventListener('scroll', recalc, true);
+   };
  }, [open, align, fullWidth]);
 
- const handleToggle = () => {
- if (!open && triggerRef.current) {
- const r = triggerRef.current.getBoundingClientRect();
- setCoords(
- align === 'right'
- ? { top: r.bottom + 8, right: window.innerWidth - r.right, width: fullWidth ? r.width : undefined }
- : { top: r.bottom + 8, left: r.left, width: fullWidth ? r.width : undefined }
- );
- }
- setOpen(p => !p);
- };
+  const handleToggle = () => {
+    if (!open && triggerRef.current) {
+      const r = triggerRef.current.getBoundingClientRect();
+      setCoords(
+        align === 'right'
+          ? {
+              top: r.bottom + 8,
+              right: window.innerWidth - r.right,
+              left: 'auto',
+              width: fullWidth ? r.width : undefined
+            }
+          : {
+              top: r.bottom + 8,
+              left: r.left,
+              right: 'auto',
+              width: fullWidth ? r.width : undefined
+            }
+      );
+    }
+    setOpen(p => !p);
+  };
 
  const selected = options.find(o => o.value === value) ?? options[0];
 

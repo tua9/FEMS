@@ -141,6 +141,7 @@ const BorrowingDetailModal = ({
       case BORROW_STATUS.RETURNED:    return 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 border-emerald-200/50';
       case BORROW_STATUS.REJECTED:    return 'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400 border-orange-200/50';
       case BORROW_STATUS.CANCELLED:   return 'bg-slate-200 dark:bg-slate-800/50 text-slate-800 dark:text-slate-200 border-slate-300/50';
+      case 'unreturned':              return 'bg-red-200 dark:bg-red-900/50 text-red-800 dark:text-red-200 border-red-300/50';
       default:                        return 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200/50';
     }
   };
@@ -209,15 +210,20 @@ const BorrowingDetailModal = ({
               <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Borrower Details</h4>
               <div className="flex items-center gap-4">
                 <div className="w-12 h-12 rounded-2xl bg-[#1A2B56] text-white flex items-center justify-center font-bold text-lg">
-                  {(typeof record.borrowerId === 'object' ? record.borrowerId?.displayName : 'U')?.charAt(0)}
+                  {((typeof record.borrowerId === 'object' ? record.borrowerId?.displayName : 'User') || 'U').charAt(0)}
                 </div>
                 <div className="min-w-0">
                   <p className="font-black text-slate-800 dark:text-white leading-tight truncate">
-                    {typeof record.borrowerId === 'object' ? record.borrowerId?.displayName : 'Unknown'}
+                    {typeof record.borrowerId === 'object' ? (record.borrowerId?.displayName || record.borrowerId?.username) : (record.borrowerId || 'Unknown')}
                   </p>
-                  <p className="text-[10px] font-bold text-slate-500 dark:text-slate-400 mt-0.5 truncate">
-                    {typeof record.borrowerId === 'object' ? record.borrowerId?.email : 'No email'}
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">
+                    Role: {record.borrowerRole || (typeof record.borrowerId === 'object' ? record.borrowerId?.role : 'Unknown')}
                   </p>
+                  {typeof record.borrowerId === 'object' && record.borrowerId?.email && (
+                    <p className="text-[10px] font-bold text-slate-500 dark:text-slate-400 mt-0.5 truncate">
+                      {record.borrowerId.email}
+                    </p>
+                  )}
                 </div>
               </div>
             </div>
@@ -231,8 +237,13 @@ const BorrowingDetailModal = ({
                 <div className="min-w-0">
                   <p className="font-black text-slate-800 dark:text-white leading-tight truncate">{entityName}</p>
                   <p className="text-[10px] font-bold text-slate-500 dark:text-slate-400 mt-0.5 truncate">
-                    {isInfrastructure ? 'Type: ' : 'Category: '}{entitySub || 'N/A'}
+                    {typeof entity === 'object' ? (isInfrastructure ? entity?.type : entity?.category) : 'N/A'}
                   </p>
+                  {typeof entity === 'object' && (entity.code || entity.qr_code) && (
+                    <p className="text-[10px] font-black text-blue-500 mt-1 uppercase tracking-tighter">
+                      {entity.code || entity.qr_code}
+                    </p>
+                  )}
                 </div>
               </div>
             </div>
