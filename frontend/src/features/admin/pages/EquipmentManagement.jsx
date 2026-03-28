@@ -41,40 +41,40 @@ const EquipmentManagement = () => {
             value: equipments.length, 
             filter: 'All Status', 
             icon: 'inventory_2', 
-            color: 'text-blue-600 dark:text-blue-400', 
-            bg: 'bg-blue-50 dark:bg-blue-900/20' 
+            activeColor: 'text-blue-400', 
+            hoverColor: 'group-hover:text-blue-400',
+            activeBg: 'bg-blue-50/50', 
+            hoverBg: 'group-hover:bg-blue-50/50'
         },
         { 
             label: 'Available', 
             value: equipments.filter(e => getDerivedStatus(e, activeRequests) === 'Available').length, 
             filter: 'Available', 
             icon: 'check_circle', 
-            color: 'text-green-600 dark:text-green-400', 
-            bg: 'bg-green-50 dark:bg-green-900/20' 
+            activeColor: 'text-emerald-400', 
+            hoverColor: 'group-hover:text-emerald-400',
+            activeBg: 'bg-emerald-50/50', 
+            hoverBg: 'group-hover:bg-emerald-50/50'
         },
         { 
             label: 'Maintenance', 
             value: equipments.filter(e => e.status === 'maintenance').length, 
             filter: 'Maintenance', 
             icon: 'settings', 
-            color: 'text-purple-600 dark:text-purple-400', 
-            bg: 'bg-purple-50 dark:bg-purple-900/20' 
+            activeColor: 'text-purple-400', 
+            hoverColor: 'group-hover:text-purple-400',
+            activeBg: 'bg-purple-50/50', 
+            hoverBg: 'group-hover:bg-purple-50/50'
         },
         { 
             label: 'Broken', 
             value: equipments.filter(e => e.status === 'broken').length, 
             filter: 'Broken', 
             icon: 'error', 
-            color: 'text-red-600 dark:text-red-400', 
-            bg: 'bg-red-50 dark:bg-red-900/20' 
-        },
-        { 
-            label: 'Under Review', 
-            value: equipments.filter(e => e.status === 'under_review').length, 
-            filter: 'Under Review', 
-            icon: 'history_edu', 
-            color: 'text-amber-600 dark:text-amber-400', 
-            bg: 'bg-amber-50 dark:bg-amber-900/20' 
+            activeColor: 'text-red-400', 
+            hoverColor: 'group-hover:text-red-400',
+            activeBg: 'bg-red-50/50', 
+            hoverBg: 'group-hover:bg-red-50/50'
         },
     ];
 
@@ -195,22 +195,33 @@ const EquipmentManagement = () => {
                 </div>
 
                 {/* Status Summary Cards */}
-                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 mb-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-8 text-center sm:text-left">
                     {statusCards.map(card => (
                         <button
                             key={card.label}
                             onClick={() => setStatusFilter(statusFilter === card.filter ? 'All Status' : card.filter)}
-                            className={`dashboard-card p-4 rounded-2xl transition-all duration-200 flex items-center justify-between hover:scale-[1.02] active:scale-95 text-left border-2 ${statusFilter === card.filter ? 'border-[#1A2B56]/20 dark:border-blue-400/30' : 'border-transparent'
-                                }`}
+                            className={`dashboard-card p-5 rounded-2xl transition-all duration-300 flex items-center justify-between hover:scale-[1.02] active:scale-95 text-left group ${
+                                statusFilter === card.filter 
+                                    ? 'shadow-lg shadow-[#1A2B56]/5' 
+                                    : ''
+                            }`}
                         >
                             <div>
-                                <p className="text-[10px] font-semibold uppercase tracking-[0.15em] text-slate-500 dark:text-slate-400 mb-1">
+                                <p className="text-[10px] font-medium uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400 mb-1">
                                     {card.label}
                                 </p>
-                                <p className={`text-2xl font-extrabold tracking-tight ${card.color}`}>{card.value}</p>
+                                <p className="text-3xl font-bold tracking-tight text-[#1A2B56] dark:text-white">{card.value}</p>
                             </div>
-                            <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${card.bg}`}>
-                                <span className={`material-symbols-outlined text-lg ${card.color}`}>{card.icon}</span>
+                            <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300 ${
+                                statusFilter === card.filter 
+                                    ? card.activeBg 
+                                    : 'bg-slate-50 ' + card.hoverBg
+                            }`}>
+                                <span className={`material-symbols-outlined transition-colors duration-300 ${
+                                    statusFilter === card.filter 
+                                        ? card.activeColor 
+                                        : 'text-slate-300 ' + card.hoverColor
+                                }`}>{card.icon}</span>
                             </div>
                         </button>
                     ))}
