@@ -19,6 +19,7 @@ import ApproveModal from '../components/borrow/ApproveModal';
 import RejectModal from '../components/borrow/RejectModal';
 import ReturnConfirmModal from '../components/borrow/ReturnConfirmModal';
 import RequestDetailModal from '../components/borrow/RequestDetailModal';
+import RemindModal from '../components/borrow/RemindModal';
 import BorrowRequestRow from '../components/borrow/BorrowRequestRow';
 import ConfirmModal from '@/features/shared/components/ConfirmModal';
 
@@ -52,6 +53,7 @@ const LecturerBorrowManagementPage = () => {
   const [approvingReq, setApprovingReq] = useState(null);
   const [rejectingReq, setRejectingReq] = useState(null);
   const [confirmReturnReq, setConfirmReturnReq] = useState(null);
+  const [remindReq, setRemindReq] = useState(null);
   const [viewDetailReq, setViewDetailReq] = useState(null);
   const [showEndSessionModal, setShowEndSessionModal] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -174,21 +176,27 @@ const LecturerBorrowManagementPage = () => {
     [allRequests, sessionRoomId]
   );
 
-  const returningRequests = useMemo(() =>
-    allRequests.filter(r =>
-      r.status === 'returning' &&
-      (!sessionRoomId || String(r.roomId?._id || r.roomId) === String(sessionRoomId))
-    ),
-    [allRequests, sessionRoomId]
-  );
+  const returningRequests = useMemo(() => {
+    const uid = user?._id ? String(user._id) : null;
+    return allRequests.filter(r => {
+      if (r.status !== 'returning') return false;
+      const isCurrentSession = !sessionRoomId || String(r.roomId?._id || r.roomId) === String(sessionRoomId);
+      const isMyHandover = uid && String(r.handedOverBy?._id || r.handedOverBy) === uid;
+      const isMyApprove = uid && String(r.approvedBy?._id || r.approvedBy) === uid;
+      return isCurrentSession || isMyHandover || isMyApprove;
+    });
+  }, [allRequests, sessionRoomId, user]);
 
-  const unreturnedRequests = useMemo(() =>
-    allRequests.filter(r =>
-      r.status === 'unreturned' &&
-      (!sessionRoomId || String(r.roomId?._id || r.roomId) === String(sessionRoomId))
-    ),
-    [allRequests, sessionRoomId]
-  );
+  const unreturnedRequests = useMemo(() => {
+    if (!user?._id) return [];
+    const uid = String(user._id);
+    return allRequests.filter(r => {
+      if (r.status !== 'unreturned') return false;
+      const aId = r.approvedBy ? String(r.approvedBy._id || r.approvedBy) : null;
+      const hId = r.handedOverBy ? String(r.handedOverBy._id || r.handedOverBy) : null;
+      return aId === uid || hId === uid;
+    });
+  }, [allRequests, user]);
 
   // ── Helpers ───────────────────────────────────────────────────────────────
   // (Moved to borrowUtils.js)
@@ -238,6 +246,21 @@ const LecturerBorrowManagementPage = () => {
       await loadRequests();
     } catch (err) {
       toast.error(err?.response?.data?.message || 'Không thể duyệt yêu cầu.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  // ── Remind ────────────────────────────────────────────────────────────────
+  const handleSendReminder = async (note) => {
+    if (!remindReq) return;
+    setSubmitting(true);
+    try {
+      await borrowRequestService.remindBorrowRequest(remindReq._id, note);
+      toast.success(`Đã gửi lời nhắc tới ${getStudentName(remindReq)}.`);
+      setRemindReq(null);
+    } catch (err) {
+      toast.error(err?.response?.data?.message || 'Không thể gửi lời nhắc.');
     } finally {
       setSubmitting(false);
     }
@@ -569,7 +592,7 @@ const LecturerBorrowManagementPage = () => {
         )}
 
         {/* ══ SECTION 5: Handing — Awaiting Return Confirmation ═══════════════ */}
-        {activeSchedule && returningRequests.length > 0 && (
+        {returningRequests.length > 0 && (
           <section className="mb-8">
             <div className="flex items-center gap-3 mb-5 px-1">
               <div className="w-1.5 h-8 bg-emerald-500 rounded-full" />
@@ -632,7 +655,7 @@ const LecturerBorrowManagementPage = () => {
         )}
 
         {/* ══ SECTION 7: Unreturned — Outstanding ═══════════════════════════════ */}
-        {activeSchedule && unreturnedRequests.length > 0 && (
+        {unreturnedRequests.length > 0 && (
           <section className="mb-8">
             <div className="flex items-center gap-3 mb-5 px-1">
               <div className="w-1.5 h-8 bg-red-500 rounded-full" />
@@ -654,12 +677,20 @@ const LecturerBorrowManagementPage = () => {
                          <span className="px-3 py-1.5 rounded-lg bg-red-100 dark:bg-red-900/40 text-[10px] font-bold text-red-700 dark:text-red-400 uppercase tracking-widest animate-pulse">
                            Cảnh báo: Chưa trả
                          </span>
-                         <button
-                           onClick={() => setConfirmReturnReq(req)}
-                           className="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 font-bold text-[10px] uppercase tracking-widest hover:bg-slate-200 transition-all active:scale-95"
-                         >
-                           Thu hồi muộn
-                         </button>
+                         <div className="flex gap-2">
+                           <button
+                             onClick={() => setRemindReq(req)}
+                             className="px-3 py-1.5 rounded-xl bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 font-bold text-[10px] uppercase tracking-widest hover:bg-amber-100 transition-all active:scale-95 border border-amber-200 dark:border-amber-900/30"
+                           >
+                             Nhắc nhở
+                           </button>
+                           <button
+                             onClick={() => setConfirmReturnReq(req)}
+                             className="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 font-bold text-[10px] uppercase tracking-widest hover:bg-slate-200 transition-all active:scale-95"
+                           >
+                             Thu hồi muộn
+                           </button>
+                         </div>
                       </div>
                     }
                   />
@@ -674,6 +705,14 @@ const LecturerBorrowManagementPage = () => {
       {/* ══════════════════════════════════════════════════════════════════════
           MODALS
       ══════════════════════════════════════════════════════════════════════ */}
+
+      <RemindModal
+        isOpen={!!remindReq}
+        onClose={() => setRemindReq(null)}
+        request={remindReq}
+        onConfirm={handleSendReminder}
+        submitting={submitting}
+      />
 
       <ApproveModal
         isOpen={!!approvingReq}

@@ -1,6 +1,7 @@
 import Schedule from '../models/Schedule.js'
 import Slot from '../models/Slot.js'
 import User from '../models/User.js'
+import TeacherAttendance from '../models/TeacherAttendance.js'
 import ApiError from '../utils/ApiError.js'
 import { StatusCodes } from 'http-status-codes'
 import { buildVNDateTime, vnDayRange, vnRangeStart, vnRangeEnd } from '../utils/dateVN.js'
@@ -133,6 +134,19 @@ const getMySchedules = async (userId, filter = {}) => {
         .lean()
     } else {
       sch.studentIds = []
+    }
+    
+    // Attach isLecturerCheckedIn
+    if (sch.lecturerId) {
+      const attendance = await TeacherAttendance.findOne({
+        scheduleId: sch._id,
+        lecturerId: sch.lecturerId._id || sch.lecturerId,
+        checkedInAt: { $ne: null },
+        status: 'present',
+      }).lean()
+      sch.isLecturerCheckedIn = !!attendance
+    } else {
+      sch.isLecturerCheckedIn = false
     }
   }
 
