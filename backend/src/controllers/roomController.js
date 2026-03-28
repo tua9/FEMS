@@ -19,7 +19,9 @@ export const getRoomById = asyncHandler(async (req, res) => {
 })
 
 export const getRoomsByBuilding = asyncHandler(async (req, res) => {
-  const result = await roomService.getRoomsByBuilding(req.params.buildingId)
+  const buildingId = req.params.buildingId
+  const result = await roomService.getRoomsByBuilding(buildingId)
+  console.log('[getRoomsByBuilding]', { buildingId, count: Array.isArray(result) ? result.length : undefined })
   res.status(StatusCodes.OK).json(result)
 })
 

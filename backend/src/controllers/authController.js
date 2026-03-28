@@ -79,3 +79,27 @@ export const changePassword = asyncHandler(async (req, res) => {
   const result = await authService.changePassword(req.user._id, req.body)
   res.status(StatusCodes.OK).json(result)
 })
+
+export const googleSignIn = asyncHandler(async (req, res) => {
+  const result = await authService.signInWithGoogle(req.body)
+  const { userInfo, accessToken, refreshToken, displayName } = result.data
+
+  res.cookie('accessToken', accessToken, {
+    httpOnly: true,
+    secure: true,
+    sameSite: 'none',
+    maxAge: ms('14 days'),
+  })
+
+  res.cookie('refreshToken', refreshToken, {
+    httpOnly: true,
+    secure: true,
+    sameSite: 'none',
+    maxAge: ms('14 days'),
+  })
+
+  res.status(StatusCodes.OK).json({
+    message: `Sign in successful: User[${displayName}]`,
+    ...result
+  })
+})

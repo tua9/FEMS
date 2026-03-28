@@ -1,6 +1,8 @@
 import mongoose from 'mongoose'
 
-const roomSchema = mongoose.Schema(
+const { ObjectId } = mongoose.Schema.Types
+
+const roomSchema = new mongoose.Schema(
   {
     name: {
       type: String,
@@ -18,8 +20,8 @@ const roomSchema = mongoose.Schema(
       enum: ['available', 'occupied', 'maintenance'],
       default: 'available',
     },
-    building_id: {
-      type: mongoose.Schema.Types.ObjectId,
+    buildingId: {
+      type: ObjectId,
       ref: 'Building',
       default: null,
     },
@@ -35,10 +37,9 @@ const roomSchema = mongoose.Schema(
   { timestamps: true },
 )
 
-// Default sort by newest first
+// Default sort newest first
 roomSchema.pre('find', function () {
   this.sort({ createdAt: -1 })
-
 })
 
 const Room = mongoose.model('Room', roomSchema)

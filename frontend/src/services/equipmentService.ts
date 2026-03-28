@@ -44,4 +44,9 @@ export const equipmentService = {
     const res = await api.get("/equipments/inventory", { params });
     return res.data;
   },
+
+  getCategories: async (): Promise<string[]> => {
+    const res = await api.get<string[]>("/equipments/categories");
+    return res.data;
+  },
 };

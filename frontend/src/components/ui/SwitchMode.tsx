@@ -10,7 +10,7 @@ import { useTheme } from "../common/theme-provider";
 
 const SwitchMode = () => {
   const [checked, setChecked] = useState<boolean>(false);
-  const { theme, setTheme } = useTheme();
+  const { setTheme } = useTheme();
 
   useEffect(() => {
     setTheme(checked ? "dark" : "light");

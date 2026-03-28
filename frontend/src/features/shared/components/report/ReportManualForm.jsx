@@ -1,0 +1,721 @@
+import React, { useState, useRef, useCallback, useEffect, useMemo } from "react";
+import { toast } from "sonner";
+import {
+ Monitor,
+ Armchair,
+ MoreHorizontal,
+ MapPin,
+ ChevronDown,
+ Camera,
+ ArrowRight,
+ X,
+ Loader2,
+ AlertTriangle,
+ Info,
+ AlertOctagon,
+ Flame,
+ Search,
+ CheckCircle2,
+} from "lucide-react";
+import { useEquipmentStore } from "@/stores/useEquipmentStore";
+import { roomService } from "@/services/roomService";
+
+// ─── Types ────────────────────────────────────────────────────────────────────
+
+// ─── Constants ────────────────────────────────────────────────────────────────
+
+const CATEGORIES = [
+ { id: "equipment", icon: Monitor, label: "Equipment" },
+ { id: "infrastructure", icon: Armchair, label: "Infrastructure" },
+];
+
+// ─── Component ────────────────────────────────────────────────────────────────
+
+export const ReportManualForm = ({
+ prefillCategory,
+ prefillRoomId,
+ prefillEquipmentId,
+ prefillDescription,
+ onSubmit,
+ isSubmitting = false,
+ rooms: roomsProp,
+ buildings: buildingsProp,
+ // Controlled state from hook
+ category,
+ setCategory,
+ roomId,
+ setRoomId,
+ equipmentId,
+ setEquipmentId,
+ description,
+ setDescription,
+ files,
+ setFiles,
+ onResetFileInput,
+}) => {
+ const rooms = Array.isArray(roomsProp) ? roomsProp : [];
+ const [severity, setSeverity] = useState("medium");
+ const [dragOver, setDragOver] = useState(false);
+ const [errors, setErrors] = useState({});
+ const [selectedBuildingId, setSelectedBuildingId] = useState("");
+ const [buildingSearch, setBuildingSearch] = useState("");
+ const [showBuildingResults, setShowBuildingResults] = useState(false);
+ const [roomSearch, setRoomSearch] = useState("");
+ const [showRoomResults, setShowRoomResults] = useState(false);
+ const [roomsForBuilding, setRoomsForBuilding] = useState([]);
+ const [roomsLoading, setRoomsLoading] = useState(false);
+
+ // Equipment selection state
+ const [eqSearch, setEqSearch] = useState("");
+ const [showEqResults, setShowEqResults] = useState(false);
+ const equipmentsRaw = useEquipmentStore(state => state.equipments);
+ const equipments = Array.isArray(equipmentsRaw) ? equipmentsRaw : [];
+ const fetchEquipments = useEquipmentStore(state => state.fetchAll);
+
+ const fileInputRef = useRef(null);
+
+ // Let hook clear the actual DOM file input value
+ useEffect(() => {
+ if (!onResetFileInput) return;
+ onResetFileInput.current = () => {
+ if (fileInputRef.current) fileInputRef.current.value = "";
+ };
+ }, [onResetFileInput]);
+
+ useEffect(() => {
+ fetchEquipments();
+ }, [fetchEquipments]);
+
+ // Sync from prefill (QR scan)
+ useEffect(() => {
+ if (prefillCategory) setCategory(prefillCategory);
+ }, [prefillCategory, setCategory]);
+
+ useEffect(() => {
+ if (prefillRoomId) {
+ setRoomId(prefillRoomId);
+ const room = rooms.find((r) => r._id === prefillRoomId);
+ if (room) {
+ setRoomSearch(room.name || "");
+ const rawBuilding = room.buildingId ?? room.building_id;
+ if (rawBuilding) {
+ const bId = typeof rawBuilding === "string" ? rawBuilding : rawBuilding._id;
+ setSelectedBuildingId(bId);
+ }
+ }
+ }
+ }, [prefillRoomId, rooms, setRoomId]);
+
+ useEffect(() => {
+ if (prefillEquipmentId) {
+ setEquipmentId(prefillEquipmentId);
+ const eq = equipments.find((e) => String(e._id) === String(prefillEquipmentId));
+ if (eq) setEqSearch(eq.code || eq.name || "");
+ }
+ }, [prefillEquipmentId, equipments, setEquipmentId]);
+
+ useEffect(() => {
+ if (prefillDescription) setDescription(prefillDescription);
+ }, [prefillDescription, setDescription]);
+
+ // When category changes, wipe dependent selections for controlled values
+ useEffect(() => {
+ if (category !== 'equipment') {
+ setEquipmentId("");
+ setEqSearch("");
+ }
+ }, [category, setEquipmentId]);
+
+ // Sync selectedBuildingId whenever roomId is set (from prefill or equipment resolve)
+ useEffect(() => {
+ if (roomId && rooms.length > 0) {
+ const room = rooms.find((r) => r._id === roomId);
+ if (room) {
+ setRoomSearch(room.name || "");
+ const rawBuilding = room.buildingId ?? room.building_id;
+ if (rawBuilding) {
+ const bId = typeof rawBuilding === "object" ? rawBuilding._id : rawBuilding;
+ setSelectedBuildingId((prev) => (prev !== bId ? bId : prev));
+ }
+ }
+ }
+ }, [roomId, rooms]);
+
+ // Sync building search text when buildingId changes
+ useEffect(() => {
+ if (selectedBuildingId && buildingsProp) {
+ const buildingsList = Array.isArray(buildingsProp) ? buildingsProp : [];
+ const match = buildingsList.find(b => b._id === selectedBuildingId);
+ if (match) setBuildingSearch(match.name || "");
+ } else if (!selectedBuildingId) {
+ setBuildingSearch("");
+ }
+ }, [selectedBuildingId, buildingsProp]);
+
+ // Fetch rooms for selected building directly from API (avoids race condition with pre-loaded rooms)
+ useEffect(() => {
+ if (!selectedBuildingId) {
+ setRoomsForBuilding([]);
+ return;
+ }
+ let cancelled = false;
+ setRoomsLoading(true);
+ roomService
+ .getByBuildingId(selectedBuildingId)
+ .then((data) => {
+ if (cancelled) return;
+
+ // Normalize possible API shapes:
+ //  - [ ...rooms ]
+ //  - { rooms: [ ... ] }
+ //  - { data: [ ... ] }
+ //  - { data: { rooms: [ ... ] } }
+ const list =
+ (Array.isArray(data) && data) ||
+ data?.rooms ||
+ data?.data ||
+ data?.data?.rooms ||
+ [];
+
+ setRoomsForBuilding(Array.isArray(list) ? list : []);
+ })
+ .catch(() => {
+ if (!cancelled) setRoomsForBuilding([]);
+ })
+ .finally(() => {
+ if (!cancelled) setRoomsLoading(false);
+ });
+
+ return () => {
+ cancelled = true;
+ };
+ }, [selectedBuildingId]);
+
+ // Extract / Map buildings
+ const buildings = React.useMemo(() => {
+ // If buildings are provided via prop, use them
+ if (Array.isArray(buildingsProp) && buildingsProp.length > 0) {
+ return buildingsProp.map(b => ({ id: b._id, name: b.name }));
+ }
+
+ // Fallback: derive from rooms
+ const map = new Map();
+ rooms.forEach((room) => {
+ const rawBuilding = room.buildingId ?? room.building_id;
+ if (!rawBuilding) return;
+
+ // If only an id is available (string/ObjectId), we can't derive a name.
+ // We'll still include it so filtering works, but name may be empty.
+ const id = typeof rawBuilding === "string" ? rawBuilding : rawBuilding._id;
+ const name = typeof rawBuilding === "string" ? "" : rawBuilding.name;
+
+ if (!map.has(id)) map.set(id, { id, name });
+ });
+
+ return Array.from(map.values()).sort((a, b) =>
+ String(a.name ?? "").localeCompare(String(b.name ?? ""), undefined, { sensitivity: "base" }),
+ );
+ }, [rooms, buildingsProp]);
+
+ // Filter buildings based on search
+ const filteredBuildingsList = useMemo(() => {
+ if (!buildingSearch) return buildings;
+ const term = buildingSearch.toUpperCase();
+ return buildings.filter(b => (b.name || "").toUpperCase().includes(term));
+ }, [buildings, buildingSearch]);
+
+ // Filter rooms fetched for selected building by search text
+ const filteredRooms = React.useMemo(() => {
+ if (!selectedBuildingId) return [];
+ let list = roomsForBuilding;
+ if (roomSearch) {
+ const term = roomSearch.toUpperCase();
+ list = list.filter(r => (r.name || "").toUpperCase().includes(term));
+ }
+ return list.sort((a, b) =>
+ String(a.name ?? "").localeCompare(String(b.name ?? ""), undefined, { sensitivity: "base" })
+ );
+ }, [roomsForBuilding, selectedBuildingId, roomSearch]);
+
+ // Filter equipments based on search
+ const filteredEquipments = useMemo(() => {
+ if (!eqSearch) return [];
+ const term = eqSearch.toUpperCase();
+ return equipments.filter(e =>
+ (e.code && String(e.code).toUpperCase().startsWith(term)) ||
+ (e.name && String(e.name).toUpperCase().includes(term))
+ ).slice(0, 10);
+ }, [equipments, eqSearch]);
+
+ const handleSelectEquipment = (eq) => {
+ setEquipmentId(eq._id);
+ setEqSearch(eq.code || eq.name);
+ setShowEqResults(false);
+ setErrors(prev => ({ ...prev, equipmentCode: undefined }));
+ 
+ // Auto populate room_id if equipment has one (handle both camelCase roomId and snake_case room_id)
+ const rm = eq.roomId ?? eq.room_id;
+ if (rm) {
+ const rid = typeof rm === 'object' ? rm._id : rm;
+ setRoomId(rid);
+      const room = rooms.find(r => r._id === rid);
+      if (room) {
+        setRoomSearch(room.name || "");
+        if (room.buildingId) {
+          const bId = typeof room.buildingId === 'object' ? room.buildingId._id : room.buildingId;
+          setSelectedBuildingId(bId);
+        }
+      }
+ }
+ };
+
+ // ── File handling ──────────────────────────────────────────────────────────
+ const addFiles = useCallback((incoming) => {
+ if (!incoming) return;
+ const valid = Array.from(incoming).filter(f => f.type.startsWith("image/") && f.size <= 10 * 1024 * 1024);
+ 
+ if (valid.length > 2 || (files.length + valid.length) > 2) {
+ toast.warning("Hệ thống chỉ cho phép nộp tối đa 2 hình ảnh bằng chứng!");
+ }
+
+ setFiles(prev => [...prev, ...valid].slice(0, 2));
+ setErrors(prev => ({ ...prev, files: undefined }));
+ }, [files]);
+
+ const removeFile = (index) => {
+ setFiles(prev => prev.filter((_, i) => i !== index));
+ // If last file removed, clear native input so same file can be selected again
+ if (files.length === 1 && fileInputRef.current) fileInputRef.current.value = "";
+ };
+
+ // Ensure drag-and-drop upload doesn't crash if a file is dropped.
+ const handleDrop = (e) => {
+ e.preventDefault();
+ setDragOver(false);
+ const dropped = e.dataTransfer?.files;
+ if (dropped && dropped.length) addFiles(dropped);
+ };
+
+ // ── Validation + submit ────────────────────────────────────────────────────
+ const handleSubmit = (e) => {
+ e.preventDefault();
+ const newErrors = {};
+ 
+ if (category === 'equipment' && !equipmentId) {
+ newErrors.equipmentCode = "Please search and select an equipment code.";
+ }
+
+ if (category !== 'equipment' && !roomId) {
+ newErrors.roomId = "Please select an incident location.";
+ }
+
+ // Fallback if equipment category doesn't have a room resolved yet
+ if (category === 'equipment' && equipmentId && !roomId) {
+ newErrors.equipmentCode = "This equipment has no assigned location. Please contact admin.";
+ }
+
+ if (description.length < 10) newErrors.description = "Description must be at least 10 characters.";
+ if (description.length > 200) newErrors.description = "Description cannot exceed 200 characters.";
+
+ // Evidence is required
+ if (!files || files.length < 1) newErrors.files = "Please upload at least 1 evidence image.";
+
+ if (Object.keys(newErrors).length > 0) {
+ setErrors(newErrors);
+ return;
+ }
+ setErrors({});
+
+ const formData = {
+ category,
+ room_id: roomId,
+ description,
+ files,
+ // UI removed severity selection; backend still expects a value
+ severity: "medium",
+ };
+ if (equipmentId) formData.equipment_id = equipmentId;
+
+ onSubmit(formData);
+ };
+
+ return (
+ <form
+ onSubmit={handleSubmit}
+ className="glass-card mb-[2.5rem] space-y-[2.5rem] rounded-[2rem] border border-white bg-white/60 p-[1.5rem] shadow-[0_10px_30px_-5px_rgba(30,43,88,0.1)] dark:border-white/10 dark:bg-slate-800/70 lg:p-[2.5rem]"
+ >
+ {/* 1. Category ──────────────────────────────────────────────────── */}
+ <div>
+ <h3 className="mb-[1rem] text-[0.625rem] font-black tracking-[0.2em] text-slate-500 uppercase dark:text-slate-400 opacity-60">
+ 1. Select Issue Category
+ </h3>
+ <div className="flex flex-wrap gap-[0.75rem]">
+ {CATEGORIES.map((cat) => {
+ const Icon = cat.icon;
+ const isSelected = category === cat.id;
+ return (
+ <label key={cat.id} className="cursor-pointer group">
+ <input
+ type="radio"
+ name="category"
+ className="hidden"
+ checked={isSelected}
+ onChange={() => {
+ setCategory(cat.id);
+ setErrors((p) => ({ ...p, equipmentCode: undefined, roomId: undefined, description: undefined }));
+ if (cat.id !== 'equipment') {
+ setEquipmentId("");
+ setEqSearch("");
+ }
+                  // Clear room and building to avoid stale state from previous category
+                  setRoomId("");
+                  setSelectedBuildingId("");
+                  setBuildingSearch("");
+                  setRoomSearch("");
+                }}
+ />
+ <div
+ className={`flex items-center gap-[0.75rem] px-[1.25rem] py-[0.75rem] rounded-2xl border transition-all hover:scale-[1.02] active:scale-95 ${isSelected
+ ? "border-[#1E2B58] bg-white shadow-md ring-1 ring-[#1E2B58]/10 dark:border-white dark:bg-slate-700 dark:ring-white/10"
+ : "border-white/60 bg-white/20 dark:border-white/5 dark:bg-slate-800/40 opacity-70 hover:opacity-100"
+ }`}
+ >
+ <Icon className={`h-4 w-4 ${isSelected ? "text-[#1E2B58] dark:text-white" : "text-slate-400 dark:text-slate-400"}`} strokeWidth={2.5} />
+ <span className={`text-[0.6875rem] font-black tracking-widest uppercase ${isSelected ? "text-[#1E2B58] dark:text-white" : "text-slate-500 dark:text-slate-400"}`}>
+ {cat.label}
+ </span>
+ </div>
+ </label>
+ );
+ })}
+ </div>
+ </div>
+
+ {/* 2. Logic Controller for Location / Equipment ─────────────────── */}
+ <div className="animate-in fade-in slide-in-from-top-2 duration-300">
+ {category === 'equipment' ? (
+ <div>
+ <h3 className="mb-[1rem] text-[0.625rem] font-black tracking-[0.2em] text-slate-500 uppercase dark:text-slate-400 opacity-60">
+ 2. Identify Equipment
+ </h3>
+ <div className="relative">
+ <div className="pointer-events-none absolute inset-y-0 left-[1.25rem] flex items-center">
+ <Search className={`h-[1.25rem] w-[1.25rem] ${errors.equipmentCode ? "text-red-400" : "text-slate-400"}`} />
+ </div>
+ <input
+ type="text"
+ placeholder="Search equipment code (e.g. LA26...)"
+ value={eqSearch}
+ onChange={(e) => {
+ setEqSearch(e.target.value);
+ setShowEqResults(true);
+ if (equipmentId) setEquipmentId(""); // Clear selection if typing
+ }}
+ onFocus={() => setShowEqResults(true)}
+ className={`text-[#1E2B58] h-[3.5rem] w-full rounded-[1.5rem] border bg-white/40 pl-[3.25rem] pr-[1.5rem] font-bold shadow-sm outline-none transition-all placeholder:text-slate-400 focus:ring-2 dark:bg-white/5 dark:text-white ${errors.equipmentCode 
+ ? "border-red-400/60 focus:ring-red-400/20" 
+ : "border-white/50 focus:ring-[#1E2B58]/10 dark:border-white/10"
+ }`}
+ />
+ 
+ {equipmentId && (
+ <div className="absolute inset-y-0 right-[1.25rem] flex items-center">
+ <CheckCircle2 className="h-5 w-5 text-emerald-500" />
+ </div>
+ )}
+
+ {/* Equipment Search Dropdown */}
+ {showEqResults && eqSearch && !equipmentId && (
+ <div className="absolute top-[110%] left-0 right-0 z-50 max-h-[15rem] overflow-y-auto rounded-3xl border border-white/50 bg-white shadow-2xl backdrop-blur-xl dark:border-white/10 dark:bg-slate-800 no-scrollbar animate-in zoom-in-95 duration-200">
+ {filteredEquipments.length > 0 ? (
+ filteredEquipments.map((eq) => (
+ <button
+ key={eq._id}
+ type="button"
+ onClick={() => handleSelectEquipment(eq)}
+ className="flex w-full items-center justify-between px-6 py-4 transition-colors hover:bg-slate-50 dark:hover:bg-white/5 border-b border-black/5 dark:border-white/5 last:border-0"
+ >
+ <div className="text-left">
+ <p className="text-sm font-black text-[#1E2B58] dark:text-white uppercase tracking-tight">{eq.code || "NO CODE"}</p>
+ <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500">{eq.name}</p>
+ </div>
+ <div className="text-right">
+ <p className="text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest italic opacity-60">
+ Room: {(eq.roomId ?? eq.room_id)?.name || "N/A"}
+ </p>
+ </div>
+ </button>
+ ))
+ ) : (
+ <div className="px-6 py-4 text-center">
+ <p className="text-xs font-bold text-slate-400 uppercase tracking-widest italic">No matching equipment</p>
+ </div>
+ )}
+ </div>
+ )}
+ </div>
+ {errors.equipmentCode && <p className="mt-2 pl-4 text-[10px] font-black text-red-500 dark:text-red-400 uppercase tracking-widest">{errors.equipmentCode}</p>}
+ {equipmentId && (
+ <p className="mt-2 pl-4 text-[10px] font-black text-emerald-500 uppercase tracking-widest flex items-center gap-1.5 opacity-80 italic">
+ <MapPin className="w-3 h-3" />
+ Location resolved: {rooms.find(r => r._id === roomId)?.name || "Unknown"}
+ </p>
+ )}
+ </div>
+                  ) : (
+                <div>
+                  <h3 className="mb-[1rem] text-[0.625rem] font-black tracking-[0.2em] text-slate-500 uppercase dark:text-slate-400 opacity-60">
+                    2. Incident Location
+                  </h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-[1rem]">
+                    {/* Building Search */}
+                    <div className="relative">
+                      <div className="pointer-events-none absolute inset-y-0 left-[1.25rem] flex items-center">
+                        <MapPin className={`h-[1.25rem] w-[1.25rem] ${errors.roomId && !selectedBuildingId ? "text-red-400" : "text-slate-400"}`} />
+                      </div>
+                      <input
+                        type="text"
+                        placeholder="Search Building..."
+                        value={buildingSearch}
+                        onChange={(e) => {
+                          setBuildingSearch(e.target.value);
+                          setShowBuildingResults(true);
+                          if (selectedBuildingId) {
+                            setSelectedBuildingId("");
+                            setRoomId("");
+                            setRoomSearch("");
+                          }
+                        }}
+                        onFocus={() => setShowBuildingResults(true)}
+                        onBlur={() => setTimeout(() => setShowBuildingResults(false), 150)}
+                        className={`text-[#1E2B58] h-[3.5rem] w-full rounded-[1.5rem] border bg-white/40 pl-[3.25rem] pr-[1.5rem] font-bold shadow-sm outline-none transition-all placeholder:text-slate-400 focus:ring-2 dark:bg-white/5 dark:text-white ${errors.roomId && !selectedBuildingId
+                          ? "border-red-400/60 focus:ring-red-400/20"
+                          : "border-white/50 focus:ring-[#1E2B58]/10 dark:border-white/10"
+                          }`}
+                      />
+
+                      {selectedBuildingId && (
+                        <div className="absolute inset-y-0 right-[1.25rem] flex items-center">
+                          <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                        </div>
+                      )}
+
+                      {showBuildingResults && !selectedBuildingId && (
+                        <div className="absolute top-[110%] left-0 right-0 z-50 max-h-[15rem] overflow-y-auto rounded-3xl border border-white/50 bg-white shadow-2xl backdrop-blur-xl dark:border-white/10 dark:bg-slate-800 no-scrollbar animate-in zoom-in-95 duration-200">
+                          {filteredBuildingsList.length > 0 ? (
+                            filteredBuildingsList.map((b) => (
+                              <button
+                                key={b.id}
+                                type="button"
+                                onClick={() => {
+                                  setSelectedBuildingId(b.id);
+                                  setBuildingSearch(b.name);
+                                  setShowBuildingResults(false);
+                                  setRoomId("");
+                                  setRoomSearch("");
+                                }}
+                                className="flex w-full items-center px-6 py-4 transition-colors hover:bg-slate-50 dark:hover:bg-white/5 border-b border-black/5 dark:border-white/5 last:border-0"
+                              >
+                                <p className="text-sm font-black text-[#1E2B58] dark:text-white uppercase tracking-tight">{b.name}</p>
+                              </button>
+                            ))
+                          ) : (
+                            <div className="px-6 py-4 text-center">
+                              <p className="text-xs font-bold text-slate-400 uppercase tracking-widest italic">No matching building</p>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Room Search */}
+                    <div className="relative">
+                      <div className="pointer-events-none absolute inset-y-0 left-[1.25rem] flex items-center">
+                        <ChevronDown className={`h-[1.25rem] w-[1.25rem] ${errors.roomId ? "text-red-400" : "text-slate-400"}`} />
+                      </div>
+                      <input
+                        type="text"
+                        placeholder={selectedBuildingId ? "Search Room..." : "Select Building First"}
+                        value={roomSearch}
+                        disabled={!selectedBuildingId}
+                        onChange={(e) => {
+                          setRoomSearch(e.target.value);
+                          setShowRoomResults(true);
+                          if (roomId) setRoomId("");
+                        }}
+                        onFocus={() => setShowRoomResults(true)}
+                        onBlur={() => setTimeout(() => setShowRoomResults(false), 150)}
+                        className={`text-[#1E2B58] h-[3.5rem] w-full rounded-[1.5rem] border bg-white/40 pl-[3.25rem] pr-[1.5rem] font-bold shadow-sm outline-none transition-all placeholder:text-slate-400 focus:ring-2 dark:bg-white/5 dark:text-white disabled:opacity-50 disabled:cursor-not-allowed ${errors.roomId
+                          ? "border-red-400/60 focus:ring-red-400/20"
+                          : "border-white/50 focus:ring-[#1E2B58]/10 dark:border-white/10"
+                          }`}
+                      />
+
+                      {roomId && (
+                        <div className="absolute inset-y-0 right-[1.25rem] flex items-center">
+                          <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                        </div>
+                      )}
+
+                      {showRoomResults && !roomId && selectedBuildingId && (
+                        <div className="absolute top-[110%] left-0 right-0 z-50 max-h-[15rem] overflow-y-auto rounded-3xl border border-white/50 bg-white shadow-2xl backdrop-blur-xl dark:border-white/10 dark:bg-slate-800 no-scrollbar animate-in zoom-in-95 duration-200">
+                          {roomsLoading ? (
+                            <div className="flex items-center justify-center gap-2 px-6 py-4">
+                              <Loader2 className="h-4 w-4 animate-spin text-slate-400" />
+                              <p className="text-xs font-bold text-slate-400 uppercase tracking-widest italic">Loading rooms…</p>
+                            </div>
+                          ) : filteredRooms.length > 0 ? (
+                            filteredRooms.map((room) => (
+                              <button
+                                key={room._id}
+                                type="button"
+                                onClick={() => {
+                                  setRoomId(room._id);
+                                  setRoomSearch(room.name);
+                                  setShowRoomResults(false);
+                                  setErrors((p) => ({ ...p, roomId: undefined }));
+                                }}
+                                className="flex w-full items-center px-6 py-4 transition-colors hover:bg-slate-50 dark:hover:bg-white/5 border-b border-black/5 dark:border-white/5 last:border-0"
+                              >
+                                <p className="text-sm font-black text-[#1E2B58] dark:text-white uppercase tracking-tight">{room.name}</p>
+                              </button>
+                            ))
+                          ) : (
+                            <div className="px-6 py-4 text-center">
+                              <p className="text-xs font-bold text-slate-400 uppercase tracking-widest italic">No matching room</p>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  {errors.roomId && <p className="mt-2 pl-4 text-[10px] font-black text-red-500 dark:text-red-400 uppercase tracking-widest">{errors.roomId}</p>}
+                </div>
+              )}
+ </div>
+
+ {/* 3. Severity ──────────────────────────────────────────────────── */}
+ {/* (Removed from UI; severity is sent as fixed `medium`) */}
+
+ {/* 4. Description ───────────────────────────────────────────────── */}
+ <div>
+ <h3 className="mb-[1rem] text-[0.625rem] font-black tracking-[0.2em] text-slate-500 uppercase dark:text-slate-400 opacity-60">
+ 3. Issue Description
+ </h3>
+ <textarea
+ value={description}
+ maxLength={200}
+ onChange={(e) => {
+ setDescription(e.target.value);
+ setErrors((p) => ({ ...p, description: undefined }));
+ }}
+ className={`text-[#1E2B58] h-[9rem] w-full resize-none rounded-[1.5rem] border bg-white/40 p-[1.5rem] font-bold shadow-sm outline-none transition-all placeholder:text-slate-400 focus:ring-2 focus:border-[#1E2B58]/30 dark:bg-white/5 dark:text-white ${errors.description
+ ? "border-red-400/60 focus:ring-red-400/20"
+ : "border-white/50 focus:ring-[#1E2B58]/10 dark:border-white/10"
+ }`}
+ placeholder="Please provide specific details about the issue..."
+ />
+ <div className="mt-1.5 flex justify-between px-1">
+ {errors.description ? <p className="text-[10px] font-black text-red-500 dark:text-red-400 uppercase tracking-widest">{errors.description}</p> : <span />}
+ <span className={`text-[0.625rem] font-bold ${description.length < 10 ? "text-slate-400" : description.length >= 200 ? "text-amber-500" : "text-emerald-500"}`}>{description.length} / 200</span>
+ </div>
+ </div>
+
+ {/* 5. Evidence ──────────────────────────────────────────────────── */}
+ <div>
+ <h3 className="mb-[1rem] text-[0.625rem] font-black tracking-[0.2em] text-slate-500 uppercase dark:text-slate-400 opacity-60">
+ 4. Upload Evidence <span className="font-medium normal-case opacity-60 tracking-normal">(required, max 2 files)</span>
+ </h3>
+ <input
+ ref={fileInputRef}
+ type="file"
+ accept="image/*"
+ multiple
+ className="hidden"
+ onChange={(e) => addFiles(e.target.files)}
+ />
+ <div
+ onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+ onDragLeave={() => setDragOver(false)}
+ onDrop={handleDrop}
+ className={`relative flex min-h-[10rem] w-full rounded-[2rem] border-2 border-dashed transition-all ${dragOver
+ ? "scale-[1.01] border-[#1E2B58] bg-[#1E2B58]/5 dark:border-sky-400 dark:bg-sky-400/5"
+ : "border-white/60 bg-white/40 dark:border-slate-600 dark:bg-white/5"
+ } ${errors.files ? "ring-2 ring-red-400/30 border-red-400/60" : ""}`}
+ >
+ {files.length === 0 ? (
+ /* ── Empty state: full clickable area ── */
+ <div
+ onClick={() => fileInputRef.current?.click()}
+ className="flex flex-1 cursor-pointer flex-col items-center justify-center gap-[0.75rem] px-4 py-8 w-full hover:bg-white/10 rounded-[2rem] transition-colors"
+ >
+ <div className="flex h-[2.5rem] w-[2.5rem] items-center justify-center rounded-2xl bg-white shadow-sm dark:bg-slate-700/50 border border-slate-100 dark:border-slate-600">
+ <Camera className="h-[1.25rem] w-[1.25rem] text-slate-500 dark:text-slate-400" />
+ </div>
+ <div className="text-center">
+ <p className="text-[#1E2B58] text-[0.75rem] font-black uppercase tracking-widest dark:text-white">
+ Drag or Click to upload
+ </p>
+ <p className="mt-[0.25rem] text-[0.5rem] font-bold tracking-widest text-slate-400 uppercase dark:text-slate-500">PNG, JPG up to 10MB</p>
+ </div>
+ </div>
+ ) : (
+ /* ── Files selected: show previews inside the box ── */
+ <div className="flex flex-wrap items-center gap-3 p-4 w-full">
+ {files.map((file, i) => (
+ <div key={i} className="group relative animate-in fade-in zoom-in-95 duration-200">
+ <img
+ src={URL.createObjectURL(file)}
+ alt={file.name}
+ className="h-24 w-24 rounded-2xl border-2 border-white object-cover shadow-md dark:border-slate-700"
+ />
+ <button
+ type="button"
+ onClick={(e) => { e.stopPropagation(); removeFile(i); }}
+ className="hover:scale-110 active:scale-90 absolute -right-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-white shadow-sm transition-all"
+ >
+ <X className="h-2.5 w-2.5" />
+ </button>
+ </div>
+ ))}
+ {files.length < 2 && (
+ <button
+ type="button"
+ onClick={() => fileInputRef.current?.click()}
+ className="flex h-24 w-24 cursor-pointer flex-col items-center justify-center gap-1.5 rounded-2xl border-2 border-dashed border-slate-300 bg-white/40 hover:bg-white/60 dark:border-slate-600 dark:bg-white/5 dark:hover:bg-white/10 transition-colors"
+ >
+ <Camera className="h-5 w-5 text-slate-400" />
+ <span className="text-[9px] font-black uppercase tracking-widest text-slate-400">Add more</span>
+ </button>
+ )}
+ </div>
+ )}
+ </div>
+ {errors.files && (
+ <p className="mt-2 pl-4 text-[10px] font-black text-red-500 dark:text-red-400 uppercase tracking-widest">
+ {errors.files}
+ </p>
+ )}
+ </div>
+
+ {/* Submit ───────────────────────────────────────────────────────── */}
+ <button
+ type="submit"
+ disabled={isSubmitting}
+ className="active:scale-[0.98] flex w-full items-center justify-center gap-[0.75rem] rounded-[1.5rem] bg-[#1E2B58] py-[1.25rem] text-[0.75rem] font-black uppercase tracking-[0.2em] text-white shadow-[0_10px_25px_-5px_rgba(30,43,88,0.4)] transition-all hover:bg-[#151f40] disabled:scale-100 disabled:cursor-not-allowed disabled:opacity-60"
+ >
+ {isSubmitting ? (
+ <>
+ <Loader2 className="h-4 w-4 animate-spin" />
+ Processing…
+ </>
+ ) : (
+ <>
+ Create Report
+ <ArrowRight className="h-[1.25rem] w-[1.25rem]" />
+ </>
+ )}
+ </button>
+ </form>
+ );
+};

@@ -1,0 +1,85 @@
+import React from 'react';
+import { useNavigate } from 'react-router-dom';
+import { ClipboardList } from 'lucide-react';
+
+import { ReportFormShell } from '@/features/shared/components/report/ReportFormShell';
+import { RecentReports } from '@/features/shared/components/report/RecentReports';
+import { ReportSuccessModal } from '@/features/shared/components/report/ReportSuccessModal';
+import { useReportForm } from '@/hooks/useReportForm';
+import { useAuthStore } from '@/stores/useAuthStore';
+
+// ─── Component ────────────────────────────────────────────────────────────────
+
+export const ReportIssuePage = () => {
+ const navigate = useNavigate();
+ const { user } = useAuthStore();
+
+ const {
+ prefillRoomId, prefillCategory, prefillDescription, prefillEquipmentId,
+ rooms, buildings, isSubmitting,
+ showSuccess, reportId, reportSubject, reportDate, reportImages,
+ handleQRDetected, handleFormSubmit,
+ handleSubmitAnother, closeSuccess,
+
+ category, setCategory,
+ roomId, setRoomId,
+ equipmentId, setEquipmentId,
+ description, setDescription,
+ files, setFiles,
+ resetFileInputRef,
+ } = useReportForm();
+
+ return (
+ <div className="w-full">
+ <main className="pt-6 sm:pt-24 pb-10 px-4 sm:px-6 w-full max-w-[90vw] xl:max-w-4xl mx-auto flex-1 flex flex-col overflow-hidden">
+ <div className="w-full">
+ <ReportFormShell
+ prefillRoomId={prefillRoomId}
+ prefillCategory={prefillCategory}
+ prefillDescription={prefillDescription}
+ prefillEquipmentId={prefillEquipmentId}
+ rooms={rooms}
+ buildings={buildings}
+ isSubmitting={isSubmitting}
+ onQRDetected={handleQRDetected}
+ onSubmit={handleFormSubmit}
+
+ category={category}
+ setCategory={setCategory}
+ roomId={roomId}
+ setRoomId={setRoomId}
+ equipmentId={equipmentId}
+ setEquipmentId={setEquipmentId}
+ description={description}
+ setDescription={setDescription}
+ files={files}
+ setFiles={setFiles}
+ resetFileInputRef={resetFileInputRef}
+ >
+ <RecentReports />
+ </ReportFormShell>
+ </div>
+ </main>
+
+ {showSuccess && reportId && (
+ <ReportSuccessModal
+ reportId={reportId}
+ reportSubject={reportSubject}
+ reportDate={reportDate}
+ reportImages={reportImages}
+ primaryLabel="View in My History"
+ primaryIcon={<ClipboardList className="w-4 h-4" />}
+ onPrimary={() => {
+   closeSuccess();
+   // Navigate to history page and default to Report History tab
+   navigate(`/${user?.role}/history`, { state: { tab: 'report' } });
+ }}
+ onSubmitAnother={handleSubmitAnother}
+ onClose={closeSuccess}
+ />
+ )}
+ </div>
+ );
+};
+
+export default ReportIssuePage;

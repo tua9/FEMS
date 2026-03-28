@@ -1,45 +1,58 @@
 import mongoose from 'mongoose'
 
+const { ObjectId } = mongoose.Schema.Types
+
+const actionSchema = new mongoose.Schema(
+  {
+    type: { type: String, enum: ['none', 'open_detail', 'open_list', 'open_external'], default: 'none' },
+    resource: { type: String, default: null },
+    resourceId: { type: ObjectId, default: null },
+    payload: { type: mongoose.Schema.Types.Mixed, default: null },
+  },
+  { _id: false }
+)
+
 const notificationSchema = new mongoose.Schema(
   {
-    user_id: {
-      type: mongoose.Schema.Types.ObjectId,
+    userId: {
+      type: ObjectId,
       ref: 'User',
       required: true,
       index: true,
     },
+
     type: {
       type: String,
-      enum: ['approval', 'borrow', 'return', 'equipment', 'report', 'general'],
+      enum: ['borrow', 'approval', 'return', 'equipment', 'report', 'general'],
       default: 'general',
     },
+
     title: {
       type: String,
       required: true,
       trim: true,
     },
+
     message: {
       type: String,
       required: true,
       trim: true,
     },
-    read: {
+
+    isRead: {
       type: Boolean,
       default: false,
     },
-    to: {
-      type: String,
-      trim: true,
-    },
-    state: {
-      type: mongoose.Schema.Types.Mixed,
-      default: null,
+
+    action: {
+      type: actionSchema,
+      default: () => ({ type: 'none', resource: null, resourceId: null, payload: null }),
     },
   },
   { timestamps: true },
 )
 
-// Default sort by newest first
+// Default sort newest first
 notificationSchema.pre('find', function () {
   this.sort({ createdAt: -1 })
 })

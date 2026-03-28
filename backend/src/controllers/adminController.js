@@ -2,6 +2,16 @@ import { StatusCodes } from 'http-status-codes'
 import { adminService } from '../services/adminService.js'
 import { asyncHandler } from '../middlewares/asyncHandler.js'
 
+export const getEquipmentAnalytics = asyncHandler(async (req, res) => {
+  const result = await adminService.getEquipmentAnalytics()
+  res.status(StatusCodes.OK).json(result)
+})
+
+export const getReportAnalytics = asyncHandler(async (req, res) => {
+  const result = await adminService.getReportAnalytics()
+  res.status(StatusCodes.OK).json(result)
+})
+
 export const getDashboardStats = asyncHandler(async (req, res) => {
   const result = await adminService.getDashboardStats()
   res.status(StatusCodes.OK).json(result)
@@ -24,5 +34,15 @@ export const getRecentBorrowRequests = asyncHandler(async (req, res) => {
 
 export const getRecentDamageReports = asyncHandler(async (req, res) => {
   const result = await adminService.getRecentDamageReports()
+  res.status(StatusCodes.OK).json(result)
+})
+
+export const getTechnicianPerformance = asyncHandler(async (req, res) => {
+  const result = await adminService.getTechnicianPerformance()
+  res.status(StatusCodes.OK).json(result)
+})
+
+export const getActiveBorrowing = asyncHandler(async (req, res) => {
+  const result = await adminService.getActiveBorrowing()
   res.status(StatusCodes.OK).json(result)
 })

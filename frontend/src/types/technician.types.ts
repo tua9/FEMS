@@ -1,10 +1,16 @@
 export interface Task {
   /** 6-char display id derived from Mongo ObjectId */
   id: string;
-  /** Business serial code, e.g. RP... */
+  /** Real Mongo Report _id */
+  reportId?: string;
+  /** Business serial code from Report.code, e.g. RP... */
   code?: string;
-  title: string;
-  category: string;
+  /** Report.type (used for the sublabel under report subject) */
+  type?: string;
+  /** Task title (equipment name or room name) */
+  title?: string;
+  /** Equipment category or type */
+  category?: string;
 
   /** Equipment name (from Report.equipment_id.name) */
   equipment: string;
@@ -21,7 +27,8 @@ export interface Task {
   description: string;
 
   priority: 'Low' | 'Medium' | 'High' | 'Urgent';
-  status: 'Pending' | 'In Progress' | 'Completed' | 'Cancelled';
+  // Real DB status from Report.status
+  status: 'pending' | 'approved' | 'rejected' | 'processing' | 'fixed' | 'cancelled';
 
   reportedBy: {
     id: string;
