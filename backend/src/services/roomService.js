@@ -53,7 +53,20 @@ const updateRoom = async (id, body) => {
 }
 
 const getRoomsByBuilding = async (buildingId) => {
-  return Room.find({ buildingId }).populate('buildingId', 'name')
+  // Primary (current model): buildingId
+  let rooms = await Room.find({ buildingId }).populate('buildingId', 'name')
+
+  // Backward-compatibility: some databases store the building reference as `building_id` (snake_case).
+  // Since `building_id` is stored as an ObjectId, cast the incoming string to ObjectId.
+  if (!rooms || rooms.length === 0) {
+    const oid = mongoose.Types.ObjectId.isValid(buildingId)
+      ? new mongoose.Types.ObjectId(buildingId)
+      : buildingId
+
+    rooms = await Room.find({ building_id: oid }).populate('buildingId', 'name')
+  }
+
+  return rooms
 }
 
 const deleteRoom = async (id) => {

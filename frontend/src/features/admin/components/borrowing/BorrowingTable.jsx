@@ -23,9 +23,11 @@ const BorrowingTable = ({ records, onApprove, onHandover, onReject, onReturn, on
  case BORROW_STATUS.APPROVED:    return 'bg-blue-100/50 dark:bg-blue-900/30 text-blue-500 dark:text-blue-400';
  case BORROW_STATUS.HANDED_OVER: return 'bg-indigo-100/50 dark:bg-indigo-900/30 text-indigo-500 dark:text-indigo-400';
  case 'overdue': return 'bg-red-100/50 dark:bg-red-900/30 text-red-500 dark:text-red-400'; // UI-derived virtual status
- case BORROW_STATUS.RETURNED:    return 'bg-emerald-100/50 dark:bg-emerald-900/30 text-emerald-500 dark:text-emerald-400';
- case BORROW_STATUS.REJECTED:    return 'bg-orange-100/50 dark:bg-orange-900/30 text-orange-500 dark:text-orange-400';
- default: return 'bg-slate-100/50 dark:bg-slate-800/60 text-slate-400 dark:text-slate-500';
+ case BORROW_STATUS.RETURNED:    return 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 border-emerald-200/50';
+ case BORROW_STATUS.REJECTED:    return 'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400 border-orange-200/50';
+ case BORROW_STATUS.CANCELLED:   return 'bg-slate-200 dark:bg-slate-800/50 text-slate-800 dark:text-slate-200 border-slate-300/50';
+ case 'unreturned':              return 'bg-red-200 dark:bg-red-900/50 text-red-800 dark:text-red-200 border-red-300/50';
+ default:                        return 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200/50';
  }
  };
 

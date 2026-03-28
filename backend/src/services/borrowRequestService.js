@@ -337,7 +337,7 @@ const studentConfirmReceived = async (id, studentId, handoverForm) => {
  * @param {string} id         — BorrowRequest id
  * @param {string} studentId  — User id of the student
  */
-const studentSubmitReturn = async (id, studentId) => {
+const studentSubmitReturn = async (id, studentId, returnForm = {}) => {
   const request = await BorrowRequest.findById(id)
   if (!request) throw new ApiError(StatusCodes.NOT_FOUND, 'Borrow request not found')
   if (!['handed_over', 'unreturned'].includes(request.status)) throw new ApiError(StatusCodes.BAD_REQUEST, 'Thiết bị chưa được bàn giao hoặc không thể trả')
@@ -345,7 +345,24 @@ const studentSubmitReturn = async (id, studentId) => {
     throw new ApiError(StatusCodes.FORBIDDEN, 'Chỉ người mượn mới có thể gửi yêu cầu trả')
   }
 
+  const { checklist = {}, notes = null, images = [] } = returnForm
+  const isAllChecked = checklist.appearance && checklist.functioning && checklist.accessories
+
+  if (!isAllChecked && (!Array.isArray(images) || images.length === 0)) {
+    throw new ApiError(StatusCodes.UNPROCESSABLE_ENTITY, 'Vui lòng cung cấp ảnh minh chứng nếu có mục không đạt yêu cầu')
+  }
+
   request.status = 'returning'
+  request.studentReturnInfo = {
+    checklist: {
+      appearance:  !!checklist.appearance,
+      functioning: !!checklist.functioning,
+      accessories: !!checklist.accessories,
+    },
+    notes:       notes || null,
+    images,
+    submittedAt: new Date(),
+  }
   await request.save()
 
   // Notify the lecturer who approved it (or handed it over), otherwise notify admins
@@ -393,7 +410,8 @@ const confirmReturn = async (id, confirmedBy, returnForm) => {
     throw new ApiError(StatusCodes.UNPROCESSABLE_ENTITY, 'Vui lòng cung cấp ảnh minh chứng nếu có mục không đạt yêu cầu')
   }
 
-  request.status = 'returned'
+  const finalStatus = isAllChecked ? 'returned' : 'dispute'
+  request.status = finalStatus
   request.returnedConfirmedBy = confirmedBy
   request.returnedAt = new Date()
   request.actualReturnDate = new Date()
@@ -408,6 +426,10 @@ const confirmReturn = async (id, confirmedBy, returnForm) => {
     submittedAt: new Date(),
   }
   await request.save()
+
+  if (!isAllChecked) {
+    await Equipment.findByIdAndUpdate(request.equipmentId, { status: 'dispute' })
+  }
 
   const borrowerName = request.borrowerId?.displayName || request.borrowerId?.username || 'Unknown'
 

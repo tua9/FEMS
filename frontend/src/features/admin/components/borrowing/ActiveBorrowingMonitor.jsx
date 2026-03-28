@@ -7,6 +7,7 @@ const REQUEST_STATUS_MAP = {
   pending: { label: 'Pending Approval', color: 'bg-amber-100 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400' },
   approved: { label: 'Approved', color: 'bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400' },
   handed_over: { label: 'In Use', color: 'bg-indigo-100 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400' },
+  overdue: { label: 'Overdue', color: 'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400' },
   returned: { label: 'Returning', color: 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400' },
 };
 
@@ -168,7 +169,7 @@ const ActiveBorrowingMonitor = () => {
       {active && filteredRows.length === 0 && (
         <div className="flex flex-col items-center justify-center py-10 text-center">
           <span className="material-symbols-outlined text-3xl text-slate-300 dark:text-slate-600 mb-2">inventory_2</span>
-          <p className="text-sm font-semibold text-slate-400 dark:text-slate-500">No equipment matches your filters</p>
+          <p className="text-sm font-semibold text-slate-400 dark:text-slate-500">No active borrowing</p>
         </div>
       )}
 

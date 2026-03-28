@@ -11,7 +11,8 @@ const EquipmentCard = ({
   onReturn,
   onConfirmReceived,
   onCancel,
-  onViewDetail
+  onViewDetail,
+  hasActiveRequest
 }) => {
   const eqId = String(item._id);
   const isDeviceLocked = item.status === 'broken' || item.status === 'maintenance';
@@ -97,10 +98,15 @@ const EquipmentCard = ({
         </div>
       ) : (
         <button
-          onClick={() => onBorrow(item)}
-          disabled={!isSessionOngoing}
+          onClick={() => {
+            if (hasActiveRequest) {
+              return; // Already handled in the page wrapper or just silently blocked
+            }
+            onBorrow(item);
+          }}
+          disabled={!isSessionOngoing || hasActiveRequest}
           className={`w-full py-2.5 rounded-2xl font-black text-xs uppercase tracking-widest flex items-center justify-center gap-2 transition-all active:scale-95 ${
-            isSessionOngoing
+            isSessionOngoing && !hasActiveRequest
               ? 'bg-[#1E2B58] dark:bg-blue-700 text-white hover:bg-[#2A3B66] dark:hover:bg-blue-600 shadow-md shadow-blue-900/20'
               : 'bg-slate-100 dark:bg-slate-800 text-slate-400 cursor-not-allowed'
           }`}

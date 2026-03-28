@@ -1,35 +1,41 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import { PageHeader } from "@/features/shared/components/PageHeader";
+import { attendanceService } from "@/services/attendanceService";
+import { borrowRequestService } from "@/services/borrowRequestService";
+import { scheduleService } from "@/services/scheduleService";
+import { useAuthStore } from "@/stores/useAuthStore";
+import { getSlotTimeStatus, getTodayVN } from "@/utils/dateUtils";
+import { uploadImages } from "@/utils/uploadHelper";
 import {
-  Laptop, Eye, Loader2, BookOpen, MapPin, Clock, CheckCircle2,
-  LogOut, LogIn, ShieldCheck, AlertTriangle, RefreshCw, Users, HandMetal
-} from 'lucide-react';
-import { toast } from 'sonner';
-import { useAuthStore } from '@/stores/useAuthStore';
-import { scheduleService } from '@/services/scheduleService';
-import { attendanceService } from '@/services/attendanceService';
-import { borrowRequestService } from '@/services/borrowRequestService';
-import { PageHeader } from '@/features/shared/components/PageHeader';
-import { getTodayVN, getSlotTimeStatus } from '@/utils/dateUtils';
-import { uploadImages } from '@/utils/uploadHelper';
+  AlertTriangle,
+  BookOpen,
+  CheckCircle2,
+  Clock,
+  Loader2,
+  LogIn,
+  LogOut,
+  MapPin,
+  RefreshCw,
+  ShieldCheck,
+  Users,
+} from "lucide-react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { toast } from "sonner";
 
 // Sub-components
-import BorrowBadge from '../components/borrow/BorrowBadge';
-import BorrowAvatar from '../components/borrow/BorrowAvatar';
-import ApproveModal from '../components/borrow/ApproveModal';
-import RejectModal from '../components/borrow/RejectModal';
-import ReturnConfirmModal from '../components/borrow/ReturnConfirmModal';
-import RequestDetailModal from '../components/borrow/RequestDetailModal';
-import RemindModal from '../components/borrow/RemindModal';
-import BorrowRequestRow from '../components/borrow/BorrowRequestRow';
-import ConfirmModal from '@/features/shared/components/ConfirmModal';
+import ConfirmModal from "@/features/shared/components/ConfirmModal";
+import ApproveModal from "../components/borrow/ApproveModal";
+import BorrowRequestRow from "../components/borrow/BorrowRequestRow";
+import RejectModal from "../components/borrow/RejectModal";
+import RemindModal from "../components/borrow/RemindModal";
+import RequestDetailModal from "../components/borrow/RequestDetailModal";
+import ReturnConfirmModal from "../components/borrow/ReturnConfirmModal";
 
 // Utilities
 import {
   fmtTime,
-  fmtDateTime,
+  getEquipmentName,
   getStudentName,
-  getEquipmentName
-} from '../components/borrow/borrowUtils';
+} from "../components/borrow/borrowUtils";
 
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
@@ -62,33 +68,38 @@ const LecturerBorrowManagementPage = () => {
   // ── Derived: active (ongoing) teaching schedule ───────────────────────────
   const activeSchedule = useMemo(() => {
     if (!schedules.length) return null;
-    
+
     // 1. Ongoing: current time is within [startAt, endAt] AND not completed
-    const ongoing = schedules.find(s => 
-      s.status !== 'completed' && 
-      getSlotTimeStatus(s.startAt, s.endAt) === 'ongoing'
+    const ongoing = schedules.find(
+      (s) =>
+        s.status !== "completed" &&
+        getSlotTimeStatus(s.startAt, s.endAt) === "ongoing",
     );
     if (ongoing) return ongoing;
-    
+
     // 2. Upcoming: starts in the future AND not completed
-    const upcoming = schedules.find(s => 
-      s.status !== 'completed' && 
-      getSlotTimeStatus(s.startAt, s.endAt) === 'upcoming'
+    const upcoming = schedules.find(
+      (s) =>
+        s.status !== "completed" &&
+        getSlotTimeStatus(s.startAt, s.endAt) === "upcoming",
     );
     if (upcoming) return upcoming;
 
     // 3. Fallback: Recently ended session of today (so lecturer can still checkout)
     const recentlyEnded = [...schedules]
-      .filter(s => getSlotTimeStatus(s.startAt, s.endAt) === 'ended')
-      .sort((a,b) => new Date(b.endAt) - new Date(a.endAt))[0];
+      .filter((s) => getSlotTimeStatus(s.startAt, s.endAt) === "ended")
+      .sort((a, b) => new Date(b.endAt) - new Date(a.endAt))[0];
 
     return recentlyEnded || null;
   }, [schedules, nowTick]);
 
   const isSessionOngoing = useMemo(() => {
     if (!activeSchedule) return false;
-    if (activeSchedule.status === 'completed') return false;
-    return getSlotTimeStatus(activeSchedule.startAt, activeSchedule.endAt) === 'ongoing';
+    if (activeSchedule.status === "completed") return false;
+    return (
+      getSlotTimeStatus(activeSchedule.startAt, activeSchedule.endAt) ===
+      "ongoing"
+    );
   }, [activeSchedule, nowTick]);
 
   // ── Tick ──────────────────────────────────────────────────────────────────
@@ -112,16 +123,23 @@ const LecturerBorrowManagementPage = () => {
     }
   }, []);
 
-  useEffect(() => { loadSchedules(); }, [loadSchedules]);
+  useEffect(() => {
+    loadSchedules();
+  }, [loadSchedules]);
 
   // ── Load check-in status when schedule is known ───────────────────────────
   useEffect(() => {
-    if (!activeSchedule?._id) { setCheckInStatus(null); return; }
+    if (!activeSchedule?._id) {
+      setCheckInStatus(null);
+      return;
+    }
     let cancelled = false;
     const load = async () => {
       setCheckInLoading(true);
       try {
-        const res = await attendanceService.getMyCheckInStatus(activeSchedule._id);
+        const res = await attendanceService.getMyCheckInStatus(
+          activeSchedule._id,
+        );
         if (!cancelled) setCheckInStatus(res);
       } catch {
         if (!cancelled) setCheckInStatus({ checkedIn: false });
@@ -130,7 +148,9 @@ const LecturerBorrowManagementPage = () => {
       }
     };
     load();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [activeSchedule]);
 
   // ── Load all pending requests ─────────────────────────────────────────────
@@ -146,43 +166,58 @@ const LecturerBorrowManagementPage = () => {
     }
   }, []);
 
-  useEffect(() => { loadRequests(); }, [loadRequests]);
+  useEffect(() => {
+    loadRequests();
+  }, [loadRequests]);
 
   // ── Filter requests relevant to current session ───────────────────────────
   const sessionRoomId = activeSchedule?.roomId?._id || activeSchedule?.roomId;
 
-  const pendingRequests = useMemo(() =>
-    allRequests.filter(r =>
-      r.status === 'pending' &&
-      // filter to current session room if we know it
-      (!sessionRoomId || String(r.roomId?._id || r.roomId) === String(sessionRoomId))
-    ),
-    [allRequests, sessionRoomId]
+  const pendingRequests = useMemo(
+    () =>
+      allRequests.filter(
+        (r) =>
+          r.status === "pending" &&
+          // filter to current session room if we know it
+          (!sessionRoomId ||
+            String(r.roomId?._id || r.roomId) === String(sessionRoomId)),
+      ),
+    [allRequests, sessionRoomId],
   );
 
-  const approvedRequests = useMemo(() =>
-    allRequests.filter(r =>
-      r.status === 'approved' &&
-      (!sessionRoomId || String(r.roomId?._id || r.roomId) === String(sessionRoomId))
-    ),
-    [allRequests, sessionRoomId]
+  const approvedRequests = useMemo(
+    () =>
+      allRequests.filter(
+        (r) =>
+          r.status === "approved" &&
+          (!sessionRoomId ||
+            String(r.roomId?._id || r.roomId) === String(sessionRoomId)),
+      ),
+    [allRequests, sessionRoomId],
   );
 
-  const handedOverRequests = useMemo(() =>
-    allRequests.filter(r =>
-      r.status === 'handed_over' &&
-      (!sessionRoomId || String(r.roomId?._id || r.roomId) === String(sessionRoomId))
-    ),
-    [allRequests, sessionRoomId]
+  const handedOverRequests = useMemo(
+    () =>
+      allRequests.filter(
+        (r) =>
+          r.status === "handed_over" &&
+          (!sessionRoomId ||
+            String(r.roomId?._id || r.roomId) === String(sessionRoomId)),
+      ),
+    [allRequests, sessionRoomId],
   );
 
   const returningRequests = useMemo(() => {
     const uid = user?._id ? String(user._id) : null;
-    return allRequests.filter(r => {
-      if (r.status !== 'returning') return false;
-      const isCurrentSession = !sessionRoomId || String(r.roomId?._id || r.roomId) === String(sessionRoomId);
-      const isMyHandover = uid && String(r.handedOverBy?._id || r.handedOverBy) === uid;
-      const isMyApprove = uid && String(r.approvedBy?._id || r.approvedBy) === uid;
+    return allRequests.filter((r) => {
+      if (r.status !== "returning") return false;
+      const isCurrentSession =
+        !sessionRoomId ||
+        String(r.roomId?._id || r.roomId) === String(sessionRoomId);
+      const isMyHandover =
+        uid && String(r.handedOverBy?._id || r.handedOverBy) === uid;
+      const isMyApprove =
+        uid && String(r.approvedBy?._id || r.approvedBy) === uid;
       return isCurrentSession || isMyHandover || isMyApprove;
     });
   }, [allRequests, sessionRoomId, user]);
@@ -190,13 +225,21 @@ const LecturerBorrowManagementPage = () => {
   const unreturnedRequests = useMemo(() => {
     if (!user?._id) return [];
     const uid = String(user._id);
-    return allRequests.filter(r => {
-      if (r.status !== 'unreturned') return false;
-      const aId = r.approvedBy ? String(r.approvedBy._id || r.approvedBy) : null;
-      const hId = r.handedOverBy ? String(r.handedOverBy._id || r.handedOverBy) : null;
-      return aId === uid || hId === uid;
+
+    return allRequests.filter((r) => {
+      if (r.status !== "unreturned") return false;
+
+      const isMyAction =
+        (r.approvedBy && String(r.approvedBy._id || r.approvedBy) === uid) ||
+        (r.handedOverBy &&
+          String(r.handedOverBy._id || r.handedOverBy) === uid);
+      const isCurrentRoom =
+        sessionRoomId &&
+        String(r.roomId?._id || r.roomId) === String(sessionRoomId);
+
+      return isMyAction || isCurrentRoom;
     });
-  }, [allRequests, user]);
+  }, [allRequests, user, sessionRoomId]);
 
   // ── Helpers ───────────────────────────────────────────────────────────────
   // (Moved to borrowUtils.js)
@@ -207,12 +250,14 @@ const LecturerBorrowManagementPage = () => {
     setCheckingIn(true);
     try {
       await attendanceService.checkIn(activeSchedule._id);
-      toast.success('Check-in recorded successfully.');
+      toast.success("Check-in recorded successfully.");
       // Reload check-in status
-      const res = await attendanceService.getMyCheckInStatus(activeSchedule._id);
+      const res = await attendanceService.getMyCheckInStatus(
+        activeSchedule._id,
+      );
       setCheckInStatus(res);
     } catch (err) {
-      toast.error(err?.response?.data?.message || 'Could not check in.');
+      toast.error(err?.response?.data?.message || "Could not check in.");
     } finally {
       setCheckingIn(false);
     }
@@ -223,12 +268,14 @@ const LecturerBorrowManagementPage = () => {
     setCheckingIn(true);
     try {
       await attendanceService.checkOut(activeSchedule._id);
-      toast.success('Session ended.');
-      const res = await attendanceService.getMyCheckInStatus(activeSchedule._id);
+      toast.success("Session ended.");
+      const res = await attendanceService.getMyCheckInStatus(
+        activeSchedule._id,
+      );
       setCheckInStatus(res);
       await loadSchedules(); // Reload to get updated schedule status
     } catch (err) {
-      toast.error(err?.response?.data?.message || 'Could not end the session.');
+      toast.error(err?.response?.data?.message || "Could not end the session.");
     } finally {
       setCheckingIn(false);
       setShowEndSessionModal(false);
@@ -240,12 +287,19 @@ const LecturerBorrowManagementPage = () => {
     if (!approvingReq) return;
     setSubmitting(true);
     try {
-      await borrowRequestService.approveBorrowRequest(approvingReq._id, note.trim() || undefined);
-      toast.success(`${getStudentName(approvingReq)}'s request has been approved.`);
+      await borrowRequestService.approveBorrowRequest(
+        approvingReq._id,
+        note.trim() || undefined,
+      );
+      toast.success(
+        `${getStudentName(approvingReq)}'s request has been approved.`,
+      );
       setApprovingReq(null);
       await loadRequests();
     } catch (err) {
-      toast.error(err?.response?.data?.message || 'Could not approve the request.');
+      toast.error(
+        err?.response?.data?.message || "Could not approve the request.",
+      );
     } finally {
       setSubmitting(false);
     }
@@ -260,7 +314,7 @@ const LecturerBorrowManagementPage = () => {
       toast.success(`Reminder sent to ${getStudentName(remindReq)}.`);
       setRemindReq(null);
     } catch (err) {
-      toast.error(err?.response?.data?.message || 'Could not send reminder.');
+      toast.error(err?.response?.data?.message || "Could not send reminder.");
     } finally {
       setSubmitting(false);
     }
@@ -271,12 +325,19 @@ const LecturerBorrowManagementPage = () => {
     if (!rejectingReq) return;
     setSubmitting(true);
     try {
-      await borrowRequestService.rejectBorrowRequest(rejectingReq._id, reason.trim());
-      toast.success(`${getStudentName(rejectingReq)}'s request has been rejected.`);
+      await borrowRequestService.rejectBorrowRequest(
+        rejectingReq._id,
+        reason.trim(),
+      );
+      toast.success(
+        `${getStudentName(rejectingReq)}'s request has been rejected.`,
+      );
       setRejectingReq(null);
       await loadRequests();
     } catch (err) {
-      toast.error(err?.response?.data?.message || 'Could not reject the request.');
+      toast.error(
+        err?.response?.data?.message || "Could not reject the request.",
+      );
     } finally {
       setSubmitting(false);
     }
@@ -297,11 +358,13 @@ const LecturerBorrowManagementPage = () => {
         notes: formData.notes,
         images: imageUrls,
       });
-      toast.success(`Return confirmed for "${getEquipmentName(confirmReturnReq)}".`);
+      toast.success(
+        `Return confirmed for "${getEquipmentName(confirmReturnReq)}".`,
+      );
       setConfirmReturnReq(null);
       await loadRequests();
     } catch (err) {
-      toast.error(err?.response?.data?.message || 'Could not confirm return.');
+      toast.error(err?.response?.data?.message || "Could not confirm return.");
     } finally {
       setSubmitting(false);
     }
@@ -311,11 +374,9 @@ const LecturerBorrowManagementPage = () => {
   // RENDER
   // ─────────────────────────────────────────────────────────────────────────
 
-
   return (
     <div className="w-full">
-      <main className="mx-auto flex w-full max-w-[90vw] flex-1 flex-col px-4 pt-6 sm:pt-24 pb-10 sm:px-6 xl:max-w-7xl">
-
+      <main className="mx-auto flex w-full max-w-[90vw] flex-1 flex-col px-4 pt-6 pb-10 sm:px-6 sm:pt-24 xl:max-w-7xl">
         <PageHeader
           title="Equipment borrow management"
           subtitle="Approve requests, hand over equipment, and confirm returns during your teaching session."
@@ -324,17 +385,22 @@ const LecturerBorrowManagementPage = () => {
         {/* ══ SECTION 1: Teaching Session + Check-in ══════════════════════════ */}
         <section className="mb-8">
           {scheduleLoading ? (
-            <div className="dashboard-card rounded-4xl p-8 flex items-center gap-4">
-              <Loader2 className="w-5 h-5 animate-spin text-[#1E2B58]/30 dark:text-white/20" />
-              <span className="text-sm text-[#1E2B58]/50 dark:text-white/40">Loading today&apos;s schedule…</span>
+            <div className="dashboard-card flex items-center gap-4 rounded-4xl p-8">
+              <Loader2 className="h-5 w-5 animate-spin text-[#1E2B58]/30 dark:text-white/20" />
+              <span className="text-sm text-[#1E2B58]/50 dark:text-white/40">
+                Loading today&apos;s schedule…
+              </span>
             </div>
           ) : !activeSchedule ? (
-            <div className="dashboard-card rounded-4xl p-12 flex flex-col items-center justify-center text-center gap-4">
-              <BookOpen className="w-12 h-12 text-[#1E2B58]/15 dark:text-white/15" />
+            <div className="dashboard-card flex flex-col items-center justify-center gap-4 rounded-4xl p-12 text-center">
+              <BookOpen className="h-12 w-12 text-[#1E2B58]/15 dark:text-white/15" />
               <div>
-                <p className="font-black text-[#1E2B58]/50 dark:text-white/40">No teaching sessions scheduled today</p>
-                <p className="text-xs text-[#1E2B58]/30 dark:text-white/30 mt-1">
-                  Borrow management is only available during a scheduled class session.
+                <p className="font-black text-[#1E2B58]/50 dark:text-white/40">
+                  No teaching sessions scheduled today
+                </p>
+                <p className="mt-1 text-xs text-[#1E2B58]/30 dark:text-white/30">
+                  Borrow management is only available during a scheduled class
+                  session.
                 </p>
               </div>
             </div>
@@ -342,29 +408,35 @@ const LecturerBorrowManagementPage = () => {
             <div className="dashboard-card rounded-4xl p-6 sm:p-8">
               <div className="flex flex-wrap items-start justify-between gap-6">
                 {/* Session info */}
-                <div className="flex items-start gap-5 flex-1">
-                  <div className="w-14 h-14 rounded-3xl bg-[#1E2B58]/8 dark:bg-white/5 flex items-center justify-center shrink-0">
-                    <BookOpen className="w-7 h-7 text-[#1E2B58] dark:text-white" />
+                <div className="flex flex-1 items-start gap-5">
+                  <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-3xl bg-[#1E2B58]/8 dark:bg-white/5">
+                    <BookOpen className="h-7 w-7 text-[#1E2B58] dark:text-white" />
                   </div>
                   <div>
-                    <p className="text-[0.625rem] font-black uppercase tracking-widest text-[#1E2B58]/50 dark:text-white/40 mb-1">
+                    <p className="mb-1 text-[0.625rem] font-black tracking-widest text-[#1E2B58]/50 uppercase dark:text-white/40">
                       Today&apos;s teaching session
                     </p>
-                    <h2 className="text-xl font-black text-[#1E2B58] dark:text-white leading-tight">
+                    <h2 className="text-xl leading-tight font-black text-[#1E2B58] dark:text-white">
                       {activeSchedule.title}
                     </h2>
-                    <div className="flex flex-wrap items-center gap-x-5 gap-y-1.5 mt-2">
+                    <div className="mt-2 flex flex-wrap items-center gap-x-5 gap-y-1.5">
                       <span className="flex items-center gap-1.5 text-xs font-bold text-slate-500 dark:text-slate-400">
-                        <MapPin className="w-3.5 h-3.5 shrink-0" />
-                        {activeSchedule.roomId?.name || 'N/A'}
+                        <MapPin className="h-3.5 w-3.5 shrink-0" />
+                        {activeSchedule.roomId?.name || "N/A"}
                       </span>
                       <span className="flex items-center gap-1.5 text-xs font-bold text-slate-500 dark:text-slate-400">
-                        <Clock className="w-3.5 h-3.5 shrink-0" />
-                        {activeSchedule.slotId?.startTime || fmtTime(activeSchedule.startAt)} – {activeSchedule.slotId?.endTime || fmtTime(activeSchedule.endAt)}
+                        <Clock className="h-3.5 w-3.5 shrink-0" />
+                        {activeSchedule.slotId?.startTime ||
+                          fmtTime(activeSchedule.startAt)}{" "}
+                        –{" "}
+                        {activeSchedule.slotId?.endTime ||
+                          fmtTime(activeSchedule.endAt)}
                       </span>
                       {activeSchedule.slotId && (
                         <span className="text-xs font-bold text-slate-400">
-                          Slot {activeSchedule.slotId.name || activeSchedule.slotId.code}
+                          Slot{" "}
+                          {activeSchedule.slotId.name ||
+                            activeSchedule.slotId.code}
                         </span>
                       )}
                     </div>
@@ -372,49 +444,86 @@ const LecturerBorrowManagementPage = () => {
                 </div>
 
                 {/* Check-in controls */}
-                <div className="flex flex-col items-end gap-3 shrink-0">
+                <div className="flex shrink-0 flex-col items-end gap-3">
                   {/* Session status badge */}
-                  <span className={`flex items-center gap-2 px-4 py-2 rounded-2xl text-[10px] font-black uppercase tracking-widest border ${
-                    (activeSchedule.status === 'completed' || getSlotTimeStatus(activeSchedule.startAt, activeSchedule.endAt) === 'ended')
-                      ? 'bg-slate-50 text-slate-500 border-slate-200 dark:bg-slate-900/40 dark:text-slate-400 dark:border-slate-800'
+                  <span
+                    className={`flex items-center gap-2 rounded-2xl border px-4 py-2 text-[10px] font-black tracking-widest uppercase ${
+                      activeSchedule.status === "completed" ||
+                      getSlotTimeStatus(
+                        activeSchedule.startAt,
+                        activeSchedule.endAt,
+                      ) === "ended"
+                        ? "border-slate-200 bg-slate-50 text-slate-500 dark:border-slate-800 dark:bg-slate-900/40 dark:text-slate-400"
+                        : isSessionOngoing
+                          ? "border-emerald-200 bg-emerald-50 text-emerald-600 dark:border-emerald-900/30 dark:bg-emerald-900/20 dark:text-emerald-400"
+                          : "border-amber-200 bg-amber-50 text-amber-600 dark:border-amber-900/30 dark:bg-amber-900/20 dark:text-amber-400"
+                    }`}
+                  >
+                    <span
+                      className={`h-1.5 w-1.5 rounded-full ${
+                        activeSchedule.status === "completed" ||
+                        getSlotTimeStatus(
+                          activeSchedule.startAt,
+                          activeSchedule.endAt,
+                        ) === "ended"
+                          ? "bg-slate-400"
+                          : isSessionOngoing
+                            ? "animate-pulse bg-emerald-500"
+                            : "bg-amber-500"
+                      }`}
+                    />
+                    {activeSchedule.status === "completed" ||
+                    getSlotTimeStatus(
+                      activeSchedule.startAt,
+                      activeSchedule.endAt,
+                    ) === "ended"
+                      ? "Completed"
                       : isSessionOngoing
-                        ? 'bg-emerald-50 text-emerald-600 border-emerald-200 dark:bg-emerald-900/20 dark:text-emerald-400 dark:border-emerald-900/30'
-                        : 'bg-amber-50 text-amber-600 border-amber-200 dark:bg-amber-900/20 dark:text-amber-400 dark:border-amber-900/30'
-                  }`}>
-                    <span className={`w-1.5 h-1.5 rounded-full ${
-                      (activeSchedule.status === 'completed' || getSlotTimeStatus(activeSchedule.startAt, activeSchedule.endAt) === 'ended') ? 'bg-slate-400' :
-                      isSessionOngoing ? 'bg-emerald-500 animate-pulse' : 'bg-amber-500'
-                    }`} />
-                    {(activeSchedule.status === 'completed' || getSlotTimeStatus(activeSchedule.startAt, activeSchedule.endAt) === 'ended') ? 'Completed' : isSessionOngoing ? 'Ongoing' : 'Upcoming'}
+                        ? "Ongoing"
+                        : "Upcoming"}
                   </span>
 
                   {/* Check-in button */}
                   {checkInLoading ? (
                     <div className="flex items-center gap-2 text-xs text-slate-400">
-                      <Loader2 className="w-3.5 h-3.5 animate-spin" /> Checking…
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" /> Checking…
                     </div>
                   ) : isCheckedIn ? (
                     <div className="flex items-center gap-3">
-                      <span className={`flex items-center gap-2 text-xs font-black px-3 py-1.5 rounded-xl border ${
-                        (activeSchedule.status === 'completed' || getSlotTimeStatus(activeSchedule.startAt, activeSchedule.endAt) === 'ended')
-                          ? 'text-slate-500 bg-slate-50 border-slate-200 dark:bg-slate-900/40 dark:text-slate-400 dark:border-slate-800'
-                          : 'text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-900/30'
-                      }`}>
-                        <CheckCircle2 className="w-3.5 h-3.5" />
+                      <span
+                        className={`flex items-center gap-2 rounded-xl border px-3 py-1.5 text-xs font-black ${
+                          activeSchedule.status === "completed" ||
+                          getSlotTimeStatus(
+                            activeSchedule.startAt,
+                            activeSchedule.endAt,
+                          ) === "ended"
+                            ? "border-slate-200 bg-slate-50 text-slate-500 dark:border-slate-800 dark:bg-slate-900/40 dark:text-slate-400"
+                            : "border-emerald-200 bg-emerald-50 text-emerald-600 dark:border-emerald-900/30 dark:bg-emerald-900/20 dark:text-emerald-400"
+                        }`}
+                      >
+                        <CheckCircle2 className="h-3.5 w-3.5" />
                         Checked in
-                        {checkInStatus?.checkInTime && ` at ${fmtTime(checkInStatus.checkInTime)}`}
+                        {checkInStatus?.checkInTime &&
+                          ` at ${fmtTime(checkInStatus.checkInTime)}`}
                       </span>
-                      {activeSchedule.status !== 'completed' && (
+                      {activeSchedule.status !== "completed" && (
                         <button
                           onClick={() => setShowEndSessionModal(true)}
                           disabled={checkingIn}
-                          className={`flex items-center gap-1.5 px-4 py-2 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all active:scale-95 disabled:opacity-60 ${
-                            getSlotTimeStatus(activeSchedule.startAt, activeSchedule.endAt) === 'ended'
-                              ? 'bg-red-500 text-white shadow-lg shadow-red-500/20 hover:bg-red-600'
-                              : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200'
+                          className={`flex items-center gap-1.5 rounded-xl px-4 py-2 text-[10px] font-black tracking-widest uppercase transition-all active:scale-95 disabled:opacity-60 ${
+                            getSlotTimeStatus(
+                              activeSchedule.startAt,
+                              activeSchedule.endAt,
+                            ) === "ended"
+                              ? "bg-red-500 text-white shadow-lg shadow-red-500/20 hover:bg-red-600"
+                              : "bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300"
                           }`}
                         >
-                          {checkingIn ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <LogOut className="w-3.5 h-3.5" />}
+                          {checkingIn ? (
+                            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                          ) : (
+                            <LogOut className="h-3.5 w-3.5" />
+                          )}
                           End
                         </button>
                       )}
@@ -423,14 +532,18 @@ const LecturerBorrowManagementPage = () => {
                     <button
                       onClick={handleCheckIn}
                       disabled={checkingIn || !isSessionOngoing}
-                      className={`flex items-center gap-2 px-5 py-2.5 rounded-2xl font-black text-xs uppercase tracking-widest transition-all active:scale-95 disabled:opacity-60 ${
+                      className={`flex items-center gap-2 rounded-2xl px-5 py-2.5 text-xs font-black tracking-widest uppercase transition-all active:scale-95 disabled:opacity-60 ${
                         isSessionOngoing
-                          ? 'bg-[#1E2B58] text-white hover:bg-[#2A3B66] shadow-lg shadow-blue-900/20'
-                          : 'bg-slate-100 dark:bg-slate-800 text-slate-400 cursor-not-allowed'
+                          ? "bg-[#1E2B58] text-white shadow-lg shadow-blue-900/20 hover:bg-[#2A3B66]"
+                          : "cursor-not-allowed bg-slate-100 text-slate-400 dark:bg-slate-800"
                       }`}
                     >
-                      {checkingIn ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <LogIn className="w-3.5 h-3.5" />}
-                      {isSessionOngoing ? 'Check in' : 'Not yet time'}
+                      {checkingIn ? (
+                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                      ) : (
+                        <LogIn className="h-3.5 w-3.5" />
+                      )}
+                      {isSessionOngoing ? "Check in" : "Not yet time"}
                     </button>
                   )}
                 </div>
@@ -442,57 +555,112 @@ const LecturerBorrowManagementPage = () => {
         {/* ══ SECTION 2: Borrow Unlock Status ═════════════════════════════════ */}
         {activeSchedule && (
           <section className="mb-8">
-            <div className={`rounded-3xl p-5 flex items-start gap-4 border ${
-              (activeSchedule.status !== 'completed' && new Date(activeSchedule.endAt) < new Date() && isCheckedIn)
-                ? 'bg-red-50 border-red-200 dark:bg-red-900/10 dark:border-red-900/20 animate-pulse'
-                : isCheckedIn
-                  ? 'bg-emerald-50 border-emerald-200 dark:bg-emerald-900/10 dark:border-emerald-900/20'
-                  : 'bg-amber-50 border-amber-200 dark:bg-amber-900/10 dark:border-amber-900/20'
-            }`}>
-              <div className={`w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 ${
-                (activeSchedule.status !== 'completed' && new Date(activeSchedule.endAt) < new Date() && isCheckedIn)
-                  ? 'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400'
+            <div
+              className={`flex items-start gap-4 rounded-3xl border p-5 ${
+                activeSchedule.status !== "completed" &&
+                new Date(activeSchedule.endAt) < new Date() &&
+                isCheckedIn
+                  ? "animate-pulse border-red-200 bg-red-50 dark:border-red-900/20 dark:bg-red-900/10"
                   : isCheckedIn
-                    ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400'
-                    : 'bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400'
-              }`}>
-                {(activeSchedule.status !== 'completed' && new Date(activeSchedule.endAt) < new Date() && isCheckedIn)
-                  ? <AlertTriangle className="w-5 h-5" />
-                  : isCheckedIn
-                    ? <ShieldCheck className="w-5 h-5" />
-                    : <AlertTriangle className="w-5 h-5" />
-                }
+                    ? "border-emerald-200 bg-emerald-50 dark:border-emerald-900/20 dark:bg-emerald-900/10"
+                    : "border-amber-200 bg-amber-50 dark:border-amber-900/20 dark:bg-amber-900/10"
+              }`}
+            >
+              <div
+                className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl ${
+                  activeSchedule.status !== "completed" &&
+                  new Date(activeSchedule.endAt) < new Date() &&
+                  isCheckedIn
+                    ? "bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400"
+                    : isCheckedIn
+                      ? "bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400"
+                      : "bg-amber-100 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400"
+                }`}
+              >
+                {activeSchedule.status !== "completed" &&
+                new Date(activeSchedule.endAt) < new Date() &&
+                isCheckedIn ? (
+                  <AlertTriangle className="h-5 w-5" />
+                ) : isCheckedIn ? (
+                  <ShieldCheck className="h-5 w-5" />
+                ) : (
+                  <AlertTriangle className="h-5 w-5" />
+                )}
               </div>
               <div>
-                <p className={`font-black text-sm ${
-                  (activeSchedule.status !== 'completed' && getSlotTimeStatus(activeSchedule.startAt, activeSchedule.endAt) === 'ended' && isCheckedIn)
-                    ? 'text-red-700 dark:text-red-400'
-                    : activeSchedule.status === 'completed' || getSlotTimeStatus(activeSchedule.startAt, activeSchedule.endAt) === 'ended'
-                      ? 'text-slate-600 dark:text-slate-300'
-                      : isCheckedIn ? 'text-emerald-700 dark:text-emerald-400' : 'text-amber-700 dark:text-amber-400'
-                }`}>
-                  {activeSchedule.status !== 'completed' && getSlotTimeStatus(activeSchedule.startAt, activeSchedule.endAt) === 'ended' && isCheckedIn
-                    ? 'ACTION REQUIRED: End Session'
-                    : activeSchedule.status === 'completed' || getSlotTimeStatus(activeSchedule.startAt, activeSchedule.endAt) === 'ended'
-                      ? 'Session has ended'
+                <p
+                  className={`text-sm font-black ${
+                    activeSchedule.status !== "completed" &&
+                    getSlotTimeStatus(
+                      activeSchedule.startAt,
+                      activeSchedule.endAt,
+                    ) === "ended" &&
+                    isCheckedIn
+                      ? "text-red-700 dark:text-red-400"
+                      : activeSchedule.status === "completed" ||
+                          getSlotTimeStatus(
+                            activeSchedule.startAt,
+                            activeSchedule.endAt,
+                          ) === "ended"
+                        ? "text-slate-600 dark:text-slate-300"
+                        : isCheckedIn
+                          ? "text-emerald-700 dark:text-emerald-400"
+                          : "text-amber-700 dark:text-amber-400"
+                  }`}
+                >
+                  {activeSchedule.status !== "completed" &&
+                  getSlotTimeStatus(
+                    activeSchedule.startAt,
+                    activeSchedule.endAt,
+                  ) === "ended" &&
+                  isCheckedIn
+                    ? "ACTION REQUIRED: End Session"
+                    : activeSchedule.status === "completed" ||
+                        getSlotTimeStatus(
+                          activeSchedule.startAt,
+                          activeSchedule.endAt,
+                        ) === "ended"
+                      ? "Session has ended"
                       : isCheckedIn
-                        ? 'Equipment borrowing is enabled'
-                        : 'Students cannot borrow equipment yet'}
+                        ? "Equipment borrowing is enabled"
+                        : "Students cannot borrow equipment yet"}
                 </p>
-                <p className={`text-xs mt-0.5 ${
-                  (activeSchedule.status !== 'completed' && getSlotTimeStatus(activeSchedule.startAt, activeSchedule.endAt) === 'ended' && isCheckedIn)
-                    ? 'text-red-600/70 dark:text-red-400/60'
-                    : activeSchedule.status === 'completed' || getSlotTimeStatus(activeSchedule.startAt, activeSchedule.endAt) === 'ended'
-                      ? 'text-slate-500 dark:text-slate-400'
-                      : isCheckedIn ? 'text-emerald-600/70 dark:text-emerald-400/60' : 'text-amber-600/70 dark:text-amber-400/60'
-                }`}>
-                  {activeSchedule.status !== 'completed' && getSlotTimeStatus(activeSchedule.startAt, activeSchedule.endAt) === 'ended' && isCheckedIn
+                <p
+                  className={`mt-0.5 text-xs ${
+                    activeSchedule.status !== "completed" &&
+                    getSlotTimeStatus(
+                      activeSchedule.startAt,
+                      activeSchedule.endAt,
+                    ) === "ended" &&
+                    isCheckedIn
+                      ? "text-red-600/70 dark:text-red-400/60"
+                      : activeSchedule.status === "completed" ||
+                          getSlotTimeStatus(
+                            activeSchedule.startAt,
+                            activeSchedule.endAt,
+                          ) === "ended"
+                        ? "text-slate-500 dark:text-slate-400"
+                        : isCheckedIn
+                          ? "text-emerald-600/70 dark:text-emerald-400/60"
+                          : "text-amber-600/70 dark:text-amber-400/60"
+                  }`}
+                >
+                  {activeSchedule.status !== "completed" &&
+                  getSlotTimeStatus(
+                    activeSchedule.startAt,
+                    activeSchedule.endAt,
+                  ) === "ended" &&
+                  isCheckedIn
                     ? 'The scheduled time for this slot has passed. Please click "End Session" to complete your check-out.'
-                    : activeSchedule.status === 'completed' || getSlotTimeStatus(activeSchedule.startAt, activeSchedule.endAt) === 'ended'
-                      ? 'Students can no longer submit borrow requests for this session.'
+                    : activeSchedule.status === "completed" ||
+                        getSlotTimeStatus(
+                          activeSchedule.startAt,
+                          activeSchedule.endAt,
+                        ) === "ended"
+                      ? "Students can no longer submit borrow requests for this session."
                       : isCheckedIn
-                        ? 'You are checked in. Students in this room can now submit borrow requests.'
-                        : 'You must check in before students can submit borrow requests.'}
+                        ? "You are checked in. Students in this room can now submit borrow requests."
+                        : "You must check in before students can submit borrow requests."}
                 </p>
               </div>
             </div>
@@ -502,37 +670,39 @@ const LecturerBorrowManagementPage = () => {
         {/* ══ SECTION 3: Pending Requests ══════════════════════════════════════ */}
         {activeSchedule && (
           <section className="mb-8">
-            <div className="flex items-center gap-3 mb-5 px-1">
-              <div className="w-1.5 h-8 bg-amber-400 dark:bg-amber-500 rounded-full" />
-              <h3 className="text-xl font-black text-[#1E2B58] dark:text-white">Pending approval</h3>
+            <div className="mb-5 flex items-center gap-3 px-1">
+              <div className="h-8 w-1.5 rounded-full bg-amber-400 dark:bg-amber-500" />
+              <h3 className="text-xl font-black text-[#1E2B58] dark:text-white">
+                Pending approval
+              </h3>
               {!requestsLoading && (
-                <span className="text-[10px] font-black px-2.5 py-1 rounded-full bg-amber-50 dark:bg-amber-400/10 text-amber-600 dark:text-amber-400 border border-amber-100 dark:border-amber-400/20">
+                <span className="rounded-full border border-amber-100 bg-amber-50 px-2.5 py-1 text-[10px] font-black text-amber-600 dark:border-amber-400/20 dark:bg-amber-400/10 dark:text-amber-400">
                   {pendingRequests.length}
                 </span>
               )}
               <button
                 onClick={loadRequests}
-                className="ml-auto flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-[#1E2B58]/40 dark:text-white/30 hover:text-[#1E2B58] dark:hover:text-white transition-colors"
+                className="ml-auto flex items-center gap-1.5 text-[10px] font-black tracking-widest text-[#1E2B58]/40 uppercase transition-colors hover:text-[#1E2B58] dark:text-white/30 dark:hover:text-white"
               >
-                <RefreshCw className="w-3 h-3" /> Refresh
+                <RefreshCw className="h-3 w-3" /> Refresh
               </button>
             </div>
 
-            <div className="dashboard-card rounded-4xl overflow-hidden">
+            <div className="dashboard-card overflow-hidden rounded-4xl">
               {requestsLoading ? (
                 <div className="flex justify-center py-16">
-                  <Loader2 className="w-7 h-7 animate-spin text-[#1E2B58]/20 dark:text-white/20" />
+                  <Loader2 className="h-7 w-7 animate-spin text-[#1E2B58]/20 dark:text-white/20" />
                 </div>
               ) : pendingRequests.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-12 gap-3 text-center px-8">
-                  <Users className="w-10 h-10 text-slate-300 dark:text-slate-600" />
+                <div className="flex flex-col items-center justify-center gap-3 px-8 py-12 text-center">
+                  <Users className="h-10 w-10 text-slate-300 dark:text-slate-600" />
                   <p className="text-sm font-bold text-slate-400 dark:text-slate-500">
                     No borrow requests are pending approval.
                   </p>
                 </div>
               ) : (
                 <div className="divide-y divide-[#1E2B58]/5 dark:divide-white/5">
-                  {pendingRequests.map(req => (
+                  {pendingRequests.map((req) => (
                     <BorrowRequestRow
                       key={req._id}
                       req={req}
@@ -541,13 +711,13 @@ const LecturerBorrowManagementPage = () => {
                         <>
                           <button
                             onClick={() => setRejectingReq(req)}
-                            className="px-4 py-2 rounded-xl bg-red-50 dark:bg-red-900/20 text-red-500 dark:text-red-400 font-black text-[10px] uppercase tracking-widest hover:bg-red-100 dark:hover:bg-red-900/30 transition-all active:scale-95 border border-red-100 dark:border-red-900/30"
+                            className="rounded-xl border border-red-100 bg-red-50 px-4 py-2 text-[10px] font-black tracking-widest text-red-500 uppercase transition-all hover:bg-red-100 active:scale-95 dark:border-red-900/30 dark:bg-red-900/20 dark:text-red-400 dark:hover:bg-red-900/30"
                           >
                             Reject
                           </button>
                           <button
                             onClick={() => setApprovingReq(req)}
-                            className="px-4 py-2 rounded-xl bg-emerald-500 text-white font-black text-[10px] uppercase tracking-widest hover:bg-emerald-600 transition-all active:scale-95 shadow-md shadow-emerald-500/20"
+                            className="rounded-xl bg-emerald-500 px-4 py-2 text-[10px] font-black tracking-widest text-white uppercase shadow-md shadow-emerald-500/20 transition-all hover:bg-emerald-600 active:scale-95"
                           >
                             Approve
                           </button>
@@ -564,23 +734,25 @@ const LecturerBorrowManagementPage = () => {
         {/* ══ SECTION 4: Approved — Awaiting Student Handover Confirm ══════════ */}
         {activeSchedule && approvedRequests.length > 0 && (
           <section className="mb-8">
-            <div className="flex items-center gap-3 mb-5 px-1">
-              <div className="w-1.5 h-8 bg-blue-500 rounded-full" />
-              <h3 className="text-xl font-black text-[#1E2B58] dark:text-white">Awaiting student confirmation</h3>
-              <span className="text-[10px] font-black px-2.5 py-1 rounded-full bg-blue-50 dark:bg-blue-400/10 text-blue-600 dark:text-blue-400 border border-blue-100 dark:border-blue-400/20">
+            <div className="mb-5 flex items-center gap-3 px-1">
+              <div className="h-8 w-1.5 rounded-full bg-blue-500" />
+              <h3 className="text-xl font-black text-[#1E2B58] dark:text-white">
+                Awaiting student confirmation
+              </h3>
+              <span className="rounded-full border border-blue-100 bg-blue-50 px-2.5 py-1 text-[10px] font-black text-blue-600 dark:border-blue-400/20 dark:bg-blue-400/10 dark:text-blue-400">
                 {approvedRequests.length}
               </span>
             </div>
 
-            <div className="dashboard-card rounded-4xl overflow-hidden">
+            <div className="dashboard-card overflow-hidden rounded-4xl">
               <div className="divide-y divide-[#1E2B58]/5 dark:divide-white/5">
-                {approvedRequests.map(req => (
+                {approvedRequests.map((req) => (
                   <BorrowRequestRow
                     key={req._id}
                     req={req}
                     onViewDetail={setViewDetailReq}
                     actions={
-                      <span className="px-3 py-1.5 rounded-lg bg-blue-50 dark:bg-blue-900/20 text-[10px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-widest border border-blue-100 dark:border-blue-900/30">
+                      <span className="rounded-lg border border-blue-100 bg-blue-50 px-3 py-1.5 text-[10px] font-bold tracking-widest text-blue-600 uppercase dark:border-blue-900/30 dark:bg-blue-900/20 dark:text-blue-400">
                         Awaiting Confirmation
                       </span>
                     }
@@ -594,17 +766,19 @@ const LecturerBorrowManagementPage = () => {
         {/* ══ SECTION 5: Handing — Awaiting Return Confirmation ═══════════════ */}
         {returningRequests.length > 0 && (
           <section className="mb-8">
-            <div className="flex items-center gap-3 mb-5 px-1">
-              <div className="w-1.5 h-8 bg-emerald-500 rounded-full" />
-              <h3 className="text-xl font-black text-[#1E2B58] dark:text-white">Awaiting return confirmation</h3>
-              <span className="text-[10px] font-black px-2.5 py-1 rounded-full bg-emerald-50 dark:bg-emerald-400/10 text-emerald-600 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-400/20">
+            <div className="mb-5 flex items-center gap-3 px-1">
+              <div className="h-8 w-1.5 rounded-full bg-emerald-500" />
+              <h3 className="text-xl font-black text-[#1E2B58] dark:text-white">
+                Awaiting return confirmation
+              </h3>
+              <span className="rounded-full border border-emerald-100 bg-emerald-50 px-2.5 py-1 text-[10px] font-black text-emerald-600 dark:border-emerald-400/20 dark:bg-emerald-400/10 dark:text-emerald-400">
                 {returningRequests.length}
               </span>
             </div>
 
-            <div className="dashboard-card rounded-4xl overflow-hidden border-2 border-emerald-500/20">
+            <div className="dashboard-card overflow-hidden rounded-4xl border-2 border-emerald-500/20">
               <div className="divide-y divide-[#1E2B58]/5 dark:divide-white/5">
-                {returningRequests.map(req => (
+                {returningRequests.map((req) => (
                   <BorrowRequestRow
                     key={req._id}
                     req={req}
@@ -612,9 +786,9 @@ const LecturerBorrowManagementPage = () => {
                     actions={
                       <button
                         onClick={() => setConfirmReturnReq(req)}
-                        className="px-4 py-2 rounded-xl bg-emerald-500 text-white font-black text-[10px] uppercase tracking-widest hover:bg-emerald-600 transition-all active:scale-95 flex items-center gap-1.5 shadow-lg shadow-emerald-500/20"
+                        className="flex items-center gap-1.5 rounded-xl bg-emerald-500 px-4 py-2 text-[10px] font-black tracking-widest text-white uppercase shadow-lg shadow-emerald-500/20 transition-all hover:bg-emerald-600 active:scale-95"
                       >
-                        <CheckCircle2 className="w-3.5 h-3.5" /> Confirm Return
+                        <CheckCircle2 className="h-3.5 w-3.5" /> Confirm Return
                       </button>
                     }
                   />
@@ -627,23 +801,25 @@ const LecturerBorrowManagementPage = () => {
         {/* ══ SECTION 6: Handed Over — Ongoing Usage ═══════════════════════════ */}
         {activeSchedule && handedOverRequests.length > 0 && (
           <section className="mb-8">
-            <div className="flex items-center gap-3 mb-5 px-1">
-              <div className="w-1.5 h-8 bg-slate-400 rounded-full" />
-              <h3 className="text-xl font-black text-[#1E2B58] dark:text-white">In use</h3>
-              <span className="text-[10px] font-black px-2.5 py-1 rounded-full bg-slate-50 dark:bg-white/5 text-slate-500 dark:text-slate-400 border border-slate-100 dark:border-white/10">
+            <div className="mb-5 flex items-center gap-3 px-1">
+              <div className="h-8 w-1.5 rounded-full bg-slate-400" />
+              <h3 className="text-xl font-black text-[#1E2B58] dark:text-white">
+                In use
+              </h3>
+              <span className="rounded-full border border-slate-100 bg-slate-50 px-2.5 py-1 text-[10px] font-black text-slate-500 dark:border-white/10 dark:bg-white/5 dark:text-slate-400">
                 {handedOverRequests.length}
               </span>
             </div>
 
-            <div className="dashboard-card rounded-4xl overflow-hidden">
+            <div className="dashboard-card overflow-hidden rounded-4xl">
               <div className="divide-y divide-[#1E2B58]/5 dark:divide-white/5">
-                {handedOverRequests.map(req => (
+                {handedOverRequests.map((req) => (
                   <BorrowRequestRow
                     key={req._id}
                     req={req}
                     onViewDetail={setViewDetailReq}
                     actions={
-                      <span className="px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+                      <span className="rounded-lg bg-slate-100 px-3 py-1.5 text-[10px] font-bold tracking-widest text-slate-500 uppercase dark:bg-slate-800">
                         Not Returned
                       </span>
                     }
@@ -657,40 +833,42 @@ const LecturerBorrowManagementPage = () => {
         {/* ══ SECTION 7: Unreturned — Outstanding ═══════════════════════════════ */}
         {unreturnedRequests.length > 0 && (
           <section className="mb-8">
-            <div className="flex items-center gap-3 mb-5 px-1">
-              <div className="w-1.5 h-8 bg-red-500 rounded-full" />
-              <h3 className="text-xl font-black text-[#1E2B58] dark:text-white">Not returned</h3>
-              <span className="text-[10px] font-black px-2.5 py-1 rounded-full bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 border border-red-100 dark:border-red-900/30">
+            <div className="mb-5 flex items-center gap-3 px-1">
+              <div className="h-8 w-1.5 rounded-full bg-red-500" />
+              <h3 className="text-xl font-black text-[#1E2B58] dark:text-white">
+                Not returned
+              </h3>
+              <span className="rounded-full border border-red-100 bg-red-50 px-2.5 py-1 text-[10px] font-black text-red-600 dark:border-red-900/30 dark:bg-red-900/20 dark:text-red-400">
                 {unreturnedRequests.length}
               </span>
             </div>
 
-            <div className="dashboard-card rounded-4xl overflow-hidden border border-red-200 dark:border-red-900/30 bg-red-50/30 dark:bg-red-900/10">
+            <div className="dashboard-card overflow-hidden rounded-4xl border border-red-200 bg-red-50/30 dark:border-red-900/30 dark:bg-red-900/10">
               <div className="divide-y divide-red-100 dark:divide-red-900/20">
-                {unreturnedRequests.map(req => (
+                {unreturnedRequests.map((req) => (
                   <BorrowRequestRow
                     key={req._id}
                     req={req}
                     onViewDetail={setViewDetailReq}
                     actions={
                       <div className="flex flex-col items-end gap-2">
-                         <span className="px-3 py-1.5 rounded-lg bg-red-100 dark:bg-red-900/40 text-[10px] font-bold text-red-700 dark:text-red-400 uppercase tracking-widest animate-pulse">
-                           Warning: Not returned
-                         </span>
-                         <div className="flex gap-2">
-                           <button
-                             onClick={() => setRemindReq(req)}
-                             className="px-3 py-1.5 rounded-xl bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 font-bold text-[10px] uppercase tracking-widest hover:bg-amber-100 transition-all active:scale-95 border border-amber-200 dark:border-amber-900/30"
-                           >
-                             Remind
-                           </button>
-                           <button
-                             onClick={() => setConfirmReturnReq(req)}
-                             className="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 font-bold text-[10px] uppercase tracking-widest hover:bg-slate-200 transition-all active:scale-95"
-                           >
-                             Late recovery
-                           </button>
-                         </div>
+                        <span className="animate-pulse rounded-lg bg-red-100 px-3 py-1.5 text-[10px] font-bold tracking-widest text-red-700 uppercase dark:bg-red-900/40 dark:text-red-400">
+                          Cảnh báo: Chưa trả
+                        </span>
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => setRemindReq(req)}
+                            className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-1.5 text-[10px] font-bold tracking-widest text-amber-600 uppercase transition-all hover:bg-amber-100 active:scale-95 dark:border-amber-900/30 dark:bg-amber-900/20 dark:text-amber-400"
+                          >
+                            Nhắc nhở
+                          </button>
+                          <button
+                            onClick={() => setConfirmReturnReq(req)}
+                            className="rounded-xl bg-slate-100 px-3 py-1.5 text-[10px] font-bold tracking-widest text-slate-600 uppercase transition-all hover:bg-slate-200 active:scale-95 dark:bg-slate-800 dark:text-slate-400"
+                          >
+                            Thu hồi muộn
+                          </button>
+                        </div>
                       </div>
                     }
                   />
@@ -699,7 +877,6 @@ const LecturerBorrowManagementPage = () => {
             </div>
           </section>
         )}
-
       </main>
 
       {/* ══════════════════════════════════════════════════════════════════════

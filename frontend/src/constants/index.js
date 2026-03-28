@@ -14,6 +14,7 @@ export const BORROW_STATUS = Object.freeze({
   RETURNED:    'returned',
   CANCELLED:   'cancelled',
   UNRETURNED:  'unreturned',
+  DISPUTE:     'dispute',
 });
 
 /**
@@ -37,6 +38,7 @@ export const EQUIPMENT_STATUS = Object.freeze({
   AVAILABLE:   'available',
   MAINTENANCE: 'maintenance',
   BROKEN:      'broken',
+  DISPUTE:     'dispute',
 });
 
 /**

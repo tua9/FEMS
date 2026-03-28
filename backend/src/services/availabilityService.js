@@ -22,7 +22,7 @@ const getEquipmentBorrowStatus = async (equipmentId) => {
   }
 
   // Technical condition overrides everything
-  if (equipment.status === 'broken' || equipment.status === 'maintenance') {
+  if (equipment.status === 'broken' || equipment.status === 'maintenance' || equipment.status === 'dispute') {
     return { borrowStatus: 'unavailable', activeRequest: null }
   }
 
@@ -65,6 +65,9 @@ const checkEquipmentBorrowability = async (equipmentId, dateRange = null) => {
   }
   if (equipment.status === 'maintenance') {
     return { canBorrow: false, reason: 'Equipment is under maintenance' }
+  }
+  if (equipment.status === 'dispute') {
+    return { canBorrow: false, reason: 'Equipment is currently in dispute' }
   }
 
   // Check for any conflicting active requests in the requested time window

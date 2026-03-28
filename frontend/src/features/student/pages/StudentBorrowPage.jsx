@@ -20,6 +20,7 @@ import AvailabilityLabel from '../components/borrow/AvailabilityLabel';
 import BorrowModal from '../components/borrow/BorrowModal';
 import HandoverConfirmModal from '../components/borrow/HandoverConfirmModal';
 import RequestDetailModal from '../components/borrow/RequestDetailModal';
+import ReturnModal from '../components/borrow/ReturnModal';
 import EquipmentCard from '../components/borrow/EquipmentCard';
 import ActiveRequestItem from '../components/borrow/ActiveRequestItem';
 
@@ -50,6 +51,7 @@ const StudentBorrowPage = () => {
   // ── Modal state ───────────────────────────────────────────────────────────
   const [borrowTarget, setBorrowTarget] = useState(null);
   const [handoverViewTarget, setHandoverViewTarget] = useState(null);
+  const [returnTarget, setReturnTarget] = useState(null);
   const [viewRequest, setViewRequest] = useState(null);
   const [returnConfirmReq, setReturnConfirmReq] = useState(null);
   const [submitting, setSubmitting] = useState(false);
@@ -230,25 +232,32 @@ const StudentBorrowPage = () => {
     }
   };
 
-  // ── Return request: open confirm modal, then submit ─────────────────────
-  const handleReturnClick = (req) => {
-    setReturnConfirmReq(req);
-  };
-
-  const handleReturnConfirm = async () => {
-    if (!returnConfirmReq) return;
-    const req = returnConfirmReq;
+  // ── Return submit (student submits return request) ───────────────────────
+  const handleReturnSubmit = async (formData) => {
+    if (!returnTarget) return;
     setSubmitting(true);
     try {
-      await borrowRequestService.submitReturn(req._id);
-      toast.success('Return request sent. Waiting for lecturer confirmation.');
-      setReturnConfirmReq(null);
+      let imageUrls = [];
+      if (formData.files && formData.files.length > 0) {
+        imageUrls = await uploadImages(formData.files);
+      }
+      await borrowRequestService.submitReturn(returnTarget._id, {
+        checklist: formData.checklist,
+        notes: formData.notes,
+        images: imageUrls,
+      });
+      toast.success('Đã gửi yêu cầu hoàn trả. Chờ giảng viên xác nhận.');
+      setReturnTarget(null);
       await loadMyRequests();
     } catch (err) {
       toast.error(err?.response?.data?.message || 'Could not submit return request.');
     } finally {
       setSubmitting(false);
     }
+  };
+
+  const openReturnModal = (req) => {
+    setReturnTarget(req);
   };
 
   // ── Cancel request ────────────────────────────────────────────────────────
@@ -399,7 +408,11 @@ const StudentBorrowPage = () => {
                 <ActiveRequestItem
                   key={req._id}
                   req={req}
+<<<<<<< HEAD
                   onReturn={handleReturnClick}
+=======
+                  onReturn={openReturnModal}
+>>>>>>> origin/NewDev
                   onConfirmReceived={setHandoverViewTarget}
                   onCancel={handleCancelRequest}
                   onViewDetail={() => setViewRequest(req)}
@@ -464,6 +477,7 @@ const StudentBorrowPage = () => {
                     item={item}
                     myReq={myActiveByEqId[item._id]}
                     isSessionOngoing={isSessionOngoing && activeSchedule.isLecturerCheckedIn}
+                    hasActiveRequest={activeRequests.length > 0}
                     onBorrow={(it) => {
                       if (!isSessionOngoing) {
                         toast.warning('Class has not started yet. Please wait for your slot.');
@@ -473,9 +487,17 @@ const StudentBorrowPage = () => {
                         toast.warning('The lecturer has not checked in. You cannot borrow equipment yet.');
                         return;
                       }
+                      if (activeRequests.length > 0) {
+                        toast.warning('Bạn phải hoàn tất hoặc hủy đơn hiện tại trước khi mượn thêm.');
+                        return;
+                      }
                       setBorrowTarget(it);
                     }}
+<<<<<<< HEAD
                     onReturn={handleReturnClick}
+=======
+                    onReturn={openReturnModal}
+>>>>>>> origin/NewDev
                     onConfirmReceived={setHandoverViewTarget}
                     onCancel={handleCancelRequest}
                     onViewDetail={setViewRequest}
@@ -508,6 +530,15 @@ const StudentBorrowPage = () => {
         request={handoverViewTarget}
         onConfirm={handleConfirmReceived}
         onCancelRequest={handleCancelRequest}
+        submitting={submitting}
+      />
+
+      {/* Return Modal */}
+      <ReturnModal
+        isOpen={!!returnTarget}
+        onClose={() => setReturnTarget(null)}
+        target={returnTarget}
+        onConfirm={handleReturnSubmit}
         submitting={submitting}
       />
 

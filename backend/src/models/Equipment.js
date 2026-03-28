@@ -26,7 +26,7 @@ const equipmentSchema = new mongoose.Schema(
     // Borrow status is derived from BorrowRequest (see availabilityService)
     status: {
       type: String,
-      enum: ['available', 'maintenance', 'broken'],
+      enum: ['available', 'maintenance', 'broken', 'dispute'],
       required: true,
       default: 'available',
     },

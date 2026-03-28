@@ -88,13 +88,16 @@ export const confirmReceivedBorrowRequest = asyncHandler(async (req, res) => {
 })
 
 /**
- * Student requests return. No body payload needed anymore.
- * Status: handed_over → returning
+ * Student requests return.
+ * Body: { checklist: { appearance, functioning, accessories }, notes, images[] }
+ * Status: handed_over → returning (or unreturned → returning)
  */
 export const submitReturnBorrowRequest = asyncHandler(async (req, res) => {
+  const { checklist, notes, images } = req.body
   const result = await borrowRequestService.studentSubmitReturn(
     req.params.id,
-    req.user._id
+    req.user._id,
+    { checklist, notes, images }
   )
   res.status(StatusCodes.OK).json(result)
 })

@@ -5,7 +5,7 @@ import { toast } from 'sonner';
 import { getStudentName, getEquipmentName } from './borrowUtils';
 
 const ReturnConfirmModal = ({ isOpen, onClose, request, onConfirm, submitting }) => {
-  const [returnNote, setReturnNote] = useState('Equipment return received — condition OK');
+  const [returnNote, setReturnNote] = useState('Confirm received back');
   const [returnChecklist, setReturnChecklist] = useState({ appearance: true, functioning: true, accessories: true });
   const [returnFiles, setReturnFiles] = useState([]);
   const [returnPreviews, setReturnPreviews] = useState([]);
@@ -13,7 +13,7 @@ const ReturnConfirmModal = ({ isOpen, onClose, request, onConfirm, submitting })
 
   useEffect(() => {
     if (!isOpen) {
-      setReturnNote('Equipment return received — condition OK');
+      setReturnNote('Confirm received back');
       setReturnChecklist({ appearance: true, functioning: true, accessories: true });
       setReturnFiles([]);
       returnPreviews.forEach(url => URL.revokeObjectURL(url));
@@ -55,7 +55,7 @@ const ReturnConfirmModal = ({ isOpen, onClose, request, onConfirm, submitting })
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!isAllChecked && returnFiles.length === 0) {
-      toast.error('Please upload photo evidence if any checklist item is not satisfied.');
+      toast.error('Please provide evidence photos if the condition is not met.');
       return;
     }
     onConfirm({
@@ -81,7 +81,7 @@ const ReturnConfirmModal = ({ isOpen, onClose, request, onConfirm, submitting })
             <LogOut className="w-7 h-7 text-slate-500 dark:text-slate-300" />
           </div>
           <div>
-            <p className="text-[0.625rem] font-black uppercase tracking-widest text-[#1E2B58]/50 dark:text-white/40 mb-1">Confirm return</p>
+            <p className="text-[0.625rem] font-black uppercase tracking-widest text-[#1E2B58]/50 dark:text-white/40 mb-1">Confirm Return</p>
             <h3 className="text-xl font-black text-[#1E2B58] dark:text-white">{getEquipmentName(request)}</h3>
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
               Returned by {getStudentName(request)}
@@ -89,12 +89,28 @@ const ReturnConfirmModal = ({ isOpen, onClose, request, onConfirm, submitting })
           </div>
         </div>
 
+        {/* Student's Uploaded Proof */}
+        {request.studentReturnInfo?.images?.length > 0 && (
+          <div className="mb-4 text-left">
+            <p className="text-[0.625rem] font-black uppercase tracking-widest text-[#1E2B58]/50 dark:text-white/40 mb-2">
+              Student's Proof
+            </p>
+            <div className="grid grid-cols-2 gap-3">
+              {request.studentReturnInfo.images.map((imgUrl, idx) => (
+                <div key={idx} className="aspect-video rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-sm cursor-pointer hover:opacity-90 transition-opacity">
+                  <img src={imgUrl} alt="Student proof" className="w-full h-full object-cover" onClick={() => window.open(imgUrl, '_blank')} />
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Checklist */}
         <div className="bg-white/40 dark:bg-slate-800/40 rounded-[1.25rem] p-4 mb-4 space-y-2.5">
-          <p className="text-[0.625rem] font-black uppercase tracking-widest text-[#1E2B58]/50 dark:text-white/40 mb-2">Condition on receipt</p>
+          <p className="text-[0.625rem] font-black uppercase tracking-widest text-[#1E2B58]/50 dark:text-white/40 mb-2">Check condition upon return</p>
           {[
-            { key: 'appearance',  label: 'Appearance OK (no cracks or damage)' },
-            { key: 'functioning', label: 'Functions properly' },
+            { key: 'appearance',  label: 'Normal appearance (no cracks)' },
+            { key: 'functioning', label: 'Functioning normally' },
             { key: 'accessories', label: 'No missing accessories' },
           ].map(({ key, label }) => (
             <label key={key} className="flex items-center gap-3 cursor-pointer">
@@ -113,10 +129,10 @@ const ReturnConfirmModal = ({ isOpen, onClose, request, onConfirm, submitting })
         {!isAllChecked && (
           <div className="mb-4 p-4 rounded-2xl bg-amber-50 dark:bg-amber-900/10 border border-amber-100 dark:border-amber-900/20 animate-in fade-in slide-in-from-top-2">
             <label className="text-[0.625rem] font-black uppercase tracking-widest text-amber-600 dark:text-amber-400 mb-2 block text-left">
-              Evidence photos <span className="text-red-500">*</span>
+              Evidence Images <span className="text-red-500">*</span>
             </label>
             <p className="text-[10px] text-amber-600/80 dark:text-amber-400/80 mb-3">
-              Photograph any condition issues (up to 2 photos).
+              Please capture the equipment's condition that does not meet the requirements (max 2 images).
             </p>
             
             <input type="file" ref={fileInputRef} onChange={handleFileChange} accept="image/*" multiple className="hidden" />
@@ -136,7 +152,7 @@ const ReturnConfirmModal = ({ isOpen, onClose, request, onConfirm, submitting })
                   <div className="w-8 h-8 rounded-full bg-amber-100 dark:bg-amber-900/40 flex items-center justify-center group-hover:scale-110 transition-transform">
                     <Package className="w-4 h-4 text-amber-500" />
                   </div>
-                  <span className="text-[10px] font-bold text-amber-500 uppercase tracking-widest text-center px-2">Upload</span>
+                  <span className="text-[10px] font-bold text-amber-500 uppercase tracking-widest text-center px-2">Upload image</span>
                 </button>
               )}
             </div>
@@ -162,9 +178,11 @@ const ReturnConfirmModal = ({ isOpen, onClose, request, onConfirm, submitting })
             Cancel
           </button>
           <button onClick={handleSubmit} disabled={submitting}
-            className="flex-[2] py-3.5 rounded-[1.25rem] font-bold text-sm bg-[#1E2B58] text-white hover:bg-[#2A3B66] transition-all shadow-lg shadow-blue-900/20 flex items-center justify-center gap-2 disabled:opacity-60 active:scale-95">
+            className={`flex-[2] py-3.5 rounded-[1.25rem] font-bold text-sm text-white transition-all shadow-lg flex items-center justify-center gap-2 disabled:opacity-60 active:scale-95 ${
+              isAllChecked ? 'bg-[#1E2B58] hover:bg-[#2A3B66] shadow-blue-900/20' : 'bg-red-500 hover:bg-red-600 shadow-red-900/20'
+            }`}>
             {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
-            Confirm receipt
+            {isAllChecked ? 'Confirm Received' : 'Dispute'}
           </button>
         </div>
       </div>
