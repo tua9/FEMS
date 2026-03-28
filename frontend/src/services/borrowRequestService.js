@@ -51,10 +51,10 @@ export const borrowRequestService = {
   },
 
   /**
-   * Student submits return request (no form data).
+   * Student submits return request.
    */
-  async submitReturn(id) {
-    const res = await api.patch(`/requests/${id}/submit-return`);
+  async submitReturn(id, formData) {
+    const res = await api.patch(`/requests/${id}/submit-return`, formData);
     return res.data;
   },
 

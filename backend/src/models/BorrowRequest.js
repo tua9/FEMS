@@ -90,7 +90,7 @@ const borrowRequestSchema = new mongoose.Schema(
     // pending/approved → cancelled (auto when slot ends, or manual by borrower)
     status: {
       type: String,
-      enum: ['pending', 'approved', 'rejected', 'handed_over', 'returning', 'returned', 'cancelled', 'unreturned'],
+      enum: ['pending', 'approved', 'rejected', 'handed_over', 'returning', 'returned', 'cancelled', 'unreturned', 'dispute'],
       default: 'pending',
     },
 
@@ -143,7 +143,17 @@ const borrowRequestSchema = new mongoose.Schema(
     },
 
     // ── Return submission (from student) ──────────────────────────────────────
-    // Student simply requests return (no form) (status becomes 'returning')
+    // Student requests return and provides evidence (status becomes 'returning')
+    studentReturnInfo: {
+      checklist: {
+        appearance:  { type: Boolean, default: false },
+        functioning: { type: Boolean, default: false },
+        accessories: { type: Boolean, default: false },
+      },
+      notes:       { type: String, default: null },
+      images:      [{ type: String }],
+      submittedAt: { type: Date, default: null },
+    },
 
     // ── Return confirmation (by lecturer) ─────────────────────────────────────
     // Filled by LECTURER when confirming return (status becomes 'returned')
