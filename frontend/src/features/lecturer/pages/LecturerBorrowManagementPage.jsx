@@ -434,7 +434,6 @@ const LecturerBorrowManagementPage = () => {
                       </span>
                       {activeSchedule.slotId && (
                         <span className="text-xs font-bold text-slate-400">
-                          Slot{" "}
                           {activeSchedule.slotId.name ||
                             activeSchedule.slotId.code}
                         </span>
