@@ -4,6 +4,7 @@
  */
 import React, { useState } from "react";
 import { useAuthStore } from "@/stores/useAuthStore";
+import { useChatStore } from "@/stores/useChatStore";
 import { cn } from "@/lib/utils";
 import { Menu, X } from "lucide-react";
 import NavBrand from "@/features/shared/components/navbar/NavBrand";
@@ -19,13 +20,16 @@ const AppNavbar = ({
   brandIcon = "school",
 }) => {
   const { user } = useAuthStore();
+  const isChatOpen = useChatStore((s) => s.isChatOpen);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   return (
     <header
       className={cn(
         // 1. Layout & Floating Pill Shape
-        "fixed top-4 left-4 right-4 z-50 mx-auto flex h-[4.25rem] max-w-7xl items-center justify-between rounded-full px-6 transition-all duration-300 md:px-8",
+        "fixed top-4 left-4 right-4 z-40 mx-auto flex h-[4.25rem] max-w-7xl items-center justify-between rounded-full px-6 transition-all duration-300 md:px-8",
+        // Ẩn trên mobile khi AI chat đang mở
+        isChatOpen ? "hidden sm:flex" : "flex",
         // 2. Light Mode — extreme transparency + deep float shadow
         "bg-white/20 backdrop-blur-lg border border-white/60 shadow-[0_8px_24px_0_rgba(0,0,0,0.15)]",
         // 3. Dark Mode — extreme transparency + stronger wide shadow to pop against dark backgrounds
