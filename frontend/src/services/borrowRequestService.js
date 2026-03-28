@@ -77,8 +77,8 @@ export const borrowRequestService = {
     return res.data;
   },
 
-  async remindBorrowRequest(id) {
-    const res = await api.post(`/requests/${id}/remind`);
+  async remindBorrowRequest(id, note) {
+    const res = await api.post(`/requests/${id}/remind`, { note });
     return res.data;
   },
 };

@@ -121,6 +121,7 @@ export const cancelBorrowRequest = asyncHandler(async (req, res) => {
 })
 
 export const remindBorrowRequest = asyncHandler(async (req, res) => {
-  const result = await borrowRequestService.remindBorrowRequest(req.params.id)
+  const { note } = req.body
+  const result = await borrowRequestService.remindBorrowRequest(req.params.id, req.user._id, note)
   res.status(StatusCodes.OK).json(result)
 })
