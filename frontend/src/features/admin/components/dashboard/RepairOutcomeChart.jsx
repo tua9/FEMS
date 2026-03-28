@@ -23,62 +23,12 @@ const RepairOutcomeChart = ({ data }) => {
     ? Math.round(((data.find((d) => d.outcome === 'fixed_internally')?.count ?? 0) / total) * 100)
     : 0;
 
-<<<<<<< HEAD
- return (
- <div>
- <p className="text-[11px] font-semibold uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-4">
- Repair success rate
- </p>
- {total === 0 ? (
- <p className="text-xs text-slate-400 text-center py-8">No closed incidents yet</p>
- ) : (
- <>
- <div className="relative flex items-center justify-center py-2">
- <svg className="w-36 h-36" viewBox="0 0 100 100">
- {segments.map((seg) =>
- seg.len > 0 ? (
- <circle
- key={seg.outcome}
- cx="50" cy="50" r="40"
- fill="transparent"
- stroke={seg.color}
- strokeWidth="12"
- strokeDasharray={CIRCUMFERENCE}
- strokeDashoffset={seg.offset}
- style={{ transform: `rotate(${seg.rot}deg)`, transformOrigin: 'center' }}
- />
- ) : null
- )}
- </svg>
- <div className="absolute inset-0 flex flex-col items-center justify-center">
- <span className="text-2xl font-black text-[#1A2B56] dark:text-white">{fixedPct}%</span>
- <span className="text-[9px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">Success</span>
- </div>
- </div>
- <div className="mt-4 space-y-2">
- {segments.map((seg) => (
- <div key={seg.outcome} className="flex items-center justify-between text-xs font-semibold dark:text-slate-300">
- <div className="flex items-center gap-2">
- <span>{seg.icon}</span>
- <span>{seg.label}</span>
- </div>
- <span>{seg.count} ({total > 0 ? Math.round((seg.count / total) * 100) : 0}%)</span>
- </div>
- ))}
- </div>
- </>
- )}
- </div>
- )
-}
-=======
   return (
     <div className="h-full flex flex-col">
       <div className="mb-6">
         <h4 className="text-[13px] font-bold text-[#1A2B56] dark:text-blue-400 uppercase tracking-widest mb-1">Repair Quality Analytics</h4>
         <p className="text-[10px] text-slate-500 font-medium tracking-wide">Strategic breakdown of equipment resolution outcomes</p>
       </div>
->>>>>>> origin/logic-admin
 
       {total === 0 ? (
         <div className="flex-1 flex items-center justify-center opacity-40">
