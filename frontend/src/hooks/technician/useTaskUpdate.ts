@@ -1,5 +1,5 @@
 import { technicianApi } from '@/services/api/technicianApi';
-import { UpdateTaskPayload } from '@/types/technician.types';
+import type { UpdateTaskPayload } from '@/types/technician.types';
 import { useState } from 'react';
 
 export const useTaskUpdate = (taskId: string) => {

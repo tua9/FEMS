@@ -1,0 +1,6 @@
+username,displayName,email,role,password,classCode
+std01,Nguyen Van A,std01@fpt.edu.vn,student,abc@123,SE19C01
+std02,Tran Thi B,std02@fpt.edu.vn,student,abc@123,SE19C01
+lec01,Teacher X,teacherx@fpt.edu.vn,lecturer,abc@123,
+tech01,Tech Y,techy@fpt.edu.vn,technician,abc@123,
+admin02,Admin Z,adminz@fpt.edu.vn,admin,abc@123,

@@ -1,6 +1,6 @@
 import React from 'react';
 import { FileText, ArrowRight } from 'lucide-react';
-import type { ReportHistoryItem, ReportSeverity } from './ReportHistoryTable';
+import type { ReportHistoryItem } from './ReportHistoryTable';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 

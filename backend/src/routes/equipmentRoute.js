@@ -7,6 +7,8 @@ import {
   updateEquipment,
   deleteEquipment,
   getEquipmentInventory,
+  getEquipmentCategories,
+  markEquipmentBroken,
 } from '../controllers/equipmentController.js'
 import { restrictTo, protectedRoute } from '../middlewares/authMiddlewares.js'
 
@@ -14,6 +16,7 @@ const router = express.Router()
 
 // Guest / All routes
 router.get('/code/:code', getEquipmentByCode)
+router.get('/categories', getEquipmentCategories)
 router.get('/inventory', getEquipmentInventory)
 router.get('/', getAllEquipment)
 router.get('/:id', getEquipmentById)
@@ -22,6 +25,7 @@ router.get('/:id', getEquipmentById)
 router.use(protectedRoute)
 router.post('/', restrictTo('admin', 'technician'), createEquipment)
 router.put('/:id', restrictTo('admin', 'technician'), updateEquipment)
+router.patch('/:id/mark-broken', restrictTo('admin', 'technician'), markEquipmentBroken)
 router.patch('/:id', restrictTo('admin', 'technician'), updateEquipment)
 router.delete('/:id', restrictTo('admin', 'technician'), deleteEquipment)
 

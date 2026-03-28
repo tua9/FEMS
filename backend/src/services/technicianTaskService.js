@@ -18,34 +18,45 @@ const mapPriority = (p) => {
 
 const mapStatus = (s) => {
   const v = String(s || '').toLowerCase()
-  if (v === 'pending') return 'Pending'
-  if (v === 'approved') return 'Approved'
-  if (v === 'processing') return 'In Progress'
-  if (v === 'fixed') return 'Completed'
-  if (v === 'rejected') return 'Rejected'
-  if (v === 'cancelled') return 'Cancelled'
-  return 'Pending'
+  if (v === 'pending') return 'pending'
+  if (v === 'approved') return 'approved'
+  if (v === 'processing') return 'processing'
+  if (v === 'fixed') return 'fixed'
+  if (v === 'rejected') return 'rejected'
+  if (v === 'cancelled') return 'cancelled'
+  return 'pending'
 }
 
 const getTasks = async () => {
   const reports = await Report.find()
     .populate({ path: 'equipment_id', select: 'name category' })
-    .populate({ path: 'room_id', select: 'name floor building_id' })
-    .populate({ path: 'room_id', populate: { path: 'building_id', select: 'name' } })
+    .populate({ path: 'room_id', select: 'name floor buildingId' })
+    .populate({ path: 'room_id', populate: { path: 'buildingId', select: 'name' } })
     .populate({ path: 'user_id', select: 'displayName email username' })
 
   return reports.map((r) => {
     const roomName = r.room_id?.name || 'N/A'
     const equipmentName = r.equipment_id?.name || null
+    const equipmentCategory = r.equipment_id?.category || 'Other'
 
-    const buildingName = r.room_id?.building_id?.name || 'N/A'
+    const buildingName = r.room_id?.buildingId?.name || 'N/A'
 
     const reporterName = r.user_id?.displayName || r.user_id?.username || 'Unknown'
 
+    // Title and category for the task
+    const taskTitle = equipmentName || roomName || 'Untitled'
+    const taskCategory = equipmentCategory
+
     return {
       id: toTaskId6(r._id),
+      reportId: String(r._id),
+      code: r.code,
+      type: r.type,
+      title: taskTitle,
+      category: taskCategory,
       equipment: equipmentName || roomName,
       issue: r.description || '',
+      description: r.description || '',
       priority: mapPriority(r.priority),
       status: mapStatus(r.status),
       location: {

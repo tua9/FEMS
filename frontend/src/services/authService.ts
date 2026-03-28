@@ -16,6 +16,7 @@ export const authService = {
 
   fetchUserProfile: async () => {
     const response = await api.get("/auth/me");
+    // Backend returns user directly in response.data
     return response.data;
   },
 
@@ -49,5 +50,14 @@ export const authService = {
   changePassword: async (currentPassword: string, newPassword: string) => {
     const response = await api.post("/auth/change-password", { currentPassword, newPassword });
     return response.data;
-  }
+  },
+
+  signInWithGoogle: async (accessToken: string) => {
+    const response = await api.post(
+      "/auth/google",
+      { accessToken },
+      { withCredentials: true },
+    );
+    return response.data;
+  },
 };

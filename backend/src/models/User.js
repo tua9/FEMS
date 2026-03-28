@@ -1,5 +1,7 @@
 import mongoose from 'mongoose'
 
+const { ObjectId } = mongoose.Schema.Types
+
 const userSchema = new mongoose.Schema(
   {
     username: {
@@ -18,7 +20,11 @@ const userSchema = new mongoose.Schema(
     },
     hashedPassword: {
       type: String,
-      required: true,
+      default: null,
+    },
+    googleId: {
+      type: String,
+      default: null,
     },
     displayName: {
       type: String,
@@ -53,6 +59,12 @@ const userSchema = new mongoose.Schema(
     isActive: {
       type: Boolean,
       default: true,
+    },
+    // Only relevant for students — links to their academic class
+    classId: {
+      type: ObjectId,
+      ref: 'Class',
+      default: null,
     },
   },
   { timestamps: true },

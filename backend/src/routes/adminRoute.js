@@ -5,6 +5,10 @@ import {
   getHealthStatus,
   getRecentBorrowRequests,
   getRecentDamageReports,
+  getEquipmentAnalytics,
+  getReportAnalytics,
+  getTechnicianPerformance,
+  getActiveBorrowing,
 } from '../controllers/adminController.js'
 import { protectedRoute, restrictTo } from '../middlewares/authMiddlewares.js'
 
@@ -16,5 +20,9 @@ router.get('/dashboard/chart', getDashboardChart)
 router.get('/dashboard/health', getHealthStatus)
 router.get('/dashboard/borrow-requests', getRecentBorrowRequests)
 router.get('/dashboard/damage-reports', getRecentDamageReports)
+router.get('/dashboard/equipment-analytics', getEquipmentAnalytics)
+router.get('/dashboard/report-analytics', getReportAnalytics)
+router.get('/dashboard/technician-performance', getTechnicianPerformance)
+router.get('/borrowing/active', getActiveBorrowing)
 
 export default router

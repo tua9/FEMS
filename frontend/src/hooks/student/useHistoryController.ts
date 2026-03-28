@@ -84,7 +84,7 @@ export function useHistoryController(ITEMS_PER_PAGE: number = 6) {
   const handleCancelReport = async (item: Report) => {
     if (!window.confirm(`Bạn có chắc muốn hủy báo cáo #${item._id.slice(-6).toUpperCase()}?`)) return;
     try {
-      await cancelMyReport(item._id);
+      await cancelMyReport(item._id, '');
     } catch {
       // Error already stored in store
     }

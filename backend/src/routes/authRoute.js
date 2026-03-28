@@ -8,6 +8,7 @@ import {
   verifyResetToken,
   resetPassword,
   changePassword,
+  googleSignIn,
 } from '../controllers/authController.js'
 import { getUserProfile, updateOwnProfile } from '../controllers/userController.js'
 import { protectedRoute } from '../middlewares/authMiddlewares.js'
@@ -16,6 +17,7 @@ const router = express.Router()
 
 router.post('/signup', signUp)
 router.post('/signin', signIn)
+router.post('/google', googleSignIn)
 router.post('/logout', signOut)
 router.post('/refresh-token', refreshToken)
 router.post('/forgot-password', forgotPassword)

@@ -15,7 +15,10 @@ import equipmentRouters from './routes/equipmentRoute.js'
 import adminRoutes from './routes/adminRoute.js'
 import dashboardRoutes from './routes/dashboardRoute.js'
 import scheduleRoutes from './routes/scheduleRoute.js'
+import classRoutes from './routes/classRoute.js'
 import notificationRoutes from './routes/notificationRoute.js'
+import attendanceRoutes from './routes/attendanceRoute.js'
+import slotRoutes from './routes/slotRoute.js'
 import technicianRoutes from './routes/technicianRoute.js'
 import uploadRoutes from './routes/uploadRoute.js'
 import aiRoute from './routes/aiRoute.js'
@@ -54,6 +57,9 @@ app.use('/api/rooms', roomRouters)
 // Lecturer/Dashboard specific routes
 app.use('/api/dashboard', dashboardRoutes)
 app.use('/api/schedules', scheduleRoutes)
+app.use('/api/classes', classRoutes)
+app.use('/api/attendance', attendanceRoutes)
+app.use('/api/slots', slotRoutes)
 app.use('/api/notifications', notificationRoutes)
 
 import { errorHandlingMiddleware } from './middlewares/errorMiddleware.js'

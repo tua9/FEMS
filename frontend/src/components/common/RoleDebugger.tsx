@@ -20,7 +20,7 @@ const RoleDebugger: React.FC = () => {
     return () => window.removeEventListener('storage', handleStorage);
   }, []);
 
-  if (process.env.NODE_ENV === 'production') return null;
+  if (typeof process === 'undefined' || process.env.NODE_ENV === 'production') return null;
 
   return (
     <div className="fixed bottom-4 left-4 z-50 bg-black/80 text-white px-4 py-2 rounded-lg text-xs font-mono">

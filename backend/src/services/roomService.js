@@ -2,78 +2,88 @@ import { StatusCodes } from 'http-status-codes'
 import mongoose from 'mongoose'
 import Room from '../models/Room.js'
 import ApiError from '../utils/ApiError.js'
-import Equipment from '../models/Equipment.js'
 
 const createRoom = async (body) => {
-  const { name, type, status, building_id } = body
+  const { name, type, status, buildingId, floor, labels } = body
 
   if (!name || name.trim() === '') {
     throw new ApiError(StatusCodes.BAD_REQUEST, 'Name is required')
   }
 
-  const isExistRoom = await Room.findOne({ name, building_id })
+  const isExistRoom = await Room.findOne({ name: name.trim(), buildingId })
   if (isExistRoom) {
-    throw new ApiError(
-      StatusCodes.CONFLICT,
-      'Room already exists in this building',
-    )
+    throw new ApiError(StatusCodes.CONFLICT, 'Room already exists in this building')
   }
 
   const newRoom = await Room.create({
     name: name.trim(),
     type,
     status,
-    building_id,
+    buildingId: buildingId || null,
+    floor: floor ?? 1,
+    labels: labels || [],
   })
 
-  return {
-    message: 'Create room success',
-    room_id: newRoom._id,
-  }
+  return { message: 'Room created', roomId: newRoom._id }
 }
 
 const getAllRooms = async () => {
-  return await Room.find().populate('building_id')
+  return Room.find().populate('buildingId', 'name')
 }
 
 const getRoomById = async (id) => {
-  const room = await Room.findById(id).populate('building_id')
-  if (!room) {
-    throw new ApiError(StatusCodes.NOT_FOUND, 'Room not found')
-  }
+  const room = await Room.findById(id).populate('buildingId', 'name')
+  if (!room) throw new ApiError(StatusCodes.NOT_FOUND, 'Room not found')
   return room
 }
 
 const updateRoom = async (id, body) => {
-  const { name, type, status, building_id } = body
-  const room = await Room.findByIdAndUpdate(
-    id,
-    { name, type, status, building_id },
-    { new: true, runValidators: true },
-  )
-  if (!room) {
-    throw new ApiError(StatusCodes.NOT_FOUND, 'Room not found')
-  }
-  return { message: 'Update success', room }
+  const { name, type, status, buildingId, floor, labels } = body
+  const patch = {}
+  if (name !== undefined) patch.name = name
+  if (type !== undefined) patch.type = type
+  if (status !== undefined) patch.status = status
+  if (buildingId !== undefined) patch.buildingId = buildingId
+  if (floor !== undefined) patch.floor = floor
+  if (labels !== undefined) patch.labels = labels
+
+  const room = await Room.findByIdAndUpdate(id, patch, { new: true, runValidators: true })
+  if (!room) throw new ApiError(StatusCodes.NOT_FOUND, 'Room not found')
+  return { message: 'Room updated', room }
 }
 
 const getRoomsByBuilding = async (buildingId) => {
-  return await Room.find({ building_id: buildingId }).populate('building_id')
+  // Primary (current model): buildingId
+  let rooms = await Room.find({ buildingId }).populate('buildingId', 'name')
+
+  // Backward-compatibility: some databases store the building reference as `building_id` (snake_case).
+  // Since `building_id` is stored as an ObjectId, cast the incoming string to ObjectId.
+  if (!rooms || rooms.length === 0) {
+    const oid = mongoose.Types.ObjectId.isValid(buildingId)
+      ? new mongoose.Types.ObjectId(buildingId)
+      : buildingId
+
+    rooms = await Room.find({ building_id: oid }).populate('buildingId', 'name')
+  }
+
+  return rooms
 }
 
 const deleteRoom = async (id) => {
   const room = await Room.findByIdAndDelete(id)
-  if (!room) {
-    throw new ApiError(StatusCodes.NOT_FOUND, 'Room not found')
-  }
-  return { message: 'Delete success' }
+  if (!room) throw new ApiError(StatusCodes.NOT_FOUND, 'Room not found')
+  return { message: 'Room deleted' }
 }
 
+/**
+ * Room status center — groups rooms by building with equipment health summary.
+ * Equipment join uses the new roomId field.
+ */
 const getRoomStatusCenter = async (queries) => {
-  const { building_id, floor, equipmentStatus } = queries
+  const { buildingId, floor, equipmentStatus } = queries
 
   const matchQuery = {}
-  if (building_id) matchQuery.building_id = new mongoose.Types.ObjectId(building_id)
+  if (buildingId) matchQuery.buildingId = new mongoose.Types.ObjectId(buildingId)
   if (floor) matchQuery.floor = Number(floor)
 
   const pipeline = [
@@ -81,17 +91,17 @@ const getRoomStatusCenter = async (queries) => {
     {
       $lookup: {
         from: 'buildings',
-        localField: 'building_id',
+        localField: 'buildingId',
         foreignField: '_id',
         as: 'building',
       },
     },
-    { $unwind: '$building' },
+    { $unwind: { path: '$building', preserveNullAndEmptyArrays: true } },
     {
       $lookup: {
         from: 'equipment',
         localField: '_id',
-        foreignField: 'room_id',
+        foreignField: 'roomId',
         as: 'equipmentItems',
       },
     },
@@ -137,7 +147,6 @@ const getRoomStatusCenter = async (queries) => {
             ' PCS OPERATIONAL',
           ],
         },
-        // Get top 3 representative equipment for display on card
         displayEquipment: {
           $map: {
             input: { $slice: ['$equipmentItems', 3] },
@@ -161,7 +170,6 @@ const getRoomStatusCenter = async (queries) => {
     },
   ]
 
-  // Apply equipment status filter if provided
   if (equipmentStatus) {
     if (equipmentStatus === 'faulty') {
       pipeline.push({ $match: { faultyEquipment: { $gt: 0 } } })
@@ -172,11 +180,10 @@ const getRoomStatusCenter = async (queries) => {
     }
   }
 
-  // Final step: Group by building name
   pipeline.push({
     $group: {
       _id: '$building.name',
-      buildingId: { $first: '$building_id' },
+      buildingId: { $first: '$buildingId' },
       buildingName: { $first: '$building.name' },
       rooms: {
         $push: {
@@ -194,7 +201,7 @@ const getRoomStatusCenter = async (queries) => {
     },
   })
 
-  return await Room.aggregate(pipeline)
+  return Room.aggregate(pipeline)
 }
 
 export const roomService = {

@@ -371,9 +371,80 @@ const changePassword = async (userId, { currentPassword, newPassword }) => {
   return { message: 'Password changed successfully' }
 }
 
+const signInWithGoogle = async ({ accessToken }) => {
+  if (!accessToken) {
+    throw new ApiError(StatusCodes.BAD_REQUEST, 'Google access token is required')
+  }
+
+  // 1. Verify token & get user info from Google
+  let googlePayload
+  try {
+    const response = await fetch(
+      `https://www.googleapis.com/oauth2/v3/userinfo`,
+      { headers: { Authorization: `Bearer ${accessToken}` } }
+    )
+    if (!response.ok) throw new Error('Google token invalid')
+    googlePayload = await response.json()
+  } catch {
+    throw new ApiError(StatusCodes.UNAUTHORIZED, 'Invalid Google access token')
+  }
+
+  const { sub: googleId, email, name, picture } = googlePayload
+
+  console.log(`[AUTH] Google Login Attempt: ${email}`)
+
+  // 2. Find existing user by email
+  const user = await User.findOne({ email })
+  if (!user) {
+    console.error(`[AUTH] Google Login Fail: USER_NOT_FOUND - ${email}`)
+    throw new ApiError(
+      StatusCodes.NOT_FOUND,
+      'This Google account is not registered in the system. Please contact admin.'
+    )
+  }
+
+  // 3. Guard: inactive account
+  if (user.isActive === false) {
+    console.error(`[AUTH] Google Login Fail: USER_INACTIVE - ${email}`)
+    throw new ApiError(StatusCodes.FORBIDDEN, 'Your account is deactivated. Please contact admin.')
+  }
+
+  // 4. Link googleId on first Google login
+  if (!user.googleId) {
+    user.googleId = googleId
+    if (!user.avatarUrl && picture) {
+      user.avatarUrl = picture
+    }
+    await user.save()
+  }
+
+  // 5. Success Flow: same as normal signIn
+  const userInfo = {
+    _id: user._id,
+    username: user.username,
+    role: user.role,
+  }
+
+  const { accessToken: femsAccessToken, refreshToken: femsRefreshToken } = await generateTokens(userInfo)
+  await createSession(user._id, femsRefreshToken)
+
+  console.log(`[AUTH] Google Login Success: ${email} (Role: ${user.role})`)
+
+  return {
+    status: 'success',
+    data: {
+      userInfo,
+      accessToken: femsAccessToken,
+      refreshToken: femsRefreshToken,
+      displayName: user.displayName,
+    }
+  }
+}
+
 export const authService = {
   signUp,
   signIn,
+  signInWithGoogle,
   signOut,
   refreshToken,
   forgotPassword,

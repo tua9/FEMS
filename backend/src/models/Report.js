@@ -65,6 +65,20 @@ const reportSchema = new mongoose.Schema(
       default: null,
     },
 
+    // Root cause of the damage (set by technician when resolving)
+    cause: {
+      type: String,
+      enum: ['user_error', 'hardware', 'software', 'environment', 'unknown'],
+      default: null,
+    },
+
+    // Repair outcome / technician note (free-form)
+    outcome: {
+      type: String,
+      default: null,
+      trim: true,
+    },
+
     // Auto-generated business code, e.g. RP2603ABC
     code: {
       type: String,

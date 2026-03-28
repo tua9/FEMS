@@ -85,4 +85,15 @@ export const technicianApi = {
     const { data } = await api.get<any[]>(`/tickets`);
     return data;
   },
+
+  // ── Update ticket/report status (Approve / Reject from dashboards & ticket center) ──
+  // IMPORTANT: `id` must be Mongo Report _id and the route lives under reportRoute: /api/tickets/:id/status
+  updateTicketStatus: async (
+    id: string,
+    status: 'pending' | 'approved' | 'rejected' | 'processing' | 'fixed' | 'cancelled',
+    outcome?: string,
+  ): Promise<any> => {
+    const { data } = await api.patch<any>(`/tickets/${id}/status`, { status, outcome });
+    return data;
+  },
 };
