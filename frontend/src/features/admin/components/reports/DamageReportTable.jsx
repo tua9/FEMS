@@ -1,21 +1,21 @@
 import { REPORT_STATUS } from '@/constants';
 
 const DamageReportTable = ({
- reports,
- onOpenDetails,
- onApprove,
- onReject,
- onUndo,
- onAssign,
- onResolve
+    reports,
+    onOpenDetails,
+    onApprove,
+    onReject,
+    onUndo,
+    onAssign,
+    onResolve
 }) => {
 
- const getPriorityStyle = (priority) => {
- const p = priority.toLowerCase();
- if (p === 'high') return 'bg-[#EE4E4E] text-white border-transparent';
- if (p === 'medium') return 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 border-amber-200 dark:border-amber-800/50';
- return 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 border-blue-100 dark:border-blue-800/30';
- };
+    const getPriorityStyle = (priority) => {
+        const p = priority.toLowerCase();
+        if (p === 'high') return 'bg-[#EE4E4E] text-white border-transparent';
+        if (p === 'medium') return 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 border-amber-200 dark:border-amber-800/50';
+        return 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 border-blue-100 dark:border-blue-800/30';
+    };
 
  const getStatusStyle = (status) => {
  switch (status) {
@@ -39,10 +39,10 @@ const DamageReportTable = ({
  }
  };
 
- const rowBg = "bg-white/70 group-hover:bg-white dark:bg-slate-800/60 dark:group-hover:bg-slate-700/80 backdrop-blur-sm transition-colors";
+    const rowBg = "bg-white/70 group-hover:bg-white dark:bg-slate-800/60 dark:group-hover:bg-slate-700/80 backdrop-blur-sm transition-colors";
 
- const renderActions = (report) => {
- const baseBtnClass = "min-h-[40px] px-3 rounded-[14px] transition-all shadow-sm flex items-center justify-center group/btn font-bold uppercase tracking-wider text-[10px] border-2";
+    const renderActions = (report) => {
+        const baseBtnClass = "min-h-[40px] px-3 rounded-[14px] transition-all shadow-sm flex items-center justify-center group/btn font-bold uppercase tracking-wider text-[10px] border-2";
 
  if (report.status === REPORT_STATUS.PENDING) {
  return (
@@ -108,78 +108,95 @@ const DamageReportTable = ({
  );
  }
 
- return <div className="h-10"></div>;
- };
+        return <div className="h-10"></div>;
+    };
 
- return (
- <div>
- <table className="w-full text-left border-separate border-spacing-y-3 table-fixed">
- <colgroup>
- <col className="w-[15%]" />
- <col className="w-[25%]" />
- <col className="w-[25%]" />
- <col className="w-[18%]" />
- <col className="w-[17%]" />
- </colgroup>
- <thead>
- <tr className="text-slate-800 dark:text-slate-300">
- <th className="px-3 pb-2 text-[10px] font-semibold uppercase tracking-[0.15em] opacity-80">Report ID & Date</th>
- <th className="px-3 pb-2 text-[10px] font-semibold uppercase tracking-[0.15em] opacity-80">Equipment Issue</th>
- <th className="px-3 pb-2 text-[10px] font-semibold uppercase tracking-[0.15em] opacity-80">Reported By</th>
- <th className="px-3 pb-2 text-[10px] font-semibold uppercase tracking-[0.15em] opacity-80 text-center">Status & Priority</th>
- <th className="px-3 pb-2 text-[10px] font-semibold uppercase tracking-[0.15em] opacity-80 text-right pr-6">Actions</th>
- </tr>
- </thead>
- <tbody>
- {reports.map(report => {
- const eqName = typeof report.equipment_id === 'object' ? report.equipment_id?.name : 'General Issue';
- const reporterName = typeof report.user_id === 'object' ? report.user_id?.displayName || report.user_id?.username : 'Unknown';
- 
- return (
- <tr key={report._id} className="group cursor-pointer" onClick={() => onOpenDetails && onOpenDetails(report)}>
- <td className={`p-4 rounded-l-[24px] ${rowBg}`}>
- <div className="space-y-1">
- <div className="font-semibold text-xs text-[#1A2B56] dark:text-blue-400">{report._id.slice(-8).toUpperCase()}</div>
- <div className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">{new Date(report.createdAt || '').toLocaleDateString()}</div>
- </div>
- </td>
- <td className={`p-4 ${rowBg}`}>
- <div className="flex flex-col justify-center min-h-[44px] max-w-[300px]">
- <div className="text-xs font-semibold text-slate-800 dark:text-white mb-1 truncate">{eqName}</div>
- <div className="text-[10px] text-slate-600 dark:text-slate-400 line-clamp-2 leading-relaxed break-words">{report.description}</div>
- </div>
- </td>
- <td className={`p-4 ${rowBg}`}>
- <div className="flex items-center gap-2.5 h-full">
- <div className="w-8 h-8 rounded-full bg-[#1A2B56] text-white flex items-center justify-center font-semibold text-xs flex-shrink-0">
- {(reporterName || 'U').charAt(0)}
- </div>
- <span className="text-xs font-semibold text-slate-700 dark:text-slate-300 truncate">{reporterName || 'Unknown'}</span>
- </div>
- </td>
- <td className={`p-4 ${rowBg}`}>
- <div className="flex flex-col items-center gap-2 h-full justify-center">
- <span className="w-full max-w-[120px] py-1.5 flex items-center justify-center gap-2 rounded-full text-[9px] font-semibold uppercase tracking-widest bg-slate-100/50 dark:bg-slate-800/50 text-slate-600 dark:text-slate-400">
- <span className={`w-2 h-2 rounded-full flex-shrink-0 ${getStatusStyle(report.status)}`}></span>
- {getStatusLabel(report.status)}
- </span>
- <span className={`w-full max-w-[120px] py-1 flex items-center justify-center rounded-full text-[8px] font-semibold uppercase tracking-[0.15em] border ${getPriorityStyle(report.priority)}`}>
- {report.priority}
- </span>
- </div>
- </td>
- <td className={`p-4 rounded-r-[24px] text-right pr-6 ${rowBg}`} onClick={e => e.stopPropagation()}>
- <div className="flex justify-end min-w-max">
- {renderActions(report)}
- </div>
- </td>
- </tr>
- );
- })}
- </tbody>
- </table>
- </div>
- );
+    return (
+        <div>
+            <table className="w-full text-left border-separate border-spacing-y-3 table-fixed">
+                <colgroup>
+                    <col className="w-[14%]" />
+                    <col className="w-[21%]" />
+                    <col className="w-[17%]" />
+                    <col className="w-[14%]" />
+                    <col className="w-[16%]" />
+                    <col className="w-[18%]" />
+                </colgroup>
+                <thead>
+                    <tr className="text-slate-800 dark:text-slate-300">
+                        <th className="px-3 pb-2 text-[10px] font-semibold uppercase tracking-[0.15em] opacity-80">Report ID & Date</th>
+                        <th className="px-3 pb-2 text-[10px] font-semibold uppercase tracking-[0.15em] opacity-80">Equipment Issue</th>
+                        <th className="px-3 pb-2 text-[10px] font-semibold uppercase tracking-[0.15em] opacity-80">Reported By</th>
+                        <th className="px-3 pb-2 text-[10px] font-semibold uppercase tracking-[0.15em] opacity-80">Assigned To</th>
+                        <th className="px-3 pb-2 text-[10px] font-semibold uppercase tracking-[0.15em] opacity-80 text-center">Status & Priority</th>
+                        <th className="px-3 pb-2 text-[10px] font-semibold uppercase tracking-[0.15em] opacity-80 text-right pr-6">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {reports.map(report => {
+                        const eqName = typeof report.equipment_id === 'object' ? report.equipment_id?.name : 'General Issue';
+                        const reporterName = typeof report.user_id === 'object' ? report.user_id?.displayName || report.user_id?.username : 'Unknown';
+                        const assigneeName = report.assigned_to?.displayName || report.assigned_to?.username || 'Unassigned';
+
+                        return (
+                            <tr key={report._id} className="group cursor-pointer" onClick={() => onOpenDetails && onOpenDetails(report)}>
+                                <td className={`p-4 rounded-l-[24px] ${rowBg}`}>
+                                    <div className="space-y-1">
+                                        <div className="font-semibold text-xs text-[#1A2B56] dark:text-blue-400">{report._id.slice(-8).toUpperCase()}</div>
+                                        <div className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">{new Date(report.createdAt || '').toLocaleDateString()}</div>
+                                    </div>
+                                </td>
+                                <td className={`p-4 ${rowBg}`}>
+                                    <div className="flex flex-col justify-center min-h-[44px] max-w-[300px]">
+                                        <div className="text-xs font-semibold text-slate-800 dark:text-white mb-1 truncate">{eqName}</div>
+                                        <div className="text-[10px] text-slate-600 dark:text-slate-400 line-clamp-2 leading-relaxed break-words">{report.description}</div>
+                                    </div>
+                                </td>
+                                <td className={`p-4 ${rowBg}`}>
+                                    <div className="flex items-center gap-2.5 h-full">
+                                        <div className="w-8 h-8 rounded-full bg-[#1A2B56] text-white flex items-center justify-center font-semibold text-xs flex-shrink-0">
+                                            {(reporterName || 'U').charAt(0)}
+                                        </div>
+                                        <span className="text-xs font-semibold text-slate-700 dark:text-slate-300 truncate">{reporterName || 'Unknown'}</span>
+                                    </div>
+                                </td>
+                                <td className={`p-4 ${rowBg}`}>
+                                    <div className="flex items-center gap-2.5 h-full">
+                                        {assigneeName === 'Unassigned' ? (
+                                            <span className="text-xs font-medium italic text-slate-300 dark:text-slate-500">Unassigned</span>
+                                        ) : (
+                                            <>
+                                                <div className="w-8 h-8 rounded-full flex items-center justify-center font-semibold text-xs flex-shrink-0 bg-emerald-600 text-white shadow-sm">
+                                                    {assigneeName.charAt(0)}
+                                                </div>
+                                                <span className="text-xs font-semibold truncate text-slate-700 dark:text-slate-300">{assigneeName}</span>
+                                            </>
+                                        )}
+                                    </div>
+                                </td>
+                                <td className={`p-4 ${rowBg}`}>
+                                    <div className="flex flex-col items-center gap-2 h-full justify-center">
+                                        <span className="w-full max-w-[120px] py-1.5 flex items-center justify-center gap-2 rounded-full text-[9px] font-semibold uppercase tracking-widest bg-slate-100/50 dark:bg-slate-800/50 text-slate-600 dark:text-slate-400">
+                                            <span className={`w-2 h-2 rounded-full flex-shrink-0 ${getStatusStyle(report.status)}`}></span>
+                                            {getStatusLabel(report.status)}
+                                        </span>
+                                        <span className={`w-full max-w-[120px] py-1 flex items-center justify-center rounded-full text-[8px] font-semibold uppercase tracking-[0.15em] border ${getPriorityStyle(report.priority)}`}>
+                                            {report.priority}
+                                        </span>
+                                    </div>
+                                </td>
+                                <td className={`p-4 rounded-r-[24px] text-right pr-6 ${rowBg}`} onClick={e => e.stopPropagation()}>
+                                    <div className="flex justify-end min-w-[100px]">
+                                        {renderActions(report)}
+                                    </div>
+                                </td>
+                            </tr>
+                        );
+                    })}
+                </tbody>
+            </table>
+        </div>
+    );
 };
 
 export default DamageReportTable;

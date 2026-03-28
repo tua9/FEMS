@@ -3,11 +3,11 @@ import User from '../models/User.js'
 import ApiError from '../utils/ApiError.js'
 
 const getAllUsers = async () => {
-  return await User.find().select('-hashedPassword')
+  return await User.find().select('-hashedPassword').populate('classId', 'code name')
 }
 
 const getUserById = async (id) => {
-  const user = await User.findById(id).select('-hashedPassword')
+  const user = await User.findById(id).select('-hashedPassword').populate('classId', 'code name')
   if (!user) {
     throw new ApiError(StatusCodes.NOT_FOUND, 'User not found')
   }
@@ -18,7 +18,7 @@ const updateUser = async (id, body) => {
   const user = await User.findByIdAndUpdate(id, body, {
     new: true,
     runValidators: true,
-  }).select('-hashedPassword')
+  }).select('-hashedPassword').populate('classId', 'code name')
 
   if (!user) {
     throw new ApiError(StatusCodes.NOT_FOUND, 'User not found')
@@ -37,7 +37,7 @@ const deleteUser = async (id) => {
 import bcrypt from 'bcrypt'
 
 const createUser = async (body) => {
-  const { username, email, password, role, displayName } = body
+  const { username, email, password, role, displayName, classId, avatarUrl, avatarId } = body
 
   if (!username || !email || !password || !role || !displayName) {
     throw new ApiError(StatusCodes.BAD_REQUEST, 'All fields are required!')
@@ -62,13 +62,17 @@ const createUser = async (body) => {
     hashedPassword,
     role,
     displayName,
+    classId: classId || null,
+    avatarUrl,
+    avatarId,
   })
 
-  // Return user without password
-  const userResponse = newUser.toObject()
-  delete userResponse.hashedPassword
+  // Populate the user with class info before returning
+  const populatedUser = await User.findById(newUser._id)
+    .select('-hashedPassword')
+    .populate('classId', 'code name');
 
-  return { message: 'User created successfully', user: userResponse }
+  return { message: 'User created successfully', user: populatedUser }
 }
 
 const getUserProfile = async (id) => {
