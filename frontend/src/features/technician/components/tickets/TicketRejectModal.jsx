@@ -20,7 +20,9 @@ const TicketRejectModal = ({ ticket, onClose, onConfirm }) => {
 
  const handleConfirm = () => {
  if (!reason) { setError('Please select a reason for rejection.'); return; }
- onConfirm(ticket.id);
+
+ const fullNote = [reason, note].map((s) => String(s || '').trim()).filter(Boolean).join(' — ');
+ onConfirm(ticket.id, fullNote);
  onClose();
  };
 
@@ -87,9 +89,9 @@ const TicketRejectModal = ({ ticket, onClose, onConfirm }) => {
  : 'border-slate-200 bg-slate-50 text-slate-600 hover:bg-white hover:border-slate-300'
  }`}
  >
- <span className={`w-4 h-4 rounded-full border-2 flex-shrink-0 flex items-center justify-center ${
+ <span className={`w-4 h-4 rounded-full border-2 shrink-0 flex items-center justify-center ${
  reason === r ? 'border-rose-500' : 'border-slate-300'
- }`}>
+}`}>
  {reason === r && <span className="w-2 h-2 rounded-full bg-rose-500 block" />}
  </span>
  {r}

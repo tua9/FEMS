@@ -68,7 +68,7 @@ const TicketApproveModal = ({ ticket, onClose, onConfirm }) => {
  </button>
  <button
  type="button"
- onClick={() => { onConfirm(ticket.id); onClose(); }}
+ onClick={() => { onConfirm(ticket.id, note); onClose(); }}
  className={BTN_PRIMARY}
  >
  <span className="material-symbols-outlined text-base">check_circle</span>

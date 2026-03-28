@@ -1,6 +1,5 @@
 import React from 'react';
 import {
- getPriorityStyle,
  getStatusDisplay,
 } from '@/mocks/technician/mockTickets';
 
@@ -11,7 +10,7 @@ const Avatar = ({
  {src ? (
  <img src={src} alt={initials} className="w-8 h-8 rounded-full border border-white object-cover" />
  ) : (
- <div className="w-8 h-8 rounded-full bg-slate-200 border border-white flex items-center justify-center text-[10px] font-bold text-slate-700 flex-shrink-0">
+ <div className="w-8 h-8 rounded-full bg-slate-200 border border-white flex items-center justify-center text-[10px] font-bold text-slate-700 shrink-0">
  {initials}
  </div>
  )}
@@ -80,9 +79,10 @@ const ActionButtons = ({ id, status, onView, onApprove, onReject, onStartRepair,
  return <div className="flex justify-end">{viewBtn}</div>;
 };
 
-// Column header changes for "In Progress" tab (Technician Assigned instead of Reporter)
-const HEADERS_DEFAULT = ['Ticket ID', 'Equipment', 'Room', 'Reporter', 'Priority', 'Status', 'Actions'];
-const HEADERS_IN_PROGRESS = ['Ticket ID', 'Equipment', 'Room', 'Technician Assigned', 'Priority', 'Status', 'Actions'];
+// Column header changes for "In Progress" tab
+const HEADERS_DEFAULT = ['Ticket ID', 'Equipment', 'Room', 'Reporter', 'Status', 'Actions'];
+// In Progress: show assigned technician under a header named "Reporter" per request
+const HEADERS_IN_PROGRESS = ['Ticket ID', 'Equipment', 'Room', 'Reporter', 'Status', 'Actions'];
 
 const TicketTable = ({
  tickets,
@@ -114,7 +114,6 @@ const TicketTable = ({
  <col style={{ width: '220px' }} /> {/* Equipment */}
  <col style={{ width: '170px' }} /> {/* Room */}
  <col style={{ width: '200px' }} /> {/* Reporter / Assignee */}
- <col style={{ width: '110px' }} /> {/* Priority */}
  <col style={{ width: '140px' }} /> {/* Status */}
  <col style={{ width: '240px' }} /> {/* Actions */}
  </colgroup>
@@ -141,7 +140,7 @@ const TicketTable = ({
  <tbody className="text-sm">
  {paged.map((ticket, rowIdx) => {
  const statusDisplay = getStatusDisplay(ticket.status);
- const person = activeStatus === 'In Progress' ? ticket.assignee : ticket.reporter;
+ const person = activeStatus === 'In Progress' ? ticket.reporter : ticket.reporter;
 
  return (
  <tr
@@ -169,20 +168,13 @@ const TicketTable = ({
  {/* Room */}
  <td className="px-5 py-6 text-slate-600 dark:text-slate-300 font-medium truncate">{ticket.room}</td>
 
- {/* Reporter / Assignee */}
+ {/* Reporter */}
  <td className="px-5 py-6">
  {person ? (
  <Avatar name={person.name} initials={person.initials} src={'avatar' in person ? person.avatar : undefined} />
  ) : (
  <span className="text-slate-400 text-xs">—</span>
  )}
- </td>
-
- {/* Priority */}
- <td className="px-5 py-6">
- <span className={`px-3 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider ${getPriorityStyle(ticket.priority)}`}>
- {ticket.priority}
- </span>
  </td>
 
  {/* Status — badge style */}
@@ -192,7 +184,7 @@ const TicketTable = ({
  style={{ background: statusDisplay.bgColor, color: statusDisplay.textColor }}
  >
  <span
- className="w-1.5 h-1.5 rounded-full flex-shrink-0"
+ className="w-1.5 h-1.5 rounded-full shrink-0"
  style={{ background: statusDisplay.dotColor }}
  ></span>
  {statusDisplay.label}

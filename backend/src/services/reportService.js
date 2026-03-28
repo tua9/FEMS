@@ -105,14 +105,22 @@ const cancelReport = async (id, userId, decisionNote) => {
   return { message: 'Report cancelled', report }
 }
 
-const updateReportStatus = async (id, status, approverId, technicianId) => {
+const updateReportStatus = async (id, status, approverId, technicianId, outcomeNote) => {
   const allowed = ['pending', 'approved', 'rejected', 'processing', 'fixed', 'cancelled']
   if (!allowed.includes(status)) throw new ApiError(StatusCodes.BAD_REQUEST, 'Invalid status')
 
-  const report = await Report.findById(id).populate('equipment_id', 'code name')
+  const report = await Report.findById(id)
+    .populate('equipment_id', 'code name')
+    .populate('user_id', 'role displayName username')
   if (!report) throw new ApiError(StatusCodes.NOT_FOUND, 'Report not found')
 
   report.status = status
+
+  // Optional free-form note stored in outcome (technician comment)
+  if (typeof outcomeNote === 'string') {
+    const trimmed = outcomeNote.trim()
+    report.outcome = trimmed.length ? trimmed : null
+  }
 
   if (status === 'processing' && technicianId) {
     report.assigned_to = technicianId
@@ -143,29 +151,42 @@ const updateReportStatus = async (id, status, approverId, technicianId) => {
     if (eqStatus) await Equipment.findByIdAndUpdate(report.equipment_id, { status: eqStatus })
   }
 
-  // Notify the reporter
+  // Always notify admins whenever a technician changes a report's status
   const reportCode = report.code || report._id.toString().slice(-6).toUpperCase()
-  let notifTitle = 'Report Update'
-  let notifMessage = `Your report #${reportCode} status has been updated to ${status}.`
-
-  if (status === 'approved' || status === 'processing') {
-    notifTitle = 'Report Being Processed'
-    notifMessage = `Your report #${reportCode} is being processed.`
-  } else if (status === 'fixed') {
-    notifTitle = 'Issue Resolved'
-    notifMessage = `Your reported issue #${reportCode} has been resolved.`
-  } else if (status === 'rejected') {
-    notifTitle = 'Report Rejected'
-    notifMessage = `Your report #${reportCode} was rejected. Please contact the administrator.`
-  }
-
-  await notificationService.createNotification({
-    userId: report.user_id,
+  await notificationService.notifyAdmins({
     type: 'report',
-    title: notifTitle,
-    message: notifMessage,
+    title: 'Technician updated report status',
+    message: `Report #${reportCode} was updated to ${status}${report.outcome ? ` (note: ${report.outcome})` : ''}.`,
     action: { type: 'open_detail', resource: 'report', resourceId: report._id },
-  }).catch(err => console.error('Failed to notify reporter:', err))
+  }).catch(err => console.error('Failed to notify admins:', err))
+
+  // Notify the reporter only if they are student/lecturer
+  const reporterRole = report.user_id?.role
+  const shouldNotifyReporter = reporterRole === 'student' || reporterRole === 'lecturer'
+
+  if (shouldNotifyReporter && report.user_id?._id) {
+    let notifTitle = 'Report Update'
+    let notifMessage = `Your report #${reportCode} status has been updated to ${status}.`
+
+    if (status === 'approved' || status === 'processing') {
+      notifTitle = 'Report Being Processed'
+      notifMessage = `Your report #${reportCode} is being processed.`
+    } else if (status === 'fixed') {
+      notifTitle = 'Issue Resolved'
+      notifMessage = `Your reported issue #${reportCode} has been resolved.${report.outcome ? ` Note: ${report.outcome}` : ''}`
+    } else if (status === 'rejected') {
+      notifTitle = 'Report Rejected'
+      notifMessage = `Your report #${reportCode} was rejected.${report.outcome ? ` Reason: ${report.outcome}` : ''}`
+    }
+
+    await notificationService.createNotification({
+      userId: report.user_id._id,
+      type: 'report',
+      title: notifTitle,
+      message: notifMessage,
+      action: { type: 'open_detail', resource: 'report', resourceId: report._id },
+    }).catch(err => console.error('Failed to notify reporter:', err))
+  }
 
   return { message: 'Status updated', report: await populateReport(Report.findById(id)) }
 }

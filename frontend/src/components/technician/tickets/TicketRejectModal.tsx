@@ -9,7 +9,7 @@ import ModalPortal from '@/components/technician/common/ModalPortal';
 interface Props {
   ticket: Ticket;
   onClose: () => void;
-  onConfirm: (id: string) => void;
+  onConfirm: (id: string, outcomeNote: string) => void;
 }
 
 const REJECT_REASONS = [
@@ -22,12 +22,20 @@ const REJECT_REASONS = [
 
 const TicketRejectModal: React.FC<Props> = ({ ticket, onClose, onConfirm }) => {
   const [reason, setReason] = useState('');
-  const [note,   setNote]   = useState('');
-  const [error,  setError]  = useState('');
+  const [note, setNote] = useState('');
+  const [error, setError] = useState('');
 
   const handleConfirm = () => {
-    if (!reason) { setError('Please select a reason for rejection.'); return; }
-    onConfirm(ticket.id);
+    if (!reason) {
+      setError('Please select a reason for rejection.');
+      return;
+    }
+    const outcomeNote = [reason, note].filter(Boolean).join(' — ').trim();
+    if (!outcomeNote) {
+      setError('Please provide a rejection note.');
+      return;
+    }
+    onConfirm(ticket.id, outcomeNote);
     onClose();
   };
 

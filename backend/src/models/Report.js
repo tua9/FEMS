@@ -72,11 +72,11 @@ const reportSchema = new mongoose.Schema(
       default: null,
     },
 
-    // Repair outcome (set by technician when closing the report)
+    // Repair outcome / technician note (free-form)
     outcome: {
       type: String,
-      enum: ['fixed_internally', 'external_warranty', 'beyond_repair'],
       default: null,
+      trim: true,
     },
 
     // Auto-generated business code, e.g. RP2603ABC

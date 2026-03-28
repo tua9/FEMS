@@ -1,14 +1,20 @@
-import React from 'react';
+import React, { useState } from 'react';
 import type { Ticket } from '@/data/technician/mockTickets';
 import {
   MODAL_OVERLAY, MODAL_CARD, CLOSE_BTN,
-  BTN_SECONDARY,
+  BTN_SECONDARY, SECTION_LABEL, TEXTAREA_CLASS,
 } from '@/components/technician/common/modalStyles';
 
 interface Props {
   ticket: Ticket;
   onClose: () => void;
   onConfirm: (id: string) => void;
+}
+
+interface PropsWithNote {
+  ticket: Ticket;
+  onClose: () => void;
+  onConfirm: (id: string, outcomeNote: string) => void;
 }
 
 // ── Start Repair Confirm Modal ─────────────────────────────────────────────
@@ -82,56 +88,89 @@ export const StartRepairModal: React.FC<Props> = ({ ticket, onClose, onConfirm }
 );
 
 // ── Mark Resolved Confirm Modal ────────────────────────────────────────────
-export const MarkResolvedModal: React.FC<Props> = ({ ticket, onClose, onConfirm }) => (
-  <div className={MODAL_OVERLAY} onClick={onClose}>
-    <div
-      className={`${MODAL_CARD} max-w-sm`}
-      onClick={(e) => e.stopPropagation()}
-    >
-      <div className="px-7 pt-7 pb-5 flex items-start justify-between">
-        <div className="flex items-start gap-4">
-          <div className="w-12 h-12 rounded-xl bg-emerald-500 flex items-center justify-center shrink-0">
-            <span className="material-symbols-outlined text-white text-xl">task_alt</span>
+export const MarkResolvedModal: React.FC<PropsWithNote> = ({ ticket, onClose, onConfirm }) => {
+  const [note, setNote] = useState('');
+  const [error, setError] = useState('');
+
+  const handleConfirm = () => {
+    const trimmed = note.trim();
+    if (!trimmed) {
+      setError('Please add a note about the repair outcome.');
+      return;
+    }
+    onConfirm(ticket.id, trimmed);
+    onClose();
+  };
+
+  return (
+    <div className={MODAL_OVERLAY} onClick={onClose}>
+      <div
+        className={`${MODAL_CARD} max-w-sm`}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="px-7 pt-7 pb-5 flex items-start justify-between">
+          <div className="flex items-start gap-4">
+            <div className="w-12 h-12 rounded-xl bg-emerald-500 flex items-center justify-center shrink-0">
+              <span className="material-symbols-outlined text-white text-xl">task_alt</span>
+            </div>
+            <div>
+              <h2 className="text-base font-extrabold text-slate-800">Mark as Resolved</h2>
+              <p className="text-xs text-slate-400 mt-0.5">#{ticket.id}</p>
+            </div>
           </div>
-          <div>
-            <h2 className="text-base font-extrabold text-slate-800">Mark as Resolved</h2>
-            <p className="text-xs text-slate-400 mt-0.5">#{ticket.id}</p>
+          <button type="button" onClick={onClose} className={CLOSE_BTN}>
+            <span className="material-symbols-outlined text-lg">close</span>
+          </button>
+        </div>
+
+        <div className="mx-7 border-t border-slate-100" />
+
+        <div className="px-7 py-6 space-y-4">
+          <div className="flex items-start gap-3 p-4 rounded-xl bg-emerald-50 border border-emerald-100">
+            <span className="material-symbols-outlined text-emerald-500 text-xl mt-0.5 shrink-0">check_circle</span>
+            <div>
+              <p className="text-sm font-bold text-emerald-700">Confirm completion?</p>
+              <p className="text-xs text-emerald-600 mt-0.5 leading-relaxed">
+                <span className="font-semibold">{ticket.equipment}</span> at{' '}
+                <span className="font-semibold">{ticket.room}</span> will be marked as{' '}
+                <span className="font-semibold">Completed</span>.
+              </p>
+            </div>
+          </div>
+
+          {error && (
+            <div className="flex items-center gap-2 px-4 py-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-600 text-xs font-medium">
+              <span className="material-symbols-outlined text-base">error</span>
+              {error}
+            </div>
+          )}
+
+          <div className="space-y-1.5">
+            <label className={SECTION_LABEL}>Note</label>
+            <textarea
+              value={note}
+              onChange={(e) => { setNote(e.target.value); if (error) setError(''); }}
+              placeholder="Describe what was done / the repair result..."
+              rows={3}
+              className={TEXTAREA_CLASS}
+            />
           </div>
         </div>
-        <button type="button" onClick={onClose} className={CLOSE_BTN}>
-          <span className="material-symbols-outlined text-lg">close</span>
-        </button>
-      </div>
 
-      <div className="mx-7 border-t border-slate-100" />
-
-      <div className="px-7 py-6 space-y-4">
-        <div className="flex items-start gap-3 p-4 rounded-xl bg-emerald-50 border border-emerald-100">
-          <span className="material-symbols-outlined text-emerald-500 text-xl mt-0.5 shrink-0">check_circle</span>
-          <div>
-            <p className="text-sm font-bold text-emerald-700">Confirm completion?</p>
-            <p className="text-xs text-emerald-600 mt-0.5 leading-relaxed">
-              <span className="font-semibold">{ticket.equipment}</span> at{' '}
-              <span className="font-semibold">{ticket.room}</span> will be marked as{' '}
-              <span className="font-semibold">Completed</span>.
-            </p>
-          </div>
+        <div className="px-7 py-5 border-t border-slate-100 flex gap-3">
+          <button type="button" onClick={onClose} className={BTN_SECONDARY}>
+            Cancel
+          </button>
+          <button
+            type="button"
+            onClick={handleConfirm}
+            className="flex-1 py-3 rounded-xl bg-emerald-600 text-white text-sm font-bold hover:bg-emerald-700 active:scale-[0.98] transition-all flex items-center justify-center gap-2 shadow-sm"
+          >
+            <span className="material-symbols-outlined text-base">task_alt</span>
+            Mark Resolved
+          </button>
         </div>
-      </div>
-
-      <div className="px-7 py-5 border-t border-slate-100 flex gap-3">
-        <button type="button" onClick={onClose} className={BTN_SECONDARY}>
-          Cancel
-        </button>
-        <button
-          type="button"
-          onClick={() => { onConfirm(ticket.id); onClose(); }}
-          className="flex-1 py-3 rounded-xl bg-emerald-600 text-white text-sm font-bold hover:bg-emerald-700 active:scale-[0.98] transition-all flex items-center justify-center gap-2 shadow-sm"
-        >
-          <span className="material-symbols-outlined text-base">task_alt</span>
-          Mark Resolved
-        </button>
       </div>
     </div>
-  </div>
-);
+  );
+};
