@@ -1,6 +1,5 @@
 /**
- * NavNotificationBell — Chuông thông báo + dropdown panel.
- * Dùng chung cho tất cả role.
+ * NavNotificationBell — notification bell + dropdown (all roles).
  */
 import React, { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
@@ -10,7 +9,9 @@ import { Link } from "react-router";
 import { useAuthStore } from "@/stores/useAuthStore";
 import { useNotificationStore } from "@/stores/useNotificationStore";
 import { formatDistanceToNow } from "date-fns";
+import { enGB } from "date-fns/locale";
 import { NOTIFICATION_TYPE_CONFIG } from "@/utils/notificationHelper";
+import { localizeNotificationDisplay } from "@/utils/legacyNotificationI18n";
 
 // ── NotificationItem ──────────────────────────────────────────────────────────
 
@@ -20,6 +21,7 @@ const NotificationItem = ({
  onClose,
  role,
 }) => {
+ const { title: displayTitle, message: displayMessage } = localizeNotificationDisplay(notification);
  const { icon, bg, color } = NOTIFICATION_TYPE_CONFIG[notification.type] || NOTIFICATION_TYPE_CONFIG.general;
 
  return (
@@ -56,17 +58,17 @@ const NotificationItem = ({
  : "text-slate-900 dark:text-slate-100"
  }`}
  >
- {notification.title}
+ {displayTitle}
  </p>
  {!notification.isRead && (
  <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-blue-500" />
  )}
  </div>
  <p className="mt-0.5 line-clamp-2 text-xs leading-relaxed text-slate-500 dark:text-slate-400">
- {notification.message}
+ {displayMessage}
  </p>
  <span className="mt-1.5 block text-[0.6875rem] text-slate-400 dark:text-slate-500">
- {formatDistanceToNow(new Date(notification.createdAt), { addSuffix: true })}
+ {formatDistanceToNow(new Date(notification.createdAt), { addSuffix: true, locale: enGB })}
  </span>
  </div>
  </div>
@@ -279,7 +281,7 @@ const NavNotificationBell = () => {
  <CheckCheck className="h-6 w-6 text-emerald-400 dark:text-emerald-500" />
  </div>
  <p className="text-sm font-semibold text-slate-400 dark:text-slate-500">
- Không có thông báo mới
+ No new notifications
  </p>
  </div>
  );
@@ -295,7 +297,7 @@ const NavNotificationBell = () => {
  onClick={() => setIsOpen(false)}
  className="inline-block text-[0.8125rem] font-bold text-[#1E2B58] transition-colors hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300"
  >
- Xem tất cả thông báo →
+ View all notifications →
  </Link>
  </div>
  </motion.div>

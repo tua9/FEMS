@@ -32,7 +32,7 @@ const InfoField = ({ label, value, icon: Icon }) => (
 // ─── UserProfilePage Component ──────────────────────────────────────────────────
 const UserProfilePage = () => {
  const navigate = useNavigate();
- const { user } = useAuthStore();
+ const { user, refreshUserProfile } = useAuthStore();
  const [showEditModal, setShowEditModal] = React.useState(false);
  
  // Data stores
@@ -56,11 +56,26 @@ const UserProfilePage = () => {
  }
  }, [role]);
 
+ useEffect(() => {
+ if (role === "student") {
+ refreshUserProfile();
+ }
+ }, [role, refreshUserProfile]);
+
  const displayName = user?.displayName ?? user?.username ?? "—";
  const avatarUrl = user?.avatarUrl
  ?? `https://ui-avatars.com/api/?name=${encodeURIComponent(displayName)}&background=1E2B58&color=fff&size=200`;
 
  const fields = getInfoFields(role);
+
+ const studentClassLabel = (u) => {
+   const c = u?.classId;
+   if (!c) return "—";
+   if (typeof c === "object") {
+     return c.code || (c._id ? String(c._id) : "—");
+   }
+   return String(c);
+ };
 
  // Dynamic stats calculation
  const getStatValue = (key) => {
@@ -154,6 +169,8 @@ const UserProfilePage = () => {
  
  if (key === "_id" && user?._id) {
  value = user._id.slice(-8).toUpperCase();
+ } else if (key === "studentClass") {
+ value = studentClassLabel(user);
  } else if (user && user[key]) {
  value = String(user[key]);
  }

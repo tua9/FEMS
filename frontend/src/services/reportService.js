@@ -2,7 +2,7 @@ import api from "@/lib/axios";
 export const reportService = {
  create: async (payload)=> {
  const res = await api.post("/tickets/report", payload);
- return res.data.report || res.data;
+ return res.data; // { message, report_id, report }
  },
 
  getPersonalHistory: async ()=> {

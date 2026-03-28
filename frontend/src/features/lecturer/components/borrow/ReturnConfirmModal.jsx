@@ -30,7 +30,7 @@ const ReturnConfirmModal = ({ isOpen, onClose, request, onConfirm, submitting })
     if (!files.length) return;
 
     if (returnFiles.length + files.length > 2) {
-      toast.error('Chỉ được tải lên tối đa 2 ảnh.');
+      toast.error('You can upload at most 2 photos.');
       return;
     }
 

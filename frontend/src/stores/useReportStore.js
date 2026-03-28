@@ -38,26 +38,18 @@ export const useReportStore = create((set, get) => ({
   createReport: async (payload) => {
     try {
       set({ actionLoading: true, error: null });
-      const response = await reportService.create(payload);
-      // Backend returns { message, report, report_id }.
-      // If it's a new report, we can either append it (if full data exists) or refetch.
-      // Based on the merged logic, let's append the returned report and also refetch history to be safe.
-      const newReport = response.report;
+      // Backend returns { message, report_id, report: populated }
+      const data = await reportService.create(payload);
+      const newReport = data?.report;
 
       if (newReport) {
         set((state) => ({
           reports: [newReport, ...state.reports],
-          myReports: [newReport, ...state.myReports]
+          myReports: [newReport, ...state.myReports],
         }));
-      } else {
-        // Only fetch history if there is a logged-in user
-        if (useAuthStore.getState().user) {
-          const freshMyReports = await reportService.getPersonalHistory();
-          set({ myReports: freshMyReports });
-        }
       }
 
-      return response;
+      return data; // always return full { message, report_id, report }
     } catch (error) {
       set({ error: error?.response?.data?.message || "Cannot create report" });
       throw error;

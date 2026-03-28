@@ -638,38 +638,63 @@ export const ReportManualForm = ({
  onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
  onDragLeave={() => setDragOver(false)}
  onDrop={handleDrop}
- onClick={() => fileInputRef.current?.click()}
- className={`relative flex h-[10rem] w-full cursor-pointer flex-col items-center justify-center gap-[0.75rem] rounded-[2rem] border-2 border-dashed transition-all ${dragOver
+ className={`relative flex min-h-[10rem] w-full rounded-[2rem] border-2 border-dashed transition-all ${dragOver
  ? "scale-[1.01] border-[#1E2B58] bg-[#1E2B58]/5 dark:border-sky-400 dark:bg-sky-400/5"
- : "border-white/60 bg-white/40 hover:bg-white/50 dark:border-slate-600 dark:bg-white/5 dark:hover:bg-slate-800/50"
+ : "border-white/60 bg-white/40 dark:border-slate-600 dark:bg-white/5"
  } ${errors.files ? "ring-2 ring-red-400/30 border-red-400/60" : ""}`}
  >
- <div className="group-hover:scale-110 flex h-[2.5rem] w-[2.5rem] items-center justify-center rounded-2xl bg-white shadow-sm transition-transform dark:bg-slate-700/50 border border-slate-100 dark:border-slate-600">
+ {files.length === 0 ? (
+ /* ── Empty state: full clickable area ── */
+ <div
+ onClick={() => fileInputRef.current?.click()}
+ className="flex flex-1 cursor-pointer flex-col items-center justify-center gap-[0.75rem] px-4 py-8 w-full hover:bg-white/10 rounded-[2rem] transition-colors"
+ >
+ <div className="flex h-[2.5rem] w-[2.5rem] items-center justify-center rounded-2xl bg-white shadow-sm dark:bg-slate-700/50 border border-slate-100 dark:border-slate-600">
  <Camera className="h-[1.25rem] w-[1.25rem] text-slate-500 dark:text-slate-400" />
  </div>
- <div className="text-center px-4">
+ <div className="text-center">
  <p className="text-[#1E2B58] text-[0.75rem] font-black uppercase tracking-widest dark:text-white">
- {files.length > 0 ? `${files.length} file${files.length > 1 ? "s" : ""} selected` : "Drag or Click to upload"}
+ Drag or Click to upload
  </p>
  <p className="mt-[0.25rem] text-[0.5rem] font-bold tracking-widest text-slate-400 uppercase dark:text-slate-500">PNG, JPG up to 10MB</p>
  </div>
+ </div>
+ ) : (
+ /* ── Files selected: show previews inside the box ── */
+ <div className="flex flex-wrap items-center gap-3 p-4 w-full">
+ {files.map((file, i) => (
+ <div key={i} className="group relative animate-in fade-in zoom-in-95 duration-200">
+ <img
+ src={URL.createObjectURL(file)}
+ alt={file.name}
+ className="h-24 w-24 rounded-2xl border-2 border-white object-cover shadow-md dark:border-slate-700"
+ />
+ <button
+ type="button"
+ onClick={(e) => { e.stopPropagation(); removeFile(i); }}
+ className="hover:scale-110 active:scale-90 absolute -right-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-white shadow-sm transition-all"
+ >
+ <X className="h-2.5 w-2.5" />
+ </button>
+ </div>
+ ))}
+ {files.length < 2 && (
+ <button
+ type="button"
+ onClick={() => fileInputRef.current?.click()}
+ className="flex h-24 w-24 cursor-pointer flex-col items-center justify-center gap-1.5 rounded-2xl border-2 border-dashed border-slate-300 bg-white/40 hover:bg-white/60 dark:border-slate-600 dark:bg-white/5 dark:hover:bg-white/10 transition-colors"
+ >
+ <Camera className="h-5 w-5 text-slate-400" />
+ <span className="text-[9px] font-black uppercase tracking-widest text-slate-400">Add more</span>
+ </button>
+ )}
+ </div>
+ )}
  </div>
  {errors.files && (
  <p className="mt-2 pl-4 text-[10px] font-black text-red-500 dark:text-red-400 uppercase tracking-widest">
  {errors.files}
  </p>
- )}
- {files.length > 0 && (
- <div className="mt-3 flex flex-wrap gap-2 animate-in fade-in zoom-in-95 duration-200">
- {files.map((file, i) => (
- <div key={i} className="group relative">
- <img src={URL.createObjectURL(file)} alt={file.name} className="h-16 w-16 rounded-xl border-2 border-white object-cover shadow-md dark:border-slate-700" />
- <button type="button" onClick={() => removeFile(i)} className="hover:scale-110 active:scale-90 absolute -right-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-white shadow-sm transition-all">
- <X className="h-2.5 w-2.5" />
- </button>
- </div>
- ))}
- </div>
  )}
  </div>
 

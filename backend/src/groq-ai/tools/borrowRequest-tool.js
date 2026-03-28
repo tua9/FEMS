@@ -53,7 +53,7 @@ export async function create_borrow_request(args) {
 
         return JSON.stringify({
             status: "success",
-            message: `Yêu cầu mượn thiết bị "${equipment.name}" đã được hệ thống ghi nhận thành công và đang chờ xét duyệt.`,
+            message: `Borrow request for "${equipment.name}" was recorded successfully and is pending approval.`,
             request_id: newRequest._id
         });
 

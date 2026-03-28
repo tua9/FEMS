@@ -78,7 +78,7 @@ const autoHandleEndedSessions = async (specificScheduleId = null) => {
 
     if (['pending', 'approved'].includes(req.status)) {
       req.status = 'cancelled'
-      req.decisionNote = 'Yêu cầu đã bị hủy tự động do ca học đã kết thúc mà chưa được xử lý hoàn tất.'
+      req.decisionNote = 'This request was automatically cancelled because the class session ended before it could be fully processed.'
       req.cancelledAt = new Date()
       req.cancelledBy = null // system cancellation
       await req.save()
@@ -86,8 +86,8 @@ const autoHandleEndedSessions = async (specificScheduleId = null) => {
       await notificationService.createNotification({
         userId: req.borrowerId,
         type: 'borrow',
-        title: 'Yêu cầu mượn bị hủy',
-        message: `Yêu cầu mượn #${req.code || req._id.toString().slice(-6).toUpperCase()} đã bị hủy tự động do ca học đã kết thúc.`,
+        title: 'Borrow request cancelled',
+        message: `Borrow request #${req.code || req._id.toString().slice(-6).toUpperCase()} was automatically cancelled because the class session has ended.`,
         action: {
           type: 'open_detail',
           resource: 'borrow',
@@ -177,8 +177,8 @@ const createStudentRequest = async (user, body) => {
 
   await notificationService.notifyAdmins({
     type: 'borrow',
-    title: 'Yêu cầu mượn mới',
-    message: `${user.displayName || user.username} (sinh viên) đã tạo yêu cầu mượn thiết bị ${equipment.name} (#${code}).`,
+    title: 'New borrow request',
+    message: `${user.displayName || user.username} (student) created a borrow request for ${equipment.name} (#${code}).`,
     action: { type: 'open_detail', resource: 'borrow', resourceId: request._id },
   }).catch(err => console.error('Notify admins failed:', err))
 
@@ -220,8 +220,8 @@ const createLecturerRequest = async (user, body) => {
 
   await notificationService.notifyAdmins({
     type: 'borrow',
-    title: 'Yêu cầu mượn mới',
-    message: `${user.displayName || user.username} (giảng viên) đã tạo yêu cầu mượn thiết bị ${equipment.name} (#${code}).`,
+    title: 'New borrow request',
+    message: `${user.displayName || user.username} (lecturer) created a borrow request for ${equipment.name} (#${code}).`,
     action: { type: 'open_detail', resource: 'borrow', resourceId: request._id },
   }).catch(err => console.error('Notify admins failed:', err))
 
@@ -246,12 +246,12 @@ const approveRequest = async (id, approverId, decisionNote) => {
   if (decisionNote) request.decisionNote = decisionNote.trim()
   await request.save()
 
-  const baseMsg = `Yêu cầu mượn #${request.code} đã được duyệt. Giảng viên sẽ sớm bàn giao thiết bị cho bạn.`
+  const baseMsg = `Borrow request #${request.code} has been approved. Your lecturer will hand over the equipment soon.`
   await notificationService.createNotification({
     userId: request.borrowerId,
     type: 'approval',
-    title: 'Yêu cầu mượn được duyệt',
-    message: decisionNote ? `${baseMsg} Ghi chú: "${decisionNote.trim()}"` : baseMsg,
+    title: 'Borrow request approved',
+    message: decisionNote ? `${baseMsg} Note: "${decisionNote.trim()}"` : baseMsg,
     action: { type: 'open_detail', resource: 'borrow', resourceId: request._id },
   }).catch(err => console.error('Notify borrower failed:', err))
 
@@ -272,8 +272,8 @@ const rejectRequest = async (id, approverId, decisionNote) => {
   await notificationService.createNotification({
     userId: request.borrowerId,
     type: 'approval',
-    title: 'Yêu cầu mượn bị từ chối',
-    message: `Yêu cầu mượn #${request.code} đã bị từ chối. Lý do: ${decisionNote?.trim() || 'Không có lý do'}.`,
+    title: 'Borrow request rejected',
+    message: `Borrow request #${request.code} was rejected. Reason: ${decisionNote?.trim() || 'No reason given'}.`,
     action: { type: 'open_detail', resource: 'borrow', resourceId: request._id },
   }).catch(err => console.error('Notify borrower failed:', err))
 
@@ -322,8 +322,8 @@ const studentConfirmReceived = async (id, studentId, handoverForm) => {
   await notificationService.createNotification({
     userId: request.approvedBy,
     type: 'borrow',
-    title: 'Sinh viên đã xác nhận nhận thiết bị',
-    message: `Sinh viên đã xác nhận nhận thiết bị ${equipment?.name || ''} (#${request.code}).`,
+    title: 'Student confirmed receipt',
+    message: `The student confirmed receipt of ${equipment?.name || 'equipment'} (#${request.code}).`,
     action: { type: 'open_detail', resource: 'borrow', resourceId: request._id },
   }).catch(err => console.error('Notify lecturer failed:', err))
 
@@ -371,15 +371,15 @@ const studentSubmitReturn = async (id, studentId, returnForm = {}) => {
     await notificationService.createNotification({
       userId: notifyTarget,
       type: 'return',
-      title: 'Sinh viên gửi yêu cầu trả thiết bị',
-      message: `Sinh viên đã gửi yêu cầu trả thiết bị (Yêu cầu #${request.code}). Vui lòng kiểm tra và xác nhận.`,
+      title: 'Return request submitted',
+      message: `A student submitted a return request (Request #${request.code}). Please review and confirm.`,
       action: { type: 'open_detail', resource: 'borrow', resourceId: request._id },
     }).catch(err => console.error('Notify lecturer failed:', err))
   } else {
     await notificationService.notifyAdmins({
       type: 'return',
-      title: 'Yêu cầu trả thiết bị mới',
-      message: `Sinh viên đã gửi yêu cầu trả thiết bị (Yêu cầu #${request.code}).`,
+      title: 'New return request',
+      message: `A student submitted a return request (Request #${request.code}).`,
       action: { type: 'open_detail', resource: 'borrow', resourceId: request._id },
     }).catch(err => console.error('Notify admins failed:', err))
   }
@@ -437,8 +437,8 @@ const confirmReturn = async (id, confirmedBy, returnForm) => {
   await notificationService.createNotification({
     userId: request.borrowerId._id || request.borrowerId,
     type: 'return',
-    title: 'Thiết bị đã được xác nhận trả',
-    message: `Giảng viên đã xác nhận bạn trả thiết bị thành công (Yêu cầu #${request.code}). Cảm ơn bạn!`,
+    title: 'Return confirmed',
+    message: `Your lecturer confirmed that you returned the equipment successfully (Request #${request.code}). Thank you!`,
     action: { type: 'open_detail', resource: 'borrow', resourceId: request._id },
   }).catch(err => console.error('Notify borrower failed:', err))
 
@@ -450,8 +450,8 @@ const confirmReturn = async (id, confirmedBy, returnForm) => {
         notificationService.createNotification({
           userId: s._id,
           type: 'return',
-          title: 'Thiết bị đã được trả',
-          message: `${borrowerName} đã trả thiết bị (Yêu cầu #${request.code}).`,
+          title: 'Equipment returned',
+          message: `${borrowerName} returned the equipment (Request #${request.code}).`,
           action: { type: 'open_detail', resource: 'borrow', resourceId: request._id },
         }),
       ),
@@ -584,8 +584,8 @@ const checkOverdueHandedOverRequests = async () => {
   if (overdueRequests.length > 0) {
     await notificationService.notifyAdmins({
       type: 'borrow',
-      title: 'Cảnh báo trả trễ',
-      message: `Có ${overdueRequests.length} thiết bị đang bị mượn quá hạn. Vui lòng kiểm tra.`,
+      title: 'Overdue borrow alert',
+      message: `${overdueRequests.length} borrowed item(s) are past due. Please review.`,
       action: { type: 'open_list', resource: 'borrow' },
     }).catch(err => console.error('Failed to notify admins about overdue borrows:', err))
   }
@@ -599,8 +599,9 @@ const remindBorrowRequest = async (id, lecturerId, note) => {
   }
 
   const lecturer = await User.findById(lecturerId).select('displayName')
-  const title = `Nhắc nhở từ Giảng viên ${lecturer?.displayName || ''}`
-  const message = note ? note.trim() : `Vui lòng hoàn trả thiết bị ${request.code} sớm nhất có thể.`
+  const lectName = lecturer?.displayName?.trim()
+  const title = lectName ? `Reminder from lecturer ${lectName}` : 'Reminder from your lecturer'
+  const message = note ? note.trim() : `Please return the equipment for request ${request.code} as soon as possible.`
 
   await notificationService.createNotification({
     userId: request.borrowerId,
@@ -610,7 +611,7 @@ const remindBorrowRequest = async (id, lecturerId, note) => {
     action: { type: 'open_detail', resource: 'borrow', resourceId: request._id },
   })
 
-  return { message: 'Đã gửi nhắc nhở thành công' }
+  return { message: 'Reminder sent successfully' }
 }
 
 export const borrowRequestService = {

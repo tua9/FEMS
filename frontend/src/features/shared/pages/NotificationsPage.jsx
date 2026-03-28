@@ -4,8 +4,10 @@ import { useNavigate, useLocation } from 'react-router';
 import { useNotificationStore } from '@/stores/useNotificationStore';
 import { PageHeader } from '@/features/shared/components/PageHeader';
 import { formatDistanceToNow } from 'date-fns';
+import { enGB } from 'date-fns/locale';
 import NotificationDetailModal from '@/features/shared/components/notifications/NotificationDetailModal';
 import { NOTIFICATION_TYPE_CONFIG, getNotificationAction } from '@/utils/notificationHelper';
+import { localizeNotificationDisplay } from '@/utils/legacyNotificationI18n';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { Radio } from 'lucide-react';
 import BroadcastModal from '@/features/admin/components/notifications/BroadcastModal';
@@ -25,6 +27,7 @@ const FILTER_TABS = [
 
 const NotificationRow = ({ notification, onRead, onDelete, onOpenDetail, isHighlighted }) => {
  const navigate = useNavigate();
+ const { title: displayTitle, message: displayMessage } = localizeNotificationDisplay(notification);
  const cfg = NOTIFICATION_TYPE_CONFIG[notification.type] || NOTIFICATION_TYPE_CONFIG.general;
 
  const action = getNotificationAction(notification);
@@ -70,14 +73,14 @@ const NotificationRow = ({ notification, onRead, onDelete, onOpenDetail, isHighl
  ? 'text-[#1E2B58] dark:text-white'
  : 'text-slate-600 dark:text-slate-300'
  }`}>
- {notification.title}
+ {displayTitle}
  </h3>
  {!notification.isRead && (
  <span className="w-2.5 h-2.5 bg-blue-500 rounded-full shrink-0 mt-1" />
  )}
  </div>
  <p className="text-[0.8125rem] text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
- {notification.message}
+ {displayMessage}
  </p>
  <div className="flex items-center gap-3 mt-2">
  <span className={`text-[0.625rem] font-black uppercase tracking-wide px-2 py-0.5 rounded-lg ${cfg.bg} ${cfg.color}`}>
@@ -89,7 +92,7 @@ const NotificationRow = ({ notification, onRead, onDelete, onOpenDetail, isHighl
  </span>
  )}
  <span className="text-[0.75rem] text-slate-400 dark:text-slate-500">
- {formatDistanceToNow(new Date(notification.createdAt), { addSuffix: true })}
+ {formatDistanceToNow(new Date(notification.createdAt), { addSuffix: true, locale: enGB })}
  </span>
  </div>
  </button>
@@ -185,7 +188,7 @@ const NotificationsPage = () => {
  title="Notifications"
  subtitle={unreadCount > 0
  ? `${unreadCount} unread · Stay updated with equipment, borrows, and facility alerts.`
- : "You're all caught up Stay updated with equipment, borrows, and facility alerts."}
+ : "You're all caught up. Stay updated with equipment, borrows, and facility alerts."}
  className="items-start text-left mb-0!"
  />
  {unreadCount > 0 && (

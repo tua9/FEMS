@@ -4,10 +4,10 @@ import { X, AlertTriangle, Loader2 } from 'lucide-react';
 import { getStudentName, getEquipmentName } from './borrowUtils';
 
 const QUICK_REJECT_REASONS = [
-  'Thiết bị không có sẵn',
-  'Không phù hợp mục đích sử dụng',
-  'Yêu cầu thiếu thông tin',
-  'Thời gian không hợp lệ',
+  'Equipment not available',
+  'Not suitable for intended use',
+  'Request missing information',
+  'Invalid timing',
 ];
 
 const RejectModal = ({ isOpen, onClose, request, onConfirm, submitting }) => {
@@ -19,7 +19,7 @@ const RejectModal = ({ isOpen, onClose, request, onConfirm, submitting }) => {
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!rejectReason.trim()) {
-      setRejectError('Vui lòng nhập lý do từ chối.');
+      setRejectError('Please enter a rejection reason.');
       return;
     }
     onConfirm(rejectReason.trim());
@@ -41,7 +41,7 @@ const RejectModal = ({ isOpen, onClose, request, onConfirm, submitting }) => {
             <AlertTriangle className="w-7 h-7 text-red-500" />
           </div>
           <div>
-            <p className="text-[0.625rem] font-black uppercase tracking-widest text-[#1E2B58]/50 dark:text-white/40 mb-1">Từ chối yêu cầu</p>
+            <p className="text-[0.625rem] font-black uppercase tracking-widest text-[#1E2B58]/50 dark:text-white/40 mb-1">Reject request</p>
             <h3 className="text-xl font-black text-[#1E2B58] dark:text-white">{getStudentName(request)}</h3>
             <p className="text-xs text-[#1E2B58]/50 dark:text-white/40 mt-0.5">{getEquipmentName(request)}</p>
           </div>
@@ -50,7 +50,7 @@ const RejectModal = ({ isOpen, onClose, request, onConfirm, submitting }) => {
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <div>
             <p className="text-[0.625rem] font-black uppercase tracking-widest text-[#1E2B58]/50 dark:text-white/40 mb-2">
-              Lý do nhanh
+              Quick reasons
             </p>
             <div className="flex flex-wrap gap-2">
               {QUICK_REJECT_REASONS.map(r => (
@@ -72,11 +72,11 @@ const RejectModal = ({ isOpen, onClose, request, onConfirm, submitting }) => {
 
           <div className="flex flex-col gap-2">
             <label className="text-[0.625rem] font-black uppercase tracking-widest text-[#1E2B58]/50 dark:text-white/40">
-              Lý do từ chối <span className="text-red-500">*</span>
+              Rejection reason <span className="text-red-500">*</span>
             </label>
             <textarea
               rows={3}
-              placeholder="Giải thích lý do từ chối yêu cầu này..."
+              placeholder="Explain why this request is rejected…"
               value={rejectReason}
               onChange={e => { setRejectReason(e.target.value); setRejectError(''); }}
               className="w-full bg-white/40 dark:bg-slate-800/50 border border-white/40 dark:border-slate-700/50 rounded-[1rem] px-4 py-3 text-sm font-medium text-[#1E2B58] dark:text-white placeholder:text-[#1E2B58]/30 dark:placeholder:text-white/30 outline-none focus:ring-2 focus:ring-red-400/30 transition-all resize-none"
@@ -87,12 +87,12 @@ const RejectModal = ({ isOpen, onClose, request, onConfirm, submitting }) => {
           <div className="flex gap-3 mt-1">
             <button type="button" onClick={onClose}
               className="flex-1 py-3.5 rounded-[1.25rem] font-bold text-sm border border-[#1E2B58]/20 dark:border-white/20 text-[#1E2B58]/70 dark:text-white/70 hover:bg-[#1E2B58]/5 dark:hover:bg-white/5 transition-all">
-              Hủy
+              Cancel
             </button>
             <button type="submit" disabled={submitting}
               className="flex-[2] py-3.5 rounded-[1.25rem] font-bold text-sm bg-red-500 text-white hover:bg-red-600 transition-all shadow-lg shadow-red-500/20 flex items-center justify-center gap-2 disabled:opacity-60 active:scale-95">
               {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <X className="w-4 h-4" />}
-              Từ chối yêu cầu
+              Reject request
             </button>
           </div>
         </form>
