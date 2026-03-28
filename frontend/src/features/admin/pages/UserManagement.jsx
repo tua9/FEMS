@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { toast } from 'sonner';
 import CustomDropdown from '@/features/shared/components/CustomDropdown';
 import UserTable from '../components/users/UserTable';
 import AddUserModal from '../components/users/AddUserModal';
@@ -8,6 +9,7 @@ import Pagination from '@/features/shared/components/Pagination';
 import ActionConfirmationModal from '../components/common/ActionConfirmationModal';
 import { useUserStore } from '@/stores/useUserStore';
 import { PageHeader } from '@/features/shared/components/PageHeader';
+import { classService } from '@/services/classService';
 
 const UserManagement = () => {
  const users = useUserStore(state => state.users);
@@ -27,6 +29,8 @@ const UserManagement = () => {
  const [searchQuery, setSearchQuery] = useState('');
  const [roleFilter, setRoleFilter] = useState('All');
  const [statusFilter, setStatusFilter] = useState('All');
+ const [classFilter, setClassFilter] = useState('All');
+ const [classes, setClasses] = useState([]);
  const [currentPage, setCurrentPage] = useState(1);
  const ITEMS_PER_PAGE = 5;
  const [isExporting, setIsExporting] = useState(false);
@@ -34,6 +38,7 @@ const UserManagement = () => {
 
  useEffect(() => {
  fetchAllUsers();
+ classService.getAllClasses().then(d => setClasses(Array.isArray(d) ? d : [])).catch(() => {});
  }, [fetchAllUsers]);
 
  const handleOpenDetails = (user) => {
@@ -87,12 +92,63 @@ const UserManagement = () => {
  };
 
  const handleBulkImport = (e) => {
- const file = e.target.files?.[0];
- if (file) {
- alert(`Draft: Import functionality for "${file.name}" would process ${file.size} bytes. (Backend required for full implementation)`);
- // Reset input
- if (fileInputRef.current) fileInputRef.current.value = '';
- }
+  const file = e.target.files?.[0];
+  if (!file) return;
+
+  if (!file.name.endsWith('.csv')) {
+    toast.error("Please upload a .csv file.");
+    return;
+  }
+
+  const reader = new FileReader();
+  reader.onload = async (event) => {
+    const text = event.target.result;
+    if (!text) return;
+    const lines = text.split('\n').filter(line => line.trim() !== '');
+    if (lines.length <= 1) {
+      toast.error("CSV file is empty or only contains headers.");
+      return;
+    }
+
+    const headers = lines[0].split(',').map(h => h.trim());
+    const rows = lines.slice(1);
+
+    let successCount = 0;
+    let errorCount = 0;
+
+    toast.info(`Starting bulk import of ${rows.length} users...`);
+
+    for (const row of rows) {
+      const values = row.split(',').map(v => v.trim());
+      if (values.length < headers.length) continue;
+
+      const data = {};
+      headers.forEach((header, index) => {
+        data[header] = values[index];
+      });
+
+      // Resolve classId if classCode exists
+      if (data.role === 'student' && data.classCode) {
+        const targetClass = classes.find(c => c.code.toLowerCase() === data.classCode.toLowerCase());
+        data.classId = targetClass ? targetClass._id : null;
+      }
+      delete data.classCode;
+
+      try {
+        await useUserStore.getState().createUser(data);
+        successCount++;
+      } catch (err) {
+        console.error(`Import failed for ${data.username}:`, err);
+        errorCount++;
+      }
+    }
+
+    if (successCount > 0) toast.success(`Successfully imported ${successCount} users.`);
+    if (errorCount > 0) toast.error(`Failed to import ${errorCount} users.`);
+    
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+  reader.readAsText(file);
  };
 
  const filteredUsers = users.filter(user => {
@@ -104,14 +160,15 @@ const UserManagement = () => {
  const matchesSearch = nameMatch || emailMatch || idMatch;
  const matchesRole = roleFilter === 'All' || user.role.toLowerCase() === roleFilter.toLowerCase();
  const matchesStatus = statusFilter === 'All' || (statusFilter === 'Active' ? user.isActive !== false : user.isActive === false);
+ const matchesClass = roleFilter.toLowerCase() !== 'student' || classFilter === 'All' || (classFilter === 'Unadded' ? !user.classId : (user.classId?._id === classFilter || user.classId === classFilter));
 
- return matchesSearch && matchesRole && matchesStatus;
+ return matchesSearch && matchesRole && matchesStatus && matchesClass;
  });
 
  // Reset page when filters change
  useEffect(() => {
  setCurrentPage(1);
- }, [searchQuery, roleFilter, statusFilter]);
+ }, [searchQuery, roleFilter, statusFilter, classFilter]);
 
  const totalPages = Math.ceil(filteredUsers.length / ITEMS_PER_PAGE);
  const currentUsers = filteredUsers.slice(
@@ -278,10 +335,26 @@ const UserManagement = () => {
  align="right"
  />
 
+ {roleFilter.toLowerCase() === 'student' && (
+ <>
+ <div className="h-5 w-px bg-[#1E2B58]/10 dark:bg-white/10 mx-1" />
+ <CustomDropdown
+ value={classFilter}
+ options={[
+ { value: 'All', label: 'Class: All' },
+ { value: 'Unadded', label: 'Unadded' },
+ ...classes.map(c => ({ value: c._id, label: c.code }))
+ ]}
+ onChange={setClassFilter}
+ align="right"
+ />
+ </>
+ )}
+
  <div className="h-5 w-px bg-[#1E2B58]/10 dark:bg-white/10 mx-1" />
 
  <button
- onClick={() => { setSearchQuery(''); setRoleFilter('All'); setStatusFilter('All'); }}
+ onClick={() => { setSearchQuery(''); setRoleFilter('All'); setStatusFilter('All'); setClassFilter('All'); }}
  className="flex items-center justify-center w-9 h-9 rounded-xl text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all"
  title="Reset filters"
  >

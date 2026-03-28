@@ -46,6 +46,11 @@ const UserDetailModal = ({ isOpen, user, onClose, onEdit, onUpdate }) => {
  }
  };
 
+ const logs = [
+ { id: 2, action: 'Profile Record Updated', timestamp: user.updatedAt },
+ { id: 1, action: 'Identity Onboarded', timestamp: user.createdAt }
+ ].filter(log => log.timestamp);
+
  return createPortal(
  <div className="fixed inset-0 z-[100] flex items-center justify-center px-4 py-6 bg-black/30 backdrop-blur-sm">
  <style dangerouslySetInnerHTML={{
@@ -119,9 +124,22 @@ const UserDetailModal = ({ isOpen, user, onClose, onEdit, onUpdate }) => {
  <div className="w-10 h-10 rounded-2xl bg-emerald-50 dark:bg-emerald-900/20 text-emerald-500 flex items-center justify-center border-2 border-emerald-100 dark:border-emerald-900/30">
  <span className="material-symbols-outlined text-xl">verified</span>
  </div>
- <p className="font-black text-slate-800 dark:text-white leading-tight">January 12, 2025</p>
+ <p className="font-black text-slate-800 dark:text-white leading-tight">{user.createdAt ? new Date(user.createdAt).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : 'Unknown'}</p>
  </div>
  </div>
+ {user.role === 'student' && (
+ <div className="p-6 rounded-3xl bg-white/40 dark:bg-slate-900/30 border-2 border-white dark:border-slate-700 shadow-sm grow flex flex-col justify-center">
+ <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Class Assignment</h4>
+ <div className="flex items-center gap-3">
+ <div className="w-10 h-10 rounded-2xl bg-purple-50 dark:bg-purple-900/20 text-purple-500 flex items-center justify-center border-2 border-purple-100 dark:border-purple-900/30">
+ <span className="material-symbols-outlined text-xl">school</span>
+ </div>
+ <p className="font-black text-slate-800 dark:text-white leading-tight">
+ {user.classId ? <span className="text-[#1A2B56] dark:text-blue-400">{user.classId?.code || 'Assigned'}</span> : <span className="italic text-slate-400 font-medium">Unadded</span>}
+ </p>
+ </div>
+ </div>
+ )}
  </div>
  </div>
 
@@ -132,14 +150,14 @@ const UserDetailModal = ({ isOpen, user, onClose, onEdit, onUpdate }) => {
  Recent Security Logs
  </h4>
  <div className="space-y-4">
- {[1, 2].map(i => (
- <div key={i} className="flex items-center gap-4 p-5 rounded-3xl bg-slate-50/50 dark:bg-slate-900/20 border-2 border-slate-200 dark:border-slate-800 transition-all hover:bg-white dark:hover:bg-slate-900/40">
+ {logs.map(log => (
+ <div key={log.id} className="flex items-center gap-4 p-5 rounded-3xl bg-slate-50/50 dark:bg-slate-900/20 border-2 border-slate-200 dark:border-slate-800 transition-all hover:bg-white dark:hover:bg-slate-900/40">
  <div className="w-10 h-10 rounded-2xl bg-white dark:bg-slate-800 flex items-center justify-center text-[#1A2B56] dark:text-blue-400 shadow-sm border-2 border-slate-200 dark:border-slate-700">
- <span className="material-symbols-outlined text-[20px]">history</span>
+ <span className="material-symbols-outlined text-[20px]">{log.id === 1 ? 'person_add' : 'manage_accounts'}</span>
  </div>
  <div className="flex-1">
- <p className="text-sm font-black text-slate-800 dark:text-white leading-tight">Authenticated from Secure Terminal</p>
- <p className="text-[10px] text-slate-400 font-bold uppercase tracking-tight mt-1">May 24, 2026 • 10:24 AM</p>
+ <p className="text-sm font-black text-slate-800 dark:text-white leading-tight">{log.action}</p>
+ <p className="text-[10px] text-slate-400 font-bold uppercase tracking-tight mt-1">{new Date(log.timestamp).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })} • {new Date(log.timestamp).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}</p>
  </div>
  </div>
  ))}

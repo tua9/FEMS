@@ -4,7 +4,6 @@ import { dashboardService } from '../services/dashboardService';
 export const useDashboardStore = create((set) => ({
     stats: null,
     activities: [],
-    usageStats: null,
     isLoading: false,
     error: null,
 
@@ -28,13 +27,4 @@ export const useDashboardStore = create((set) => ({
         }
     },
 
-    fetchUsageStats: async () => {
-        set({ isLoading: true, error: null });
-        try {
-            const usageStats = await dashboardService.getLecturerUsageStats();
-            set({ usageStats, isLoading: false });
-        } catch (error) {
-            set({ error: error.message || 'Failed to fetch usage stats', isLoading: false });
-        }
-    },
 }));

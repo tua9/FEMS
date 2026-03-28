@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import StatCard from '../components/common/StatCard';
 import EquipmentHealthChart from '../components/dashboard/EquipmentHealthChart';
 import TopBorrowedList from '../components/dashboard/TopBorrowedList';
 import BorrowRequestList from '../components/dashboard/BorrowRequestList';
@@ -87,84 +86,6 @@ const AdminDashboard = () => {
             topPadding="pt-6"
             className="px-6 pb-16"
         >
-            {/* ── Stat Cards ── */}
-            <AnimatedList className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                <AnimatedListItem>
-                    <StatCard
-                        title="Total Equipment"
-                        value={(stats.totalEquipment ?? 0).toLocaleString()}
-                        trendValue={`+${stats.equipmentTrend ?? 0}%`}
-                        trendLabel="from last month"
-                        trendDirection="up"
-                        iconName="devices"
-                        colorTheme="blue"
-                        onClick={() => navigate('/admin/equipment')}
-                    />
-                </AnimatedListItem>
-                <AnimatedListItem>
-                    <StatCard
-                        title="Broken Equipment"
-                        value={stats.brokenEquipment ?? 0}
-                        trendValue={`${stats.criticalRepairs ?? 0}`}
-                        trendLabel="critical repairs"
-                        trendDirection="down"
-                        iconName="build_circle"
-                        colorTheme="red"
-                        onClick={() => navigate('/admin/equipment', { state: { status: 'Broken' } })}
-                    />
-                </AnimatedListItem>
-                <AnimatedListItem>
-                    <StatCard
-                        title="Pending Approvals"
-                        value={stats.pendingRequests ?? 0}
-                        trendValue={`Avg. ${stats.avgResponseTimeHours ?? 0}h`}
-                        trendLabel="response"
-                        trendDirection="neutral"
-                        iconName="inventory_2"
-                        colorTheme="amber"
-                        onClick={() => navigate('/admin/borrowing', { state: { status: 'pending' } })}
-                    />
-                </AnimatedListItem>
-            </AnimatedList>
-
-            <AnimatedList className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                <AnimatedListItem>
-                    <StatCard
-                        title="Borrow rate"
-                        value={`${stats.borrowRate ?? 0}%`}
-                        trendValue={`${stats.inUseEquipment ?? 0} in use`}
-                        trendLabel="of total fleet"
-                        trendDirection="neutral"
-                        iconName="swap_horiz"
-                        colorTheme="blue"
-                        onClick={() => navigate('/admin/borrowing')}
-                    />
-                </AnimatedListItem>
-                <AnimatedListItem>
-                    <StatCard
-                        title="Damage & maintenance load"
-                        value={`${stats.damageRate ?? 0}%`}
-                        trendValue={`${stats.maintenanceEquipment ?? 0} under care`}
-                        trendLabel="broken + maintenance"
-                        trendDirection="down"
-                        iconName="crisis_alert"
-                        colorTheme="amber"
-                        onClick={() => navigate('/admin/equipment', { state: { status: 'Maintenance' } })}
-                    />
-                </AnimatedListItem>
-                <AnimatedListItem>
-                    <StatCard
-                        title="Equipment fault share"
-                        value={reportAnalytics != null ? `${reportAnalytics.damageReportRate ?? 0}%` : '—'}
-                        trendValue={reportAnalytics != null ? `${reportAnalytics.fixedCount ?? 0} resolved` : 'Loading…'}
-                        trendLabel="of all reports"
-                        trendDirection="neutral"
-                        iconName="assignment_late"
-                        colorTheme="red"
-                        onClick={() => navigate('/admin/reports')}
-                    />
-                </AnimatedListItem>
-            </AnimatedList>
 
             {/* ── Analytics ── */}
             <AnimatedSection variant="fade" delay={0.1} className="grid grid-cols-1 lg:grid-cols-12 gap-8 mb-8">
