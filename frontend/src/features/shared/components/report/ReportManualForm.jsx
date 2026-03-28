@@ -94,11 +94,12 @@ export const ReportManualForm = ({
  useEffect(() => {
  if (prefillRoomId) {
  setRoomId(prefillRoomId);
- const room = rooms.find(r => r._id === prefillRoomId);
+ const room = rooms.find((r) => r._id === prefillRoomId);
  if (room) {
  setRoomSearch(room.name || "");
- if (room.buildingId) {
- const bId = typeof room.buildingId === 'string' ? room.buildingId : room.buildingId._id;
+ const rawBuilding = room.buildingId ?? room.building_id;
+ if (rawBuilding) {
+ const bId = typeof rawBuilding === "string" ? rawBuilding : rawBuilding._id;
  setSelectedBuildingId(bId);
  }
  }
@@ -128,12 +129,13 @@ export const ReportManualForm = ({
  // Sync selectedBuildingId whenever roomId is set (from prefill or equipment resolve)
  useEffect(() => {
  if (roomId && rooms.length > 0) {
- const room = rooms.find(r => r._id === roomId);
+ const room = rooms.find((r) => r._id === roomId);
  if (room) {
  setRoomSearch(room.name || "");
- if (room.buildingId) {
- const bId = typeof room.buildingId === 'object' ? room.buildingId._id : room.buildingId;
- setSelectedBuildingId(prev => (prev !== bId ? bId : prev));
+ const rawBuilding = room.buildingId ?? room.building_id;
+ if (rawBuilding) {
+ const bId = typeof rawBuilding === "object" ? rawBuilding._id : rawBuilding;
+ setSelectedBuildingId((prev) => (prev !== bId ? bId : prev));
  }
  }
  }
@@ -158,15 +160,35 @@ export const ReportManualForm = ({
  }
  let cancelled = false;
  setRoomsLoading(true);
- roomService.getByBuildingId(selectedBuildingId)
- .then(data => {
+ roomService
+ .getByBuildingId(selectedBuildingId)
+ .then((data) => {
  if (cancelled) return;
- const list = Array.isArray(data) ? data : data?.rooms ?? [];
+
+ // Normalize possible API shapes:
+ //  - [ ...rooms ]
+ //  - { rooms: [ ... ] }
+ //  - { data: [ ... ] }
+ //  - { data: { rooms: [ ... ] } }
+ const list =
+ (Array.isArray(data) && data) ||
+ data?.rooms ||
+ data?.data ||
+ data?.data?.rooms ||
+ [];
+
  setRoomsForBuilding(Array.isArray(list) ? list : []);
  })
- .catch(() => { if (!cancelled) setRoomsForBuilding([]); })
- .finally(() => { if (!cancelled) setRoomsLoading(false); });
- return () => { cancelled = true; };
+ .catch(() => {
+ if (!cancelled) setRoomsForBuilding([]);
+ })
+ .finally(() => {
+ if (!cancelled) setRoomsLoading(false);
+ });
+
+ return () => {
+ cancelled = true;
+ };
  }, [selectedBuildingId]);
 
  // Extract / Map buildings
@@ -179,13 +201,19 @@ export const ReportManualForm = ({
  // Fallback: derive from rooms
  const map = new Map();
  rooms.forEach((room) => {
- if (!room.buildingId) return;
- const id = typeof room.buildingId === 'string' ? room.buildingId : room.buildingId._id;
- const name = typeof room.buildingId === 'string' ? room.buildingId : room.buildingId.name;
+ const rawBuilding = room.buildingId ?? room.building_id;
+ if (!rawBuilding) return;
+
+ // If only an id is available (string/ObjectId), we can't derive a name.
+ // We'll still include it so filtering works, but name may be empty.
+ const id = typeof rawBuilding === "string" ? rawBuilding : rawBuilding._id;
+ const name = typeof rawBuilding === "string" ? "" : rawBuilding.name;
+
  if (!map.has(id)) map.set(id, { id, name });
  });
+
  return Array.from(map.values()).sort((a, b) =>
- String(a.name ?? "").localeCompare(String(b.name ?? ""), undefined, { sensitivity: "base" })
+ String(a.name ?? "").localeCompare(String(b.name ?? ""), undefined, { sensitivity: "base" }),
  );
  }, [rooms, buildingsProp]);
 
