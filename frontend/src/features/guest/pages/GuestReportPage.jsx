@@ -14,10 +14,17 @@ const GuestReportPage = () => {
 
  const {
  prefillRoomId, prefillCategory, prefillDescription, prefillEquipmentId,
- rooms, isSubmitting,
+ rooms, buildings, isSubmitting,
  showSuccess, reportId, reportSubject, reportDate,
  handleQRDetected, handleFormSubmit,
  handleSubmitAnother, closeSuccess,
+
+ category, setCategory,
+ roomId, setRoomId,
+ equipmentId, setEquipmentId,
+ description, setDescription,
+ files, setFiles,
+ resetFileInputRef,
  } = useReportForm();
 
  return (
@@ -54,9 +61,22 @@ const GuestReportPage = () => {
  prefillDescription={prefillDescription}
  prefillEquipmentId={prefillEquipmentId}
  rooms={rooms}
+ buildings={buildings}
  isSubmitting={isSubmitting}
  onQRDetected={handleQRDetected}
  onSubmit={handleFormSubmit}
+
+ category={category}
+ setCategory={setCategory}
+ roomId={roomId}
+ setRoomId={setRoomId}
+ equipmentId={equipmentId}
+ setEquipmentId={setEquipmentId}
+ description={description}
+ setDescription={setDescription}
+ files={files}
+ setFiles={setFiles}
+ resetFileInputRef={resetFileInputRef}
  />
  </main>
 

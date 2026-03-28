@@ -1,6 +1,7 @@
 import React from 'react';
 import Pagination from '@/features/shared/components/Pagination';
 import { useBorrowRequestStore } from '@/stores/useBorrowRequestStore';
+import { BORROW_STATUS } from '@/constants';
 
 const BorrowingTable = ({ records, onApprove, onHandover, onReject, onReturn, onViewDetails }) => {
  const actionLoading = useBorrowRequestStore(state => state.actionLoading);
@@ -18,12 +19,12 @@ const BorrowingTable = ({ records, onApprove, onHandover, onReject, onReturn, on
 
  const getStatusStyle = (status) => {
  switch (status) {
- case 'pending': return 'bg-amber-100/50 dark:bg-amber-900/30 text-amber-500 dark:text-amber-400';
- case 'approved': return 'bg-blue-100/50 dark:bg-blue-900/30 text-blue-500 dark:text-blue-400';
- case 'handed_over': return 'bg-indigo-100/50 dark:bg-indigo-900/30 text-indigo-500 dark:text-indigo-400';
- case 'overdue': return 'bg-red-100/50 dark:bg-red-900/30 text-red-500 dark:text-red-400';
- case 'returned': return 'bg-emerald-100/50 dark:bg-emerald-900/30 text-emerald-500 dark:text-emerald-400';
- case 'rejected': return 'bg-orange-100/50 dark:bg-orange-900/30 text-orange-500 dark:text-orange-400';
+ case BORROW_STATUS.PENDING:     return 'bg-amber-100/50 dark:bg-amber-900/30 text-amber-500 dark:text-amber-400';
+ case BORROW_STATUS.APPROVED:    return 'bg-blue-100/50 dark:bg-blue-900/30 text-blue-500 dark:text-blue-400';
+ case BORROW_STATUS.HANDED_OVER: return 'bg-indigo-100/50 dark:bg-indigo-900/30 text-indigo-500 dark:text-indigo-400';
+ case 'overdue': return 'bg-red-100/50 dark:bg-red-900/30 text-red-500 dark:text-red-400'; // UI-derived virtual status
+ case BORROW_STATUS.RETURNED:    return 'bg-emerald-100/50 dark:bg-emerald-900/30 text-emerald-500 dark:text-emerald-400';
+ case BORROW_STATUS.REJECTED:    return 'bg-orange-100/50 dark:bg-orange-900/30 text-orange-500 dark:text-orange-400';
  default: return 'bg-slate-100/50 dark:bg-slate-800/60 text-slate-400 dark:text-slate-500';
  }
  };
@@ -58,7 +59,7 @@ const BorrowingTable = ({ records, onApprove, onHandover, onReject, onReturn, on
  const borrowerName = borrower?.displayName || 'Unknown';
  const equipmentName = equipment?.name || 'Unknown Item';
  const equipmentCode = (equipment)?.code || (equipment)?.qr_code || 'N/A';
- const isOverdue = record.status === 'overdue' || (record.status === 'handed_over' && new Date(record.expectedReturnDate) < new Date());
+ const isOverdue = record.status === 'overdue' || (record.status === BORROW_STATUS.HANDED_OVER && new Date(record.expectedReturnDate) < new Date()); // 'overdue' là UI-derived virtual status
  const displayStatus = isOverdue ? 'overdue' : (record.status);
 
  return (
@@ -101,7 +102,7 @@ const BorrowingTable = ({ records, onApprove, onHandover, onReject, onReturn, on
  <div className="px-4 py-1 animate-pulse text-[10px] font-semibold uppercase tracking-widest text-[#1A2B56] dark:text-blue-400 bg-white/50 dark:bg-slate-700 rounded-lg">Processing...</div>
  ) : (
  <>
- {record.status === 'pending' && (
+ {record.status === BORROW_STATUS.PENDING && (
  <>
  <button
  onClick={(e) => { e.stopPropagation(); onApprove?.(record._id); }}
@@ -118,7 +119,7 @@ const BorrowingTable = ({ records, onApprove, onHandover, onReject, onReturn, on
  </>
  )}
  {/* approved → open detail modal to fill handover form */}
- {record.status === 'approved' && (
+ {record.status === BORROW_STATUS.APPROVED && (
  <button
  onClick={(e) => { e.stopPropagation(); onViewDetails?.(record); }}
  className="px-2.5 py-1 bg-[#1A2B56] text-white hover:bg-[#2A3B66] rounded-md text-xs font-semibold transition-all shadow-[0_5px_15px_rgba(26,43,86,0.2)] hover:shadow-[0_8px_20px_rgba(26,43,86,0.3)] hover:-translate-y-0.5 whitespace-nowrap active:scale-95"
@@ -127,7 +128,7 @@ const BorrowingTable = ({ records, onApprove, onHandover, onReject, onReturn, on
  </button>
  )}
  {/* returning → lecturer confirms return */}
- {record.status === 'returning' && (
+ {record.status === BORROW_STATUS.RETURNING && (
  <button
  onClick={(e) => { e.stopPropagation(); onReturn?.(record._id); }}
  className="px-2.5 py-1 bg-emerald-600 text-white hover:bg-emerald-700 rounded-md text-xs font-semibold transition-all shadow-[0_5px_15px_rgba(5,150,105,0.2)] hover:-translate-y-0.5 whitespace-nowrap active:scale-95"
@@ -136,19 +137,19 @@ const BorrowingTable = ({ records, onApprove, onHandover, onReject, onReturn, on
  </button>
  )}
  {/* handed_over: in use, show label */}
- {(record.status === 'handed_over' && !isOverdue) && (
+ {(record.status === BORROW_STATUS.HANDED_OVER && !isOverdue) && (
  <div className="px-2.5 py-1 text-[10px] font-semibold uppercase text-indigo-400 tracking-widest">In Use</div>
  )}
  {isOverdue && (
  <div className="px-2.5 py-1 text-[10px] font-semibold uppercase text-red-400 tracking-widest">Overdue</div>
  )}
- {record.status === 'returned' && (
+ {record.status === BORROW_STATUS.RETURNED && (
  <div className="px-2.5 py-1 text-[10px] font-semibold uppercase text-slate-400 tracking-widest">Completed</div>
  )}
- {record.status === 'rejected' && (
+ {record.status === BORROW_STATUS.REJECTED && (
  <div className="px-2.5 py-1 text-[10px] font-semibold uppercase text-red-400 tracking-widest">Rejected</div>
  )}
- {record.status === 'cancelled' && (
+ {record.status === BORROW_STATUS.CANCELLED && (
  <div className="px-2.5 py-1 text-[10px] font-semibold uppercase text-slate-400 tracking-widest">Cancelled</div>
  )}
  </>

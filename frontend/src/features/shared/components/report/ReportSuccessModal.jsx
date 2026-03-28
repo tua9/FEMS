@@ -30,7 +30,8 @@ export const ReportSuccessModal = ({
 
  {/* Title */}
  <h3 className="text-xl font-black text-[#1E2B58] dark:text-white text-center mb-1">
- Report Submitted </h3>
+ Report Created Successfully!
+ </h3>
  <p className="text-sm text-slate-500 dark:text-slate-400 text-center mb-6">
  Your issue has been logged. Our team will follow up soon.
  </p>
@@ -57,6 +58,7 @@ export const ReportSuccessModal = ({
 
  {/* Actions */}
  <div className="flex flex-col gap-3">
+ {primaryLabel && onPrimary ? (
  <button
  onClick={onPrimary}
  className="w-full py-3.5 rounded-[1.25rem] font-bold text-sm bg-[#1E2B58] text-white hover:bg-[#151f40] hover:scale-[1.02] active:scale-95 transition-all shadow-lg shadow-[#1E2B58]/20 flex items-center justify-center gap-2"
@@ -65,12 +67,23 @@ export const ReportSuccessModal = ({
  {primaryLabel}
  <ArrowRight className="w-4 h-4" />
  </button>
+ ) : (
+ <button
+ onClick={onClose}
+ className="w-full py-3.5 rounded-[1.25rem] font-bold text-sm bg-[#1E2B58] text-white hover:bg-[#151f40] hover:scale-[1.02] active:scale-95 transition-all shadow-lg shadow-[#1E2B58]/20"
+ >
+ Close
+ </button>
+ )}
+
+ {onSubmitAnother && (
  <button
  onClick={onSubmitAnother}
  className="w-full py-3 rounded-[1.25rem] font-bold text-sm border border-[#1E2B58]/20 dark:border-white/20 text-[#1E2B58]/70 dark:text-white/70 hover:bg-[#1E2B58]/5 dark:hover:bg-white/5 transition-all"
  >
  Submit Another Report
  </button>
+ )}
  </div>
  </div>
  </div>

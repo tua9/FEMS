@@ -1,11 +1,12 @@
 import React from 'react';
 import { Search, ListFilter, Download, X } from 'lucide-react';
+import { BORROW_STATUS } from '@/constants';
 
 const STATUS_OPTS = [
- { value: 'all', label: 'All Requests' },
- { value: 'pending', label: 'Pending' },
- { value: 'approved', label: 'Approved' },
- { value: 'rejected', label: 'Rejected' },
+ { value: 'all',                  label: 'All Requests' },
+ { value: BORROW_STATUS.PENDING,  label: 'Pending' },
+ { value: BORROW_STATUS.APPROVED, label: 'Approved' },
+ { value: BORROW_STATUS.REJECTED, label: 'Rejected' },
 ];
 
 const TYPE_OPTS = [

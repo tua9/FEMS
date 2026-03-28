@@ -182,6 +182,14 @@ const LecturerBorrowManagementPage = () => {
     [allRequests, sessionRoomId]
   );
 
+  const unreturnedRequests = useMemo(() =>
+    allRequests.filter(r =>
+      r.status === 'unreturned' &&
+      (!sessionRoomId || String(r.roomId?._id || r.roomId) === String(sessionRoomId))
+    ),
+    [allRequests, sessionRoomId]
+  );
+
   // ── Helpers ───────────────────────────────────────────────────────────────
   // (Moved to borrowUtils.js)
 
@@ -615,6 +623,44 @@ const LecturerBorrowManagementPage = () => {
                       <span className="px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-[10px] font-bold text-slate-500 uppercase tracking-widest">
                         Not Returned
                       </span>
+                    }
+                  />
+                ))}
+              </div>
+            </div>
+          </section>
+        )}
+
+        {/* ══ SECTION 7: Unreturned — Outstanding ═══════════════════════════════ */}
+        {activeSchedule && unreturnedRequests.length > 0 && (
+          <section className="mb-8">
+            <div className="flex items-center gap-3 mb-5 px-1">
+              <div className="w-1.5 h-8 bg-red-500 rounded-full" />
+              <h3 className="text-xl font-black text-[#1E2B58] dark:text-white">Chưa hoàn trả</h3>
+              <span className="text-[10px] font-black px-2.5 py-1 rounded-full bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 border border-red-100 dark:border-red-900/30">
+                {unreturnedRequests.length}
+              </span>
+            </div>
+
+            <div className="dashboard-card rounded-4xl overflow-hidden border border-red-200 dark:border-red-900/30 bg-red-50/30 dark:bg-red-900/10">
+              <div className="divide-y divide-red-100 dark:divide-red-900/20">
+                {unreturnedRequests.map(req => (
+                  <BorrowRequestRow
+                    key={req._id}
+                    req={req}
+                    onViewDetail={setViewDetailReq}
+                    actions={
+                      <div className="flex flex-col items-end gap-2">
+                         <span className="px-3 py-1.5 rounded-lg bg-red-100 dark:bg-red-900/40 text-[10px] font-bold text-red-700 dark:text-red-400 uppercase tracking-widest animate-pulse">
+                           Cảnh báo: Chưa trả
+                         </span>
+                         <button
+                           onClick={() => setConfirmReturnReq(req)}
+                           className="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 font-bold text-[10px] uppercase tracking-widest hover:bg-slate-200 transition-all active:scale-95"
+                         >
+                           Thu hồi muộn
+                         </button>
+                      </div>
                     }
                   />
                 ))}

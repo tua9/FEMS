@@ -21,6 +21,19 @@ export const ReportFormShell = ({
  onQRDetected,
  onSubmit,
  children,
+
+ // Controlled state
+ category,
+ setCategory,
+ roomId,
+ setRoomId,
+ equipmentId,
+ setEquipmentId,
+ description,
+ setDescription,
+ files,
+ setFiles,
+ resetFileInputRef,
 }) => (
  <>
  <ReportHeader />
@@ -46,6 +59,18 @@ export const ReportFormShell = ({
  isSubmitting={isSubmitting}
  rooms={rooms}
  buildings={buildings}
+ 
+ category={category}
+ setCategory={setCategory}
+ roomId={roomId}
+ setRoomId={setRoomId}
+ equipmentId={equipmentId}
+ setEquipmentId={setEquipmentId}
+ description={description}
+ setDescription={setDescription}
+ files={files}
+ setFiles={setFiles}
+ onResetFileInput={resetFileInputRef}
  />
 
  {children}

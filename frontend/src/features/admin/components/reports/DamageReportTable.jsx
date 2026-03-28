@@ -1,3 +1,5 @@
+import { REPORT_STATUS } from '@/constants';
+
 const DamageReportTable = ({
     reports,
     onOpenDetails,
@@ -15,96 +17,96 @@ const DamageReportTable = ({
         return 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 border-blue-100 dark:border-blue-800/30';
     };
 
-    const getStatusStyle = (status) => {
-        switch (status) {
-            case 'fixed': return 'bg-emerald-500 shadow-emerald-500/20';
-            case 'processing': return 'bg-indigo-500 shadow-indigo-500/20';
-            case 'approved': return 'bg-blue-400 shadow-blue-400/20 dark:bg-blue-400/80';
-            case 'pending': return 'bg-amber-500 shadow-amber-500/20';
-            case 'rejected': return 'bg-red-500 shadow-red-500/20';
-            default: return 'bg-slate-500';
-        }
-    };
+ const getStatusStyle = (status) => {
+ switch (status) {
+ case REPORT_STATUS.FIXED:       return 'bg-emerald-500 shadow-emerald-500/20';
+ case REPORT_STATUS.PROCESSING:  return 'bg-indigo-500 shadow-indigo-500/20';
+ case REPORT_STATUS.APPROVED:    return 'bg-blue-400 shadow-blue-400/20 dark:bg-blue-400/80';
+ case REPORT_STATUS.PENDING:     return 'bg-amber-500 shadow-amber-500/20';
+ case REPORT_STATUS.REJECTED:    return 'bg-red-500 shadow-red-500/20';
+ default: return 'bg-slate-500';
+ }
+ };
 
-    const getStatusLabel = (status) => {
-        switch (status) {
-            case 'fixed': return 'Resolved';
-            case 'processing': return 'In Progress';
-            case 'approved': return 'Approved';
-            case 'pending': return 'Pending';
-            case 'rejected': return 'Rejected';
-            default: return status;
-        }
-    };
+ const getStatusLabel = (status) => {
+ switch (status) {
+ case REPORT_STATUS.FIXED:       return 'Resolved';
+ case REPORT_STATUS.PROCESSING:  return 'In Progress';
+ case REPORT_STATUS.APPROVED:    return 'Approved';
+ case REPORT_STATUS.PENDING:     return 'Pending';
+ case REPORT_STATUS.REJECTED:    return 'Rejected';
+ default: return status;
+ }
+ };
 
     const rowBg = "bg-white/70 group-hover:bg-white dark:bg-slate-800/60 dark:group-hover:bg-slate-700/80 backdrop-blur-sm transition-colors";
 
     const renderActions = (report) => {
         const baseBtnClass = "min-h-[40px] px-3 rounded-[14px] transition-all shadow-sm flex items-center justify-center group/btn font-bold uppercase tracking-wider text-[10px] border-2";
 
-        if (report.status === 'pending') {
-            return (
-                <div className="flex items-center justify-end gap-2 text-right">
-                    <button
-                        onClick={() => onApprove && onApprove(report)}
-                        className={`${baseBtnClass} bg-slate-50 dark:bg-slate-900/10 border-slate-100 dark:border-slate-800/30 text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 hover:border-emerald-100 dark:hover:border-emerald-800/30 w-11 p-0`}
-                        title="Approve Report"
-                    >
-                        <span className="material-symbols-outlined text-xl">check_circle</span>
-                    </button>
-                    <button
-                        onClick={() => onReject && onReject(report)}
-                        className={`${baseBtnClass} bg-slate-50 dark:bg-slate-900/10 border-slate-100 dark:border-slate-800/30 text-slate-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 hover:border-red-100 dark:hover:border-red-800/30 w-11 p-0`}
-                        title="Reject Report"
-                    >
-                        <span className="material-symbols-outlined text-xl">cancel</span>
-                    </button>
-                </div>
-            );
-        }
+ if (report.status === REPORT_STATUS.PENDING) {
+ return (
+ <div className="flex items-center justify-end gap-2 text-right">
+ <button
+ onClick={() => onApprove && onApprove(report)}
+ className={`${baseBtnClass} bg-slate-50 dark:bg-slate-900/10 border-slate-100 dark:border-slate-800/30 text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 hover:border-emerald-100 dark:hover:border-emerald-800/30 w-11 p-0`}
+ title="Approve Report"
+ >
+ <span className="material-symbols-outlined text-xl">check_circle</span>
+ </button>
+ <button
+ onClick={() => onReject && onReject(report)}
+ className={`${baseBtnClass} bg-slate-50 dark:bg-slate-900/10 border-slate-100 dark:border-slate-800/30 text-slate-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 hover:border-red-100 dark:hover:border-red-800/30 w-11 p-0`}
+ title="Reject Report"
+ >
+ <span className="material-symbols-outlined text-xl">cancel</span>
+ </button>
+ </div>
+ );
+ }
 
-        if (report.status === 'rejected') {
-            return (
-                <div className="flex items-center justify-end gap-2">
-                    <button
-                        onClick={() => onUndo && onUndo(report)}
-                        className={`${baseBtnClass} bg-slate-50 dark:bg-slate-900/10 border-slate-100 dark:border-slate-800/30 text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:border-blue-100 dark:hover:border-blue-800/30 w-11 p-0`}
-                        title="Undo Rejection"
-                    >
-                        <span className="material-symbols-outlined text-xl font-light">undo</span>
-                    </button>
-                </div>
-            );
-        }
+ if (report.status === REPORT_STATUS.REJECTED) {
+ return (
+ <div className="flex items-center justify-end gap-2">
+ <button
+ onClick={() => onUndo && onUndo(report)}
+ className={`${baseBtnClass} bg-slate-50 dark:bg-slate-900/10 border-slate-100 dark:border-slate-800/30 text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:border-blue-100 dark:hover:border-blue-800/30 w-11 p-0`}
+ title="Undo Rejection"
+ >
+ <span className="material-symbols-outlined text-xl font-light">undo</span>
+ </button>
+ </div>
+ );
+ }
 
-        if (report.status === 'approved') {
-            return (
-                <div className="flex items-center justify-end gap-2 text-right">
-                    <button
-                        onClick={() => onAssign && onAssign(report)}
-                        className={`${baseBtnClass} bg-slate-50 dark:bg-slate-900/10 border-slate-100 dark:border-slate-800/30 text-slate-400 hover:text-orange-700 dark:hover:text-orange-900/80 hover:bg-orange-50 dark:hover:bg-orange-900/20 hover:border-orange-100 dark:hover:border-orange-800/30 w-11 p-0`}
-                        title="Assign Technician"
-                    >
-                        <span className="material-symbols-outlined text-xl">person_add</span>
-                    </button>
-                </div>
-            );
-        }
+ if (report.status === REPORT_STATUS.APPROVED) {
+ return (
+ <div className="flex items-center justify-end gap-2 text-right">
+ <button
+ onClick={() => onAssign && onAssign(report)}
+ className={`${baseBtnClass} bg-slate-50 dark:bg-slate-900/10 border-slate-100 dark:border-slate-800/30 text-slate-400 hover:text-orange-700 dark:hover:text-orange-900/80 hover:bg-orange-50 dark:hover:bg-orange-900/20 hover:border-orange-100 dark:hover:border-orange-800/30 w-11 p-0`}
+ title="Assign Technician"
+ >
+ <span className="material-symbols-outlined text-xl">person_add</span>
+ </button>
+ </div>
+ );
+ }
 
-        if (report.status === 'processing') {
-            return (
-                <div className="flex items-center justify-end gap-2 text-right">
-                    <button
-                        onClick={() => onResolve && onResolve(report)}
-                        className={`${baseBtnClass} bg-slate-50 dark:bg-slate-900/10 border-slate-100 dark:border-slate-800/30 text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 hover:border-emerald-100 dark:hover:border-emerald-800/30 w-full max-w-[100px] font-black`}
-                        title="Mark "
-                    >
-                        <span className="material-symbols-outlined text-lg mr-1">task_alt</span>
-                        Done
-                    </button>
-                </div>
-            );
-        }
+ if (report.status === REPORT_STATUS.PROCESSING) {
+ return (
+ <div className="flex items-center justify-end gap-2 text-right">
+ <button
+ onClick={() => onResolve && onResolve(report)}
+ className={`${baseBtnClass} bg-slate-50 dark:bg-slate-900/10 border-slate-100 dark:border-slate-800/30 text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 hover:border-emerald-100 dark:hover:border-emerald-800/30 w-full max-w-[100px] font-black`}
+ title="Mark "
+ >
+ <span className="material-symbols-outlined text-lg mr-1">task_alt</span>
+ Done
+ </button>
+ </div>
+ );
+ }
 
         return <div className="h-10"></div>;
     };
